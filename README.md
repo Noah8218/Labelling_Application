@@ -1,2 +1,1 @@
-# Labelling_Application
-winform/c#
+# Wafer-Chip-Mapping-program
