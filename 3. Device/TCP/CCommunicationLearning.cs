@@ -1,4 +1,7 @@
 ﻿using Lib.Common;
+using MvcVisionSystem._1._Core;
+using Newtonsoft.Json;
+using Sunny.UI;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -11,6 +14,16 @@ using Vila.Communication.Net;
 
 namespace MvcVisionSystem._3._Device.TCP
 {
+    public class DefectInfo
+    {
+        public string ClassName { get; set; } = "";
+        public float Confidence { get; set; } = 0;
+        public float X { get; set; } = 0;
+        public float Y { get; set; } = 0;
+        public float Width { get; set; } = 0;
+        public float Height { get; set; } = 0;
+    }
+
     public class CCommunicationLearning
     {
         public enum CommandLearning
@@ -63,6 +76,69 @@ namespace MvcVisionSystem._3._Device.TCP
             }
         }
 
+        public Bitmap DrawDefects(Bitmap bitmap, List<DefectInfo> defects)
+        {
+            using (Graphics g = Graphics.FromImage(bitmap))
+            {
+                // Calculate font size based on image width
+                float fontSize = bitmap.Width / 50.0f;  // Adjust the denominator as needed
+                if (fontSize < 10) fontSize = 10;  // Set a minimum font size
+                if (fontSize > 20) fontSize = 20;  // Set a maximum font size
+
+                // Define a font
+                using (Font font = new Font("Arial", fontSize))
+                {
+                    // Define a brush
+                    using (Brush brush = new SolidBrush(Color.Green))
+                    {
+                        foreach (var defect in defects)
+                        {
+                            // Convert coordinates and size from float to int
+                            int x = (int)defect.X;
+                            int y = (int)defect.Y;
+                            int width = (int)defect.Width;
+                            int height = (int)defect.Height;
+
+                            // Create a rectangle
+                            Rectangle rect = new Rectangle(x, y, width, height);
+
+                            // Calculate pen width based on image width
+                            float penWidth = bitmap.Width / 800.0f;  // Adjust the denominator as needed
+                            if (penWidth < 1) penWidth = 1;  // Set a minimum pen width
+                            if (penWidth > 4) penWidth = 4;  // Set a maximum pen width
+
+                            // Create a pen
+                            using (Pen pen = new Pen(Color.Green, penWidth))
+                            {
+                                // Draw the rectangle
+                                g.DrawRectangle(pen, defect.X, defect.Y, defect.Width, defect.Height);
+                            }
+
+                            // Define the text to display
+                            string text = $"{defect.ClassName}: {defect.Confidence}";
+
+                            // Define the location to draw the text
+                            float textX = x;
+                            float textY = y - font.Height > 0 ? y - font.Height : 0;
+
+                            // Ensure that the text does not go beyond the image boundaries
+                            if (textX + text.Length * fontSize > bitmap.Width)
+                                textX = bitmap.Width - text.Length * fontSize;
+                            if (textX < 0) textX = 0;
+
+                            PointF point = new PointF(textX, textY);
+
+                            // Draw the text
+                            g.DrawString(text, font, brush, point);
+                        }
+                    }
+                }
+            }
+
+            return bitmap;
+        }
+
+
         private void OnServerReceiveFunction(IAsyncResult ar)
         {
             byte[] byData;
@@ -71,39 +147,50 @@ namespace MvcVisionSystem._3._Device.TCP
             while (Yolov5Comm.GetByteData(out byData))
             {
                 sMsg = Encoding.ASCII.GetString(byData, 0, byData.Length);
+                CLOG.COMM($"[Receive] {sMsg}");
 
-                switch (sMsg)
+                if (sMsg.StartsWith("ResultDefect"))
                 {
-                    case "StartTraining":
-                        //StartTraining();                        
-                        break;
-                    case "StopTraining":
-                        //StopTraining();
-                        break;
-                    case "StartDefect":
-                        //StartDefect();
-                        break;
-                    case "StopDefect":
-                        //StopDefect();
-                        break;
-                    default:
-                        Console.WriteLine($"Unknown command: {sMsg}");
-                        break;
+                    string jsonResult = sMsg.Substring("ResultDefect".Length).Trim();
+
+                    // Parse the JSON string to a list of DefectInfo objects
+                    List<DefectInfo> defects = JsonConvert.DeserializeObject<List<DefectInfo>>(jsonResult);
+                    List<DefectInfo> truncatedDefects = defects.Select(defect => new DefectInfo
+                    {
+                        ClassName = defect.ClassName,
+                        Confidence = (float)Math.Truncate(100 * defect.Confidence) / 100,
+                        X = (float)Math.Truncate(100 * defect.X) / 100,
+                        Y = (float)Math.Truncate(100 * defect.Y) / 100,
+                        Width = (float)Math.Truncate(100 * defect.Width) / 100,
+                        Height = (float)Math.Truncate(100 * defect.Height) / 100
+                    }).ToList();
+                    var image24 =  CDrawBitmap.GetBitmapFormat24bppRgb(Lib.Common.CImageConverter.ToBitmap(CDisplayManager.ImageSrc));
+                    var image =  DrawDefects(image24, truncatedDefects);                    
+                    CDisplayManager.CreateLayerDisplay(image, "Detect", true);
+                    // Add the newly detected defects to the global defect list
+                    //defectList.AddRange(defects);
                 }
-
-                //m_strRecvBuffer += sMsg;
-
-                //RecvieMeaasge(sMsg);           // 수신된 데이터 처리
-
-                //if (IGlobal.Instance.System.UseCim)
-                //{
-                //    RecvieMeaasge(sMsg);           // 수신된 데이터 처리
-                //}
-                //else
-                //{
-                //    CLogger.WriteLog(LOG.Comm, "CIM NOT USE");
-                //    CLogger.WriteLog(LOG.NORMAL, "[Success] Recive Message --> {0}", sMsg);
-                //}
+                else
+                {
+                    switch (sMsg)
+                    {
+                        case "StartTraining":
+                            //StartTraining();                        
+                            break;
+                        case "StopTraining":
+                            //StopTraining();
+                            break;
+                        case "StartDefect":
+                            //StartDefect();
+                            break;
+                        case "StopDefect":
+                            //StopDefect();
+                            break;
+                        default:
+                            Console.WriteLine($"Unknown command: {sMsg}");
+                            break;
+                    }
+                }
             }
         }
 
