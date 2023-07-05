@@ -21,6 +21,7 @@ using System.IO;
 using System.Windows.Forms;
 using Lib.Common;
 using System.Security.Cryptography;
+using System.Drawing;
 
 namespace MvcVisionSystem
 {
@@ -151,6 +152,39 @@ namespace MvcVisionSystem
             catch (Exception Desc)
             {
                 CLOG.ABNORMAL($"[FAILED] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}   Execption ==> {Desc.Message}");
+            }
+        }
+
+        public void SendData(string command, Image image)
+        {
+            try
+            {
+                // 1. Command를 byte로 변환하고 송신
+                byte[] commandData = Encoding.ASCII.GetBytes(command + "\n");
+                socketClient.BeginSend(commandData, 0, commandData.Length, 0, new AsyncCallback(SendCallback), socketClient);
+
+                // 2. Image를 byte로 변환
+                byte[] imageData = ImageToByteArray(image);
+
+                // 3. Image 데이터의 크기를 byte로 변환하고 송신
+                byte[] imageSize = BitConverter.GetBytes(imageData.Length);
+                socketClient.BeginSend(imageSize, 0, imageSize.Length, 0, new AsyncCallback(SendCallback), socketClient);
+
+                // 4. Image 데이터 송신
+                socketClient.BeginSend(imageData, 0, imageData.Length, 0, new AsyncCallback(SendCallback), socketClient);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to send data: {e.Message}");
+            }
+        }
+
+        public byte[] ImageToByteArray(System.Drawing.Image image)
+        {
+            using (var ms = new MemoryStream())
+            {
+                image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                return ms.ToArray();
             }
         }
 

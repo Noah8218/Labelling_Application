@@ -777,7 +777,24 @@ namespace MvcVisionSystem
 
         private void btnClassInfer_Click(object sender, EventArgs e)
         {
-            Global.DeepLearning.Send(CommandLearning.StartDefect.ToString());
+            try
+            {
+
+                Global.DeepLearning.SendData(CommandLearning.StartDefect.ToString(), Lib.Common.CImageConverter.ToBitmap(CDisplayManager.ImageSrc));
+            }
+            catch
+            {
+
+            }
+        }
+
+        public byte[] ImageToByteArray(System.Drawing.Image imageIn)
+        {
+            using (var ms = new MemoryStream())
+            {
+                imageIn.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                return ms.ToArray();
+            }
         }
     }
 }

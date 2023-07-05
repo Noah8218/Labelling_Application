@@ -1,6 +1,7 @@
 ﻿using Lib.Common;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
@@ -38,11 +39,23 @@ namespace MvcVisionSystem._3._Device.TCP
             Yolov5Comm.SetListen();
         }
 
-        public void Send(String data)
+        public void Send(String data )
         {
             try
             {
-                Yolov5Comm.Send(data);
+                Yolov5Comm.Send(data );
+            }
+            catch (Exception Desc)
+            {
+                CLOG.ABNORMAL($"[FAILED] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}   Execption ==> {Desc.Message}");
+            }
+        }
+
+        public void SendData(String data, Bitmap bitmap)
+        {
+            try
+            {
+                Yolov5Comm.SendData(data, (Image)bitmap);
             }
             catch (Exception Desc)
             {
