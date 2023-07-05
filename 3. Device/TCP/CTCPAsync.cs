@@ -22,6 +22,7 @@ using System.Windows.Forms;
 using Lib.Common;
 using System.Security.Cryptography;
 using System.Drawing;
+using System.Linq;
 
 namespace MvcVisionSystem
 {
@@ -159,24 +160,42 @@ namespace MvcVisionSystem
         {
             try
             {
-                // 1. Command를 byte로 변환하고 송신
-                byte[] commandData = Encoding.ASCII.GetBytes(command + "\n");
-                socketClient.BeginSend(commandData, 0, commandData.Length, 0, new AsyncCallback(SendCallback), socketClient);
+                // 1. Convert command to bytes
+                byte[] commandData = Encoding.ASCII.GetBytes(command);
 
-                // 2. Image를 byte로 변환
+                // 2. Convert image to bytes
                 byte[] imageData = ImageToByteArray(image);
 
-                // 3. Image 데이터의 크기를 byte로 변환하고 송신
-                byte[] imageSize = BitConverter.GetBytes(imageData.Length);
-                socketClient.BeginSend(imageSize, 0, imageSize.Length, 0, new AsyncCallback(SendCallback), socketClient);
+                // 3. Define separator
+                byte[] separator = Encoding.ASCII.GetBytes("\n\n");
 
-                // 4. Image 데이터 송신
-                socketClient.BeginSend(imageData, 0, imageData.Length, 0, new AsyncCallback(SendCallback), socketClient);
+                // 4. Combine commandData, separator and imageData
+                byte[] data = Combine(commandData, separator, imageData);
+
+                if (socketClient != null)
+                {
+                    // 5. Send the data
+                    socketClient.BeginSend(data, 0, data.Length, 0, new AsyncCallback(SendCallback), socketClient);
+                }
+
+
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Failed to send data: {e.Message}");
             }
+        }
+
+        public byte[] Combine(params byte[][] arrays)
+        {
+            var result = new byte[arrays.Sum(a => a.Length)];
+            int offset = 0;
+            foreach (byte[] array in arrays)
+            {
+                Buffer.BlockCopy(array, 0, result, offset, array.Length);
+                offset += array.Length;
+            }
+            return result;
         }
 
         public byte[] ImageToByteArray(System.Drawing.Image image)

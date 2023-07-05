@@ -779,7 +779,7 @@ namespace MvcVisionSystem
         {
             try
             {
-
+                //Global.DeepLearning.Send(CommandLearning.StartDefect.ToString());
                 Global.DeepLearning.SendData(CommandLearning.StartDefect.ToString(), Lib.Common.CImageConverter.ToBitmap(CDisplayManager.ImageSrc));
             }
             catch
