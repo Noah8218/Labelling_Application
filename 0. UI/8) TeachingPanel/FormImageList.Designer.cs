@@ -37,12 +37,17 @@ namespace MvcVisionSystem
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormImageList));
             this.timePixelData = new System.Windows.Forms.Timer(this.components);
             this.rjPanel1 = new RJCodeUI_M1.RJControls.RJPanel();
-            this.btnOpenFileList = new RJCodeUI_M1.RJControls.RJButton();
             this.dgvImagesList = new RJCodeUI_M1.RJControls.RJDataGridView();
             this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.btnOpenFileList = new RJCodeUI_M1.RJControls.RJButton();
+            this.uiSplitContainer1 = new Sunny.UI.UISplitContainer();
             this.rjPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvImagesList)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.uiSplitContainer1)).BeginInit();
+            this.uiSplitContainer1.Panel1.SuspendLayout();
+            this.uiSplitContainer1.Panel2.SuspendLayout();
+            this.uiSplitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // timePixelData
@@ -54,46 +59,13 @@ namespace MvcVisionSystem
             // 
             this.rjPanel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(253)))));
             this.rjPanel1.BorderRadius = 5;
-            this.rjPanel1.Controls.Add(this.dgvImagesList);
-            this.rjPanel1.Controls.Add(this.btnOpenFileList);
+            this.rjPanel1.Controls.Add(this.uiSplitContainer1);
             this.rjPanel1.Customizable = false;
             this.rjPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rjPanel1.Location = new System.Drawing.Point(0, 0);
             this.rjPanel1.Name = "rjPanel1";
             this.rjPanel1.Size = new System.Drawing.Size(534, 513);
             this.rjPanel1.TabIndex = 2144;
-            // 
-            // btnOpenFileList
-            // 
-            this.btnOpenFileList.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
-            this.btnOpenFileList.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
-            this.btnOpenFileList.BorderRadius = 10;
-            this.btnOpenFileList.BorderSize = 3;
-            this.btnOpenFileList.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnOpenFileList.Design = RJCodeUI_M1.RJControls.ButtonDesign.Normal;
-            this.btnOpenFileList.Dock = System.Windows.Forms.DockStyle.Top;
-            this.btnOpenFileList.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(159)))), ((int)(((byte)(113)))));
-            this.btnOpenFileList.FlatAppearance.BorderSize = 0;
-            this.btnOpenFileList.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
-            this.btnOpenFileList.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
-            this.btnOpenFileList.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnOpenFileList.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F);
-            this.btnOpenFileList.ForeColor = System.Drawing.Color.White;
-            this.btnOpenFileList.IconChar = FontAwesome.Sharp.IconChar.FileImport;
-            this.btnOpenFileList.IconColor = System.Drawing.Color.White;
-            this.btnOpenFileList.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnOpenFileList.IconSize = 80;
-            this.btnOpenFileList.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.btnOpenFileList.Location = new System.Drawing.Point(0, 0);
-            this.btnOpenFileList.Name = "btnOpenFileList";
-            this.btnOpenFileList.Size = new System.Drawing.Size(534, 80);
-            this.btnOpenFileList.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
-            this.btnOpenFileList.TabIndex = 2154;
-            this.btnOpenFileList.Text = "이미지 폴더 Open";
-            this.btnOpenFileList.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnOpenFileList.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
-            this.btnOpenFileList.UseVisualStyleBackColor = false;
-            this.btnOpenFileList.Click += new System.EventHandler(this.btnOpenFolder_Click);
             // 
             // dgvImagesList
             // 
@@ -130,7 +102,7 @@ namespace MvcVisionSystem
             this.dgvImagesList.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.dgvImagesList.EnableHeadersVisualStyles = false;
             this.dgvImagesList.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.dgvImagesList.Location = new System.Drawing.Point(0, 80);
+            this.dgvImagesList.Location = new System.Drawing.Point(0, 0);
             this.dgvImagesList.Name = "dgvImagesList";
             this.dgvImagesList.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.dgvImagesList.RowHeaderColor = System.Drawing.Color.WhiteSmoke;
@@ -161,7 +133,7 @@ namespace MvcVisionSystem
             this.dgvImagesList.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(199)))), ((int)(((byte)(241)))));
             this.dgvImagesList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvImagesList.SelectionTextColor = System.Drawing.Color.Gray;
-            this.dgvImagesList.Size = new System.Drawing.Size(534, 433);
+            this.dgvImagesList.Size = new System.Drawing.Size(534, 407);
             this.dgvImagesList.TabIndex = 2155;
             this.dgvImagesList.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvImagesList_CellContentDoubleClick);
             // 
@@ -176,6 +148,62 @@ namespace MvcVisionSystem
             this.Column1.HeaderText = "파일 경로";
             this.Column1.Name = "Column1";
             this.Column1.Width = 225;
+            // 
+            // btnOpenFileList
+            // 
+            this.btnOpenFileList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOpenFileList.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnOpenFileList.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnOpenFileList.BorderRadius = 10;
+            this.btnOpenFileList.BorderSize = 3;
+            this.btnOpenFileList.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnOpenFileList.Design = RJCodeUI_M1.RJControls.ButtonDesign.Normal;
+            this.btnOpenFileList.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(159)))), ((int)(((byte)(113)))));
+            this.btnOpenFileList.FlatAppearance.BorderSize = 0;
+            this.btnOpenFileList.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
+            this.btnOpenFileList.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
+            this.btnOpenFileList.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnOpenFileList.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnOpenFileList.ForeColor = System.Drawing.Color.White;
+            this.btnOpenFileList.IconChar = FontAwesome.Sharp.IconChar.FileImport;
+            this.btnOpenFileList.IconColor = System.Drawing.Color.White;
+            this.btnOpenFileList.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnOpenFileList.IconSize = 50;
+            this.btnOpenFileList.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.btnOpenFileList.Location = new System.Drawing.Point(372, 3);
+            this.btnOpenFileList.Name = "btnOpenFileList";
+            this.btnOpenFileList.Size = new System.Drawing.Size(159, 84);
+            this.btnOpenFileList.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
+            this.btnOpenFileList.TabIndex = 2154;
+            this.btnOpenFileList.Text = "이미지 폴더 열기";
+            this.btnOpenFileList.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.btnOpenFileList.UseVisualStyleBackColor = false;
+            this.btnOpenFileList.Click += new System.EventHandler(this.btnOpenFolder_Click);
+            // 
+            // uiSplitContainer1
+            // 
+            this.uiSplitContainer1.Cursor = System.Windows.Forms.Cursors.Default;
+            this.uiSplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.uiSplitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.uiSplitContainer1.Margin = new System.Windows.Forms.Padding(0);
+            this.uiSplitContainer1.MinimumSize = new System.Drawing.Size(1, 1);
+            this.uiSplitContainer1.Name = "uiSplitContainer1";
+            this.uiSplitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // uiSplitContainer1.Panel1
+            // 
+            this.uiSplitContainer1.Panel1.Controls.Add(this.btnOpenFileList);
+            this.uiSplitContainer1.Panel1MinSize = 0;
+            // 
+            // uiSplitContainer1.Panel2
+            // 
+            this.uiSplitContainer1.Panel2.Controls.Add(this.dgvImagesList);
+            this.uiSplitContainer1.Panel2MinSize = 0;
+            this.uiSplitContainer1.Size = new System.Drawing.Size(534, 513);
+            this.uiSplitContainer1.SplitterDistance = 95;
+            this.uiSplitContainer1.SplitterWidth = 11;
+            this.uiSplitContainer1.TabIndex = 2156;
             // 
             // FormImageList
             // 
@@ -193,6 +221,10 @@ namespace MvcVisionSystem
             this.VisibleChanged += new System.EventHandler(this.Form_VisibleChanged);
             this.rjPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvImagesList)).EndInit();
+            this.uiSplitContainer1.Panel1.ResumeLayout(false);
+            this.uiSplitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.uiSplitContainer1)).EndInit();
+            this.uiSplitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -204,5 +236,6 @@ namespace MvcVisionSystem
         private RJCodeUI_M1.RJControls.RJDataGridView dgvImagesList;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
+        private Sunny.UI.UISplitContainer uiSplitContainer1;
     }
 }

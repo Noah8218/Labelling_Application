@@ -39,7 +39,9 @@
             this.pnStatusBar = new RJCodeUI_M1.RJControls.RJPanel();
             this.lbVersion = new RJCodeUI_M1.RJControls.RJLabel();
             this.pnlTitleBar = new RJCodeUI_M1.RJControls.RJPanel();
-            this.btnClassInfer = new RJCodeUI_M1.RJControls.RJButton();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.lbExportPath = new RJCodeUI_M1.RJControls.RJLabel();
+            this.btnExportPath = new RJCodeUI_M1.RJControls.RJButton();
             this.dmUserOptions = new RJCodeUI_M1.RJControls.RJDropdownMenu(this.components);
             this.miMyProfile = new FontAwesome.Sharp.IconMenuItem();
             this.miSettings = new FontAwesome.Sharp.IconMenuItem();
@@ -47,15 +49,16 @@
             this.miHelp = new FontAwesome.Sharp.IconMenuItem();
             this.miLogout = new FontAwesome.Sharp.IconMenuItem();
             this.miExit = new FontAwesome.Sharp.IconMenuItem();
+            this.btnClassSave = new RJCodeUI_M1.RJControls.RJButton();
+            this.btnClassMenu = new RJCodeUI_M1.RJControls.RJButton();
+            this.btnClassInfer = new RJCodeUI_M1.RJControls.RJButton();
             this.btnClassTrain = new RJCodeUI_M1.RJControls.RJButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.lbSelectImageName = new RJCodeUI_M1.RJControls.RJLabel();
             this.btnPreviousPage = new RJCodeUI_M1.RJControls.RJButton();
             this.btnNextPage = new RJCodeUI_M1.RJControls.RJButton();
-            this.btnClassSave = new RJCodeUI_M1.RJControls.RJButton();
             this.cbClassMenu = new RJCodeUI_M1.RJControls.RJComboBox();
             this.rjLabel13 = new RJCodeUI_M1.RJControls.RJLabel();
-            this.btnClassMenu = new RJCodeUI_M1.RJControls.RJButton();
             this.btnUserOptions = new RJCodeUI_M1.RJControls.RJButton();
             this.btnScreenCapture = new RJCodeUI_M1.RJControls.RJButton();
             this.btnCerrar = new System.Windows.Forms.Button();
@@ -72,6 +75,7 @@
             this.pnFormMain.SuspendLayout();
             this.pnStatusBar.SuspendLayout();
             this.pnlTitleBar.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.dmUserOptions.SuspendLayout();
             this.panel1.SuspendLayout();
             this.ddmDevice.SuspendLayout();
@@ -168,13 +172,12 @@
             // 
             this.pnlTitleBar.BackColor = System.Drawing.Color.Black;
             this.pnlTitleBar.BorderRadius = 0;
+            this.pnlTitleBar.Controls.Add(this.panel2);
             this.pnlTitleBar.Controls.Add(this.btnClassInfer);
             this.pnlTitleBar.Controls.Add(this.btnClassTrain);
             this.pnlTitleBar.Controls.Add(this.panel1);
-            this.pnlTitleBar.Controls.Add(this.btnClassSave);
             this.pnlTitleBar.Controls.Add(this.cbClassMenu);
             this.pnlTitleBar.Controls.Add(this.rjLabel13);
-            this.pnlTitleBar.Controls.Add(this.btnClassMenu);
             this.pnlTitleBar.Controls.Add(this.btnUserOptions);
             this.pnlTitleBar.Controls.Add(this.btnScreenCapture);
             this.pnlTitleBar.Controls.Add(this.btnCerrar);
@@ -186,36 +189,64 @@
             this.pnlTitleBar.Size = new System.Drawing.Size(1924, 49);
             this.pnlTitleBar.TabIndex = 1260;
             // 
-            // btnClassInfer
+            // panel2
             // 
-            this.btnClassInfer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
-            this.btnClassInfer.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
-            this.btnClassInfer.BorderRadius = 0;
-            this.btnClassInfer.BorderSize = 1;
-            this.btnClassInfer.ContextMenuStrip = this.dmUserOptions;
-            this.btnClassInfer.Design = RJCodeUI_M1.RJControls.ButtonDesign.IconButton;
-            this.btnClassInfer.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(83)))), ((int)(((byte)(97)))), ((int)(((byte)(212)))));
-            this.btnClassInfer.FlatAppearance.BorderSize = 0;
-            this.btnClassInfer.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
-            this.btnClassInfer.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
-            this.btnClassInfer.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClassInfer.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnClassInfer.ForeColor = System.Drawing.Color.White;
-            this.btnClassInfer.IconChar = FontAwesome.Sharp.IconChar.Exclamation;
-            this.btnClassInfer.IconColor = System.Drawing.Color.White;
-            this.btnClassInfer.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnClassInfer.IconSize = 25;
-            this.btnClassInfer.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.btnClassInfer.Location = new System.Drawing.Point(568, 2);
-            this.btnClassInfer.Name = "btnClassInfer";
-            this.btnClassInfer.Size = new System.Drawing.Size(63, 45);
-            this.btnClassInfer.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
-            this.btnClassInfer.TabIndex = 12;
-            this.btnClassInfer.Text = "추론";
-            this.btnClassInfer.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
-            this.btnClassInfer.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
-            this.btnClassInfer.UseVisualStyleBackColor = false;
-            this.btnClassInfer.Click += new System.EventHandler(this.btnClassInfer_Click);
+            this.panel2.Controls.Add(this.lbExportPath);
+            this.panel2.Controls.Add(this.btnExportPath);
+            this.panel2.Controls.Add(this.btnClassSave);
+            this.panel2.Controls.Add(this.btnClassMenu);
+            this.panel2.Location = new System.Drawing.Point(177, 3);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(528, 45);
+            this.panel2.TabIndex = 2641;
+            // 
+            // lbExportPath
+            // 
+            this.lbExportPath.BackColor = System.Drawing.Color.Transparent;
+            this.lbExportPath.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.lbExportPath.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbExportPath.Font = new System.Drawing.Font("Verdana", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbExportPath.ForeColor = System.Drawing.Color.White;
+            this.lbExportPath.LinkLabel = false;
+            this.lbExportPath.Location = new System.Drawing.Point(189, 0);
+            this.lbExportPath.Name = "lbExportPath";
+            this.lbExportPath.Size = new System.Drawing.Size(339, 45);
+            this.lbExportPath.Style = RJCodeUI_M1.RJControls.LabelStyle.Custom;
+            this.lbExportPath.TabIndex = 2136;
+            this.lbExportPath.Text = "----------------------------------";
+            this.lbExportPath.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // btnExportPath
+            // 
+            this.btnExportPath.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnExportPath.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnExportPath.BorderRadius = 0;
+            this.btnExportPath.BorderSize = 1;
+            this.btnExportPath.ContextMenuStrip = this.dmUserOptions;
+            this.btnExportPath.Design = RJCodeUI_M1.RJControls.ButtonDesign.IconButton;
+            this.btnExportPath.Dock = System.Windows.Forms.DockStyle.Left;
+            this.btnExportPath.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(83)))), ((int)(((byte)(97)))), ((int)(((byte)(212)))));
+            this.btnExportPath.FlatAppearance.BorderSize = 0;
+            this.btnExportPath.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
+            this.btnExportPath.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
+            this.btnExportPath.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnExportPath.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnExportPath.ForeColor = System.Drawing.Color.White;
+            this.btnExportPath.IconChar = FontAwesome.Sharp.IconChar.FileExport;
+            this.btnExportPath.IconColor = System.Drawing.Color.White;
+            this.btnExportPath.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnExportPath.IconSize = 25;
+            this.btnExportPath.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.btnExportPath.Location = new System.Drawing.Point(126, 0);
+            this.btnExportPath.Name = "btnExportPath";
+            this.btnExportPath.Size = new System.Drawing.Size(63, 45);
+            this.btnExportPath.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
+            this.btnExportPath.TabIndex = 11;
+            this.btnExportPath.Text = "경로 설정";
+            this.btnExportPath.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
+            this.btnExportPath.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.btnExportPath.UseVisualStyleBackColor = false;
+            this.btnExportPath.Click += new System.EventHandler(this.btnExportPath_Click);
             // 
             // dmUserOptions
             // 
@@ -293,6 +324,101 @@
             this.miExit.Size = new System.Drawing.Size(181, 22);
             this.miExit.Text = "Exit";
             // 
+            // btnClassSave
+            // 
+            this.btnClassSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnClassSave.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnClassSave.BorderRadius = 0;
+            this.btnClassSave.BorderSize = 1;
+            this.btnClassSave.ContextMenuStrip = this.dmUserOptions;
+            this.btnClassSave.Design = RJCodeUI_M1.RJControls.ButtonDesign.IconButton;
+            this.btnClassSave.Dock = System.Windows.Forms.DockStyle.Left;
+            this.btnClassSave.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(83)))), ((int)(((byte)(97)))), ((int)(((byte)(212)))));
+            this.btnClassSave.FlatAppearance.BorderSize = 0;
+            this.btnClassSave.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
+            this.btnClassSave.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
+            this.btnClassSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnClassSave.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnClassSave.ForeColor = System.Drawing.Color.White;
+            this.btnClassSave.IconChar = FontAwesome.Sharp.IconChar.Save;
+            this.btnClassSave.IconColor = System.Drawing.Color.White;
+            this.btnClassSave.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnClassSave.IconSize = 25;
+            this.btnClassSave.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.btnClassSave.Location = new System.Drawing.Point(63, 0);
+            this.btnClassSave.Name = "btnClassSave";
+            this.btnClassSave.Size = new System.Drawing.Size(63, 45);
+            this.btnClassSave.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
+            this.btnClassSave.TabIndex = 10;
+            this.btnClassSave.Text = "저장";
+            this.btnClassSave.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
+            this.btnClassSave.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.btnClassSave.UseVisualStyleBackColor = false;
+            this.btnClassSave.Click += new System.EventHandler(this.btnClassSave_Click);
+            // 
+            // btnClassMenu
+            // 
+            this.btnClassMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnClassMenu.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnClassMenu.BorderRadius = 0;
+            this.btnClassMenu.BorderSize = 1;
+            this.btnClassMenu.ContextMenuStrip = this.dmUserOptions;
+            this.btnClassMenu.Design = RJCodeUI_M1.RJControls.ButtonDesign.IconButton;
+            this.btnClassMenu.Dock = System.Windows.Forms.DockStyle.Left;
+            this.btnClassMenu.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(83)))), ((int)(((byte)(97)))), ((int)(((byte)(212)))));
+            this.btnClassMenu.FlatAppearance.BorderSize = 0;
+            this.btnClassMenu.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
+            this.btnClassMenu.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
+            this.btnClassMenu.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnClassMenu.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnClassMenu.ForeColor = System.Drawing.Color.White;
+            this.btnClassMenu.IconChar = FontAwesome.Sharp.IconChar.ClipboardList;
+            this.btnClassMenu.IconColor = System.Drawing.Color.White;
+            this.btnClassMenu.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnClassMenu.IconSize = 25;
+            this.btnClassMenu.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.btnClassMenu.Location = new System.Drawing.Point(0, 0);
+            this.btnClassMenu.Name = "btnClassMenu";
+            this.btnClassMenu.Size = new System.Drawing.Size(63, 45);
+            this.btnClassMenu.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
+            this.btnClassMenu.TabIndex = 10;
+            this.btnClassMenu.Text = "클래스 설정";
+            this.btnClassMenu.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
+            this.btnClassMenu.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.btnClassMenu.UseVisualStyleBackColor = false;
+            this.btnClassMenu.Click += new System.EventHandler(this.btnClassMenu_Click);
+            // 
+            // btnClassInfer
+            // 
+            this.btnClassInfer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnClassInfer.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnClassInfer.BorderRadius = 0;
+            this.btnClassInfer.BorderSize = 1;
+            this.btnClassInfer.ContextMenuStrip = this.dmUserOptions;
+            this.btnClassInfer.Design = RJCodeUI_M1.RJControls.ButtonDesign.IconButton;
+            this.btnClassInfer.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(83)))), ((int)(((byte)(97)))), ((int)(((byte)(212)))));
+            this.btnClassInfer.FlatAppearance.BorderSize = 0;
+            this.btnClassInfer.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
+            this.btnClassInfer.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
+            this.btnClassInfer.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnClassInfer.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnClassInfer.ForeColor = System.Drawing.Color.White;
+            this.btnClassInfer.IconChar = FontAwesome.Sharp.IconChar.Exclamation;
+            this.btnClassInfer.IconColor = System.Drawing.Color.White;
+            this.btnClassInfer.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnClassInfer.IconSize = 25;
+            this.btnClassInfer.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.btnClassInfer.Location = new System.Drawing.Point(1286, 1);
+            this.btnClassInfer.Name = "btnClassInfer";
+            this.btnClassInfer.Size = new System.Drawing.Size(63, 45);
+            this.btnClassInfer.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
+            this.btnClassInfer.TabIndex = 12;
+            this.btnClassInfer.Text = "추론";
+            this.btnClassInfer.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
+            this.btnClassInfer.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            this.btnClassInfer.UseVisualStyleBackColor = false;
+            this.btnClassInfer.Click += new System.EventHandler(this.btnClassInfer_Click);
+            // 
             // btnClassTrain
             // 
             this.btnClassTrain.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
@@ -313,7 +439,7 @@
             this.btnClassTrain.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnClassTrain.IconSize = 25;
             this.btnClassTrain.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.btnClassTrain.Location = new System.Drawing.Point(504, 2);
+            this.btnClassTrain.Location = new System.Drawing.Point(1222, 1);
             this.btnClassTrain.Name = "btnClassTrain";
             this.btnClassTrain.Size = new System.Drawing.Size(63, 45);
             this.btnClassTrain.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
@@ -406,37 +532,6 @@
             this.btnNextPage.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnNextPage.UseVisualStyleBackColor = false;
             // 
-            // btnClassSave
-            // 
-            this.btnClassSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
-            this.btnClassSave.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
-            this.btnClassSave.BorderRadius = 0;
-            this.btnClassSave.BorderSize = 1;
-            this.btnClassSave.ContextMenuStrip = this.dmUserOptions;
-            this.btnClassSave.Design = RJCodeUI_M1.RJControls.ButtonDesign.IconButton;
-            this.btnClassSave.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(83)))), ((int)(((byte)(97)))), ((int)(((byte)(212)))));
-            this.btnClassSave.FlatAppearance.BorderSize = 0;
-            this.btnClassSave.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
-            this.btnClassSave.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
-            this.btnClassSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClassSave.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnClassSave.ForeColor = System.Drawing.Color.White;
-            this.btnClassSave.IconChar = FontAwesome.Sharp.IconChar.Save;
-            this.btnClassSave.IconColor = System.Drawing.Color.White;
-            this.btnClassSave.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnClassSave.IconSize = 25;
-            this.btnClassSave.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.btnClassSave.Location = new System.Drawing.Point(250, 1);
-            this.btnClassSave.Name = "btnClassSave";
-            this.btnClassSave.Size = new System.Drawing.Size(63, 45);
-            this.btnClassSave.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
-            this.btnClassSave.TabIndex = 10;
-            this.btnClassSave.Text = "저장";
-            this.btnClassSave.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
-            this.btnClassSave.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
-            this.btnClassSave.UseVisualStyleBackColor = false;
-            this.btnClassSave.Click += new System.EventHandler(this.btnClassSave_Click);
-            // 
             // cbClassMenu
             // 
             this.cbClassMenu.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.None;
@@ -474,37 +569,6 @@
             this.rjLabel13.Style = RJCodeUI_M1.RJControls.LabelStyle.Normal;
             this.rjLabel13.TabIndex = 16;
             this.rjLabel13.Text = "클래스 매뉴";
-            // 
-            // btnClassMenu
-            // 
-            this.btnClassMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
-            this.btnClassMenu.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
-            this.btnClassMenu.BorderRadius = 0;
-            this.btnClassMenu.BorderSize = 1;
-            this.btnClassMenu.ContextMenuStrip = this.dmUserOptions;
-            this.btnClassMenu.Design = RJCodeUI_M1.RJControls.ButtonDesign.IconButton;
-            this.btnClassMenu.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(83)))), ((int)(((byte)(97)))), ((int)(((byte)(212)))));
-            this.btnClassMenu.FlatAppearance.BorderSize = 0;
-            this.btnClassMenu.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
-            this.btnClassMenu.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
-            this.btnClassMenu.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClassMenu.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnClassMenu.ForeColor = System.Drawing.Color.White;
-            this.btnClassMenu.IconChar = FontAwesome.Sharp.IconChar.ClipboardList;
-            this.btnClassMenu.IconColor = System.Drawing.Color.White;
-            this.btnClassMenu.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnClassMenu.IconSize = 25;
-            this.btnClassMenu.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.btnClassMenu.Location = new System.Drawing.Point(186, 1);
-            this.btnClassMenu.Name = "btnClassMenu";
-            this.btnClassMenu.Size = new System.Drawing.Size(63, 45);
-            this.btnClassMenu.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
-            this.btnClassMenu.TabIndex = 10;
-            this.btnClassMenu.Text = "클래스 설정";
-            this.btnClassMenu.TextAlign = System.Drawing.ContentAlignment.BottomCenter;
-            this.btnClassMenu.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
-            this.btnClassMenu.UseVisualStyleBackColor = false;
-            this.btnClassMenu.Click += new System.EventHandler(this.btnClassMenu_Click);
             // 
             // btnUserOptions
             // 
@@ -705,6 +769,7 @@
             this.pnStatusBar.PerformLayout();
             this.pnlTitleBar.ResumeLayout(false);
             this.pnlTitleBar.PerformLayout();
+            this.panel2.ResumeLayout(false);
             this.dmUserOptions.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.ddmDevice.ResumeLayout(false);
@@ -752,5 +817,8 @@
         private RJCodeUI_M1.RJControls.RJLabel lbSelectImageName;
         private RJCodeUI_M1.RJControls.RJButton btnClassInfer;
         private RJCodeUI_M1.RJControls.RJButton btnClassTrain;
+        private RJCodeUI_M1.RJControls.RJButton btnExportPath;
+        private System.Windows.Forms.Panel panel2;
+        private RJCodeUI_M1.RJControls.RJLabel lbExportPath;
     }
 }

@@ -29,14 +29,17 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.metroStyleManager = new MetroFramework.Components.MetroStyleManager(this.components);
             this.btnCancel = new RJCodeUI_M1.RJControls.RJButton();
             this.btnCreate = new RJCodeUI_M1.RJControls.RJButton();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.rjPanel1 = new RJCodeUI_M1.RJControls.RJPanel();
+            this.btnExportPath = new RJCodeUI_M1.RJControls.RJButton();
+            this.tbOutputPath = new RJCodeUI_M1.RJControls.RJTextBox();
+            this.rjLabel2 = new RJCodeUI_M1.RJControls.RJLabel();
             this.dgvImagesList = new RJCodeUI_M1.RJControls.RJDataGridView();
             this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -54,7 +57,7 @@
             this.pnlClientArea.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(245)))), ((int)(((byte)(249)))));
             this.pnlClientArea.Controls.Add(this.rjPanel1);
             this.pnlClientArea.Location = new System.Drawing.Point(1, 41);
-            this.pnlClientArea.Size = new System.Drawing.Size(400, 422);
+            this.pnlClientArea.Size = new System.Drawing.Size(400, 491);
             // 
             // metroStyleManager
             // 
@@ -82,7 +85,7 @@
             this.btnCancel.IconColor = System.Drawing.Color.White;
             this.btnCancel.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnCancel.IconSize = 24;
-            this.btnCancel.Location = new System.Drawing.Point(307, 384);
+            this.btnCancel.Location = new System.Drawing.Point(307, 453);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 35);
             this.btnCancel.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
@@ -113,7 +116,7 @@
             this.btnCreate.IconColor = System.Drawing.Color.White;
             this.btnCreate.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnCreate.IconSize = 24;
-            this.btnCreate.Location = new System.Drawing.Point(202, 73);
+            this.btnCreate.Location = new System.Drawing.Point(202, 126);
             this.btnCreate.Name = "btnCreate";
             this.btnCreate.Size = new System.Drawing.Size(90, 35);
             this.btnCreate.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
@@ -133,6 +136,9 @@
             // 
             this.rjPanel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(253)))));
             this.rjPanel1.BorderRadius = 0;
+            this.rjPanel1.Controls.Add(this.btnExportPath);
+            this.rjPanel1.Controls.Add(this.tbOutputPath);
+            this.rjPanel1.Controls.Add(this.rjLabel2);
             this.rjPanel1.Controls.Add(this.dgvImagesList);
             this.rjPanel1.Controls.Add(this.btnDelete);
             this.rjPanel1.Controls.Add(this.rjLabel1);
@@ -143,8 +149,74 @@
             this.rjPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rjPanel1.Location = new System.Drawing.Point(0, 0);
             this.rjPanel1.Name = "rjPanel1";
-            this.rjPanel1.Size = new System.Drawing.Size(400, 422);
+            this.rjPanel1.Size = new System.Drawing.Size(400, 491);
             this.rjPanel1.TabIndex = 2155;
+            // 
+            // btnExportPath
+            // 
+            this.btnExportPath.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnExportPath.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(146)))), ((int)(((byte)(246)))));
+            this.btnExportPath.BorderRadius = 10;
+            this.btnExportPath.BorderSize = 1;
+            this.btnExportPath.Design = RJCodeUI_M1.RJControls.ButtonDesign.IconButton;
+            this.btnExportPath.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(83)))), ((int)(((byte)(97)))), ((int)(((byte)(212)))));
+            this.btnExportPath.FlatAppearance.BorderSize = 0;
+            this.btnExportPath.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(137)))), ((int)(((byte)(231)))));
+            this.btnExportPath.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(79)))), ((int)(((byte)(128)))), ((int)(((byte)(216)))));
+            this.btnExportPath.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnExportPath.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnExportPath.ForeColor = System.Drawing.Color.White;
+            this.btnExportPath.IconChar = FontAwesome.Sharp.IconChar.FileExport;
+            this.btnExportPath.IconColor = System.Drawing.Color.White;
+            this.btnExportPath.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnExportPath.IconSize = 25;
+            this.btnExportPath.ImageAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.btnExportPath.Location = new System.Drawing.Point(12, 127);
+            this.btnExportPath.Name = "btnExportPath";
+            this.btnExportPath.Size = new System.Drawing.Size(90, 35);
+            this.btnExportPath.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
+            this.btnExportPath.TabIndex = 2161;
+            this.btnExportPath.Text = "경로 설정";
+            this.btnExportPath.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnExportPath.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnExportPath.UseVisualStyleBackColor = false;
+            this.btnExportPath.Click += new System.EventHandler(this.btnExportPath_Click);
+            // 
+            // tbOutputPath
+            // 
+            this.tbOutputPath._Customizable = false;
+            this.tbOutputPath.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(245)))), ((int)(((byte)(249)))));
+            this.tbOutputPath.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(132)))), ((int)(((byte)(129)))), ((int)(((byte)(132)))));
+            this.tbOutputPath.BorderFocusColor = System.Drawing.Color.FromArgb(((int)(((byte)(114)))), ((int)(((byte)(162)))), ((int)(((byte)(247)))));
+            this.tbOutputPath.BorderRadius = 10;
+            this.tbOutputPath.BorderSize = 1;
+            this.tbOutputPath.Font = new System.Drawing.Font("Verdana", 9.5F);
+            this.tbOutputPath.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(132)))), ((int)(((byte)(129)))), ((int)(((byte)(132)))));
+            this.tbOutputPath.Location = new System.Drawing.Point(12, 89);
+            this.tbOutputPath.MultiLine = false;
+            this.tbOutputPath.Name = "tbOutputPath";
+            this.tbOutputPath.Padding = new System.Windows.Forms.Padding(10, 7, 10, 7);
+            this.tbOutputPath.PasswordChar = false;
+            this.tbOutputPath.PlaceHolderColor = System.Drawing.Color.DarkGray;
+            this.tbOutputPath.PlaceHolderText = null;
+            this.tbOutputPath.ScrollBars = System.Windows.Forms.ScrollBars.None;
+            this.tbOutputPath.Size = new System.Drawing.Size(376, 31);
+            this.tbOutputPath.Style = RJCodeUI_M1.RJControls.TextBoxStyle.MatteBorder;
+            this.tbOutputPath.TabIndex = 2160;
+            // 
+            // rjLabel2
+            // 
+            this.rjLabel2.AutoSize = true;
+            this.rjLabel2.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.rjLabel2.Font = new System.Drawing.Font("Verdana", 9.5F);
+            this.rjLabel2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(132)))), ((int)(((byte)(129)))), ((int)(((byte)(132)))));
+            this.rjLabel2.LinkLabel = false;
+            this.rjLabel2.Location = new System.Drawing.Point(9, 70);
+            this.rjLabel2.Name = "rjLabel2";
+            this.rjLabel2.Size = new System.Drawing.Size(57, 16);
+            this.rjLabel2.Style = RJCodeUI_M1.RJControls.LabelStyle.Normal;
+            this.rjLabel2.TabIndex = 2159;
+            this.rjLabel2.Text = "저장경로:";
             // 
             // dgvImagesList
             // 
@@ -161,13 +233,13 @@
             this.dgvImagesList.ColumnHeaderFont = new System.Drawing.Font("Microsoft Sans Serif", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dgvImagesList.ColumnHeaderHeight = 40;
             this.dgvImagesList.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.MediumPurple;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgvImagesList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.Color.MediumPurple;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle4.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvImagesList.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.dgvImagesList.ColumnHeadersHeight = 40;
             this.dgvImagesList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.dgvImagesList.ColumnHeaderTextColor = System.Drawing.Color.White;
@@ -180,38 +252,38 @@
             this.dgvImagesList.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.dgvImagesList.EnableHeadersVisualStyles = false;
             this.dgvImagesList.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.dgvImagesList.Location = new System.Drawing.Point(12, 114);
+            this.dgvImagesList.Location = new System.Drawing.Point(12, 167);
             this.dgvImagesList.Name = "dgvImagesList";
             this.dgvImagesList.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.dgvImagesList.RowHeaderColor = System.Drawing.Color.WhiteSmoke;
             this.dgvImagesList.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.WhiteSmoke;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(199)))), ((int)(((byte)(241)))));
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvImagesList.RowHeadersDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.Color.WhiteSmoke;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(199)))), ((int)(((byte)(241)))));
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvImagesList.RowHeadersDefaultCellStyle = dataGridViewCellStyle5;
             this.dgvImagesList.RowHeadersVisible = false;
             this.dgvImagesList.RowHeadersWidth = 30;
             this.dgvImagesList.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dgvImagesList.RowHeight = 40;
             this.dgvImagesList.RowsColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(253)))));
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(253)))));
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.Color.Gray;
-            dataGridViewCellStyle3.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(199)))), ((int)(((byte)(241)))));
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.Gray;
-            this.dgvImagesList.RowsDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(253)))));
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.Color.Gray;
+            dataGridViewCellStyle6.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(199)))), ((int)(((byte)(241)))));
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.Color.Gray;
+            this.dgvImagesList.RowsDefaultCellStyle = dataGridViewCellStyle6;
             this.dgvImagesList.RowsTextColor = System.Drawing.Color.Gray;
             this.dgvImagesList.RowTemplate.Height = 40;
             this.dgvImagesList.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(213)))), ((int)(((byte)(199)))), ((int)(((byte)(241)))));
             this.dgvImagesList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvImagesList.SelectionTextColor = System.Drawing.Color.Gray;
-            this.dgvImagesList.Size = new System.Drawing.Size(376, 264);
+            this.dgvImagesList.Size = new System.Drawing.Size(376, 280);
             this.dgvImagesList.TabIndex = 2158;
             this.dgvImagesList.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvImagesList_CellClick);
             this.dgvImagesList.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvImagesList_CellContentClick);
@@ -247,7 +319,7 @@
             this.btnDelete.IconColor = System.Drawing.Color.White;
             this.btnDelete.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnDelete.IconSize = 24;
-            this.btnDelete.Location = new System.Drawing.Point(298, 73);
+            this.btnDelete.Location = new System.Drawing.Point(298, 126);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(90, 35);
             this.btnDelete.Style = RJCodeUI_M1.RJControls.ControlStyle.Solid;
@@ -302,7 +374,7 @@
             this.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(83)))), ((int)(((byte)(97)))), ((int)(((byte)(212)))));
             this.BorderSize = 1;
             this.Caption = "Class Edit";
-            this.ClientSize = new System.Drawing.Size(402, 464);
+            this.ClientSize = new System.Drawing.Size(402, 533);
             this.Name = "FormVision_ClassMenu";
             this.Padding = new System.Windows.Forms.Padding(1);
             this.Resizable = false;
@@ -330,5 +402,8 @@
         private RJCodeUI_M1.RJControls.RJDataGridView dgvImagesList;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
+        private RJCodeUI_M1.RJControls.RJTextBox tbOutputPath;
+        private RJCodeUI_M1.RJControls.RJLabel rjLabel2;
+        private RJCodeUI_M1.RJControls.RJButton btnExportPath;
     }
 }

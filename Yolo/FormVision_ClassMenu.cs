@@ -11,6 +11,7 @@ using static MvcVisionSystem.CSystem;
 using MvcVisionSystem.Yolo;
 using Sunny.UI;
 using System.Collections.Generic;
+using System.IO;
 
 namespace MvcVisionSystem
 {
@@ -43,6 +44,7 @@ namespace MvcVisionSystem
 
         private void FormSettings_Camera_Load(object sender, EventArgs e)
         {
+            tbOutputPath.Text = CGlobal.Inst.Data.OutputDataYamlPath;
             InitEvent();                        
         }
 
@@ -112,11 +114,13 @@ namespace MvcVisionSystem
                 CGlobal.Inst.Data.ClassNamedList.Add(new Yolo.CClassItem() { Text = names, DrawColor = randomColor });
                 CGlobal.Inst.Data.SaveConfig(CGlobal.Inst.Recipe.Name);
 
-                string trainPath = Application.StartupPath + "\\train";
-                string valPath = Application.StartupPath + "\\valid";
+                string trainPath = Path.Combine(CGlobal.Inst.Data.OutputDataImageAndTxtPath,"train");
+                string valPath = Path.Combine(CGlobal.Inst.Data.OutputDataImageAndTxtPath, "valid");
                 List<string> textList = CGlobal.Inst.Data.ClassNamedList.Select(item => item.Text).ToList();
 
-                CYolov5.CreateYaml(trainPath, valPath, textList, Application.StartupPath + "\\data.yaml");
+                string basePath = Path.Combine(CGlobal.Inst.Data.OutputDataYamlPath, "data.yaml");
+
+                CYolov5.CreateYaml(trainPath, valPath, textList, basePath);
             }
 
             ShowImagesList();
@@ -152,6 +156,51 @@ namespace MvcVisionSystem
         {
             string targetText = dgvImagesList[1, e.RowIndex].Value.ToString();
             txtNames.Text = targetText;
+        }
+
+        private void btnExportPath_Click(object sender, EventArgs e)
+        {
+            LoadFolderPath(out string folderPath);
+            if (folderPath != "")
+            {
+                CGlobal.Inst.Data.OutputDataYamlPath = folderPath;
+                CGlobal.Inst.Data.SaveConfig(CGlobal.Inst.Recipe.Name);
+                tbOutputPath.Text = CGlobal.Inst.Data.OutputDataYamlPath;
+            }
+        }
+
+        private string lastPath = string.Empty;
+
+        private bool LoadFolderPath(out string folderPath)
+        {
+            folderPath = "";
+            try
+            {
+                using (FolderBrowserDialog fbd = new FolderBrowserDialog())
+                {
+                    // 이전에 저장된 경로가 있다면 사용합니다.
+                    if (!string.IsNullOrEmpty(lastPath))
+                    {
+                        fbd.SelectedPath = lastPath;
+                    }
+
+                    DialogResult result = fbd.ShowDialog();
+
+                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                    {
+                        folderPath = fbd.SelectedPath;
+                        lastPath = folderPath;  // 선택된 경로를 저장합니다.
+                    }
+                }
+
+                CLOG.NORMAL($"[OK] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}");
+                return true;
+            }
+            catch (Exception Desc)
+            {
+                CLOG.ABNORMAL($"[FAILED] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}   Execption ==> {Desc.Message}");
+                return false;
+            }
         }
     }
  }

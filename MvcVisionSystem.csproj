@@ -762,6 +762,12 @@
     <Compile Include="4. Sequence\CSeqVision.cs" />
     <Compile Include="Vision\OpenCV\CPropertyVision.cs" />
     <Compile Include="Yolo\CClassList.cs" />
+    <Compile Include="Yolo\FormVision_Yolov5ParamSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Yolo\FormVision_Yolov5ParamSetting.Designer.cs">
+      <DependentUpon>FormVision_Yolov5ParamSetting.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="0. UI\0%29 MENU\FormRecipeManager.resx">
       <DependentUpon>FormRecipeManager.cs</DependentUpon>
     </EmbeddedResource>
@@ -919,6 +925,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Library\RJControls\RJForms\RJSettingsForm.resx">
       <DependentUpon>RJSettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Yolo\FormVision_Yolov5ParamSetting.resx">
+      <DependentUpon>FormVision_Yolov5ParamSetting.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="log4net.config" />
     <None Include="packages.config" />

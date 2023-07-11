@@ -10,6 +10,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Markup;
 using Vila.Communication.Net;
 
 namespace MvcVisionSystem._3._Device.TCP
@@ -57,6 +58,20 @@ namespace MvcVisionSystem._3._Device.TCP
             try
             {
                 Yolov5Comm.Send(data );
+            }
+            catch (Exception Desc)
+            {
+                CLOG.ABNORMAL($"[FAILED] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}   Execption ==> {Desc.Message}");
+            }
+        }
+
+
+        public void SendTrainingData(string Command, string imgSize, string batch, string epoch, string cfg, string weight)
+        {
+            try
+            {              
+                // Write the data to the server
+                Yolov5Comm.SendTrainingData(Command, imgSize, batch, epoch, cfg, weight);
             }
             catch (Exception Desc)
             {

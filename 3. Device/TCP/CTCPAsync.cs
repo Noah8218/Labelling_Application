@@ -23,6 +23,9 @@ using Lib.Common;
 using System.Security.Cryptography;
 using System.Drawing;
 using System.Linq;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
+using System.Windows.Markup;
 
 namespace MvcVisionSystem
 {
@@ -153,6 +156,46 @@ namespace MvcVisionSystem
             catch (Exception Desc)
             {
                 CLOG.ABNORMAL($"[FAILED] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}   Execption ==> {Desc.Message}");
+            }
+        }
+
+        public async Task SendTrainingData(string Command, string imgSize, string batch, string epoch, string cfg, string weight)
+        {
+            try
+            {
+                // Prepare the training data
+                var trainingData = new
+                {
+                    imgSize,
+                    batch,
+                    epoch,
+                    cfg,
+                    weight
+                };
+
+                // Convert the training data to JSON
+                string trainingDataJson = JsonConvert.SerializeObject(trainingData);
+
+                // Convert command and training data to bytes
+                byte[] commandData = Encoding.ASCII.GetBytes(Command);
+                byte[] trainingDataBytes = Encoding.ASCII.GetBytes(trainingDataJson);
+
+                // Define separator
+                byte[] separator = Encoding.ASCII.GetBytes("\n\n");
+
+                // Combine commandData, separator and trainingDataBytes
+                byte[] dataToSend = Combine(commandData, separator, trainingDataBytes);
+
+                if (socketClient != null)
+                {
+                    // 5. Send the data
+                    socketClient.BeginSend(dataToSend, 0, dataToSend.Length, 0, new AsyncCallback(SendCallback), socketClient);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending data: {ex.Message}");
             }
         }
 

@@ -32,12 +32,14 @@ namespace MvcVisionSystem
 
             CloseButton = false;
             CloseButtonVisible = false;
+            this.Resize += ResizeEvent;
         }
 
         // If the content won't display nicely, hide it
         private void ResizeEvent(object sender, EventArgs e)
         {
             this.Visible = this.Width > this.MinimumSize.Width && this.Height > this.MinimumSize.Height;
+            this.Refresh();
         }
 
         private bool ChangeSize = false;
@@ -72,9 +74,46 @@ namespace MvcVisionSystem
 
         private void btnOpenFolder_Click(object sender, EventArgs e)
         {
-            Lib.Common.CUtil.LoadFolderPath(out string folderPath);
-            List<string> imagePaths =  GetImageFiles(folderPath);
-            ShowImageDgv(imagePaths);
+            LoadFolderPath(out string folderPath);
+            if (folderPath != "")
+            {
+                List<string> imagePaths = GetImageFiles(folderPath);
+                ShowImageDgv(imagePaths);
+            }            
+        }
+
+        private string lastPath = string.Empty;
+
+        private bool LoadFolderPath(out string folderPath)
+        {
+            folderPath = "";
+            try
+            {
+                using (FolderBrowserDialog fbd = new FolderBrowserDialog())
+                {
+                    // 이전에 저장된 경로가 있다면 사용합니다.
+                    if (!string.IsNullOrEmpty(lastPath))
+                    {
+                        fbd.SelectedPath = lastPath;
+                    }
+
+                    DialogResult result = fbd.ShowDialog();
+
+                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                    {
+                        folderPath = fbd.SelectedPath;
+                        lastPath = folderPath;  // 선택된 경로를 저장합니다.
+                    }
+                }
+
+                CLOG.NORMAL($"[OK] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}");
+                return true;
+            }
+            catch (Exception Desc)
+            {
+                CLOG.ABNORMAL($"[FAILED] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}   Execption ==> {Desc.Message}");
+                return false;
+            }
         }
 
         private void ShowImageDgv(List<string> imagePaths)

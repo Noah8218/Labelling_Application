@@ -108,6 +108,10 @@ namespace MvcVisionSystem
                 btnClassSave.BackColor = Color.FromArgb(64, 73, 108);
                 btnClassTrain.BackColor = Color.FromArgb(64, 73, 108);
                 btnClassInfer.BackColor = Color.FromArgb(64, 73, 108);
+                btnExportPath.BackColor = Color.FromArgb(64, 73, 108);
+
+
+                lbExportPath.Text = Global.Data.OutputDataImageAndTxtPath;
 
                 this.Location = new System.Drawing.Point(0, 0);
                 this.IsMdiContainer = true;
@@ -761,7 +765,7 @@ namespace MvcVisionSystem
                 float width = (float)item.Roi.Width / imageW;
                 float height = (float)item.Roi.Height / imageH;
                 float[] floats = { index, centerX, centerY, width, height };
-                CYolov5.CreateImageAndTxtFile(imageFile, (Bitmap)CDisplayManager.Displays[DEFINE.Main].viewer._Ib.Image, floats, Application.StartupPath + "\\DATA");
+                CYolov5.CreateImageAndTxtFile(imageFile, (Bitmap)CDisplayManager.Displays[DEFINE.Main].viewer._Ib.Image, floats, Global.Data.OutputDataImageAndTxtPath);
             }
         }
 
@@ -772,20 +776,21 @@ namespace MvcVisionSystem
 
         private void btnClassTrain_Click(object sender, EventArgs e)
         {
-            Global.DeepLearning.Send(CommandLearning.StartTraining.ToString());
+
+
+            RJCodeUI_M1.RJForms.FormVision_Yolov5ParamSetting formVision_Yolov5ParamSetting = new FormVision_Yolov5ParamSetting();
+            formVision_Yolov5ParamSetting.TopLevel = true;
+            formVision_Yolov5ParamSetting.TopMost = true;
+            formVision_Yolov5ParamSetting.StartPosition = FormStartPosition.CenterParent;
+            if (!CUtil.OpenCheckForm(formVision_Yolov5ParamSetting)) return;
+            formVision_Yolov5ParamSetting.Show();
+
         }
 
         private void btnClassInfer_Click(object sender, EventArgs e)
         {
-            try
-            {
-                //Global.DeepLearning.Send(CommandLearning.StartDefect.ToString());
-                Global.DeepLearning.SendData(CommandLearning.StartDefect.ToString(), Lib.Common.CImageConverter.ToBitmap(CDisplayManager.ImageSrc));
-            }
-            catch
-            {
-
-            }
+            // 추론할 이미지를 보내야함
+            Global.DeepLearning.SendData(CommandLearning.StartDefect.ToString(), Lib.Common.CImageConverter.ToBitmap(CDisplayManager.ImageSrc));
         }
 
         public byte[] ImageToByteArray(System.Drawing.Image imageIn)
@@ -794,6 +799,51 @@ namespace MvcVisionSystem
             {
                 imageIn.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
                 return ms.ToArray();
+            }
+        }
+
+        private void btnExportPath_Click(object sender, EventArgs e)
+        {
+            LoadFolderPath(out string folderPath);
+            if (folderPath != "")
+            {
+                Global.Data.OutputDataImageAndTxtPath = folderPath;
+                Global.Data.SaveConfig(Global.Recipe.Name);
+                lbExportPath.Text = Global.Data.OutputDataImageAndTxtPath;
+            }
+        }
+
+        private string lastPath = string.Empty;
+
+        private bool LoadFolderPath(out string folderPath)
+        {
+            folderPath = "";
+            try
+            {
+                using (FolderBrowserDialog fbd = new FolderBrowserDialog())
+                {
+                    // 이전에 저장된 경로가 있다면 사용합니다.
+                    if (!string.IsNullOrEmpty(lastPath))
+                    {
+                        fbd.SelectedPath = lastPath;
+                    }
+
+                    DialogResult result = fbd.ShowDialog();
+
+                    if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
+                    {
+                        folderPath = fbd.SelectedPath;
+                        lastPath = folderPath;  // 선택된 경로를 저장합니다.
+                    }
+                }
+
+                CLOG.NORMAL($"[OK] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}");
+                return true;
+            }
+            catch (Exception Desc)
+            {
+                CLOG.ABNORMAL($"[FAILED] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}   Execption ==> {Desc.Message}");
+                return false;
             }
         }
     }

@@ -167,7 +167,7 @@ namespace MvcVisionSystem
                         fr.AutoHidePortion = 550;
                         break;
                     case VISION_DOCK_FORM.LOG:
-                        fr.Show(CLASSLIST.PanelPane, null);
+                        fr.Show(CLASSLIST.PanelPane, DockAlignment.Bottom, 0.5);
                         fr.AutoHidePortion = 550;
                         break;
                     //case VISION_DOCK_FORM.BLOB:
@@ -182,8 +182,8 @@ namespace MvcVisionSystem
                     case VISION_DOCK_FORM.CONTOUR:
                         break;
                     case VISION_DOCK_FORM.TOOLS:
-                        fr.Show(this.dockPanel, DockState.DockLeft);
-                        fr.AutoHidePortion = 100;
+                        fr.Show(this.dockPanel, DockState.DockLeftAutoHide);
+                        fr.AutoHidePortion = 100;                        
                         break;
                     //case VISION_DOCK_FORM.PROPERTY:
                     //    fr.Show(system.PanelPane, DockAlignment.Bottom, 0.47);

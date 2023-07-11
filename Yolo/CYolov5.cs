@@ -19,6 +19,35 @@ namespace MvcVisionSystem.Yolo
         public string names { get; set; }
     }
 
+    public class CYolov5TranningParam
+    {
+        public int imageSize { get; set; } = 320;
+        public int batch { get; set; } = 16;
+        public int epoch { get; set; } = 50;
+
+        public Cfg cfg { get; set; } = Cfg.yolov5x;
+
+        public Weight weight { get; set; } = Weight.yolov5x;
+
+        public enum Cfg
+        {
+            yolov5s,
+            yolov5n,
+            yolov5m,
+            yolov5l,
+            yolov5x
+        }
+
+        public enum Weight
+        {
+            yolov5s,
+            yolov5n,
+            yolov5m,
+            yolov5l,
+            yolov5x
+        }
+    }
+
     public static class CYolov5
     {
         public static void CreateYaml(string trainImagesPath, string valImagesPath, List<string> classNames, string outputYamlPath)
@@ -52,8 +81,13 @@ namespace MvcVisionSystem.Yolo
         private static void CreateImageAndTxtFile(string mode, string imageFileName, Bitmap image, float[] coordinates, string basePath)
         {
             // Create directories if they do not exist
-            string imageDir = Path.Combine(basePath, mode, "images");
-            string labelDir = Path.Combine(basePath, mode, "labels");
+
+            string strFolderPath = Path.Combine(basePath, "data");
+            DirectoryInfo dirRecipe = new DirectoryInfo(strFolderPath);
+            if (dirRecipe.Exists == false) dirRecipe.Create();
+
+            string imageDir = Path.Combine(strFolderPath, mode, "images");
+            string labelDir = Path.Combine(strFolderPath, mode, "labels");
             Directory.CreateDirectory(imageDir);
             Directory.CreateDirectory(labelDir);
 

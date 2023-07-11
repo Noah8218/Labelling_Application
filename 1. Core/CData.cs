@@ -33,6 +33,13 @@ namespace MvcVisionSystem
         [XmlIgnore] public List<CMvcGraph> GraphList { get; set; } = new List<CMvcGraph>();
 
         public List<CClassItem> ClassNamedList { get; set; } = new List<CClassItem>();
+
+        public string OutputDataYamlPath { get; set; } = "";
+
+        public string OutputDataImageAndTxtPath { get; set; } = "";
+
+        public CYolov5TranningParam TranningParam { get; set; } = new CYolov5TranningParam();
+
         [XmlIgnore] public string LastSelectImageName { get; set; } = "";
 
         public CData() { CUtil.InitDirectory("DATA"); }
