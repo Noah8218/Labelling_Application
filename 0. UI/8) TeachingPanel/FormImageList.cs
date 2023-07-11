@@ -331,7 +331,7 @@ namespace MvcVisionSystem
         private void imageListView1_ItemClick(object sender, ItemClickEventArgs e)
         {
 
-            var image = e.Item.ThumbnailImage;
+            var image = Image.FromFile(e.Item.FileName);
             string fileName = e.Item.Text;
             CGlobal.Inst.Data.LastSelectImageName = fileName;
             CDisplayManager.ImageSrc = Lib.Common.CImageConverter.ToMat((Bitmap)image);

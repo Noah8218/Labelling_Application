@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Markup;
+using System.Windows.Media;
 using Vila.Communication.Net;
 
 namespace MvcVisionSystem._3._Device.TCP
@@ -104,7 +105,8 @@ namespace MvcVisionSystem._3._Device.TCP
                 using (Font font = new Font("Arial", fontSize))
                 {
                     // Define a brush
-                    using (Brush brush = new SolidBrush(Color.Green))
+                    using (System.Drawing.Brush brush = new SolidBrush(System.Drawing.Color.Green))
+                    using (System.Drawing.Brush brushNg = new SolidBrush(System.Drawing.Color.Red))
                     {
                         foreach (var defect in defects)
                         {
@@ -123,10 +125,13 @@ namespace MvcVisionSystem._3._Device.TCP
                             if (penWidth > 4) penWidth = 4;  // Set a maximum pen width
 
                             // Create a pen
-                            using (Pen pen = new Pen(Color.Green, penWidth))
+                            using (System.Drawing.Pen pen = new System.Drawing.Pen(System.Drawing.Color.Green, penWidth))
+                            using (System.Drawing.Pen penNg = new System.Drawing.Pen(System.Drawing.Color.Red, penWidth))
                             {
+                                if (defect.ClassName == "OK") { g.DrawRectangle(pen, defect.X, defect.Y, defect.Width, defect.Height); }
+                                else { g.DrawRectangle(penNg, defect.X, defect.Y, defect.Width, defect.Height); }
                                 // Draw the rectangle
-                                g.DrawRectangle(pen, defect.X, defect.Y, defect.Width, defect.Height);
+                                
                             }
 
                             // Define the text to display
@@ -143,8 +148,10 @@ namespace MvcVisionSystem._3._Device.TCP
 
                             PointF point = new PointF(textX, textY);
 
+                            if (defect.ClassName == "OK") { g.DrawString(text, font, brush, point); }
+                            else { g.DrawString(text, font, brushNg, point); }
                             // Draw the text
-                            g.DrawString(text, font, brush, point);
+                            
                         }
                     }
                 }
