@@ -149,7 +149,7 @@ namespace MvcVisionSystem
         private void ShowVisionForms()
         {
             dockPanel.DockLeftPortion = 67;
-            dockPanel.DockRightPortion = 550;
+            dockPanel.DockRightPortion = 570;
             WeifenLuo.WinFormsUI.Docking.DockContent fr;
             foreach (var form in Forms)
             {
@@ -160,15 +160,15 @@ namespace MvcVisionSystem
                 {
                     case VISION_DOCK_FORM.IMAGELIST:
                         fr.Show(this.dockPanel, DockState.DockRight);
-                        fr.AutoHidePortion = 550;
+                        fr.AutoHidePortion = 570;
                         break;
                     case VISION_DOCK_FORM.CLASSLIST:
                         fr.Show(system.PanelPane, DockAlignment.Bottom, 0.47);
-                        fr.AutoHidePortion = 550;
+                        fr.AutoHidePortion = 570;
                         break;
                     case VISION_DOCK_FORM.LOG:
                         fr.Show(CLASSLIST.PanelPane, DockAlignment.Bottom, 0.5);
-                        fr.AutoHidePortion = 550;
+                        fr.AutoHidePortion = 570;
                         break;
                     //case VISION_DOCK_FORM.BLOB:
                     //    fr.Show(system.PanelPane, null);

@@ -13,8 +13,8 @@ namespace MvcVisionSystem
         //VER 1.0.0 ==> 2022/08/04 초기 싱글톤 패턴을 적용 --> 현장 검증은 어느정도 완료        
         #endregion
         public static string APP_NAME { get; set; } = "KTEM_VISION";
-        public static string VERSION { get; set; } = "1.0.5";
-        public static string DATETIME_UPDATED { get; set; } = "2023/05/09 /*20:00*/";
+        public static string VERSION { get; set; } = "1.1.0";
+        public static string DATETIME_UPDATED { get; set; } = "2023/07/11 /*20:00*/";
         public static string MANAGER { get; set; } = "NOAH";
     }
 

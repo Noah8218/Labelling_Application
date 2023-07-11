@@ -19,6 +19,9 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Manina.Windows.Forms;
+using SortOrder = Manina.Windows.Forms.SortOrder;
+using View = Manina.Windows.Forms.View;
 
 namespace MvcVisionSystem
 {
@@ -46,7 +49,7 @@ namespace MvcVisionSystem
 
         private void Form_VisibleChanged(object sender, EventArgs e)
         {
-            dgvImagesList.Update();
+            //dgvImagesList.Update();
 
             if (!ChangeSize)
             {
@@ -61,6 +64,49 @@ namespace MvcVisionSystem
         {            
             CDisplayManager.EventUpdateCam += OnCamUpdate;
             ShowImageDgv(new List<string>());
+
+            imageListView1.AllowDuplicateFileNames = true;
+            imageListView1.SetRenderer(new Manina.Windows.Forms.ImageListViewRenderers.DefaultRenderer());
+            imageListView1.SortColumn = 0;
+            imageListView1.SortOrder = SortOrder.AscendingNatural;
+
+            Assembly assembly = Assembly.GetAssembly(typeof(ImageListView));
+
+            int i = 0;
+            foreach (Type type in assembly.GetTypes())
+            {
+                if (type.BaseType == typeof(ImageListView.ImageListViewRenderer))
+                {
+                    renderertoolStripComboBox.Items.Add(new RendererComboBoxItem(type));
+                    if (type.Name == "DefaultRenderer")
+                        renderertoolStripComboBox.SelectedIndex = i;
+                    i++;
+                }
+            }
+            // Find and add custom colors
+            Type colorType = typeof(ImageListViewColor);
+            i = 0;
+            foreach (PropertyInfo field in colorType.GetProperties(BindingFlags.Public | BindingFlags.Static))
+            {
+                colorToolStripComboBox.Items.Add(new ColorComboBoxItem(field));
+                if (field.Name == "Default")
+                    colorToolStripComboBox.SelectedIndex = i;
+                i++;
+            }
+
+            string cacheDir = Path.Combine(
+                Path.GetDirectoryName(new Uri(assembly.GetName().CodeBase).LocalPath),
+                "Cache"
+                );
+            imageListView1.Columns.Add(ColumnType.Name);
+            imageListView1.Columns.Add(ColumnType.Dimensions);
+            imageListView1.Columns.Add(ColumnType.FileSize);
+            imageListView1.Columns.Add(ColumnType.FolderName);
+            imageListView1.Columns.Add(ColumnType.DateModified);
+            imageListView1.Columns.Add(ColumnType.FileType);
+            var col = new ImageListView.ImageListViewColumnHeader(ColumnType.Custom, "random", "Random");
+            col.Comparer = new RandomColumnComparer();
+            imageListView1.Columns.Add(col);
         }
 
         private void OnCamUpdate(object sender, EventArgs e)
@@ -119,15 +165,28 @@ namespace MvcVisionSystem
         private void ShowImageDgv(List<string> imagePaths)
         {
             // DataGridView 설정
-            dgvImagesList.Columns.Clear();  // 기존의 모든 컬럼을 제거
-            DataGridViewImageColumn imgColumn = new DataGridViewImageColumn();  // 이미지 컬럼을 추가
-            imgColumn.HeaderText = "이미지";
-            imgColumn.Name = "이미지";
-            imgColumn.ImageLayout = DataGridViewImageCellLayout.Stretch;
-            dgvImagesList.Columns.Add("No", "No");
-            dgvImagesList.Columns.Add(imgColumn);
-            dgvImagesList.Columns.Add("파일 경로", "파일 경로");
-            dgvImagesList.RowTemplate.Height = 100;  // 적절한 높이를 설정하세요
+            // dgvImagesList.Columns.Clear();  // 기존의 모든 컬럼을 제거
+            //DataGridViewImageColumn imgColumn = new DataGridViewImageColumn();  // 이미지 컬럼을 추가
+            //imgColumn.HeaderText = "이미지";
+            //imgColumn.Name = "이미지";
+            //imgColumn.ImageLayout = DataGridViewImageCellLayout.Stretch;
+            imageListView1.Items.Clear();
+            imageListView1.ThumbnailSize = new System.Drawing.Size(200, 200);
+            
+            for (int i = 0; i < imagePaths.Count; i++)
+            {
+                ImageListViewItem imageListViewItem = new ImageListViewItem(imagePaths[i]);
+                //Image image = Image.FromFile(imagePaths[i]);
+                string fileName = Path.GetFileName(imagePaths[i]);
+                //imageListView1.Items.Add(fileName, image);                
+                imageListView1.Items.Add(imageListViewItem);
+                Application.DoEvents();
+            }
+
+            //dgvImagesList.Columns.Add("No", "No");
+            //dgvImagesList.Columns.Add(imgColumn);
+            //dgvImagesList.Columns.Add("파일 경로", "파일 경로");
+            //dgvImagesList.RowTemplate.Height = 100;  // 적절한 높이를 설정하세요
 
 
             foreach (var path in imagePaths)
@@ -136,14 +195,14 @@ namespace MvcVisionSystem
                 Image image = Image.FromFile(path);
                 string fileName = Path.GetFileName(path);                
                 // DataGridView에 이미지와 경로를 추가
-                int index = dgvImagesList.Rows.Count + 1;
-                object[] row = new object[] { index.ToString(), image, fileName };
-                dgvImagesList.Rows.Add(row);
+               // int index = dgvImagesList.Rows.Count + 1;
+                //object[] row = new object[] { index.ToString(), image, fileName };
+                //dgvImagesList.Rows.Add(row);
             }
 
-            dgvImagesList.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvImagesList.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            dgvImagesList.Columns[0].Width = 40;
+            //dgvImagesList.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            //dgvImagesList.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            //dgvImagesList.Columns[0].Width = 40;
         }
 
         public  List<string> GetImageFiles(string folderPath)
@@ -191,16 +250,16 @@ namespace MvcVisionSystem
                 // 올바른 위치에서 더블 클릭했는지 확인
                 if (columnIndex >= 0 && rowIndex >= 0)
                 {
-                    if(dgvImagesList.Columns[columnIndex].Name == "이미지")
-                    {
-                        // 선택한 셀의 이미지 경로를 가져옵니다.
-                        Image image = (Image)dgvImagesList.Rows[rowIndex].Cells[columnIndex].Value;
-                        string fileName = (string)dgvImagesList.Rows[rowIndex].Cells[columnIndex + 1].Value;
-                        CGlobal.Inst.Data.LastSelectImageName = fileName;
-                        CDisplayManager.ImageSrc = Lib.Common.CImageConverter.ToMat((Bitmap)image);                        
-                        CDisplayManager.CreateLayerDisplay((Bitmap)image, "Main", true);
-                        CDisplayManager.ZoomToFit("Main");
-                    }                    
+                    //if(dgvImagesList.Columns[columnIndex].Name == "이미지")
+                    //{
+                    //    // 선택한 셀의 이미지 경로를 가져옵니다.
+                    //    Image image = (Image)dgvImagesList.Rows[rowIndex].Cells[columnIndex].Value;
+                    //    string fileName = (string)dgvImagesList.Rows[rowIndex].Cells[columnIndex + 1].Value;
+                    //    CGlobal.Inst.Data.LastSelectImageName = fileName;
+                    //    CDisplayManager.ImageSrc = Lib.Common.CImageConverter.ToMat((Bitmap)image);                        
+                    //    CDisplayManager.CreateLayerDisplay((Bitmap)image, "Main", true);
+                    //    CDisplayManager.ZoomToFit("Main");
+                    //}                    
                 }
 
 
@@ -210,6 +269,74 @@ namespace MvcVisionSystem
                 CLOG.ABNORMAL($"[FAILED] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}   Execption ==> {Desc.Message}");
                 CCommon.ShowMessageBox("EXCEPTION", $"[FAILED] {MethodBase.GetCurrentMethod().ReflectedType.Name}==>{MethodBase.GetCurrentMethod().Name}   Execption ==> {Desc.Message}");
             }
+        }
+
+        private void renderertoolStripComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Assembly assembly = Assembly.GetAssembly(typeof(ImageListView));
+            RendererComboBoxItem item = (RendererComboBoxItem)renderertoolStripComboBox.SelectedItem;
+            ImageListView.ImageListViewRenderer renderer = (ImageListView.ImageListViewRenderer)assembly.CreateInstance(item.FullName);
+            if (renderer == null)
+            {
+                assembly = Assembly.GetExecutingAssembly();
+                renderer = (ImageListView.ImageListViewRenderer)assembly.CreateInstance(item.FullName);
+            }
+            colorToolStripComboBox.Enabled = renderer.CanApplyColors;
+            imageListView1.SetRenderer(renderer);
+            imageListView1.Focus();
+        }
+
+        private void colorToolStripComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            PropertyInfo field = ((ColorComboBoxItem)colorToolStripComboBox.SelectedItem).Field;
+            ImageListViewColor color = (ImageListViewColor)field.GetValue(null, null);
+            imageListView1.Colors = color;
+        }
+
+        private void thumbnailsToolStripButton_Click(object sender, EventArgs e)
+        {
+            imageListView1.View = View.Thumbnails;
+        }
+
+        private void galleryToolStripButton_Click(object sender, EventArgs e)
+        {
+            imageListView1.View = View.Gallery;
+        }
+
+        private void horizontalStripToolStripButton_Click(object sender, EventArgs e)
+        {
+            imageListView1.View = View.HorizontalStrip;
+        }
+
+        private void verticalStripToolStripButton_Click(object sender, EventArgs e)
+        {
+            imageListView1.View = View.VerticalStrip;
+        }
+
+        private void clearThumbsToolStripButton_Click(object sender, EventArgs e)
+        {
+            imageListView1.ClearThumbnailCache();
+        }
+
+        private void x96ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            imageListView1.ThumbnailSize = new System.Drawing.Size(96, 96);
+        }
+
+        private void x200ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            imageListView1.ThumbnailSize = new System.Drawing.Size(200, 200);
+        }
+
+        private void imageListView1_ItemClick(object sender, ItemClickEventArgs e)
+        {
+
+            var image = e.Item.ThumbnailImage;
+            string fileName = e.Item.Text;
+            CGlobal.Inst.Data.LastSelectImageName = fileName;
+            CDisplayManager.ImageSrc = Lib.Common.CImageConverter.ToMat((Bitmap)image);
+            CDisplayManager.CreateLayerDisplay((Bitmap)image, "Main", true);
+            CDisplayManager.ZoomToFit("Main");
         }
     }
 }
