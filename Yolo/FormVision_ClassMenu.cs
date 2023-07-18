@@ -103,18 +103,48 @@ namespace MvcVisionSystem
         {
             string names = txtNames.Text;
 
-            // 랜덤 색상 생성
+            List<Color> colors = new List<Color>();
+            colors.Add(Color.Green);
+            colors.Add(Color.Red);
+            colors.Add(Color.Blue);
+            colors.Add(Color.Orange);
+            colors.Add(Color.Pink);
+            colors.Add(Color.Purple);
+            colors.Add(Color.Navy);
+            colors.Add(Color.LightSkyBlue);
+
             Random rand = new Random();
-            //Color randomColor = Color.FromArgb(128, rand.Next(256), rand.Next(256), rand.Next(256));
-            Color randomColor = Color.FromArgb(128, System.Drawing.Color.Green.R, Color.Green.G, Color.Green.B);
+
+            Color GetRandomColor()
+            {
+                if (colors.Count == 0)
+                    return Color.Green;
+
+                int index = rand.Next(colors.Count);
+                Color randomColor = colors[index];
+                colors.RemoveAt(index);
+
+                return randomColor;
+            }
 
             // Text와 Color 둘 다 중복되지 않는지 확인
             if (!CGlobal.Inst.Data.ClassNamedList.Any(x => x.Text == names))
             {
+                Color randomColor = GetRandomColor();
+
+                // 이미 추가된 색상인지 확인
+                while (CGlobal.Inst.Data.ClassNamedList.Any(x => x.DrawColor == randomColor))
+                {
+                    if (randomColor == Color.Green && CGlobal.Inst.Data.ClassNamedList.Any(x => x.DrawColor == Color.Green))
+                        break;
+
+                    randomColor = GetRandomColor();
+                }
+
                 CGlobal.Inst.Data.ClassNamedList.Add(new Yolo.CClassItem() { Text = names, DrawColor = randomColor });
                 CGlobal.Inst.Data.SaveConfig(CGlobal.Inst.Recipe.Name);
 
-                string trainPath = Path.Combine(CGlobal.Inst.Data.OutputDataImageAndTxtPath,"train");
+                string trainPath = Path.Combine(CGlobal.Inst.Data.OutputDataImageAndTxtPath, "train");
                 string valPath = Path.Combine(CGlobal.Inst.Data.OutputDataImageAndTxtPath, "valid");
                 List<string> textList = CGlobal.Inst.Data.ClassNamedList.Select(item => item.Text).ToList();
 

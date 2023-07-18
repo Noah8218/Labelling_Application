@@ -757,15 +757,27 @@ namespace MvcVisionSystem
             int imageW = CDisplayManager.Displays[DEFINE.Main].viewer._Ib.Image.Width;
             int imageH = CDisplayManager.Displays[DEFINE.Main].viewer._Ib.Image.Height;
             string imageFile = GetFileNameWithoutExtension(Global.Data.LastSelectImageName);
-            foreach (var item in CDisplayManager.Displays[DEFINE.Main].viewer._RoisOb)
+
+            CYolov5.CheckTxtFileDelete("train", imageFile, Global.Data.OutputDataImageAndTxtPath);
+            CYolov5.CheckTxtFileDelete("valid", imageFile, Global.Data.OutputDataImageAndTxtPath);
+
+            foreach (var item in CDisplayManager.Displays[DEFINE.Main].viewer._RoiDic)
             {
-                int index = CYolov5.GetComboBoxIndex(cbClassMenu, item.Title);
-                float centerX = (float)(item.Roi.X + item.Roi.Width / 2) / imageW;
-                float centerY = (float)(item.Roi.Y + item.Roi.Height / 2) / imageH;
-                float width = (float)item.Roi.Width / imageW;
-                float height = (float)item.Roi.Height / imageH;
-                float[] floats = { index, centerX, centerY, width, height };
-                CYolov5.CreateImageAndTxtFile(imageFile, (Bitmap)CDisplayManager.Displays[DEFINE.Main].viewer._Ib.Image, floats, Global.Data.OutputDataImageAndTxtPath);
+                var title = item.Key;
+                
+                List<string> keys = new List<string>(CDisplayManager.Displays[DEFINE.Main].viewer._RoiDic.Keys);
+                int index = keys.IndexOf(title);
+                
+                for(int i =0; i< item.Value.Count; i++)
+                {
+                    float centerX = (float)(item.Value[i].Roi.X + item.Value[i].Roi.Width / 2) / imageW;
+                    float centerY = (float)(item.Value[i].Roi.Y + item.Value[i].Roi.Height / 2) / imageH;
+                    float width = (float)item.Value[i].Roi.Width / imageW;
+                    float height = (float)item.Value[i].Roi.Height / imageH;
+                    float[] floats = { index, centerX, centerY, width, height };
+
+                    CYolov5.CreateImageAndTxtFile(imageFile, (Bitmap)CDisplayManager.Displays[DEFINE.Main].viewer._Ib.Image, floats, Global.Data.OutputDataImageAndTxtPath);
+                }
             }
         }
 
@@ -810,6 +822,15 @@ namespace MvcVisionSystem
                 Global.Data.OutputDataImageAndTxtPath = folderPath;
                 Global.Data.SaveConfig(Global.Recipe.Name);
                 lbExportPath.Text = Global.Data.OutputDataImageAndTxtPath;
+
+                string trainPath = Path.Combine(Global.Data.OutputDataImageAndTxtPath, "train");
+                string valPath = Path.Combine(Global.Data.OutputDataImageAndTxtPath, "valid");
+                List<string> textList = Global.Data.ClassNamedList.Select(item => item.Text).ToList();
+
+                string basePath = Path.Combine(Global.Data.OutputDataYamlPath, "data.yaml");
+
+                CYolov5.CreateYaml(trainPath, valPath, textList, basePath);
+
             }
         }
 

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using YamlDotNet.Serialization;
+using static MvcVisionSystem.DEFINE;
 
 namespace MvcVisionSystem.Yolo
 {
@@ -72,6 +73,21 @@ namespace MvcVisionSystem.Yolo
             File.WriteAllText(outputYamlPath, yaml);
         }
 
+        public static void CheckTxtFileDelete(string mode, string imageFileName, string basePath)
+        {
+            string strFolderPath = Path.Combine(basePath, "data");
+            DirectoryInfo dirRecipe = new DirectoryInfo(strFolderPath);
+            if (dirRecipe.Exists == false) dirRecipe.Create();
+
+            string labelDir = Path.Combine(strFolderPath, mode, "labels");
+            string txtFilePath = Path.Combine(labelDir, $"{imageFileName}.txt");
+
+            if (File.Exists(txtFilePath))
+            {
+                File.Delete(txtFilePath);
+            }
+        }
+
         public static void CreateImageAndTxtFile(string imageFileName, Bitmap image, float[] coordinates, string basePath)
         {
             CreateImageAndTxtFile("train", imageFileName, image, coordinates, basePath);
@@ -99,7 +115,6 @@ namespace MvcVisionSystem.Yolo
             }
             // Save the txt file
             string txtFilePath = Path.Combine(labelDir, $"{imageFileName}.txt");
-
             using (StreamWriter sw = File.AppendText(txtFilePath))
             {
                 sw.WriteLine($"{string.Join(" ", coordinates)}");

@@ -47,11 +47,14 @@ namespace MvcVisionSystem
         public void ShowClassItems()
         {
             dgvImagesList.Rows.Clear();
-            foreach (var item in CDisplayManager.Displays[DEFINE.Main].viewer._RoisOb)
+            foreach (var item in CDisplayManager.Displays[DEFINE.Main].viewer._RoiDic)
             {
-                int index = dgvImagesList.Rows.Count + 1;
-                object[] row = new object[] { index.ToString(), item.cClassItem.Text, item.Roi.ToString() };
-                dgvImagesList.Rows.Add(row);
+                for(int i =0; i < item.Value.Count;i++)
+                {
+                    int index = dgvImagesList.Rows.Count + 1;
+                    object[] row = new object[] { index.ToString(), item.Value[i].cClassItem.Text, item.Value[i].Roi.ToString() };
+                    dgvImagesList.Rows.Add(row);
+                }                
             }
         }
 

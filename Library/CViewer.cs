@@ -17,6 +17,7 @@ using static MvcVisionSystem.DrawObject.CEnum;
 using static MvcVisionSystem._2._Common.CParameterManager;
 using MvcVisionSystem.DrawObject;
 using Lib.Common;
+using System.Web;
 
 namespace MvcVisionSystem
 {
@@ -52,7 +53,10 @@ namespace MvcVisionSystem
             set { _TempOb.Roi = value; }
         }
 
-        public List<CRectangleObject> _RoisOb = new List<CRectangleObject>();
+        public Dictionary<string, List<CRectangleObject>> _RoiDic = new Dictionary<string, List<CRectangleObject>>();
+
+        public string _SelectedClass { get; set; } = "";
+        //public List<CRectangleObject> _RoisOb = new List<CRectangleObject>();
 
         private int _MinY = 0;
         private int _MaxY = 10000;
@@ -280,13 +284,16 @@ namespace MvcVisionSystem
             // Work out the location of the marker graphic according to the current zoom level and scroll offset
             locationTemp = _Ib.GetOffsetPoint(TempROI.X, TempROI.Y);
 
-            for (int i = 0; i < _RoisOb.Count; i++)
+            foreach (var Roi in _RoiDic)
             {
-                System.Drawing.Point Location2 = _Ib.GetOffsetPoint(_RoisOb[i].Roi.X, _RoisOb[i].Roi.Y);
-                System.Drawing.Size scaledSize2 = _Ib.GetScaledSize(_RoisOb[i].Roi.Width, _RoisOb[i].Roi.Height);
-                System.Drawing.Color color = i != _SelectROiIndex ? System.Drawing.Color.Green : System.Drawing.Color.Red;
-                _RoisOb[i].SetParameter(color, scaledSize2, Location2, false);
-                _RoisOb[i].Draw(g);
+                for (int i = 0; i < Roi.Value.Count; i++)
+                {
+                    System.Drawing.Point Location2 = _Ib.GetOffsetPoint(Roi.Value[i].Roi.X, Roi.Value[i].Roi.Y);
+                    System.Drawing.Size scaledSize2 = _Ib.GetScaledSize(Roi.Value[i].Roi.Width, Roi.Value[i].Roi.Height);
+                    System.Drawing.Color color = i != _SelectROiIndex ? System.Drawing.Color.Green : System.Drawing.Color.Red;
+                    Roi.Value[i].SetParameter(color, scaledSize2, Location2, false);
+                    Roi.Value[i].Draw(g);
+                }
             }
 
             _TempOb.SetParameter(drawSizeTempTrain, locationTemp);
@@ -300,7 +307,7 @@ namespace MvcVisionSystem
                 System.Drawing.Point CrossLocationHorEnd = _Ib.GetOffsetPoint((_Ib.Image.Width / 2), _Ib.Image.Height);
 
                 g.DrawLine(new System.Drawing.Pen(System.Drawing.Color.Yellow, 3), CrossLocationVerStart, CrossLocationVerEnd);
-                g.DrawLine(new System.Drawing.Pen(System.Drawing.Color.Yellow, 3), CrossLocationHorStart, CrossLocationHorEnd);
+                g.DrawLine(new Pen(System.Drawing.Color.Yellow, 3), CrossLocationHorStart, CrossLocationHorEnd);
             }
 
             if(!_Position.IsEmpty && _Position.X > 0 && _Position.Y > 0)
@@ -349,8 +356,16 @@ namespace MvcVisionSystem
             switch (_Mode)
             {
                 case RoiMode.Rectangle:
-                    _RoisOb.RemoveAt(_SelectROiIndex);
-                    CGlobal.Inst.System.UpdateData();
+                    List<CRectangleObject> rois = new List<CRectangleObject>();
+                    if(_RoiDic.TryGetValue(_SelectedClass, out rois))
+                    {                        
+                        int index = rois.FindIndex(x => x.Selected == true);
+                        if (index < 0) { return; }
+
+                        rois.RemoveAt(index);
+                        CGlobal.Inst.System.UpdateData();
+                    }
+
                     break;
             }
             _MouseDown = Point.Empty;
@@ -371,17 +386,21 @@ namespace MvcVisionSystem
             {
                 case RoiMode.Rectangle:
                     _MouseOperation = _TempOb.GetNodeSelectable(_StartPt, TempROI, _Ib);
-                    for (int i = 0; i < _RoisOb.Count; i++)
+                    List<CRectangleObject> RoisOb = new List<CRectangleObject>();
+                    if (_RoiDic.TryGetValue(_SelectedClass, out RoisOb))
                     {
-                        _MouseOperation = _RoisOb[i].GetNodeSelectable(_StartPt, _RoisOb[i].Roi, _Ib);
-                        if (_MouseOperation != PosSizableRect.None)
+                        for (int i = 0; i < RoisOb.Count; i++)
                         {
-                            _SelectROiIndex = i;
-                            _RoisOb[i].Selected = true;
-                            break;
+                            _MouseOperation = RoisOb[i].GetNodeSelectable(_StartPt, RoisOb[i].Roi, _Ib);
+                            if (_MouseOperation != PosSizableRect.None)
+                            {
+                                _SelectROiIndex = i;
+                                RoisOb[i].Selected = true;
+                                break;
+                            }
                         }
                     }
-
+              
                     break;
             }
 
@@ -417,15 +436,16 @@ namespace MvcVisionSystem
                             _TempOb.MoveHandleTo(_Position, _MouseOperation);
                         }
 
-                        if (_RoisOb.Count > _SelectROiIndex)
+                        if (_MouseOperation != PosSizableRect.None)
                         {
-                            if (_MouseOperation != PosSizableRect.None)
-                            {                                
-                                SetToRectangle(e, ref _RoisOb[_SelectROiIndex].Roi);
-                                _RoisOb[_SelectROiIndex].MoveHandleTo(_Position, _MouseOperation);
+                            List<CRectangleObject> RoisOb = new List<CRectangleObject>();
+                            if (_RoiDic.TryGetValue(_SelectedClass, out RoisOb))
+                            {
+                                SetToRectangle(e, ref RoisOb[_SelectROiIndex].Roi);
+                                RoisOb[_SelectROiIndex].MoveHandleTo(_Position, _MouseOperation);
                                 if (_MouseOperation == PosSizableRect.SizeAll)
                                 {
-                                    _RoisOb[_SelectROiIndex].Move(distanceX, distanceY);
+                                    RoisOb[_SelectROiIndex].Move(distanceX, distanceY);
                                 }
                             }
                         }
@@ -440,7 +460,18 @@ namespace MvcVisionSystem
             switch (_Mode)
             {                
                 case RoiMode.Rectangle:
-                    if (_RoisOb.Count > _SelectROiIndex) { _Ib.Cursor = _RoisOb[_SelectROiIndex].ChangeCursor(_Position, _RoisOb[_SelectROiIndex].Roi, _Ib); }
+                    List<CRectangleObject> RoisOb = new List<CRectangleObject>();
+                    if (_RoiDic.TryGetValue(_SelectedClass, out RoisOb))
+                    {
+                        if (_SelectROiIndex > RoisOb.Count) { return; }
+                        if (RoisOb.Count == 0) { return; }
+
+                        int index = RoisOb.FindIndex(x => x.Selected == true);
+
+                        if (index < 0) { return; }
+
+                        _Ib.Cursor = RoisOb[index].ChangeCursor(_Position, RoisOb[index].Roi, _Ib);
+                    }                        
                     break;
             }
         }
@@ -450,10 +481,13 @@ namespace MvcVisionSystem
         /// </summary>
         private void UnSelectAll()
         {
-            for (int i = 0; i < _RoisOb.Count; i++)
+            foreach(var item in _RoiDic)
             {
-                _RoisOb[i].Selected = false;
-            }
+                for (int i = 0; i < item.Value.Count; i++)
+                {
+                    item.Value[i].Selected = false;
+                }
+            }         
         }
 
         private void SettingParameter()
@@ -465,12 +499,15 @@ namespace MvcVisionSystem
             _TempOb._MaxY = _Ib.Image.Height;
             _TempOb.OriginalSize = new System.Drawing.Size(this._Ib.Image.Width, this._Ib.Image.Height);
 
-            for (int i = 0; i < _RoisOb.Count; i++)
+            foreach (var item in _RoiDic)
             {
-                _RoisOb[i]._MaxX = _Ib.Image.Width;
-                _RoisOb[i]._MaxY = _Ib.Image.Height;
-                _RoisOb[i].OriginalSize = new System.Drawing.Size(this._Ib.Image.Width, this._Ib.Image.Height);
-            }
+                for (int i = 0; i < item.Value.Count; i++)
+                {
+                    item.Value[i]._MaxX = _Ib.Image.Width;
+                    item.Value[i]._MaxY = _Ib.Image.Height;
+                    item.Value[i].OriginalSize = new System.Drawing.Size(this._Ib.Image.Width, this._Ib.Image.Height);
+                }
+            }           
         }
 
         private void GetPixelData(System.Drawing.Point _POSITION)
@@ -498,11 +535,24 @@ namespace MvcVisionSystem
                                     CRectangleObject rectangleObject = new CRectangleObject();
                                     rectangleObject.Roi = TempROI;
                                     rectangleObject.cClassItem = _TempOb.cClassItem;
-                                    _RoisOb.Add(rectangleObject);
 
-                                    CGlobal.Inst.System.UpdateData();
+                                    List<CRectangleObject> list = new List<CRectangleObject>();
 
-                                    _SelectROiIndex = _RoisOb.Count - 1;
+                                    if(_RoiDic.TryGetValue(_TempOb.cClassItem.Text, out list))
+                                    {
+                                        list.Add(rectangleObject);
+                                        _RoiDic[_TempOb.cClassItem.Text] = list;
+                                        _SelectROiIndex = list.Count - 1;
+                                    }   
+                                    else
+                                    {
+                                        list = new List<CRectangleObject>();
+                                        list.Add(rectangleObject);
+                                        _RoiDic.Add(_TempOb.cClassItem.Text, list);
+                                        _SelectROiIndex = 0;
+                                    }
+
+                                    CGlobal.Inst.System.UpdateData();                                    
                                 }
                                 TempROI = new Rectangle();
                                 break;
@@ -612,15 +662,15 @@ namespace MvcVisionSystem
                         switch (_Mode)
                         {
                             case RoiMode.Rectangle:
-                                List<CRectangle> Rois = new List<CRectangle>();
-                                for (int i= 0; i < _RoisOb.Count; i++)
-                                {
-                                    CRectangle cRectangle = new CRectangle();
-                                    cRectangle.Index = i + 1;
-                                    cRectangle.Roi = _RoisOb[i].Roi;
-                                    Rois.Add(cRectangle);
-                                }
-                                _FormVision_Result.SetBindingRois(Rois);
+                                //List<CRectangle> Rois = new List<CRectangle>();
+                                //for (int i= 0; i < _RoisOb.Count; i++)
+                                //{
+                                //    CRectangle cRectangle = new CRectangle();
+                                //    cRectangle.Index = i + 1;
+                                //    cRectangle.Roi = _RoisOb[i].Roi;
+                                //    Rois.Add(cRectangle);
+                                //}
+                                //_FormVision_Result.SetBindingRois(Rois);
                                 break;
                         }
                         _FormVision_Result.Show();

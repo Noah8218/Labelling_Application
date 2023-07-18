@@ -220,11 +220,11 @@ namespace MvcVisionSystem
         {
             this.UIThreadBeginInvoke(() =>
             {
-                foreach(var item in CDisplayManager.Displays[DEFINE.Main].viewer._RoisOb)
-                {
-                    FormClassList fr =(FormClassList)Forms[VISION_DOCK_FORM.CLASSLIST];
-                    fr.ShowClassItems();
-                }
+                //foreach (var item in CDisplayManager.Displays[DEFINE.Main].viewer._RoisOb)
+                //{
+                //    FormClassList fr = (FormClassList)Forms[VISION_DOCK_FORM.CLASSLIST];
+                //    fr.ShowClassItems();
+                //}
             });
         }
 
@@ -232,6 +232,7 @@ namespace MvcVisionSystem
         {
             this.UIThreadBeginInvoke(() =>
             {
+                CDisplayManager.Displays[DEFINE.Main].viewer._SelectedClass = e.cClassItem.Text;
                 CDisplayManager.Displays[DEFINE.Main].viewer._TempOb.cClassItem = e.cClassItem;
                 CDisplayManager.Displays[DEFINE.Main].viewer._TempOb.Color = e.cClassItem.DrawColor;
                 CDisplayManager.Displays[DEFINE.Main].viewer._TempOb.Title = e.cClassItem.Text;

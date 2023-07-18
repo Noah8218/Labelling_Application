@@ -106,12 +106,12 @@ namespace MvcVisionSystem
                 KtemViewer.LoadImageBox(ibSource);
                 KtemViewer.SetModeMultiRoi();
 
-                for(int i = 0; i < ROI.Count; i++)
-                {                    
-                    CRectangleObject cRectangleOb = new CRectangleObject();
-                    cRectangleOb.Roi = new Rectangle(ROI[i].X, ROI[i].Y, ROI[i].Width, ROI[i].Height);
-                    KtemViewer._RoisOb.Add(cRectangleOb);
-                }
+                //for(int i = 0; i < ROI.Count; i++)
+                //{                    
+                //    CRectangleObject cRectangleOb = new CRectangleObject();
+                //    cRectangleOb.Roi = new Rectangle(ROI[i].X, ROI[i].Y, ROI[i].Width, ROI[i].Height);
+                //    KtemViewer._RoisOb.Add(cRectangleOb);                    
+                //}
 
                 Mode = mode;
                 ImageGrey = (Bitmap)image.Clone();
@@ -195,21 +195,21 @@ namespace MvcVisionSystem
                 switch (Mode)
                 {                            
                     case RoiMode.Rectangle:
-                        foreach(var ROI in KtemViewer._RoisOb)
-                        {
-                            Rect r = CConverter.RectangleToRect(ROI.Roi);
-                            if (r.X < 0)
-                            {
-                                r.Width = r.Width - r.X;
-                                r.X = 0;                                
-                            }
-                            if (r.Y < 0)
-                            {
-                                r.Height = r.Height - r.Y;
-                                r.Y = 0;                                
-                            }
-                            SelectedRegions.Add(r);
-                        }
+                        //foreach(var ROI in KtemViewer._RoisOb)
+                        //{
+                        //    Rect r = CConverter.RectangleToRect(ROI.Roi);
+                        //    if (r.X < 0)
+                        //    {
+                        //        r.Width = r.Width - r.X;
+                        //        r.X = 0;                                
+                        //    }
+                        //    if (r.Y < 0)
+                        //    {
+                        //        r.Height = r.Height - r.Y;
+                        //        r.Y = 0;                                
+                        //    }
+                        //    SelectedRegions.Add(r);
+                        //}
                         
                         break;
                 }
