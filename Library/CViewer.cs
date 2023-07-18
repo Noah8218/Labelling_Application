@@ -310,12 +310,13 @@ namespace MvcVisionSystem
                 g.DrawLine(new Pen(System.Drawing.Color.Yellow, 3), CrossLocationHorStart, CrossLocationHorEnd);
             }
 
-            if(!_Position.IsEmpty && _Position.X > 0 && _Position.Y > 0)
+            if (!_Position.IsEmpty && _Position.X > 0 && _Position.Y > 0
+             && _Position.X < _Ib.Image.Width && _Position.Y < _Ib.Image.Height)
             {
                 System.Drawing.Point CrossLocationVerStart = _Ib.GetOffsetPoint(new Point(0, _Position.Y));
                 System.Drawing.Point CrossLocationVerEnd = _Ib.GetOffsetPoint(new Point(_Ib.Image.Width, _Position.Y));
                 System.Drawing.Point CrossLocationHorStart = _Ib.GetOffsetPoint(new Point(_Position.X, 0));
-                System.Drawing.Point CrossLocationHorEnd = _Ib.GetOffsetPoint(new Point(_Position.X, _Ib.Image.Height));                
+                System.Drawing.Point CrossLocationHorEnd = _Ib.GetOffsetPoint(new Point(_Position.X, _Ib.Image.Height));
                 g.DrawLine(Pens.Yellow, CrossLocationVerStart, CrossLocationVerEnd);
                 // y 축을 따라 라인을 그립니다.
                 g.DrawLine(Pens.Yellow, CrossLocationHorStart, CrossLocationHorEnd);
