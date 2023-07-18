@@ -61,7 +61,7 @@ namespace MvcVisionSystem.DrawObject
         /// <summary>
         /// 이 객체를 그려준다.
         /// </summary>
-        public override void Draw(Graphics g)
+        public override void Draw(Graphics g, ImageBox ib)
         {
             if (Size.IsEmpty) { return; }
             RectangleF r = new RectangleF(Location, Size);
@@ -80,18 +80,21 @@ namespace MvcVisionSystem.DrawObject
 
             using (System.Drawing.Pen pen = new System.Drawing.Pen(Color, PenWidth))
             {
+                int fontSize = (int)(((r.Width + r.Height) / 15));  // 'someFactor'는 ROI의 가로 길이에 따른 폰트 크기 조절 비율입니다. 적절한 값을 실험적으로 찾을 수 있습니다.
+
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-                g.DrawString(Title, new Font("Arial", 12, FontStyle.Bold), new SolidBrush(System.Drawing.Color.OrangeRed), Location.X + 15, Location.Y + 15);
-                //if (IsRotate)
-                //{
-                //    g.DrawString(Angle.ToString(), new Font("Arial", 12, FontStyle.Bold), new SolidBrush(System.Drawing.Color.OrangeRed), Location.X + 15, Location.Y + 15);
-                //}
-                
+                if (fontSize < 0.5) { fontSize = 1; }
+
+                g.DrawString(Title, new Font("Arial", fontSize, FontStyle.Bold), new SolidBrush(System.Drawing.Color.OrangeRed), Location.X, Location.Y);
+
+                //System.Drawing.Point textLocation = ib.GetOffsetPoint(new Point(Location.X, Location.Y));
+                //g.DrawString(Title, new Font("Arial", (int)(12 * ib.ZoomFactor), FontStyle.Bold), new SolidBrush(System.Drawing.Color.OrangeRed), textLocation);
+
                 foreach (PosSizableRect pos in Enum.GetValues(typeof(PosSizableRect)))
                 {
                     if (!IsRotate) { if (pos == PosSizableRect.Rotate) { continue; } }
-                    Rectangle miniRect = GetRect(pos, new Rectangle(Location, Size));
+                    Rectangle miniRect = GetRect(pos, new Rectangle(Location, Size), ib);
                     PointF[] rectCorners = new PointF[4];
                     rectCorners[0] = new PointF(miniRect.Location.X, miniRect.Location.Y);
                     rectCorners[1] = new PointF(miniRect.Size.Width + miniRect.Location.X, miniRect.Location.Y);
@@ -228,45 +231,47 @@ namespace MvcVisionSystem.DrawObject
 
         public Cursor ChangeCursor(System.Drawing.Point p, Rectangle rt, ImageBox ib) => AnchorToCursor(GetNodeSelectable(p, rt, ib), this.Angle);
 
-        private Rectangle GetRect(PosSizableRect p, Rectangle rect)
+        private Rectangle GetRect(PosSizableRect p, Rectangle rect, ImageBox ib)
         {
             switch (p)
             {
                 case PosSizableRect.LeftUp:
-                    return CreateRectSizableNode(rect.X, rect.Y);
+                    return CreateRectSizableNode(rect.X, rect.Y, ib);
 
                 case PosSizableRect.LeftMiddle:
-                    return CreateRectSizableNode(rect.X, rect.Y + +rect.Height / 2);
+                    return CreateRectSizableNode(rect.X, rect.Y + +rect.Height / 2, ib);
                 case PosSizableRect.LeftBottom:
-                    return CreateRectSizableNode(rect.X, rect.Y + rect.Height);
+                    return CreateRectSizableNode(rect.X, rect.Y + rect.Height, ib);
 
                 case PosSizableRect.BottomMiddle:
-                    return CreateRectSizableNode(rect.X + rect.Width / 2, rect.Y + rect.Height);
+                    return CreateRectSizableNode(rect.X + rect.Width / 2, rect.Y + rect.Height, ib);
                 case PosSizableRect.RightUp:
-                    return CreateRectSizableNode(rect.X + rect.Width, rect.Y);
+                    return CreateRectSizableNode(rect.X + rect.Width, rect.Y, ib);
                 case PosSizableRect.RightBottom:
-                    return CreateRectSizableNode(rect.X + rect.Width, rect.Y + rect.Height);
+                    return CreateRectSizableNode(rect.X + rect.Width, rect.Y + rect.Height, ib);
                 case PosSizableRect.RightMiddle:
-                    return CreateRectSizableNode(rect.X + rect.Width, rect.Y + rect.Height / 2);
+                    return CreateRectSizableNode(rect.X + rect.Width, rect.Y + rect.Height / 2, ib);
                 case PosSizableRect.UpMiddle:
-                    return CreateRectSizableNode(rect.X + rect.Width / 2, rect.Y);
+                    return CreateRectSizableNode(rect.X + rect.Width / 2, rect.Y, ib);
                 case PosSizableRect.SizeAll:
                     return new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
                 case PosSizableRect.Rotate:
-                    Rectangle r = CreateRectSizableNode(rect.X + rect.Width / 2, rect.Y);
+                    Rectangle r = CreateRectSizableNode(rect.X + rect.Width / 2, rect.Y, ib);
                     System.Drawing.Size szAnhorSize = new System.Drawing.Size(7, 7);
                     return new Rectangle(r.Left, r.Top - (szAnhorSize.Height * 6) + 1, r.Width + 1, r.Height + 1);
                 default:
                     return new Rectangle();
             }
         }
+        
 
-        private int sizeNodeRect = 15;
-
-        private Rectangle CreateRectSizableNode(int x, int y)
+        private Rectangle CreateRectSizableNode(int x, int y, ImageBox ib)
         {
-            sizeNodeRect = 20;
-            return new Rectangle(x - sizeNodeRect / 2, y - sizeNodeRect / 2, sizeNodeRect, sizeNodeRect);
+            int sizeNodeRect = ib.Image.Width / 30;
+
+            System.Drawing.Size size = ib.GetScaledSize(sizeNodeRect, sizeNodeRect);
+
+            return new Rectangle(x - size.Width / 2, y - size.Height / 2, size.Width, size.Height);
         }
 
         //Retangle 의 크기와 위치를 설정한다.
