@@ -72,7 +72,9 @@ namespace MvcVisionSystem
                 global.Data.ProjectSettings.TrainingGuide.LastTrainingState,
                 global.Data.ProjectSettings.TrainingGuide.LastTrainingProgressPercent,
                 global.Data.ProjectSettings.TrainingGuide.LastTrainingMessage,
-                savedToRecipe);
+                savedToRecipe,
+                global.Data.ProjectSettings.TrainingGuide.LastTrainingDatasetVersionId,
+                global.Data.ProjectSettings.TrainingGuide.LastTrainingDatasetContentSha256);
             UpdateYoloTrainingHistoryText();
         }
 
@@ -117,7 +119,9 @@ namespace MvcVisionSystem
             try
             {
                 CRecipe.InitDirectory(recipeName);
-                global.Data.SaveConfig(recipeName);
+                // Training progress is recipe metadata. The training start already
+                // captured the exact dataset, so do not rescan every image here.
+                global.Data.SaveConfig(recipeName, refreshDatasetVersion: false);
                 return true;
             }
             catch (Exception ex)

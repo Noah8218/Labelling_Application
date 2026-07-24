@@ -122,6 +122,12 @@ internal static partial class Program
             AssertEqual(externalYamlBeforeTraining, File.ReadAllText(segmentationYamlPath));
             AssertTrue(data.ProjectSettings.ExternalYoloDataset.LastValidationSucceeded, "training should revalidate the external YAML before sending it");
             AssertEqual(segmentationReport.SourceFingerprintSha256, data.ProjectSettings.ExternalYoloDataset.LastTrainingSourceFingerprintSha256);
+            AssertEqual(
+                RecipeDatasetVersionService.BuildExternalDatasetVersionId(segmentationReport.SourceFingerprintSha256),
+                data.ProjectSettings.TrainingGuide.LastTrainingDatasetVersionId);
+            AssertEqual(
+                segmentationReport.SourceFingerprintSha256,
+                data.ProjectSettings.TrainingGuide.LastTrainingDatasetContentSha256);
             AssertEqual(Path.GetFullPath(segmentationYamlPath), data.ProjectSettings.ExternalYoloDataset.LastTrainingDataYamlFilePath);
             AssertTrue(
                 data.ProjectSettings.ExternalYoloDataset.LastTrainingRuntimeDataYamlFilePath.Contains("external-yolo-runtime", StringComparison.OrdinalIgnoreCase),

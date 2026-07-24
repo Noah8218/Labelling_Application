@@ -45,6 +45,7 @@ def run(args: argparse.Namespace) -> int:
     detector_args = argparse.Namespace(
         weights=str(Path(args.weights).resolve()),
         model_root=str(Path(args.model_root).resolve()),
+        image_root=str(Path(args.dataset_root).resolve()),
         device=args.device,
         img_size=args.img_size,
         conf=args.conf,

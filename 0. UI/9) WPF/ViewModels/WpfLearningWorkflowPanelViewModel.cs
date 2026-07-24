@@ -104,7 +104,7 @@ namespace MvcVisionSystem
             LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.LabelingBasics, "\uB77C\uBCA8\uB9C1", PackIconMaterialKind.SchoolOutline, "\uC815\uB2F5 \uB77C\uBCA8\uC744 \uADF8\uB9AC\uB294 \uD750\uB984"));
             LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.ObjectDetection, "\uAC1D\uCCB4 \uD0D0\uC9C0", PackIconMaterialKind.ShapeSquareRoundedPlus, "\uBC15\uC2A4 \uB77C\uBCA8\uACFC \uBAA8\uB378 \uD6C4\uBCF4 \uAC80\uD1A0"));
             LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.Segmentation, "\uC138\uADF8\uBA58\uD14C\uC774\uC158", PackIconMaterialKind.ViewListOutline, "\uD3F4\uB9AC\uACE4\uACFC \uB9C8\uC2A4\uD06C \uB77C\uBCA8"));
-            LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.AnomalyDetection, "\uC774\uC0C1 \uD0D0\uC9C0", PackIconMaterialKind.AlertCircleOutline, "\uC815\uC0C1/\uC774\uC0C1 \uC0D8\uD50C\uACFC \uC601\uC5ED \uAC80\uD1A0"));
+            LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.AnomalyDetection, "\uC774\uC0C1 \uD0D0\uC9C0", PackIconMaterialKind.AlertCircleOutline, "이미지 전체 정상/이상 판정"));
             LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.Train, "\uD559\uC2B5", PackIconMaterialKind.PlayCircleOutline, "\uB370\uC774\uD130\uC14B \uC900\uBE44\uC640 \uD559\uC2B5"));
             LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.Infer, "\uCD94\uB860", PackIconMaterialKind.RobotIndustrial, "\uBAA8\uB378 \uC2E4\uD589\uACFC \uC608\uCE21 \uD655\uC778"));
             LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.Review, "\uAC80\uD1A0", PackIconMaterialKind.CheckAll, "\uC608\uCE21\uC744 \uD655\uC815 \uB77C\uBCA8\uB85C \uC804\uD658"));
@@ -781,7 +781,7 @@ namespace MvcVisionSystem
                 }
             }
 
-            foreach (WpfAnnotationToolItem tool in AnnotationTools.Where(tool => IsOneShotCommandTool(tool.Tool)))
+            foreach (WpfAnnotationToolItem tool in AnnotationTools.Where(tool => mode != WpfLearningMode.AnomalyDetection && IsOneShotCommandTool(tool.Tool)))
             {
                 AnnotationCommandTools.Add(tool);
                 VisibleAnnotationTools.Add(tool);
@@ -812,10 +812,6 @@ namespace MvcVisionSystem
                 case WpfLearningMode.AnomalyDetection:
                     return new[]
                     {
-                        WpfAnnotationTool.Select,
-                        WpfAnnotationTool.Rectangle,
-                        WpfAnnotationTool.Brush,
-                        WpfAnnotationTool.Eraser,
                         WpfAnnotationTool.PanZoom
                     };
 
@@ -854,7 +850,8 @@ namespace MvcVisionSystem
         private static bool ShouldPreferModeDefaultTool(WpfLearningMode mode, WpfAnnotationTool currentTool)
             => (mode == WpfLearningMode.Segmentation && currentTool == WpfAnnotationTool.Select)
                 || (mode == WpfLearningMode.AnomalyDetection
-                    && (currentTool == WpfAnnotationTool.Brush || currentTool == WpfAnnotationTool.Eraser));
+                    && (currentTool == WpfAnnotationTool.Brush || currentTool == WpfAnnotationTool.Eraser))
+                || (mode == WpfLearningMode.ObjectDetection && currentTool == WpfAnnotationTool.PanZoom);
 
         public void ApplyDatasetPurpose(LabelingDatasetPurpose purpose)
         {
@@ -1505,7 +1502,7 @@ namespace MvcVisionSystem
             {
                 WpfLearningMode.ObjectDetection => "\uD45C\uC2DC \uB3C4\uAD6C: \uC120\uD0DD, \uBC15\uC2A4, \uC774\uB3D9. \uBE0C\uB7EC\uC2DC/\uC9C0\uC6B0\uAC1C\uB294 \uC228\uACA8 \uBC15\uC2A4 \uB77C\uBCA8\uB9C1\uC5D0 \uC9D1\uC911\uD569\uB2C8\uB2E4.",
                 WpfLearningMode.Segmentation => "\uD45C\uC2DC \uB3C4\uAD6C: \uC120\uD0DD, \uD3F4\uB9AC\uACE4, \uBE0C\uB7EC\uC2DC, \uC9C0\uC6B0\uAC1C, \uC774\uB3D9. \uD53D\uC140 \uB9C8\uC2A4\uD06C \uC791\uC5C5\uC5D0 \uD544\uC694\uD55C \uB3C4\uAD6C\uB9CC \uBCF4\uC785\uB2C8\uB2E4.",
-                WpfLearningMode.AnomalyDetection => "\uD45C\uC2DC \uB3C4\uAD6C: \uC120\uD0DD, \uBC15\uC2A4, \uBE0C\uB7EC\uC2DC, \uC9C0\uC6B0\uAC1C, \uC774\uB3D9. \uACB0\uD568 \uC601\uC5ED\uC744 \uBE60\uB974\uAC8C \uD45C\uC2DC\uD569\uB2C8\uB2E4.",
+                WpfLearningMode.AnomalyDetection => "이미지 전체 판정 작업에는 그리기 도구가 없습니다. 확대/축소와 이동만 사용할 수 있습니다.",
                 _ => "\uB370\uC774\uD130\uC14B \uBAA9\uC801\uC5D0 \uB9DE\uB294 \uB3C4\uAD6C\uB9CC \uD45C\uC2DC\uD569\uB2C8\uB2E4."
             };
 
@@ -1527,14 +1524,19 @@ namespace MvcVisionSystem
 
             ModeDetailText = ResolveReadableModeDetailText(SelectedMode?.Mode ?? WpfLearningMode.LabelingBasics);
 
-            StepDetailText = ResolveReadableStepDetailText(SelectedStep?.Step);
+            StepDetailText = ResolveReadableStepDetailText(
+                SelectedStep?.Step,
+                SelectedDatasetPurposeMode?.Mode ?? WpfLearningMode.ObjectDetection);
 
             CurrentWorkflowActionText = SelectedStep?.Step switch
             {
                 WpfLearningStep.Sample => "\uB2E4\uC74C: \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB97C \uC5F4\uACE0 \uCCAB \uC774\uBBF8\uC9C0\uB97C \uC120\uD0DD\uD569\uB2C8\uB2E4.",
-                WpfLearningStep.Label => SelectedDatasetPurposeMode?.Mode == WpfLearningMode.Segmentation
-                    ? "\uB2E4\uC74C: \uD3F4\uB9AC\uACE4/\uBE0C\uB7EC\uC2DC\uB85C \uB9C8\uC2A4\uD06C\uB97C \uB9CC\uB4E4\uACE0 \uC800\uC7A5\uD569\uB2C8\uB2E4."
-                    : "\uB2E4\uC74C: \uBC15\uC2A4\uB97C \uADF8\uB9AC\uACE0 \uD074\uB798\uC2A4\uAC00 \uB9DE\uB294\uC9C0 \uD655\uC778\uD569\uB2C8\uB2E4.",
+                WpfLearningStep.Label => SelectedDatasetPurposeMode?.Mode switch
+                {
+                    WpfLearningMode.Segmentation => "\uB2E4\uC74C: \uD3F4\uB9AC\uACE4/\uBE0C\uB7EC\uC2DC\uB85C \uB9C8\uC2A4\uD06C\uB97C \uB9CC\uB4E4\uACE0 \uC800\uC7A5\uD569\uB2C8\uB2E4.",
+                    WpfLearningMode.AnomalyDetection => "다음: 이미지 전체를 정상(OK) 또는 이상(NG)으로 판정하고 다음 이미지로 이동합니다.",
+                    _ => "\uB2E4\uC74C: \uBC15\uC2A4\uB97C \uADF8\uB9AC\uACE0 \uD074\uB798\uC2A4\uAC00 \uB9DE\uB294\uC9C0 \uD655\uC778\uD569\uB2C8\uB2E4."
+                },
                 WpfLearningStep.Infer => "\uB2E4\uC74C: \uCD94\uB860\uC744 \uC2E4\uD589\uD558\uACE0 AI \uD6C4\uBCF4\uB97C \uD655\uC778\uD569\uB2C8\uB2E4.",
                 WpfLearningStep.Review => "\uB2E4\uC74C: AI \uD6C4\uBCF4\uB97C \uD655\uC815\uD558\uAC70\uB098 \uC2A4\uD0B5\uD569\uB2C8\uB2E4.",
                 WpfLearningStep.Save => "\uB2E4\uC74C: \uB77C\uBCA8\uC744 \uC800\uC7A5\uD558\uACE0 \uB370\uC774\uD130\uC14B \uC810\uAC80\uC744 \uC2E4\uD589\uD569\uB2C8\uB2E4.",
@@ -1550,7 +1552,7 @@ namespace MvcVisionSystem
             {
                 WpfLearningMode.ObjectDetection => "\uAC1D\uCCB4 \uD0D0\uC9C0 \uB370\uC774\uD130\uC14B: \uBC15\uC2A4 \uB77C\uBCA8\uB85C \uC704\uCE58\uB97C \uD559\uC2B5\uD558\uACE0 \uC5EC\uB7EC \uAC1D\uCCB4\uD0D0\uC9C0 \uBAA8\uB378\uC5D0\uC11C \uC7AC\uC0AC\uC6A9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
                 WpfLearningMode.Segmentation => "\uC138\uADF8\uBA58\uD14C\uC774\uC158 \uB370\uC774\uD130\uC14B: \uD3F4\uB9AC\uACE4, \uBE0C\uB7EC\uC2DC, \uC9C0\uC6B0\uAC1C\uB85C \uD53D\uC140 \uB9C8\uC2A4\uD06C\uB97C \uB9CC\uB4ED\uB2C8\uB2E4. \uBAA8\uB378 \uD559\uC2B5/\uAC80\uC0AC\uB294 \uC138\uADF8\uBA58\uD14C\uC774\uC158 \uC2E4\uD589\uAE30 \uC5F0\uACB0 \uD6C4 \uC9C4\uD589\uD569\uB2C8\uB2E4.",
-                WpfLearningMode.AnomalyDetection => "\uC774\uC0C1 \uD0D0\uC9C0 \uB370\uC774\uD130\uC14B: \uC815\uC0C1/\uC774\uC0C1 \uC774\uBBF8\uC9C0\uC640 \uACB0\uD568 \uC601\uC5ED\uC744 \uD45C\uC2DC\uD569\uB2C8\uB2E4. \uBAA8\uB378 \uD559\uC2B5/\uAC80\uC0AC\uB294 \uC774\uC0C1\uD0D0\uC9C0 \uC2E4\uD589\uAE30 \uC5F0\uACB0 \uD6C4 \uC9C4\uD589\uD569\uB2C8\uB2E4.",
+                WpfLearningMode.AnomalyDetection => "이상 탐지 데이터셋: 이미지를 그리지 않고 전체 화면을 정상(OK) 또는 이상(NG)으로 판정합니다. 모델 학습/검사는 이미지 분류 실행기 연결 후 진행합니다.",
                 WpfLearningMode.Train => "\uD559\uC2B5 \uB2E8\uACC4: \uD604\uC7AC \uC120\uD0DD\uD55C \uB370\uC774\uD130\uC14B\uC744 \uD3C9\uAC00\uD558\uACE0 \uBAA8\uB378 \uD559\uC2B5\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4.",
                 WpfLearningMode.Infer => "\uCD94\uB860 \uB2E8\uACC4: \uD559\uC2B5\uD55C \uBAA8\uB378\uB85C AI \uD6C4\uBCF4\uB97C \uB9CC\uB4E4\uACE0 \uAC80\uC0AC\uD569\uB2C8\uB2E4.",
                 WpfLearningMode.Review => "\uAC80\uD1A0 \uB2E8\uACC4: AI \uD6C4\uBCF4\uB97C \uC815\uB2F5 \uB77C\uBCA8\uB85C \uD655\uC815\uD558\uAC70\uB098 \uC81C\uC678\uD569\uB2C8\uB2E4.",
@@ -1564,7 +1566,7 @@ namespace MvcVisionSystem
             {
                 WpfLearningMode.ObjectDetection => "\uAC1D\uCCB4 \uD0D0\uC9C0: \uC774\uBBF8\uC9C0 \uC548\uC758 \uAC1D\uCCB4 \uC704\uCE58\uB97C \uBC15\uC2A4\uB85C \uCC3E\uACE0, YOLO \uB4F1 \uAC1D\uCCB4 \uD0D0\uC9C0 \uBAA8\uB378 \uD6C4\uBCF4\uB97C \uC815\uB2F5 \uB77C\uBCA8\uB85C \uD655\uC815\uD569\uB2C8\uB2E4.",
                 WpfLearningMode.Segmentation => "\uC138\uADF8\uBA58\uD14C\uC774\uC158: \uD53D\uC140 \uB2E8\uC704 \uB9C8\uC2A4\uD06C\uB97C \uB9CC\uB4E4\uACE0, \uBAA8\uB378 \uD559\uC2B5/\uAC80\uC0AC\uB294 \uC5F0\uACB0\uB41C \uC138\uADF8\uBA58\uD14C\uC774\uC158 \uC2E4\uD589\uAE30\uC5D0\uC11C \uC9C4\uD589\uD569\uB2C8\uB2E4.",
-                WpfLearningMode.AnomalyDetection => "\uC774\uC0C1 \uD0D0\uC9C0: \uC815\uC0C1/\uC774\uC0C1 \uC0D8\uD50C\uACFC \uACB0\uD568 \uC601\uC5ED\uC744 \uC900\uBE44\uD558\uACE0, \uBAA8\uB378 \uD559\uC2B5/\uAC80\uC0AC\uB294 \uC5F0\uACB0\uB41C \uC774\uC0C1\uD0D0\uC9C0 \uC2E4\uD589\uAE30\uC5D0\uC11C \uC9C4\uD589\uD569\uB2C8\uB2E4.",
+                WpfLearningMode.AnomalyDetection => "이상 탐지: 이미지 전체의 정상/이상을 판정하고, 연결된 이미지 분류 실행기에서 학습과 검사를 진행합니다. 결함 위치를 그리는 작업은 객체탐지 또는 세그멘테이션을 사용하세요.",
                 WpfLearningMode.Train => "\uD559\uC2B5: \uB77C\uBCA8\uACFC \uD074\uB798\uC2A4\uAC00 \uC900\uBE44\uB41C \uB4A4 \uB370\uC774\uD130\uC14B\uACFC \uD30C\uB77C\uBBF8\uD130\uB97C \uD3C9\uAC00\uD569\uB2C8\uB2E4.",
                 WpfLearningMode.Infer => "\uCD94\uB860: \uD604\uC7AC \uC774\uBBF8\uC9C0 \uB610\uB294 \uC120\uD0DD \uC774\uBBF8\uC9C0\uB97C \uBA85\uC2DC\uC801\uC73C\uB85C \uAC80\uC0AC\uD569\uB2C8\uB2E4.",
                 WpfLearningMode.Review => "\uAC80\uD1A0: AI \uD6C4\uBCF4\uB97C \uBCF4\uACE0 \uD655\uC815/\uC2A4\uD0B5\uD558\uBA70 \uC815\uB2F5 \uB77C\uBCA8\uB85C \uBC14\uAFC9\uB2C8\uB2E4.",
@@ -1572,14 +1574,16 @@ namespace MvcVisionSystem
             };
         }
 
-        private static string ResolveReadableStepDetailText(WpfLearningStep? step)
+        private static string ResolveReadableStepDetailText(WpfLearningStep? step, WpfLearningMode purposeMode)
         {
             return step switch
             {
                 WpfLearningStep.Sample => "\uC0D8\uD50C \uC774\uBBF8\uC9C0\uB97C \uBD88\uB7EC\uC640 \uAE30\uC900 \uD654\uBA74\uC744 \uB9CC\uB4ED\uB2C8\uB2E4.",
+                WpfLearningStep.Label when purposeMode == WpfLearningMode.AnomalyDetection => "이미지 전체를 정상(OK) 또는 이상(NG)으로 판정합니다. 박스나 마스크는 그리지 않습니다.",
                 WpfLearningStep.Label => "\uC815\uB2F5 \uB77C\uBCA8\uC744 \uC9C1\uC811 \uB9CC\uB4E4\uACE0 \uD074\uB798\uC2A4\uC640 \uC704\uCE58\uB97C \uD655\uC778\uD569\uB2C8\uB2E4.",
                 WpfLearningStep.Infer => "AI \uD6C4\uBCF4\uB97C \uB9CC\uB4E0 \uB4A4 \uB77C\uBCA8\uACFC \uBE44\uAD50\uD569\uB2C8\uB2E4.",
                 WpfLearningStep.Review => "\uD6C4\uBCF4\uB97C \uD558\uB098\uC529 \uBCF4\uBA70 \uD655\uC815, \uC804\uCCB4 \uD655\uC815, \uC2A4\uD0B5\uC744 \uC120\uD0DD\uD569\uB2C8\uB2E4.",
+                WpfLearningStep.Save when purposeMode == WpfLearningMode.AnomalyDetection => "현재 이미지의 OK/NG 판정을 이상탐지 검토 상태로 저장합니다.",
                 WpfLearningStep.Save => "\uD604\uC7AC \uB77C\uBCA8\uC744 \uB370\uC774\uD130\uC14B \uC800\uC7A5 \uD3F4\uB354\uC758 \uD559\uC2B5 \uB77C\uBCA8 \uD30C\uC77C\uB85C \uC800\uC7A5\uD569\uB2C8\uB2E4.",
                 _ => string.Empty
             };

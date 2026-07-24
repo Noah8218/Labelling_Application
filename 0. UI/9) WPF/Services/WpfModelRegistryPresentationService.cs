@@ -149,6 +149,9 @@ namespace MvcVisionSystem
             string baselineText = string.IsNullOrWhiteSpace(baseline)
                 ? string.Empty
                 : $" / baseline {baseline}";
+            string datasetVersionText = string.IsNullOrWhiteSpace(run?.DatasetVersionId)
+                ? string.Empty
+                : $" / Dataset {ShortenDatasetVersion(run.DatasetVersionId)}";
             string metrics = !string.IsNullOrWhiteSpace(candidate.MetricsSummary)
                 ? candidate.MetricsSummary
                 : !string.IsNullOrWhiteSpace(run?.MetricsSummary)
@@ -175,7 +178,7 @@ namespace MvcVisionSystem
                 BaselineWeightsPath = candidate.BaselineWeightsPath ?? string.Empty,
                 KindText = titlePrefix,
                 TitleText = $"{titlePrefix}: {modelPath}",
-                DetailText = $"{profileText} / {runText}{baselineText}",
+                DetailText = $"{profileText} / {runText}{datasetVersionText}{baselineText}",
                 MetricText = metrics,
                 DecisionText = candidate.IsCurrentInspectionModel
                     ? $"\uD604\uC7AC \uC0AC\uC6A9 / {decisionText}"
@@ -197,6 +200,12 @@ namespace MvcVisionSystem
                         ? "\uC120\uD0DD\uD55C \uC774\uB825\uC758 \uAC00\uC911\uCE58\uB97C recipe\uC758 \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5\uD569\uB2C8\uB2E4."
                         : "\uC774\uB825\uC758 \uAC00\uC911\uCE58 \uD30C\uC77C\uC774 \uC5C6\uC5B4 \uC801\uC6A9\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4."
             };
+        }
+
+        private static string ShortenDatasetVersion(string datasetVersionId)
+        {
+            string value = datasetVersionId?.Trim() ?? string.Empty;
+            return value.Length <= 22 ? value : value.Substring(0, 22) + "…";
         }
 
         private static string BuildProfileText(PythonModelSettings settings, ModelRegistrySettings registry)

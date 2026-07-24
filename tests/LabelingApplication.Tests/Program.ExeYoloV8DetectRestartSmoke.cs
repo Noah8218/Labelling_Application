@@ -534,7 +534,15 @@ internal static partial class Program
             File.Exists(manifestPath) ? File.ReadAllText(manifestPath) : "<manifest-missing>",
             new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
         AssertTrue(finalManifestReady, "dataset recipe manifest did not reach final content");
-        AssertTrue(File.Exists(Path.Combine(recipeDirectory, "VISION.xml")), "dataset recipe VISION.xml was not created");
+        string visionPath = Path.Combine(recipeDirectory, "VISION.xml");
+        AssertTrue(
+            WaitUntil(
+                () => File.Exists(visionPath)
+                    && File.ReadAllText(visionPath).Contains(
+                        "<DatasetPurpose>" + expectedPurpose + "</DatasetPurpose>",
+                        StringComparison.Ordinal),
+                TimeSpan.FromSeconds(10)),
+            "dataset recipe VISION.xml did not reach final " + expectedPurpose + " purpose");
         AssertTrue(File.Exists(manifestPath), "dataset recipe manifest was not created");
     }
 

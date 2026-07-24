@@ -1,6 +1,63 @@
 # Work Tracking
 
-Last updated: 2026-07-22
+Last updated: 2026-07-23
+
+## 2026-07-23 YOLO11 anomaly-classification real training and inference
+
+- Status: `Complete`
+- Scope:
+  - With explicit download approval, load the official `yolo11n-cls.pt`, run one-epoch connectivity and a 20-epoch same-split comparison on the supplied circular 500 OK / 500 NG data, and prove saved-profile restart inference in the actual EXE.
+  - Keep training completion separate from model adoption and preserve the source tree.
+- Acceptance criteria and evidence:
+  - Seed load/self-test and one-epoch app-service/TCP connectivity passed. Seed SHA-256 is `C62D41BF9625777760018BF914D2E6CD472420CCD01706D97A61CB6C82502BD7`.
+  - The 20-epoch candidate produced `best.pt` SHA-256 `4DFFF846D38938F483E6A8A7A96F2856DF2C64DFF581F607E1E179C983503458`; the 1,000-file source tree kept SHA-256 `84E41C5DBE77711B3FF2B96DEE8E50DBBF5253C90B95C53CAF24978D6CD1D846`.
+  - On the identical 104-image test fingerprint, confidence-gated YOLO11 was `82/104` (`78.8%`) versus YOLOv8 `90/104` (`86.5%`): comparison passed and both decisions remain `hold`.
+  - The actual EXE reopened the YOLO11 profile and exact trained weight, inferred a held-out NG image as `abnormal`, and persisted `Abnormal`: passed.
+  - The batch evaluator compatibility defect was fixed by supplying the bundled worker's required image root; the Model Center evaluation guard now accepts verified YOLOv8/YOLO11 local profiles and rejects other engines.
+- Verification: real 1- and 20-epoch training, fixed held-out evaluation, actual EXE restart inference, isolated/current solution builds, focused C#/Python gates, and `git diff --check`.
+- Evidence: `docs/YOLO11_ANOMALY_CLASSIFICATION_PREREQUISITE_AUDIT_20260723.md`, `artifacts/exe-yolo11-anomaly-restart-smoke/current-source-final2-20260723`, and `artifacts/ui/20260723-yolo11-anomaly-closure`.
+- UI evidence boundary: the earlier same-day catalog capture under `artifacts/ui/20260723-contract-truth-alignment` is the closest pre-closure baseline, not a fresh pre-edit capture. The current-source `after-model-adapter-catalog-final-1920.png` and actual-EXE inference capture were generated after the final build.
+- Boundary / next dependency: recorded local runtime/workflow support is complete; candidate adoption is not. The source is procedural/synthetic and one source family, so independent normal/abnormal camera-session data remains the next quality prerequisite.
+
+## 2026-07-23 Recipe Dataset Version v2
+
+- Status: `Complete`
+- Scope:
+  - Replace the former count-based dataset ID with deterministic SHA-256 content identity over recipe-owned images, annotations, ordered classes, and split ownership.
+  - Keep immutable metadata-only history in each Recipe and link the exact version/content hash to training and model-registry history.
+  - Show the current version, content hash summary, file counts, and immutable-history count in Model Center without copying the dataset.
+- Acceptance criteria and evidence:
+  - Same content produced the same `dsv2-<64 hex>` identity and reused one history file; changing label geometry with the same object count, changing a class, or moving content from train to valid produced a new identity: passed.
+  - Recipe save preserved the source-tree SHA-256; external native YOLO intake reused its read-only source fingerprint as an explicit external Dataset Version: passed.
+  - Training requests/history and model-registry history retained the exact Dataset Version and content SHA-256: passed.
+  - Anomaly classification identity included the generated class-folder split ownership; training-progress metadata saves did not rescan or create a new version: passed.
+  - Current-source and actual-EXE 1920x1080 captures showed the version and `SHA-256 · 이미지 · 라벨 · 불변 이력` summary: passed.
+- Verification:
+  - Isolated build passed with 0 warnings / 0 errors.
+  - `--recipe-dataset-version-v2`, `--wpf-project-config-panel`, `--model-registry`, `--wpf-dataset-setup-request`, `--wpf-anomaly-purpose-flow`, `--external-yolo-dataset-intake`, and `--dataset-readiness-purpose` passed.
+  - `--exe-dataset-version-smoke` passed against the newly built EXE after the invalid four-byte PNG test fixture was replaced with a real PNG.
+- Evidence: `docs/RECIPE_DATASET_VERSION_V2_20260723.md` and `artifacts/ui/recipe-dataset-version-v2`.
+- Boundary / next dependency: no full dataset copy, cloud sync, accounts, branch merging, automatic adoption, or field-quality claim. Focused-workstation maturity remains `4.0/5`; independent camera/session data remains the field-validation prerequisite.
+
+## 2026-07-23 Recipe anomaly and model-adapter contract truth alignment
+
+- Status: `Complete`
+- Scope:
+  - Make the Recipe manifest describe anomaly labeling as image-level Normal/Abnormal review instead of the obsolete box-and-mask profile.
+  - Remove anomaly drawing/edit commands from the dataset-purpose ViewModel and make the beginner guidance consistently direct the operator to whole-image `OK/NG` decisions.
+  - Bring the read-only Model Adapter Catalog up to the runtime scope verified at that checkpoint by adding U-Net segmentation and recording YOLO11 detection/segmentation.
+- Acceptance criteria and evidence:
+  - An anomaly manifest now records `annotationProfile=image-level-normal-abnormal`, `visibleTools=[panZoom]`, and the existing image-level review counts; focused anomaly flow passed.
+  - Anomaly purpose exposes navigation only in the learning ViewModel, no undo/redo/delete commands, and returns to the object-detection Select default when the purpose changes back; focused learning-workflow and shell gates passed.
+  - Dataset setup and lesson text no longer describe anomaly as region drawing; the current 1920x1080 after capture shows the dedicated `OK/NG` task card instead of the former defect-region guidance.
+  - The catalog has six declared contracts: Recipe interchange, YOLOv5 detection, local YOLOv8, U-Net segmentation, ONNX inference-only, and verified-scope local YOLO11. The later YOLO11 anomaly closure above extends that card to the now verified local classification path while preserving its `hold` quality decision.
+- Verification:
+  - Isolated test build passed with 0 warnings / 0 errors.
+  - `--wpf-anomaly-purpose-flow`, `--wpf-learning-workflow-panel`, `--wpf-dataset-setup-ui`, `--model-adapter-catalog`, and `--wpf-labeling-shell` passed.
+  - Current-source before/after 1920x1080 captures were inspected under `artifacts/ui/20260723-contract-truth-alignment`.
+- Boundary / next dependency:
+  - No training worker, model weight, label file, Recipe source image, inference result, adoption state, or canvas performance path changed.
+  - Focused-workstation maturity remains `4.0/5`. Independent field-quality evidence still requires a new approved camera/session dataset; Dataset Version v2 is a separate completed contract.
 
 ## 2026-07-22 Image Queue 10K action Worklist
 

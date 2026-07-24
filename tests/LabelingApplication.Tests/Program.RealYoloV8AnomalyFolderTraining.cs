@@ -28,10 +28,17 @@ internal static partial class Program
                 args,
                 "--source-root",
                 @"D:\circular_defect_labeling_dataset_v1\images"));
+            string modelName = GetArgumentValue(args, "--engine", "yolov8").Trim().ToLowerInvariant();
+            AssertTrue(
+                modelName is "yolov8" or "yolo11",
+                "anomaly classification training engine must be yolov8 or yolo11: " + modelName);
+            string modelDisplayName = modelName == "yolo11" ? "YOLO11" : "YOLOv8";
             string yoloRoot = Path.GetFullPath(GetArgumentValue(args, "--yolov8-root", @"C:\Git\yolov8"));
             string pythonPath = Path.Combine(yoloRoot, ".venv", "Scripts", "python.exe");
-            string clientScriptPath = Path.Combine(yoloRoot, "labeling_tcp_client.py");
-            string seedWeightsPath = Path.Combine(yoloRoot, "yolov8n-cls.pt");
+            string clientScriptPath = modelName == "yolo11"
+                ? Path.Combine(root, "Runtime", "Python", "openvisionlab_ultralytics_worker.py")
+                : Path.Combine(yoloRoot, "labeling_tcp_client.py");
+            string seedWeightsPath = Path.Combine(yoloRoot, modelName == "yolo11" ? "yolo11n-cls.pt" : "yolov8n-cls.pt");
             int epochCount = GetPositiveArgument(args, "--epochs", 20);
             int imageSize = GetPositiveArgument(args, "--image-size", 128);
             int batchSize = GetPositiveArgument(args, "--batch", 4);
@@ -39,28 +46,32 @@ internal static partial class Program
             string runName = GetArgumentValue(
                 args,
                 "--run-name",
-                "openvisionlab-yolov8-classify-" + DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture));
+                "openvisionlab-" + modelName + "-classify-" + DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture));
             string runDirectory = Path.Combine(yoloRoot, "runs", "classify", runName);
             artifactRoot = Path.GetFullPath(GetArgumentValue(
                 args,
                 "--artifact-root",
-                Path.Combine(root, "artifacts", "real-yolov8-anomaly-folder-training", DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture))));
+                Path.Combine(root, "artifacts", "real-" + modelName + "-anomaly-folder-training", DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture))));
 
             AssertTrue(Directory.Exists(sourceRoot), "anomaly source image root was not found: " + sourceRoot);
-            AssertTrue(Directory.Exists(yoloRoot), "YOLOv8 root was not found: " + yoloRoot);
-            AssertTrue(File.Exists(pythonPath), "YOLOv8 Python was not found: " + pythonPath);
-            AssertTrue(File.Exists(clientScriptPath), "YOLOv8 TCP adapter was not found: " + clientScriptPath);
-            AssertTrue(File.Exists(seedWeightsPath), "YOLOv8 classification seed was not found: " + seedWeightsPath);
+            AssertTrue(Directory.Exists(yoloRoot), "Ultralytics root was not found: " + yoloRoot);
+            AssertTrue(File.Exists(pythonPath), "Ultralytics Python was not found: " + pythonPath);
+            AssertTrue(File.Exists(clientScriptPath), modelDisplayName + " TCP worker was not found: " + clientScriptPath);
+            AssertTrue(File.Exists(seedWeightsPath), modelDisplayName + " classification seed was not found: " + seedWeightsPath);
             AssertTrue(!string.IsNullOrWhiteSpace(runName) && string.Equals(runName, Path.GetFileName(runName), StringComparison.Ordinal), "run name must be a single folder name: " + runName);
-            AssertTrue(!Directory.Exists(runDirectory), "refusing to overwrite an existing YOLOv8 classification run: " + runDirectory);
+            AssertTrue(!Directory.Exists(runDirectory), "refusing to overwrite an existing classification run: " + runDirectory);
             AssertTrue(!Directory.Exists(artifactRoot), "artifact root already exists: " + artifactRoot);
 
             Directory.CreateDirectory(artifactRoot);
+            ExternalYoloSourceTreeSnapshot sourceTreeBefore = CaptureExternalYoloSourceTree(sourceRoot);
+            File.WriteAllLines(Path.Combine(artifactRoot, "source-tree-before.tsv"), sourceTreeBefore.ManifestLines);
             string outputRoot = Path.Combine(artifactRoot, "app-output");
             var data = new CData();
             data.ConfigureOutputRoot(outputRoot);
             data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
+            data.ProjectSettings.PythonModel.ModelEngine = modelName == "yolo11"
+                ? PythonModelSettings.EngineYolo11
+                : PythonModelSettings.EngineYoloV8;
             data.ProjectSettings.PythonModel.ProjectRootPath = yoloRoot;
             data.ProjectSettings.PythonModel.PythonExecutablePath = pythonPath;
             data.ProjectSettings.PythonModel.ClientScriptPath = clientScriptPath;
@@ -98,7 +109,7 @@ internal static partial class Program
 
             int port = GetAvailableTcpPort();
             communication = new CCommunicationLearning(startListen: false, port: port);
-            AssertTrue(communication.Start(), "YOLOv8 anomaly training TCP listener did not start");
+            AssertTrue(communication.Start(), modelDisplayName + " anomaly training TCP listener did not start");
             pythonProcess = StartRealYoloV8TrainingClient(
                 pythonPath,
                 clientScriptPath,
@@ -108,15 +119,16 @@ internal static partial class Program
                 port,
                 imageSize,
                 stdout,
-                stderr);
+                stderr,
+                modelName);
             AssertTrue(
                 WaitUntil(() => communication.GetStatusSnapshot().IsClientConnected, TimeSpan.FromSeconds(30)),
-                BuildRealYoloSmokeFailure("YOLOv8 anomaly training client did not connect", stdout, stderr));
+                BuildRealYoloSmokeFailure(modelDisplayName + " anomaly training client did not connect", stdout, stderr));
 
             var workflow = new YoloTrainingWorkflowService();
             AssertTrue(
                 workflow.TryStartTraining(data, communication, runName),
-                BuildRealYoloSmokeFailure("YOLOv8 anomaly training request was not sent: " + workflow.LastPreparationFailureMessage, stdout, stderr));
+                BuildRealYoloSmokeFailure(modelDisplayName + " anomaly training request was not sent: " + workflow.LastPreparationFailureMessage, stdout, stderr));
 
             string classificationRoot = Path.Combine(outputRoot, AnomalyClassificationDatasetExportService.DefaultFolderName);
             AssertTrue(HasAnomalyTrainingImages(classificationRoot, "train", "normal"), "application anomaly export did not write train/normal images");
@@ -131,21 +143,30 @@ internal static partial class Program
             AssertTrue(
                 terminal && string.Equals(finalStatus.LastTrainingState, "completed", StringComparison.OrdinalIgnoreCase),
                 BuildRealYoloSmokeFailure(
-                    "YOLOv8 anomaly training did not complete. State=" + finalStatus.LastTrainingState + " Message=" + finalStatus.LastTrainingMessage,
+                    modelDisplayName + " anomaly training did not complete. State=" + finalStatus.LastTrainingState + " Message=" + finalStatus.LastTrainingMessage,
                     stdout,
                     stderr));
 
             string bestWeightsPath = Path.Combine(runDirectory, "weights", "best.pt");
-            AssertTrue(File.Exists(bestWeightsPath), "YOLOv8 anomaly training completed without best.pt: " + bestWeightsPath);
+            AssertTrue(File.Exists(bestWeightsPath), modelDisplayName + " anomaly training completed without best.pt: " + bestWeightsPath);
             string copiedWeightsPath = Path.Combine(artifactRoot, "best.pt");
             File.Copy(bestWeightsPath, copiedWeightsPath, overwrite: false);
+            ExternalYoloSourceTreeSnapshot sourceTreeAfter = CaptureExternalYoloSourceTree(sourceRoot);
+            File.WriteAllLines(Path.Combine(artifactRoot, "source-tree-after.tsv"), sourceTreeAfter.ManifestLines);
+            AssertEqual(sourceTreeBefore.FileCount, sourceTreeAfter.FileCount);
+            AssertEqual(sourceTreeBefore.TreeSha256, sourceTreeAfter.TreeSha256);
 
             string summaryPath = Path.Combine(artifactRoot, "summary.txt");
             File.WriteAllLines(summaryPath, new[]
             {
-                "REAL_YOLOV8_ANOMALY_FOLDER_TRAINING completed.",
+                "REAL_ULTRALYTICS_ANOMALY_FOLDER_TRAINING completed.",
+                "model=" + modelName,
                 "sourceRoot=" + sourceRoot,
                 "sourceImageCount=" + sourceImages.Length.ToString(CultureInfo.InvariantCulture),
+                "sourceTreeFileCountBefore=" + sourceTreeBefore.FileCount.ToString(CultureInfo.InvariantCulture),
+                "sourceTreeSha256Before=" + sourceTreeBefore.TreeSha256,
+                "sourceTreeFileCountAfter=" + sourceTreeAfter.FileCount.ToString(CultureInfo.InvariantCulture),
+                "sourceTreeSha256After=" + sourceTreeAfter.TreeSha256,
                 "folderImportNormal=" + import.NormalImageCount.ToString(CultureInfo.InvariantCulture),
                 "folderImportAbnormal=" + import.AbnormalImageCount.ToString(CultureInfo.InvariantCulture),
                 "classificationRoot=" + classificationRoot,
@@ -159,14 +180,18 @@ internal static partial class Program
                 "runName=" + runName,
                 "workerTrainingState=" + finalStatus.LastTrainingState,
                 "workerTrainingMessage=" + finalStatus.LastTrainingMessage,
+                "worker=" + clientScriptPath,
+                "workerSha256=" + ComputeFileSha256(clientScriptPath),
+                "seedWeights=" + seedWeightsPath,
+                "seedWeightsSha256=" + ComputeFileSha256(seedWeightsPath),
                 "bestWeights=" + bestWeightsPath,
                 "bestWeightsSha256=" + ComputeFileSha256(bestWeightsPath),
                 "copiedWeights=" + copiedWeightsPath
             });
             WriteRealYoloProcessLog(artifactRoot, stdout, stderr);
 
-            Console.WriteLine("REAL_YOLOV8_ANOMALY_FOLDER_TRAINING weights=" + bestWeightsPath);
-            Console.WriteLine("REAL_YOLOV8_ANOMALY_FOLDER_TRAINING summary=" + summaryPath);
+            Console.WriteLine("REAL_ULTRALYTICS_ANOMALY_FOLDER_TRAINING weights=" + bestWeightsPath);
+            Console.WriteLine("REAL_ULTRALYTICS_ANOMALY_FOLDER_TRAINING summary=" + summaryPath);
             return 0;
         }
         catch (Exception ex)

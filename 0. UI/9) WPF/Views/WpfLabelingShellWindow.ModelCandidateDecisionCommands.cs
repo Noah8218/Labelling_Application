@@ -47,7 +47,9 @@ namespace MvcVisionSystem
                     BuildTrainingComparisonStatusText(comparison),
                     ModelRegistryService.CandidateDecisionRejected,
                     decisionSummary,
-                    savedToRecipe: false);
+                    savedToRecipe: false,
+                    datasetVersionId: global.Data.ProjectSettings.TrainingGuide.LastTrainingDatasetVersionId,
+                    datasetContentSha256: global.Data.ProjectSettings.TrainingGuide.LastTrainingDatasetContentSha256);
 
                 if (!string.IsNullOrWhiteSpace(baselineWeightsPath) && File.Exists(baselineWeightsPath))
                 {

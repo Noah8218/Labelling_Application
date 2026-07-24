@@ -100,6 +100,8 @@ namespace MvcVisionSystem
             RegisterProjectConfigName(nameof(ProjectRecipeListBox), ProjectRecipeListBox);
             RegisterProjectConfigName(nameof(ProjectConfigPathBox), ProjectConfigPathBox);
             RegisterProjectConfigName(nameof(ProjectManifestPathBox), ProjectManifestPathBox);
+            RegisterProjectConfigName(nameof(ProjectDatasetVersionBox), ProjectDatasetVersionBox);
+            RegisterProjectConfigName(nameof(ProjectDatasetVersionDetailBox), ProjectDatasetVersionDetailBox);
             RegisterProjectConfigName(nameof(ProjectConfigStatusText), ProjectConfigStatusText);
             RegisterProjectConfigName(nameof(ApplyProjectRecipeButton), ApplyProjectRecipeButton);
             RegisterProjectConfigName(nameof(RefreshProjectRecipeListButton), RefreshProjectRecipeListButton);

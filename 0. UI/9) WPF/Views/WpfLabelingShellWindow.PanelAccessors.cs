@@ -220,6 +220,8 @@ namespace MvcVisionSystem
         private ComboBox ProjectRecipeListBox => ProjectConfigPanelControl?.RecipeListBox;
         private TextBox ProjectConfigPathBox => ProjectConfigPanelControl?.ConfigPathBox;
         private TextBox ProjectManifestPathBox => ProjectConfigPanelControl?.ManifestPathBox;
+        private TextBox ProjectDatasetVersionBox => ProjectConfigPanelControl?.DatasetVersionBox;
+        private TextBox ProjectDatasetVersionDetailBox => ProjectConfigPanelControl?.DatasetVersionDetailBox;
         private TextBlock ProjectConfigStatusText => ProjectConfigPanelControl?.StatusTextBlock;
         private Wpf.Ui.Controls.Button ApplyProjectRecipeButton => ProjectConfigPanelControl?.ApplyRecipeButton;
         private Wpf.Ui.Controls.Button RefreshProjectRecipeListButton => ProjectConfigPanelControl?.RefreshRecipeListButton;

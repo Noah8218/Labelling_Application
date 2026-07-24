@@ -238,6 +238,10 @@ namespace MvcVisionSystem
 
         public string LastTrainingMessage { get; set; } = "";
 
+        public string LastTrainingDatasetVersionId { get; set; } = "";
+
+        public string LastTrainingDatasetContentSha256 { get; set; } = "";
+
         public string AppliedWeightsPath { get; set; } = "";
 
         public string AppliedWeightsUtc { get; set; } = "";
@@ -249,6 +253,8 @@ namespace MvcVisionSystem
         public void EnsureDefaults()
         {
             RunHistory ??= new List<YoloTrainingGuideRunRecord>();
+            LastTrainingDatasetVersionId ??= "";
+            LastTrainingDatasetContentSha256 ??= "";
         }
     }
 
@@ -348,6 +354,10 @@ namespace MvcVisionSystem
         public string BaselineWeightsPath { get; set; } = "";
 
         public string MetricsSummary { get; set; } = "";
+
+        public string DatasetVersionId { get; set; } = "";
+
+        public string DatasetContentSha256 { get; set; } = "";
     }
 
     public class ModelCandidate

@@ -2,6 +2,61 @@
 
 This document records code paths that have already been performance- or UX-verified and should not be casually refactored. Treat these areas as protected product behavior: change them only when the user reports a new issue in that exact path, or when a focused verification gate proves the change is necessary.
 
+## Recipe Dataset Version v2 Contract
+
+Status: stable as of 2026-07-23 for local content identity, immutable metadata history, training/model provenance, and Model Center presentation.
+
+Protected behavior:
+
+- A recipe-owned Dataset Version must hash actual image/annotation contents, relative paths, artifact kind, ordered class contract, and split ownership. Counts alone are not an identity.
+- Unchanged content must reuse the same `dsv2-<64 hex>` identity and immutable history file. A label-coordinate, class, file-content, or split-ownership change must produce a different identity.
+- `dataset.versions` stores metadata only. Do not copy the full dataset or overwrite an existing version entry.
+- Recipe save/version recording must not modify source images or annotations.
+- Internal training requests/history and model-registry runs retain Dataset Version and full content SHA-256. Model history may shorten the visible ID but must retain the full persisted value.
+- Anomaly-classification identity uses the generated class-folder train/valid/test ownership. Training-progress-only config saves reuse the version captured at training start and must not trigger a full dataset rehash.
+- External native YOLO input remains source-read-only and maps its existing content fingerprint to `dsv2-external-yolo-*`.
+- The Model Center Project panel remains read-only for version identity. It shows version, shortened SHA-256, image/label counts, and immutable-history count.
+
+Required gates:
+
+```powershell
+dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug --no-restore /nr:false -m:1 /nodeReuse:false /p:BuildInParallel=false /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --recipe-dataset-version-v2
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --external-yolo-dataset-intake
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --dataset-readiness-purpose
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --model-registry
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-project-config-panel
+```
+
+Latest evidence: `docs/RECIPE_DATASET_VERSION_V2_20260723.md` and `artifacts/ui/recipe-dataset-version-v2`.
+
+## Recipe Anomaly And Model-Adapter Truth Contract
+
+Status: stable as of 2026-07-23 for Recipe manifest semantics, anomaly beginner guidance, and the read-only Model Adapter Catalog. This is contract/presentation evidence, not model-quality or production-adoption evidence.
+
+Protected behavior:
+
+- An anomaly `dataset.manifest.json` must record `annotationProfile=image-level-normal-abnormal`, image-level review counts, and navigation-only `visibleTools=[panZoom]`. Do not restore rectangle, polygon, brush, eraser, or label-edit commands to the image-level anomaly contract.
+- The dataset wizard and learning workflow must say that the entire image is judged `정상(OK)` or `이상(NG)`. They must not instruct the operator to draw a defect region; defect localization belongs to object detection or segmentation.
+- Switching from anomaly back to object detection restores the Select tool. The anomaly learning state exposes Pan/Zoom only and no undo/redo/delete annotation commands.
+- The read-only catalog contains six explicit contracts: Recipe interchange, YOLOv5 detection, local YOLOv8, U-Net segmentation, ONNX inference-only, and local YOLO11.
+- U-Net remains segmentation-only and uses the app-owned canonical raster-mask export. YOLO11 is verified for the recorded local detection, segmentation, and anomaly-classification paths. Its 104-image anomaly candidate remains `hold`; arbitrary YOLO11 forks/runtimes and production accuracy remain unverified.
+
+Required gates:
+
+```powershell
+dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-anomaly-purpose-flow
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-learning-workflow-panel
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-dataset-setup-ui
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --model-adapter-catalog
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-labeling-shell
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
+git diff --check
+```
+
+Latest evidence: `artifacts/ui/20260723-contract-truth-alignment` contains the earlier anomaly-guide truth alignment and the closest pre-closure catalog baseline. `artifacts/ui/20260723-yolo11-anomaly-closure/after-model-adapter-catalog-final-1920.png` is the current-source Model Center after capture; it is not a fresh true-before pair. Runtime evidence is recorded in `docs/YOLO11_ANOMALY_CLASSIFICATION_PREREQUISITE_AUDIT_20260723.md` and `artifacts/exe-yolo11-anomaly-restart-smoke/current-source-final2-20260723`.
+
 ## Native YOLOv5/YOLOv8 Comparison Source-Immutability Contract
 
 Status: stable as of 2026-07-20 for cross-engine native test comparison cache cleanup and benchmark-only reporting.

@@ -12,6 +12,8 @@ namespace MvcVisionSystem
         private string selectedRecipeName = string.Empty;
         private string configPath = string.Empty;
         private string manifestPath = string.Empty;
+        private string datasetVersionText = "저장 후 생성";
+        private string datasetVersionDetailText = "Recipe를 저장하면 이미지·라벨·클래스·분할의 SHA-256 버전을 기록합니다.";
         private string statusText = "현재 recipe 설정 위치를 확인하세요.";
         private string recipeRootPath = string.Empty;
         private bool isApplyRecipeEnabled = true;
@@ -87,6 +89,18 @@ namespace MvcVisionSystem
             private set => SetProperty(ref manifestPath, value ?? string.Empty);
         }
 
+        public string DatasetVersionText
+        {
+            get => datasetVersionText;
+            private set => SetProperty(ref datasetVersionText, value ?? string.Empty);
+        }
+
+        public string DatasetVersionDetailText
+        {
+            get => datasetVersionDetailText;
+            private set => SetProperty(ref datasetVersionDetailText, value ?? string.Empty);
+        }
+
         public string StatusText
         {
             get => statusText;
@@ -151,6 +165,13 @@ namespace MvcVisionSystem
             }
 
             SelectedRecipeName = selectedName ?? string.Empty;
+        }
+
+        public void SetDatasetVersionInfo(WpfRecipeDatasetVersionPresentation presentation)
+        {
+            presentation ??= new WpfRecipeDatasetVersionPresentation();
+            DatasetVersionText = presentation.VersionText;
+            DatasetVersionDetailText = presentation.DetailText;
         }
 
         public void SelectRecipeFromList(string name)

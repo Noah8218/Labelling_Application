@@ -72,6 +72,17 @@ namespace MvcVisionSystem.Yolo
                 },
                 new ModelAdapterCatalogItem
                 {
+                    AdapterKey = "unet-segmentation",
+                    DisplayName = "U-Net 세그멘테이션",
+                    AvailabilityText = "검증된 로컬 PyTorch 학습·추론·비교 어댑터",
+                    TaskContractText = "세그멘테이션만 지원합니다. 객체탐지 박스나 이상탐지 OK/NG 분류에는 사용하지 않습니다.",
+                    DataContractText = "Recipe 마스크/폴리곤 또는 명시적으로 활성화한 native YOLO segmentation data.yaml을 앱 소유 raster-mask export로 변환하며 원본은 변경하지 않습니다.",
+                    RuntimeContractText = "격리된 U-Net PyTorch 환경과 번들 openvisionlab_unet_worker.py를 사용합니다. 시작 가중치 없이 학습한 호환 best.pt만 검사에 사용합니다.",
+                    EvidenceContractText = "U-Net과 YOLO-seg는 같은 canonical test mask의 Dice/IoU로만 비교합니다. bbox mAP와 섞거나 결과로 자동 채택하지 않습니다.",
+                    NextActionText = "세그멘테이션 Recipe와 U-Net 실행기 상태를 확인한 뒤 학습 또는 U-Net/YOLO-seg 비교를 시작하세요."
+                },
+                new ModelAdapterCatalogItem
+                {
                     AdapterKey = "onnx-inference",
                     DisplayName = "ONNX 추론",
                     AvailabilityText = "추론 전용(Inference-only) 어댑터",
@@ -85,12 +96,12 @@ namespace MvcVisionSystem.Yolo
                 {
                     AdapterKey = "yolo11-local",
                     DisplayName = "YOLO11",
-                    AvailabilityText = "검증된 로컬 Ultralytics 런타임",
-                    TaskContractText = "객체 탐지 데이터셋에서 학습·검증·추론과 YOLOv8 대비 실행을 지원합니다.",
-                    DataContractText = "원본 native data.yaml과 YOLO bbox 라벨을 그대로 사용하며, 앱이 원본을 변환하거나 덮어쓰지 않습니다.",
-                    RuntimeContractText = "YOLO11을 선택하면 연결된 로컬 Ultralytics 폴더와 기본 yolo11n.pt 시작 가중치를 사용합니다. 실제 실행 전 경로와 가중치를 확인하세요.",
-                    EvidenceContractText = "비교 결과는 같은 데이터 분할·가중치·실행 환경의 벤치마크입니다. 자동 채택 근거가 아니며 별도 홀드아웃 검증이 필요합니다.",
-                    NextActionText = "YOLO11을 선택한 뒤 로컬 폴더 연결 상태를 확인하고, 같은 데이터셋에서 YOLOv8 대비 실행을 시작하세요."
+                    AvailabilityText = "검증된 로컬 Ultralytics 객체탐지·세그멘테이션·이상분류 런타임",
+                    TaskContractText = "객체탐지, 세그멘테이션, 이상분류의 학습·검증·추론 및 YOLOv8 대비 실행을 지원합니다.",
+                    DataContractText = "객체탐지·세그멘테이션은 작업과 일치하는 native data.yaml과 YOLO 라벨을 사용합니다. 이상분류는 Recipe의 검토 완료 OK/NG 이미지를 고정 normal/abnormal 분할로 내보내며 원본을 덮어쓰지 않습니다.",
+                    RuntimeContractText = "연결된 로컬 Ultralytics 실행기와 작업에 맞는 yolo11n.pt, yolo11n-seg.pt 또는 yolo11n-cls.pt를 사용합니다. 임의의 외부 YOLO11 포크는 검증 범위가 아닙니다.",
+                    EvidenceContractText = "같은 데이터 분할·가중치·실행 환경의 벤치마크만 비교합니다. 현재 이상분류 후보는 신뢰도 0.8에서 82/104로 hold이며 자동 채택하지 않습니다.",
+                    NextActionText = "Recipe 작업을 먼저 확인한 뒤 같은 Dataset Version에서 YOLOv8 대비 학습·평가를 시작하세요."
                 }
             };
         }

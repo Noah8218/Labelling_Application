@@ -1,5 +1,7 @@
 using MvcVisionSystem;
 using MvcVisionSystem._1._Core;
+using MvcVisionSystem.Yolo;
+using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -15,7 +17,13 @@ internal static partial class Program
 
     private static int RunExeYoloV8AnomalyRestartSmoke(string[] args)
     {
-        string recipeName = "codex_yolov8_anomaly_restart_" + DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
+        string modelEngine = PythonModelSettings.NormalizeModelEngine(GetArgumentValue(args, "--engine", PythonModelSettings.EngineYoloV8));
+        AssertTrue(
+            modelEngine == PythonModelSettings.EngineYoloV8 || modelEngine == PythonModelSettings.EngineYolo11,
+            "anomaly restart smoke engine must be YOLOv8 or YOLO11: " + modelEngine);
+        string protocolModel = modelEngine == PythonModelSettings.EngineYolo11 ? "yolo11" : "yolov8";
+        string modelDisplayName = modelEngine == PythonModelSettings.EngineYolo11 ? "YOLO11" : "YOLOv8";
+        string recipeName = "codex_" + protocolModel + "_anomaly_restart_" + DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
         Process firstProcess = null;
         Process restartedProcess = null;
         string recipeDirectory = string.Empty;
@@ -42,8 +50,10 @@ internal static partial class Program
                 Enum.TryParse(expectedAnomalyStateText, ignoreCase: true, out AnomalyImageReviewState expectedAnomalyState)
                     && Enum.IsDefined(typeof(AnomalyImageReviewState), expectedAnomalyState),
                 "expected anomaly state must be Unreviewed, Normal, or Abnormal: " + expectedAnomalyStateText);
-            string expectedWeightsRunName = Path.GetFileName(
-                Path.GetDirectoryName(Path.GetDirectoryName(weightsPath) ?? string.Empty) ?? string.Empty);
+            string weightsDirectory = Path.GetDirectoryName(weightsPath) ?? string.Empty;
+            string expectedWeightsRunName = string.Equals(Path.GetFileName(weightsDirectory), "weights", StringComparison.OrdinalIgnoreCase)
+                ? Path.GetFileName(Path.GetDirectoryName(weightsDirectory) ?? string.Empty)
+                : Path.GetFileName(weightsDirectory);
             string artifactRoot = Path.GetFullPath(GetArgumentValue(
                 args,
                 "--artifact-root",
@@ -53,15 +63,18 @@ internal static partial class Program
             string outputRoot = Path.Combine(artifactRoot, "dataset");
             string smokeImagePath = Path.Combine(inputRoot, Path.GetFileName(sourceImagePath));
             string pythonPath = Path.Combine(yoloRoot, ".venv", "Scripts", "python.exe");
-            string clientScriptPath = Path.Combine(yoloRoot, "labeling_tcp_client.py");
+            string clientScriptPath = modelEngine == PythonModelSettings.EngineYolo11
+                ? Path.Combine(root, "Runtime", "Python", "openvisionlab_ultralytics_worker.py")
+                : Path.Combine(yoloRoot, "labeling_tcp_client.py");
+            bool usePreconfiguredRecipe = args.Any(arg => string.Equals(arg, "--preconfigured-recipe", StringComparison.OrdinalIgnoreCase));
 
-            AssertTrue(File.Exists(exePath), "YOLOv8 anomaly restart smoke EXE was not found: " + exePath);
-            AssertTrue(Directory.Exists(yoloRoot), "YOLOv8 root was not found: " + yoloRoot);
-            AssertTrue(File.Exists(pythonPath), "YOLOv8 Python was not found: " + pythonPath);
-            AssertTrue(File.Exists(clientScriptPath), "YOLOv8 TCP adapter was not found: " + clientScriptPath);
-            AssertTrue(File.Exists(weightsPath), "YOLOv8 classification weights were not found: " + weightsPath);
-            AssertTrue(!string.IsNullOrWhiteSpace(expectedWeightsRunName), "YOLOv8 classification weight run name could not be resolved: " + weightsPath);
-            AssertTrue(File.Exists(sourceImagePath), "YOLOv8 anomaly smoke image was not found: " + sourceImagePath);
+            AssertTrue(File.Exists(exePath), modelDisplayName + " anomaly restart smoke EXE was not found: " + exePath);
+            AssertTrue(Directory.Exists(yoloRoot), "Ultralytics root was not found: " + yoloRoot);
+            AssertTrue(File.Exists(pythonPath), "Ultralytics Python was not found: " + pythonPath);
+            AssertTrue(File.Exists(clientScriptPath), modelDisplayName + " TCP worker was not found: " + clientScriptPath);
+            AssertTrue(File.Exists(weightsPath), modelDisplayName + " classification weights were not found: " + weightsPath);
+            AssertTrue(!string.IsNullOrWhiteSpace(expectedWeightsRunName), modelDisplayName + " classification weight run name could not be resolved: " + weightsPath);
+            AssertTrue(File.Exists(sourceImagePath), modelDisplayName + " anomaly smoke image was not found: " + sourceImagePath);
 
             string exeDirectory = Path.GetDirectoryName(exePath) ?? AppContext.BaseDirectory;
             string recipeRoot = Path.Combine(exeDirectory, "RECIPE");
@@ -76,42 +89,77 @@ internal static partial class Program
             Directory.CreateDirectory(inputRoot);
             File.Copy(sourceImagePath, smokeImagePath, overwrite: true);
 
+            if (usePreconfiguredRecipe)
+            {
+                PrepareAnomalyRestartRecipe(
+                    recipeName,
+                    recipeDirectory,
+                    lastOpenedRecipePath,
+                    outputRoot,
+                    inputRoot,
+                    modelEngine,
+                    yoloRoot,
+                    pythonPath,
+                    clientScriptPath,
+                    weightsPath,
+                    parsedAnomalyMinimumConfidence);
+            }
+
             firstProcess = StartYoloV8RuntimeSmokeExe(exePath, out IntPtr firstHandle);
             CaptureWorkflowStep(RefreshAutomationRoot(firstProcess, firstHandle), screenshotDirectory, "01_before_recipe_setup");
-            CreateDatasetRecipeThroughExe(
-                firstProcess,
-                firstHandle,
-                recipeName,
-                outputRoot,
-                recipeDirectory,
-                screenshotDirectory,
-                "\uC774\uC0C1 \uD0D0\uC9C0",
-                LabelingDatasetPurpose.AnomalyDetection,
-                "normal, abnormal");
+            if (usePreconfiguredRecipe)
+            {
+                AssertTrue(
+                    WaitUntil(
+                        () => ImageRootAppearsLoaded(
+                            RefreshAutomationRoot(firstProcess, firstHandle, bringToFront: false),
+                            inputRoot,
+                            Path.GetFileNameWithoutExtension(smokeImagePath)),
+                        TimeSpan.FromSeconds(20)),
+                    "preconfigured anomaly recipe did not load its image queue");
+                CaptureWorkflowStep(RefreshAutomationRoot(firstProcess, firstHandle), screenshotDirectory, "01_preconfigured_recipe_loaded");
+            }
+            else
+            {
+                CreateDatasetRecipeThroughExe(
+                    firstProcess,
+                    firstHandle,
+                    recipeName,
+                    outputRoot,
+                    recipeDirectory,
+                    screenshotDirectory,
+                    "\uC774\uC0C1 \uD0D0\uC9C0",
+                    LabelingDatasetPurpose.AnomalyDetection,
+                    "normal, abnormal");
+            }
 
             string visionPath = Path.Combine(recipeDirectory, "VISION.xml");
             AssertTrue(WaitUntil(() => File.Exists(visionPath), TimeSpan.FromSeconds(8)), "YOLOv8 anomaly recipe VISION.xml was not created");
             AssertEqual(LabelingDatasetPurpose.AnomalyDetection, ReadRecipeData(visionPath).ProjectSettings.DatasetPurpose);
 
-            ConfigureYoloV8RuntimeThroughExe(
-                firstProcess,
-                firstHandle,
-                inputRoot,
-                yoloRoot,
-                pythonPath,
-                clientScriptPath,
-                weightsPath,
-                screenshotDirectory,
-                confidence: "0",
-                timeoutSeconds: "180",
-                inferenceImageSize: "128",
-                anomalyNormalClasses: "normal",
-                anomalyAbnormalClasses: "abnormal",
-                anomalyMinimumConfidence: anomalyMinimumConfidence);
-            LoadConfiguredImageRootThroughExe(firstProcess, inputRoot, screenshotDirectory);
+            if (!usePreconfiguredRecipe)
+            {
+                ConfigureYoloV8RuntimeThroughExe(
+                    firstProcess,
+                    firstHandle,
+                    inputRoot,
+                    yoloRoot,
+                    pythonPath,
+                    clientScriptPath,
+                    weightsPath,
+                    screenshotDirectory,
+                    confidence: "0",
+                    timeoutSeconds: "180",
+                    inferenceImageSize: "128",
+                    anomalyNormalClasses: "normal",
+                    anomalyAbnormalClasses: "abnormal",
+                    anomalyMinimumConfidence: anomalyMinimumConfidence,
+                    modelEngine: modelEngine);
+                LoadConfiguredImageRootThroughExe(firstProcess, inputRoot, screenshotDirectory);
+            }
 
             CData savedData = ReadRecipeData(visionPath);
-            AssertYoloV8AnomalyRecipeSettings(savedData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, parsedAnomalyMinimumConfidence);
+            AssertYoloV8AnomalyRecipeSettings(savedData, modelEngine, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, parsedAnomalyMinimumConfidence);
             string savedVisionHash = ComputeFileSha256(visionPath);
             File.Copy(visionPath, Path.Combine(artifactRoot, "saved-before-restart-VISION.xml"), overwrite: true);
             CaptureWorkflowStep(RefreshAutomationRoot(firstProcess, firstHandle), screenshotDirectory, "02_saved_yolov8_anomaly_profile");
@@ -136,12 +184,12 @@ internal static partial class Program
 
             AssertTrue(
                 string.Equals(File.ReadAllText(lastOpenedRecipePath).Trim(), recipeName, StringComparison.Ordinal),
-                "restart marker did not preserve the YOLOv8 anomaly smoke recipe");
+                "restart marker did not preserve the anomaly smoke recipe");
             CData reopenedData = ReadRecipeData(visionPath);
-            AssertYoloV8AnomalyRecipeSettings(reopenedData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, parsedAnomalyMinimumConfidence);
+            AssertYoloV8AnomalyRecipeSettings(reopenedData, modelEngine, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, parsedAnomalyMinimumConfidence);
             string reopenedVisionHash = ComputeFileSha256(visionPath);
             File.Copy(visionPath, Path.Combine(artifactRoot, "reopened-before-inference-VISION.xml"), overwrite: true);
-            VerifyYoloV8SettingsVisibleAfterRestart(restartedProcess, restartedHandle, weightsPath);
+            VerifyYoloV8SettingsVisibleAfterRestart(restartedProcess, restartedHandle, weightsPath, modelEngine);
             VerifyAnomalyMappingVisibleAfterRestart(restartedProcess, restartedHandle, parsedAnomalyMinimumConfidence);
 
             var inferenceRoot = RefreshAutomationRoot(restartedProcess, restartedHandle);
@@ -173,13 +221,13 @@ internal static partial class Program
                     },
                     TimeSpan.FromMinutes(4)),
                 "first YOLOv8 anomaly inference did not finish after restart");
-            AssertTrue(!IsExeTrainedInferenceFailure(inferenceStatus), "first YOLOv8 anomaly inference failed after restart: " + inferenceStatus);
-            AssertTrue(inferenceStatus.Contains("YOLOv8", StringComparison.OrdinalIgnoreCase), "anomaly inference status did not identify YOLOv8: " + inferenceStatus);
+            AssertTrue(!IsExeTrainedInferenceFailure(inferenceStatus), "first anomaly inference failed after restart: " + inferenceStatus);
+            AssertTrue(inferenceStatus.Contains(modelDisplayName, StringComparison.OrdinalIgnoreCase), "anomaly inference status did not identify " + modelDisplayName + ": " + inferenceStatus);
             AssertTrue(
                 inferenceStatus.Contains(expectedWeightsRunName, StringComparison.OrdinalIgnoreCase),
                 "anomaly inference status did not identify the saved classification best.pt run: " + expectedWeightsRunName + " / " + inferenceStatus);
             AssertTrue(inferenceStatus.Contains("\uD6C4\uBCF4", StringComparison.Ordinal), "anomaly inference status did not report a candidate count: " + inferenceStatus);
-            AssertTrue(!inferenceStatus.Contains("\uD6C4\uBCF4 0", StringComparison.Ordinal), "YOLOv8 anomaly smoke returned no classification candidate: " + inferenceStatus);
+            AssertTrue(!inferenceStatus.Contains("\uD6C4\uBCF4 0", StringComparison.Ordinal), modelDisplayName + " anomaly smoke returned no classification candidate: " + inferenceStatus);
 
             AssertTrue(
                 WaitUntil(
@@ -192,12 +240,12 @@ internal static partial class Program
                 "04_first_" + expectedAnomalyState.ToString().ToLowerInvariant() + "_inference_after_restart");
 
             CData inferredData = ReadRecipeData(visionPath);
-            AssertYoloV8AnomalyRecipeSettings(inferredData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, parsedAnomalyMinimumConfidence);
+            AssertYoloV8AnomalyRecipeSettings(inferredData, modelEngine, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, parsedAnomalyMinimumConfidence);
             string inferredVisionHash = ComputeFileSha256(visionPath);
             string summaryPath = Path.Combine(artifactRoot, "summary.txt");
             File.WriteAllLines(summaryPath, new[]
             {
-                "EXE YOLOv8 anomaly restart smoke passed.",
+                "EXE " + modelDisplayName + " anomaly restart smoke passed.",
                 "recipe=" + recipeName,
                 "sourceImage=" + sourceImagePath,
                 "smokeImage=" + smokeImagePath,
@@ -213,16 +261,16 @@ internal static partial class Program
                 "screenshots=" + screenshotDirectory
             }, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 
-            Console.WriteLine("EXE_YOLOV8_ANOMALY_RESTART_SMOKE recipe=" + recipeName);
-            Console.WriteLine("EXE_YOLOV8_ANOMALY_RESTART_SMOKE weights=" + weightsPath);
-            Console.WriteLine("EXE_YOLOV8_ANOMALY_RESTART_SMOKE inferenceStatus=" + inferenceStatus);
-            Console.WriteLine("EXE_YOLOV8_ANOMALY_RESTART_SMOKE anomalyState=" + expectedAnomalyState);
-            Console.WriteLine("EXE_YOLOV8_ANOMALY_RESTART_SMOKE summary=" + summaryPath);
+            Console.WriteLine("EXE_ULTRALYTICS_ANOMALY_RESTART_SMOKE recipe=" + recipeName);
+            Console.WriteLine("EXE_ULTRALYTICS_ANOMALY_RESTART_SMOKE weights=" + weightsPath);
+            Console.WriteLine("EXE_ULTRALYTICS_ANOMALY_RESTART_SMOKE inferenceStatus=" + inferenceStatus);
+            Console.WriteLine("EXE_ULTRALYTICS_ANOMALY_RESTART_SMOKE anomalyState=" + expectedAnomalyState);
+            Console.WriteLine("EXE_ULTRALYTICS_ANOMALY_RESTART_SMOKE summary=" + summaryPath);
             return 0;
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine("FAIL EXE YOLOv8 anomaly restart smoke: " + ex.Message);
+            Console.Error.WriteLine("FAIL EXE Ultralytics anomaly restart smoke: " + ex.Message);
             Console.Error.WriteLine(ex.ToString());
             return 1;
         }
@@ -237,6 +285,7 @@ internal static partial class Program
 
     private static void AssertYoloV8AnomalyRecipeSettings(
         CData data,
+        string modelEngine,
         string yoloRoot,
         string pythonPath,
         string clientScriptPath,
@@ -246,12 +295,12 @@ internal static partial class Program
     {
         AssertEqual(LabelingDatasetPurpose.AnomalyDetection, data.ProjectSettings.DatasetPurpose);
         PythonModelSettings settings = data.ProjectSettings.PythonModel;
-        AssertEqual(PythonModelSettings.EngineYoloV8, settings.ModelEngine);
-        AssertPathEqual(yoloRoot, settings.ProjectRootPath, "saved YOLOv8 project root mismatch");
-        AssertPathEqual(pythonPath, settings.PythonExecutablePath, "saved YOLOv8 Python mismatch");
-        AssertPathEqual(clientScriptPath, settings.ClientScriptPath, "saved YOLOv8 client script mismatch");
-        AssertPathEqual(weightsPath, settings.WeightsPath, "saved YOLOv8 classification weights mismatch");
-        AssertPathEqual(imageRoot, settings.ImageRootPath, "saved YOLOv8 anomaly image root mismatch");
+        AssertEqual(modelEngine, settings.ModelEngine);
+        AssertPathEqual(yoloRoot, settings.ProjectRootPath, "saved Ultralytics project root mismatch");
+        AssertPathEqual(pythonPath, settings.PythonExecutablePath, "saved Ultralytics Python mismatch");
+        AssertPathEqual(clientScriptPath, settings.ClientScriptPath, "saved Ultralytics client script mismatch");
+        AssertPathEqual(weightsPath, settings.WeightsPath, "saved Ultralytics classification weights mismatch");
+        AssertPathEqual(imageRoot, settings.ImageRootPath, "saved Ultralytics anomaly image root mismatch");
         AssertEqual(128, settings.InferenceImageSize);
         AssertTrue(Math.Abs(settings.MinimumDetectionConfidence) < 0.0001F, "saved YOLOv8 classification candidate confidence should be 0");
         AssertTrue(settings.AutoStartClient, "saved YOLOv8 anomaly runtime should auto-start after restart");
@@ -260,6 +309,51 @@ internal static partial class Program
         AssertTrue(
             Math.Abs(data.ProjectSettings.AnomalyClassification.MinimumConfidence - anomalyMinimumConfidence) < 0.0001D,
             "saved anomaly confidence should be " + anomalyMinimumConfidence.ToString(CultureInfo.InvariantCulture));
+    }
+
+    private static void PrepareAnomalyRestartRecipe(
+        string recipeName,
+        string recipeDirectory,
+        string lastOpenedRecipePath,
+        string outputRoot,
+        string imageRoot,
+        string modelEngine,
+        string yoloRoot,
+        string pythonPath,
+        string clientScriptPath,
+        string weightsPath,
+        double anomalyMinimumConfidence)
+    {
+        var data = new CData();
+        data.ConfigureOutputRoot(outputRoot);
+        data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
+        data.ClassNamedList.Add(new CClassItem { Text = "normal" });
+        data.ClassNamedList.Add(new CClassItem { Text = "abnormal" });
+        PythonModelSettings settings = data.ProjectSettings.PythonModel;
+        settings.ModelEngine = modelEngine;
+        settings.ProjectRootPath = yoloRoot;
+        settings.PythonExecutablePath = pythonPath;
+        settings.ClientScriptPath = clientScriptPath;
+        settings.WeightsPath = weightsPath;
+        settings.ImageRootPath = imageRoot;
+        settings.AutoStartClient = true;
+        settings.MinimumDetectionConfidence = 0;
+        settings.DetectionTimeoutSeconds = 180;
+        settings.InferenceImageSize = 128;
+        data.ProjectSettings.AnomalyClassification.NormalClassNames.Clear();
+        data.ProjectSettings.AnomalyClassification.AbnormalClassNames.Clear();
+        data.ProjectSettings.AnomalyClassification.NormalClassNames.Add("normal");
+        data.ProjectSettings.AnomalyClassification.AbnormalClassNames.Add("abnormal");
+        data.ProjectSettings.AnomalyClassification.MinimumConfidence = anomalyMinimumConfidence;
+        data.SaveYoloDataYaml();
+
+        Directory.CreateDirectory(recipeDirectory);
+        SerializeHelper.ToXmlFile(Path.Combine(recipeDirectory, "VISION.xml"), data);
+        File.WriteAllText(
+            Path.Combine(recipeDirectory, LabelingDatasetManifestService.FileName),
+            JsonConvert.SerializeObject(LabelingDatasetManifestService.Build(data, recipeName), Formatting.Indented),
+            new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+        File.WriteAllText(lastOpenedRecipePath, recipeName, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     }
 
     private static void VerifyAnomalyMappingVisibleAfterRestart(

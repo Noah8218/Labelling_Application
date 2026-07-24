@@ -54,7 +54,10 @@ namespace MvcVisionSystem
                     return;
                 }
 
-                bool started = global.TrainingWorkflow.TryStartTraining(global.Data, global.DeepLearning);
+                bool started = global.TrainingWorkflow.TryStartTraining(
+                    global.Data,
+                    global.DeepLearning,
+                    recipeName: GetCurrentRecipeName());
                 if (global?.Data?.ProjectSettings?.ExternalYoloDataset?.HasSelection == true)
                 {
                     TrySaveExternalYoloDatasetSettings();

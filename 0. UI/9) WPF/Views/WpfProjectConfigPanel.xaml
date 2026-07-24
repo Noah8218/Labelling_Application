@@ -153,6 +153,8 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <TextBlock Text="Recipe"
@@ -223,6 +225,28 @@
                          Style="{StaticResource ProjectConfigTextBoxStyle}"
                          Text="{Binding ManifestPath, Mode=OneWay}"
                          ToolTip="{Binding ManifestPath}" />
+                <TextBlock Grid.Row="4"
+                           Text="데이터 버전"
+                           Style="{StaticResource ProjectConfigLabelStyle}" />
+                <TextBox x:Name="ProjectDatasetVersionBox"
+                         Grid.Row="4"
+                         Grid.Column="1"
+                         Grid.ColumnSpan="2"
+                         Style="{StaticResource ProjectConfigTextBoxStyle}"
+                         Text="{Binding DatasetVersionText, Mode=OneWay}"
+                         ToolTip="{Binding DatasetVersionText}"
+                         AutomationProperties.Name="현재 Dataset Version" />
+                <TextBlock Grid.Row="5"
+                           Text="콘텐츠"
+                           Style="{StaticResource ProjectConfigLabelStyle}" />
+                <TextBox x:Name="ProjectDatasetVersionDetailBox"
+                         Grid.Row="5"
+                         Grid.Column="1"
+                         Grid.ColumnSpan="2"
+                         Style="{StaticResource ProjectConfigTextBoxStyle}"
+                         Text="{Binding DatasetVersionDetailText, Mode=OneWay}"
+                         ToolTip="{Binding DatasetVersionDetailText}"
+                         AutomationProperties.Name="Dataset Version 상세" />
             </Grid>
 
             <WrapPanel Margin="0,8,0,0">

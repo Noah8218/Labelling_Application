@@ -13,7 +13,11 @@ namespace MvcVisionSystem._1._Core
 
         public string LastPreparationFailureMessage { get; private set; } = string.Empty;
 
-        public bool TryStartTraining(CData data, CCommunicationLearning communication, string runName = "")
+        public bool TryStartTraining(
+            CData data,
+            CCommunicationLearning communication,
+            string runName = "",
+            string recipeName = "")
         {
             if (!TryPrepareTrainingDataset(data, out TrainingDatasetRequest trainingRequest))
             {
@@ -24,6 +28,30 @@ namespace MvcVisionSystem._1._Core
             {
                 AppLog.ABNORMAL("YOLO 학습 통신이 초기화되지 않았습니다.");
                 return false;
+            }
+
+            RecipeDatasetVersionSnapshot recipeSnapshot = null;
+            if (!trainingRequest.IsExternalSource)
+            {
+                try
+                {
+                    recipeSnapshot = RecipeDatasetVersionService.CreateSnapshot(data);
+                    trainingRequest.DatasetVersionId = recipeSnapshot.DatasetVersionId;
+                    trainingRequest.DatasetContentSha256 = recipeSnapshot.ContentSha256;
+                    if (!string.IsNullOrWhiteSpace(recipeName))
+                    {
+                        LabelingDatasetManifestService.Save(data, recipeName, recipeSnapshot);
+                    }
+                }
+                catch (Exception ex) when (ex is IOException
+                    || ex is UnauthorizedAccessException
+                    || ex is ArgumentException
+                    || ex is InvalidDataException)
+                {
+                    LastPreparationFailureMessage = "Recipe Dataset Version v2 capture failed: " + ex.Message;
+                    AppLog.ABNORMAL(LastPreparationFailureMessage);
+                    return false;
+                }
             }
 
             TrainingSettings training = data.GetTrainingSettings();
@@ -45,17 +73,24 @@ namespace MvcVisionSystem._1._Core
             {
                 AppLog.ABNORMAL("Python 모델 클라이언트가 연결되지 않아 학습 시작 명령을 보내지 못했습니다.");
             }
-            else if (trainingRequest.IsExternalSource)
+            else
             {
-                YoloExternalDatasetIntakeService.RecordTrainingRequest(
-                    data?.ProjectSettings?.ExternalYoloDataset,
-                    data?.ProjectSettings?.PythonModel,
-                    model,
-                    trainingRequest.Task,
-                    weightFile,
-                    runName,
-                    trainingRequest.SourceFingerprintSha256,
-                    trainingRequest.RuntimeDataYamlFilePath);
+                data.ProjectSettings.TrainingGuide.LastTrainingDatasetVersionId =
+                    trainingRequest.DatasetVersionId ?? string.Empty;
+                data.ProjectSettings.TrainingGuide.LastTrainingDatasetContentSha256 =
+                    trainingRequest.DatasetContentSha256 ?? string.Empty;
+                if (trainingRequest.IsExternalSource)
+                {
+                    YoloExternalDatasetIntakeService.RecordTrainingRequest(
+                        data?.ProjectSettings?.ExternalYoloDataset,
+                        data?.ProjectSettings?.PythonModel,
+                        model,
+                        trainingRequest.Task,
+                        weightFile,
+                        runName,
+                        trainingRequest.SourceFingerprintSha256,
+                        trainingRequest.RuntimeDataYamlFilePath);
+                }
             }
 
             return sent;
@@ -216,7 +251,9 @@ namespace MvcVisionSystem._1._Core
                 Task = ResolveTrainingTask(report.Purpose),
                 IsExternalSource = true,
                 SourceFingerprintSha256 = report.SourceFingerprintSha256,
-                RuntimeDataYamlFilePath = runtime.RuntimeDataYamlFilePath
+                RuntimeDataYamlFilePath = runtime.RuntimeDataYamlFilePath,
+                DatasetVersionId = RecipeDatasetVersionService.BuildExternalDatasetVersionId(report.SourceFingerprintSha256),
+                DatasetContentSha256 = report.SourceFingerprintSha256
             };
             AppLog.NORMAL($"External native YOLO dataset ready. {report.Summary} / Source:{report.DataYamlFilePath} / Runtime:{runtime.RuntimeDataYamlFilePath}");
             return true;
@@ -382,7 +419,9 @@ namespace MvcVisionSystem._1._Core
                 Task = "segment",
                 IsExternalSource = true,
                 SourceFingerprintSha256 = report.SourceFingerprintSha256,
-                RuntimeDataYamlFilePath = result.OutputRootPath
+                RuntimeDataYamlFilePath = result.OutputRootPath,
+                DatasetVersionId = RecipeDatasetVersionService.BuildExternalDatasetVersionId(report.SourceFingerprintSha256),
+                DatasetContentSha256 = report.SourceFingerprintSha256
             };
             AppLog.NORMAL($"External native YOLO segmentation U-Net dataset ready. Images:{result.ImageCount}, PositiveMasks:{result.PositiveMaskImageCount}, Source:{report.DataYamlFilePath}, Canonical:{result.OutputRootPath}");
             return true;
@@ -436,6 +475,10 @@ namespace MvcVisionSystem._1._Core
             public string SourceFingerprintSha256 { get; set; } = string.Empty;
 
             public string RuntimeDataYamlFilePath { get; set; } = string.Empty;
+
+            public string DatasetVersionId { get; set; } = string.Empty;
+
+            public string DatasetContentSha256 { get; set; } = string.Empty;
         }
     }
 }

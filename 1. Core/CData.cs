@@ -62,14 +62,17 @@ namespace MvcVisionSystem
             return newData = this.LoadConfig(RecipeName);
         }
 
-        public void SaveConfig(string RecipeName)
+        public void SaveConfig(string RecipeName, bool refreshDatasetVersion = true)
         {
             NormalizeOutputPaths();
             NormalizeTrainingSettings();
             string strPath = GetRecipeConfigPath(RecipeName);
             Directory.CreateDirectory(Path.GetDirectoryName(strPath));
             SerializeHelper.ToXmlFile(strPath, this);
-            LabelingDatasetManifestService.Save(this, RecipeName);
+            if (refreshDatasetVersion)
+            {
+                LabelingDatasetManifestService.Save(this, RecipeName);
+            }
         }
 
         public void ConfigureOutputRoot(string outputRootPath)

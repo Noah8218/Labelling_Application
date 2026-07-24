@@ -8,6 +8,39 @@ The score below is product completeness, not code quality. A lower score can sti
 
 ## Latest Evidence Update (2026-07-23)
 
+The explicitly approved YOLO11 anomaly-classification slice is complete for the
+recorded local runtime. The official classification seed loaded, one-epoch and
+20-epoch app-service/TCP training completed on the supplied 500 OK / 500 NG
+circular data, the 1,000-file source tree stayed byte-identical, and the actual
+EXE reopened the saved profile and inferred a held-out NG image as abnormal.
+On the identical 104-image fixed test fingerprint and confidence `0.8`, YOLO11
+scored `82/104` (`78.8%`) versus YOLOv8 `90/104` (`86.5%`), so both remain
+`hold` and no model was automatically adopted. This closes local adapter
+runtime/workflow support, not field accuracy; the focused-workstation estimate
+therefore remains `4.0/5`.
+
+Recipe Dataset Version v2 is complete. The former count-based identifier could
+miss a label-coordinate edit when object counts stayed unchanged; the new local
+identity hashes exact image/annotation contents, ordered classes, and split
+ownership. Immutable metadata history, training/model provenance, Model Center
+presentation, focused regressions, source immutability, and a current actual-EXE
+smoke all passed. This strengthens reproducibility and model-comparison
+traceability, but does not add commercial collaboration/version-control breadth
+or field-quality evidence. The focused-workstation estimate therefore remains
+`4.0/5`. See `docs/RECIPE_DATASET_VERSION_V2_20260723.md`.
+
+The Recipe/anomaly/model-adapter truth-alignment slice is complete. Anomaly
+manifests now identify image-level Normal/Abnormal review and navigation-only
+tools instead of the obsolete box-and-mask profile; dataset setup and learning
+guidance no longer instruct the operator to draw a defect region. The read-only
+Model Adapter Catalog now includes the already verified U-Net segmentation
+adapter and describes YOLO11 detection/segmentation. The later YOLO11 anomaly
+closure above extends that contract to the recorded local classification path
+while showing its current `hold` decision. Focused build, manifest/purpose/wizard/catalog/shell
+gates, and current-source 1920x1080 before/after evidence passed. This removes
+contract drift only and does not change the focused-workstation estimate from
+`4.0/5`, model accuracy, or production-adoption readiness.
+
 The temporary relocated checkout has now been retired after an independent
 original-path verification. Repository-root discovery recognizes the current
 solution/project names, Dataset startup tests wait for asynchronous queue
@@ -203,7 +236,7 @@ Labelbox sets an ontology and workforce baseline: reusable ontologies, projects,
 | Operational SEG model quality | 2.8 | Runtime, contour transport, comparison, and adoption plumbing are present, but 120/125 current OK labels are four-point rectangles and there is no independent production-camera/cross-session evidence. Correct labels and rerun the unchanged held-out comparison before adoption claims. |
 | Template-assisted labeling | 3.5 | Useful local automation. It is not the same as foundation-model auto-labeling. |
 | Runtime/status presentation and MVVM boundaries | 4.1 | Many high-value status paths are now service-owned and test guarded, and the YOLO settings profile now reflects live YOLOv8/YOLO11 worker training capability when the connected worker reports it. Runtime warnings, segmentation/classification capability lists, resolved Ultralytics training weights, runtime-ready/runtime-blocked plus download-required/runtime-blocked-missing task-weight cache inventory, download-guard failures from the worker in YOLO settings, training progress/recovery, YOLOv8 segmentation training-history surfaces, current-image smoke unsupported-runtime blockers, and the local YOLOv8 source/venv connection state are preserved into status/detail surfaces with operator-readable labels. Continue only narrowly. |
-| Anomaly detection | 3.9 | Purpose/manifest/guide foundations exist, image-level normal/abnormal persistence is implemented, WPF normal-completion advances to the next unreviewed anomaly image, dashboard distribution is visible, YOLOv8/YOLO11 classification results are preserved as image-level runtime candidates, explicit class mappings persist in project settings with WPF configuration inputs, mapped classification results update anomaly review state after inference, reviewed images can be exported to an Ultralytics normal/abnormal classification dataset, anomaly training routes `task=classify` to that dataset with YOLOv8/YOLO11 task-specific classification packet coverage, and insufficient examples produce operator-facing readiness detail. Local YOLOv8 classification runtime/WPF mapped-inference smokes pass; the evaluation guard and runner fail closed below held-out count, accuracy, and confidence thresholds. A 100-image local circular-defect set now has a deterministic train/validation/test run whose unchanged 15-image held-out split passed the guard at minimum confidence 0.8 (15/15, normal 5/5, abnormal 10/10), and WPF app-path smokes mapped held-out normal and abnormal images correctly. This remains one-source-family evidence with only five held-out normal images; independent production-camera/domain-shift evidence is still required, and YOLO11 remains unverified. |
+| Anomaly detection | 3.9 | Purpose/manifest/guide foundations exist, image-level normal/abnormal persistence is implemented, WPF normal-completion advances to the next unreviewed anomaly image, dashboard distribution is visible, YOLOv8/YOLO11 classification results are preserved as image-level runtime candidates, explicit class mappings persist in project settings with WPF configuration inputs, mapped classification results update anomaly review state after inference, reviewed images can be exported to an Ultralytics normal/abnormal classification dataset, anomaly training routes `task=classify` to that dataset with YOLOv8/YOLO11 task-specific classification packet coverage, and insufficient examples produce operator-facing readiness detail. Local YOLOv8 and YOLO11 classification training/inference paths pass; the evaluation guard and runner fail closed below held-out count, accuracy, and confidence thresholds. On the same fixed 104-image circular test fingerprint at confidence 0.8, YOLOv8 is 90/104 and YOLO11 is 82/104, so both candidates remain `hold`. This remains one-source-family procedural/synthetic evidence; independent production-camera/domain-shift evidence is still required. |
 | Export/import interoperability | 4.4 | YOLO-centered output exists, object-detection exports/imports now cover COCO detection JSON, Pascal VOC XML, Label Studio detection JSON, and CVAT image task archive, segmentation has COCO, Label Studio, and CVAT polygon exports/imports, and CVAT segmentation import now writes local segment/mask artifacts. NDJSON interoperability is not productized yet. |
 | Quality control and audit metrics | 3.4 | Dataset readiness/audit export exists, and Detection/Segmentation now has persisted image-level `미검토 / 수정 필요 / 검수 완료` state, an issue-only queue filter, one current short issue reason, and a local Markdown QA report. Per-label issues, immutable decision history, reviewer identity, consensus, comments, and deeper annotation analytics are still missing. |
 | Collaboration/workforce | 0.5 | Not implemented. This is outside the current local workstation MVP. |

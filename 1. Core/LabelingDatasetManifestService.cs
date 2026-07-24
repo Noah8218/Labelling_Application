@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using MvcVisionSystem.Yolo;
 
 namespace MvcVisionSystem
@@ -12,13 +10,16 @@ namespace MvcVisionSystem
     public sealed class LabelingDatasetManifest
     {
         [JsonProperty("schemaVersion")]
-        public int SchemaVersion { get; set; } = 2;
+        public int SchemaVersion { get; set; } = 3;
 
         [JsonProperty("generatedUtc")]
         public string GeneratedUtc { get; set; } = "";
 
         [JsonProperty("datasetVersionId")]
         public string DatasetVersionId { get; set; } = "";
+
+        [JsonProperty("contentIdentity")]
+        public LabelingDatasetManifestContentIdentity ContentIdentity { get; set; } = new LabelingDatasetManifestContentIdentity();
 
         [JsonProperty("recipeName")]
         public string RecipeName { get; set; } = "";
@@ -49,6 +50,36 @@ namespace MvcVisionSystem
 
         [JsonProperty("artifactSummary")]
         public LabelingDatasetManifestArtifactSummary ArtifactSummary { get; set; } = new LabelingDatasetManifestArtifactSummary();
+    }
+
+    public sealed class LabelingDatasetManifestContentIdentity
+    {
+        [JsonProperty("identitySchemaVersion")]
+        public int IdentitySchemaVersion { get; set; } = RecipeDatasetVersionService.IdentitySchemaVersion;
+
+        [JsonProperty("algorithm")]
+        public string Algorithm { get; set; } = RecipeDatasetVersionService.Algorithm;
+
+        [JsonProperty("contentSha256")]
+        public string ContentSha256 { get; set; } = "";
+
+        [JsonProperty("classContractSha256")]
+        public string ClassContractSha256 { get; set; } = "";
+
+        [JsonProperty("splitContractSha256")]
+        public string SplitContractSha256 { get; set; } = "";
+
+        [JsonProperty("fileCount")]
+        public int FileCount { get; set; }
+
+        [JsonProperty("imageFileCount")]
+        public int ImageFileCount { get; set; }
+
+        [JsonProperty("annotationFileCount")]
+        public int AnnotationFileCount { get; set; }
+
+        [JsonProperty("historyEntry")]
+        public string HistoryEntry { get; set; } = "";
     }
 
     public sealed class LabelingDatasetManifestTraining
@@ -119,11 +150,41 @@ namespace MvcVisionSystem
             }
 
             string manifestPath = GetManifestPath(recipeName);
-            Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
-            File.WriteAllText(manifestPath, JsonConvert.SerializeObject(Build(data, recipeName), Formatting.Indented));
+            string recipeDirectory = Path.GetDirectoryName(manifestPath);
+            Directory.CreateDirectory(recipeDirectory);
+            RecipeDatasetVersionSnapshot snapshot = RecipeDatasetVersionService.RecordSnapshot(
+                recipeDirectory,
+                RecipeDatasetVersionService.CreateSnapshot(data));
+            File.WriteAllText(
+                manifestPath,
+                JsonConvert.SerializeObject(Build(data, recipeName, snapshot), Formatting.Indented));
+        }
+
+        public static void Save(CData data, string recipeName, RecipeDatasetVersionSnapshot snapshot)
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            string manifestPath = GetManifestPath(recipeName);
+            string recipeDirectory = Path.GetDirectoryName(manifestPath);
+            Directory.CreateDirectory(recipeDirectory);
+            RecipeDatasetVersionSnapshot stored = RecipeDatasetVersionService.RecordSnapshot(
+                recipeDirectory,
+                snapshot ?? RecipeDatasetVersionService.CreateSnapshot(data));
+            File.WriteAllText(
+                manifestPath,
+                JsonConvert.SerializeObject(Build(data, recipeName, stored), Formatting.Indented));
         }
 
         public static LabelingDatasetManifest Build(CData data, string recipeName)
+            => Build(data, recipeName, RecipeDatasetVersionService.CreateSnapshot(data));
+
+        private static LabelingDatasetManifest Build(
+            CData data,
+            string recipeName,
+            RecipeDatasetVersionSnapshot datasetVersion)
         {
             data ??= new CData();
             LabelingProjectSettings settings = data.ProjectSettings ?? new LabelingProjectSettings();
@@ -155,9 +216,24 @@ namespace MvcVisionSystem
                     TestPercent = settings.YoloDataset?.TestPercent ?? 0,
                     SplitSeed = settings.YoloDataset?.SplitSeed ?? 0
                 },
-                ArtifactSummary = artifactSummary
+                ArtifactSummary = artifactSummary,
+                DatasetVersionId = datasetVersion?.DatasetVersionId ?? string.Empty,
+                ContentIdentity = new LabelingDatasetManifestContentIdentity
+                {
+                    IdentitySchemaVersion = datasetVersion?.IdentitySchemaVersion ?? RecipeDatasetVersionService.IdentitySchemaVersion,
+                    Algorithm = datasetVersion?.Algorithm ?? RecipeDatasetVersionService.Algorithm,
+                    ContentSha256 = datasetVersion?.ContentSha256 ?? string.Empty,
+                    ClassContractSha256 = datasetVersion?.ClassContractSha256 ?? string.Empty,
+                    SplitContractSha256 = datasetVersion?.SplitContractSha256 ?? string.Empty,
+                    FileCount = datasetVersion?.FileCount ?? 0,
+                    ImageFileCount = datasetVersion?.ImageFileCount ?? 0,
+                    AnnotationFileCount = datasetVersion?.AnnotationFileCount ?? 0,
+                    HistoryEntry = Path.Combine(
+                            RecipeDatasetVersionService.HistoryDirectoryName,
+                            (datasetVersion?.DatasetVersionId ?? string.Empty) + ".json")
+                        .Replace(Path.DirectorySeparatorChar, '/')
+                }
             };
-            manifest.DatasetVersionId = BuildDatasetVersionId(manifest);
             return manifest;
         }
 
@@ -166,7 +242,7 @@ namespace MvcVisionSystem
             return purpose switch
             {
                 LabelingDatasetPurpose.Segmentation => "mask-and-polygon",
-                LabelingDatasetPurpose.AnomalyDetection => "box-and-mask",
+                LabelingDatasetPurpose.AnomalyDetection => "image-level-normal-abnormal",
                 _ => "bounding-box"
             };
         }
@@ -176,7 +252,7 @@ namespace MvcVisionSystem
             return purpose switch
             {
                 LabelingDatasetPurpose.Segmentation => new[] { "select", "polygon", "brush", "eraser", "panZoom" },
-                LabelingDatasetPurpose.AnomalyDetection => new[] { "select", "rectangle", "brush", "eraser", "panZoom" },
+                LabelingDatasetPurpose.AnomalyDetection => new[] { "panZoom" },
                 _ => new[] { "select", "rectangle", "panZoom" }
             };
         }
@@ -222,34 +298,5 @@ namespace MvcVisionSystem
             };
         }
 
-        private static string BuildDatasetVersionId(LabelingDatasetManifest manifest)
-        {
-            string versionSource = string.Join(
-                "|",
-                manifest.DatasetPurpose,
-                manifest.AnnotationProfile,
-                string.Join(",", manifest.VisibleTools ?? new List<string>()),
-                string.Join(",", manifest.Classes ?? new List<string>()),
-                manifest.Training?.ValidationPercent ?? 0,
-                manifest.Training?.TestPercent ?? 0,
-                manifest.Training?.SplitSeed ?? 0,
-                manifest.ArtifactSummary?.PrimaryLabelKind,
-                manifest.ArtifactSummary?.PrimaryLabelCount ?? 0,
-                manifest.ArtifactSummary?.ImageCount ?? 0,
-                manifest.ArtifactSummary?.AnomalyReviewedImageCount ?? 0,
-                manifest.ArtifactSummary?.AnomalyNormalImageCount ?? 0,
-                manifest.ArtifactSummary?.AnomalyAbnormalImageCount ?? 0,
-                manifest.ArtifactSummary?.AnomalyUnreviewedImageCount ?? 0,
-                manifest.ArtifactSummary?.BoxObjectCount ?? 0,
-                manifest.ArtifactSummary?.SegmentObjectCount ?? 0,
-                manifest.ArtifactSummary?.MaskFileCount ?? 0);
-            using SHA256 sha = SHA256.Create();
-            byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(versionSource));
-            return Convert.ToBase64String(hash)
-                .TrimEnd('=')
-                .Replace('+', '-')
-                .Replace('/', '_')
-                .Substring(0, 16);
-        }
     }
 }

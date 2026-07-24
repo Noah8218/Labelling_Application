@@ -47,6 +47,23 @@ Product direction:
 - The supplied circular-disk 500 OK / 500 NG package is complete synthetic workflow evidence: exact metadata-backed 5-class detection data, YOLOv5/YOLOv8 one-epoch connectivity, a controlled 20-epoch 150-image test benchmark, and a new 20-epoch anomaly candidate. The anomaly candidate remains `hold`; the detection benchmark favors YOLOv8n (`mAP50/mAP50-95 0.955/0.678`, 27.575ms) over YOLOv5s (`0.900/0.567`, 52.45ms) but is explicitly `engine-benchmark`, not adoption. The fixed comparison cleanup preserves the exact source-tree SHA-256. The package is derived from one earlier OK source image; do not present it as independent camera evidence. Read `docs/CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
 
 Current immediate priority:
+- The approved YOLO11 anomaly-classification runtime slice is complete. The
+  official classification seed, one-epoch connectivity, 20-epoch app/TCP
+  training, fixed 104-image evaluation, Model Center evaluation route, and
+  actual-EXE restart inference passed. At confidence `0.8`, YOLO11 scored
+  `82/104` versus YOLOv8 `90/104`; both remain `hold`. Do not repeat or tune on
+  this test split. Read
+  `docs/YOLO11_ANOMALY_CLASSIFICATION_PREREQUISITE_AUDIT_20260723.md`.
+- The next anomaly-quality priority requires newly acquired balanced
+  production-camera/cross-session normal and abnormal images with provenance
+  and content-overlap checks. Until that prerequisite exists, do not spend
+  model tokens repeating same-source synthetic training.
+- Recipe Dataset Version v2 is complete in the current worktree. It hashes exact
+  recipe-owned image/annotation content, ordered classes, and split ownership;
+  records immutable metadata-only history; links training/model history to that
+  identity; and passed current-source plus actual-EXE evidence. Do not reopen it
+  without an identity, provenance, source-mutation, or presentation regression.
+  Read `docs/RECIPE_DATASET_VERSION_V2_20260723.md`.
 - The original-path relocation closure is complete and pushed in `0f1f91b`.
   Repository-root discovery recognizes the current solution/project names,
   startup Dataset restore waits for asynchronous queue completion, and native
@@ -86,10 +103,11 @@ Current immediate priority:
 - The detailed 2026-07-20 SIT audit found 9,996 unique image contents, 111 duplicate-content groups, and 18 groups carrying conflicting OK/NG labels; no duplicate group crosses PC1/PC2. Remove or adjudicate those conflicts and prove content-hash split separation after box labeling. See `docs\WORK_TRACKING.md` for the reusable audit record.
 - Do not start another broad UI redesign without a reproduced operator defect. The current task tabs, Dataset Health window, model-comparison workspace, Model Center workspace, and model-adapter catalog are completed contracts.
 - The narrow user-approved Model Center workspace slice is complete: stage 4 is now full-width and presentation-only, with current-build evidence under `artifacts\ui\model-workspace-20260718`. Do not reopen it for general polish; reopen only for a reproduced layout or state-preservation defect.
-- The explicit Model Adapter Catalog/Contract slice is complete: the Model Center shows the declared recipe-format, YOLOv5, local-YOLOv8, ONNX inference-only, and verified-scope local-YOLO11 boundaries with task/data/runtime/evidence/next-action contracts. Do not generalize the recorded YOLO11 detection/segmentation evidence to arbitrary tasks or GitHub models.
+- The explicit Model Adapter Catalog/Contract slice is complete and truth-aligned as of 2026-07-23: the Model Center shows six declared contracts—Recipe format, YOLOv5 detection, local YOLOv8, U-Net segmentation, ONNX inference-only, and verified-scope local YOLO11—with task/data/runtime/evidence/next-action boundaries. YOLO11 detection, segmentation, and the recorded local anomaly-classification path are verified; its current anomaly candidate remains `hold`, and arbitrary YOLO11 runtimes remain unverified.
 - The anomaly `OK`/`NG` folder-name intake is complete as explicit review consent, not auto-labeling: opening folders, readiness, and export must keep images unreviewed until the temporary Image Queue card's `N장 일괄 판정` action is chosen. `이미지별 확인` stays unreviewed for that image-root session, saved manual decisions always win, and the header must not gain permanent buttons. Evidence and exact regression gates are in `docs/STABLE_VERIFIED_AREAS.md` and `docs/NEXT_THREAD_HANDOFF.md` section A0.
 
 - The anomaly labeling workspace is complete as an image-level `OK/NG 이미지 판정` flow: no drawing/label-save/class-object controls are shown for anomaly purpose; the queue owns `정상(OK) → 다음`, `이상(NG) → 다음`, and `미판정으로 되돌리기`, shows `OK`/`NG`/`미판정`, persists through `anomaly-review-status.json`, and restores the standard annotation workspace when the purpose changes. The folder-consent buttons are now `N장 일괄 판정` and `이미지별 확인`; manual decisions still win. Do not reopen this slice unless a focused regression fails or the saved-state/training contract changes.
+- The 2026-07-23 truth-alignment follow-up also makes `dataset.manifest.json` record `image-level-normal-abnormal` with navigation-only `panZoom`, removes anomaly drawing/edit tools from the learning ViewModel, and replaces defect-region beginner wording with whole-image OK/NG guidance. Returning to object detection restores Select. Evidence is under `artifacts/ui/20260723-contract-truth-alignment`; do not restore the obsolete box-and-mask metadata.
 
 - Reproduced anomaly image-root defect fixed: after selecting an `images` root with nested `NG` and `OK` folders, automatic first-file loading and later queue-row clicks retain `images` as the queue root. The exact regression is in `--anomaly-folder-auto-review`; do not reintroduce leaf-folder queue repopulation.
 
@@ -97,7 +115,7 @@ Runtime rules:
 - YOLOv8 uses C:\Git\yolov8, local ultralyticsMaster, local .venv, editable install, and labeling_tcp_client.py.
 - ONNX is inference-only support, not a replacement for local training.
 - Do not download weights, upgrade pip/packages, or alter dependencies without explicit approval.
-- YOLO11 detection and segmentation are proven only for the recorded local Ultralytics runtime, compatible task weights, and focused app paths. Anomaly classification and arbitrary YOLO11 runtimes remain unverified until their own evidence passes.
+- YOLO11 detection, segmentation, and anomaly classification are proven only for the recorded local Ultralytics runtime, compatible task weights, and focused app paths. The anomaly candidate is not adopted; arbitrary YOLO11 runtimes remain unverified.
 - Preserve MVVM. Avoid Viewer/OpenGL/ROI/brush/eraser changes unless a specific defect requires them.
 - Do not push unless the user explicitly says push. A commit request is local only.
 

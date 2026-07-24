@@ -15,6 +15,8 @@ namespace MvcVisionSystem
             string recipeName = GetCurrentRecipeName();
             string configPath = GetCurrentRecipeConfigPath();
             ProjectConfigViewModel?.LoadFrom(recipeName, GetRecipeRootDirectory());
+            ProjectConfigViewModel?.SetDatasetVersionInfo(
+                WpfRecipeDatasetVersionPresentationService.Build(ProjectConfigViewModel.ManifestPath));
 
             PopulateProjectRecipeList(recipeName);
 

@@ -29,7 +29,9 @@ namespace MvcVisionSystem
             string trainingState,
             int trainingProgressPercent,
             string trainingMessage,
-            bool savedToRecipe)
+            bool savedToRecipe,
+            string datasetVersionId = "",
+            string datasetContentSha256 = "")
         {
             if (registry == null)
             {
@@ -58,6 +60,8 @@ namespace MvcVisionSystem
                 trainingState,
                 trainingProgressPercent,
                 trainingMessage,
+                datasetVersionId,
+                datasetContentSha256,
                 now);
 
             ModelCandidate candidate = UpsertCandidate(
@@ -113,7 +117,9 @@ namespace MvcVisionSystem
             string metricsSummary,
             string decision,
             string decisionSummary,
-            bool savedToRecipe)
+            bool savedToRecipe,
+            string datasetVersionId = "",
+            string datasetContentSha256 = "")
         {
             string normalizedDecision = NormalizeCandidateDecision(decision);
             bool adopt = string.Equals(normalizedDecision, CandidateDecisionAdopted, StringComparison.Ordinal);
@@ -128,7 +134,9 @@ namespace MvcVisionSystem
                 "completed",
                 100,
                 decisionSummary,
-                savedToRecipe: adopt && savedToRecipe);
+                savedToRecipe: adopt && savedToRecipe,
+                datasetVersionId: datasetVersionId,
+                datasetContentSha256: datasetContentSha256);
             if (registry == null || candidate == null)
             {
                 return candidate;
@@ -344,9 +352,14 @@ namespace MvcVisionSystem
             string trainingState,
             int trainingProgressPercent,
             string trainingMessage,
+            string datasetVersionId,
+            string datasetContentSha256,
             string now)
         {
-            string runId = BuildStableId("run", $"{candidateWeightsPath}|{NormalizePath(outputRootPath)}");
+            string normalizedDatasetVersionId = datasetVersionId?.Trim() ?? string.Empty;
+            string runId = BuildStableId(
+                "run",
+                $"{candidateWeightsPath}|{NormalizePath(outputRootPath)}|{normalizedDatasetVersionId}");
             TrainingRun run = registry.TrainingRuns
                 .FirstOrDefault(item => string.Equals(item.TrainingRunId, runId, StringComparison.Ordinal));
             if (run == null)
@@ -367,6 +380,8 @@ namespace MvcVisionSystem
             run.CandidateWeightsPath = candidateWeightsPath;
             run.BaselineWeightsPath = baselineWeightsPath;
             run.MetricsSummary = metricsSummary ?? string.Empty;
+            run.DatasetVersionId = normalizedDatasetVersionId;
+            run.DatasetContentSha256 = datasetContentSha256?.Trim() ?? string.Empty;
             return run;
         }
 

@@ -157,6 +157,23 @@ internal static partial class Program
             });
         }
 
+        if (args.Any(arg => string.Equals(arg, "--wpf-dataset-version-visual", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunWpfDatasetVersionVisual(args);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--exe-dataset-version-smoke", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunExeDatasetVersionSmoke(args);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--recipe-dataset-version-v2", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Recipe Dataset Version v2 tracks exact immutable content and training provenance",
+                TestRecipeDatasetVersionV2);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--exe-dataset-wizard-smoke", StringComparison.OrdinalIgnoreCase)))
         {
             return RunExeDatasetWizardSmoke(args);
@@ -292,9 +309,19 @@ internal static partial class Program
             return RunExeYoloV8AnomalyRestartSmoke(args);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--exe-yolo11-anomaly-restart-smoke", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunExeYoloV8AnomalyRestartSmoke(args.Concat(new[] { "--engine", "yolo11" }).ToArray());
+        }
+
         if (args.Any(arg => string.Equals(arg, "--real-yolov8-anomaly-folder-training", StringComparison.OrdinalIgnoreCase)))
         {
             return RunRealYoloV8AnomalyFolderTraining(args);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--real-yolo11-anomaly-folder-training", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunRealYoloV8AnomalyFolderTraining(args.Concat(new[] { "--engine", "yolo11" }).ToArray());
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-external-yolo-dataset-training", StringComparison.OrdinalIgnoreCase)))
@@ -14759,6 +14786,10 @@ internal static partial class Program
 
             var workflow = new YoloTrainingWorkflowService();
             AssertTrue(workflow.TryStartTraining(segmentationData, communication), "segmentation workflow should send StartTraining when segment artifacts exist");
+            AssertTrue(
+                segmentationData.ProjectSettings.TrainingGuide.LastTrainingDatasetVersionId.StartsWith("dsv2-", StringComparison.Ordinal),
+                "recipe-owned training should retain the exact Dataset Version v2 used at send time");
+            AssertEqual(64, segmentationData.ProjectSettings.TrainingGuide.LastTrainingDatasetContentSha256.Length);
             AssertTrue(requestReceived.Wait(TimeSpan.FromSeconds(5)), "mock segmentation training client did not receive StartTraining");
             AssertTrue(mockClient.Wait(TimeSpan.FromSeconds(5)), "mock segmentation training client did not finish");
             if (mockClient.IsFaulted && mockClient.Exception != null)
@@ -17864,6 +17895,8 @@ internal static partial class Program
 
             LabelingDatasetManifest manifest = LabelingDatasetManifestService.Build(data, "anomaly-review");
             AssertEqual(LabelingDatasetPurpose.AnomalyDetection.ToString(), manifest.DatasetPurpose);
+            AssertEqual("image-level-normal-abnormal", manifest.AnnotationProfile);
+            AssertEqual("panZoom", string.Join(",", manifest.VisibleTools));
             AssertEqual("image-level-normal-abnormal", manifest.ArtifactSummary.PrimaryLabelKind);
             AssertEqual(2, manifest.ArtifactSummary.PrimaryLabelCount);
             AssertEqual(3, manifest.ArtifactSummary.ImageCount);
@@ -18643,9 +18676,18 @@ internal static partial class Program
 
             runData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYolo11;
             WpfAnomalyClassificationEvaluationRunRequest yolo11Request = runService.BuildRequest(runData);
+            AssertEqual("yolo11", yolo11Request.ModelName);
+            AssertEqual(0, runService.ValidateRequest(yolo11Request).Count);
             AssertTrue(
-                runService.ValidateRequest(yolo11Request).Any(error => error.Contains("YOLOv8", StringComparison.Ordinal)),
-                "WPF anomaly evaluation runner should not claim YOLO11 readiness through the YOLOv8 evaluation script");
+                runService.BuildPowerShellArguments(yolo11Request).Contains(workerPath),
+                "WPF anomaly evaluation runner should preserve the selected YOLO11-compatible adapter path");
+
+            yolo11Request.ModelName = "unsupported";
+            AssertTrue(
+                runService.ValidateRequest(yolo11Request).Any(error =>
+                    error.Contains("YOLOv8", StringComparison.Ordinal) &&
+                    error.Contains("YOLO11", StringComparison.Ordinal)),
+                "WPF anomaly evaluation runner should reject model engines outside the verified YOLOv8/YOLO11 scope");
         }
         finally
         {
@@ -22990,7 +23032,7 @@ internal static partial class Program
             AssertEqual(LabelingDatasetPurpose.Segmentation.ToString(), manifest.DatasetPurpose);
             AssertEqual("mask-and-polygon", manifest.AnnotationProfile);
             AssertEqual("select,polygon,brush,eraser,panZoom", string.Join(",", manifest.VisibleTools));
-            AssertEqual(2, manifest.SchemaVersion);
+            AssertEqual(3, manifest.SchemaVersion);
             AssertTrue(!string.IsNullOrWhiteSpace(manifest.GeneratedUtc), "dataset manifest should record generation time");
             AssertTrue(!string.IsNullOrWhiteSpace(manifest.DatasetVersionId), "dataset manifest should include a stable dataset version id");
             AssertEqual("masks", manifest.ArtifactSummary.PrimaryLabelKind);
@@ -28746,13 +28788,15 @@ internal static partial class Program
         AssertTrue(viewModel.DatasetPurposeSummaryText.Contains("\uC2E4\uD589\uAE30", StringComparison.Ordinal), "segmentation purpose should distinguish labeling from model runtime setup");
         AssertEqual(LabelingDatasetPurpose.Segmentation, viewModel.GetSelectedDatasetPurpose());
         viewModel.SelectedDatasetPurposeMode = viewModel.DatasetPurposeModes.First(item => item.Mode == WpfLearningMode.AnomalyDetection);
-        AssertEqual("Select,Rectangle,Brush,Eraser,PanZoom", string.Join(",", viewModel.SelectableAnnotationTools.Select(item => item.Tool)));
-        AssertEqual(WpfAnnotationTool.Select, viewModel.SelectedTool.Tool);
-        AssertTrue(viewModel.DatasetPurposeToolSummaryText.Contains("\uACB0\uD568", StringComparison.Ordinal), "anomaly purpose should explain defect-region tools");
+        AssertEqual("PanZoom", string.Join(",", viewModel.SelectableAnnotationTools.Select(item => item.Tool)));
+        AssertEqual(WpfAnnotationTool.PanZoom, viewModel.SelectedTool.Tool);
+        AssertEqual(0, viewModel.AnnotationCommandTools.Count);
+        AssertEqual(1, viewModel.VisibleAnnotationTools.Count);
+        AssertTrue(viewModel.DatasetPurposeToolSummaryText.Contains("그리기 도구가 없습니다", StringComparison.Ordinal), "anomaly purpose should explain that image-level review has no drawing tools");
         AssertTrue(viewModel.DatasetSetupFirstActionText.Contains("\uC815\uC0C1/\uC774\uC0C1", StringComparison.Ordinal), "anomaly first-run cue should mention normal/abnormal images");
         AssertEqual("\uC0C8\uB85C \uB9CC\uB4E4\uAE30", viewModel.DatasetSetupActionText);
-        AssertTrue(viewModel.DatasetPurposeSummaryText.Contains("이상", StringComparison.Ordinal), "anomaly purpose should explain defect labeling");
-        AssertTrue(viewModel.DatasetPurposeSummaryText.Contains("\uC2E4\uD589\uAE30", StringComparison.Ordinal), "anomaly purpose should distinguish labeling from model runtime setup");
+        AssertTrue(viewModel.DatasetPurposeSummaryText.Contains("이미지를 그리지 않고", StringComparison.Ordinal), "anomaly purpose should explain whole-image review instead of region labeling");
+        AssertTrue(viewModel.DatasetPurposeSummaryText.Contains("이미지 분류 실행기", StringComparison.Ordinal), "anomaly purpose should distinguish labeling from classification runtime setup");
         viewModel.ApplyDatasetPurpose(LabelingDatasetPurpose.ObjectDetection);
         AssertEqual(7, viewModel.TutorialChecklistItems.Count);
         AssertEqual(7, viewModel.YoloTrainingWorkflowSteps.Count);
@@ -29307,6 +29351,11 @@ internal static partial class Program
         AssertNamedXamlBinding(xaml, xName, "WizardCreateButton", "Command", "CreateCommand");
         AssertNamedXamlBinding(xaml, xName, "WizardCreateButton", "CommandParameter", "SelectedItem");
 
+        var wizardContractViewModel = new WpfDatasetSetupWizardViewModel();
+        WpfLearningModeItem anomalyPurpose = wizardContractViewModel.DatasetPurposeModes.Single(item => item.Mode == WpfLearningMode.AnomalyDetection);
+        AssertTrue(anomalyPurpose.ToolTip.Contains("이미지 전체", StringComparison.Ordinal), "dataset wizard should describe anomaly as whole-image review");
+        AssertTrue(!anomalyPurpose.ToolTip.Contains("영역", StringComparison.Ordinal), "dataset wizard should not imply anomaly region drawing");
+
         string wizardViewModelSource = File.ReadAllText(wizardViewModelPath);
         string shellSource = ReadWpfLabelingShellWindowSources();
         string datasetSetupRequestModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Models", "WpfDatasetSetupRequest.cs"));
@@ -29828,7 +29877,7 @@ internal static partial class Program
             AssertTrue(!string.IsNullOrWhiteSpace(manifest.ImageRootPath), "dataset setup manifest should include the active image folder path");
             AssertPathEqual(CGlobal.Inst.Data.TrainImagesPath, manifest.ImageRootPath, "blank dataset manifest should not retain the previous recipe image root");
             AssertTrue(manifest.Classes.Contains("Scratch"), "dataset setup manifest should include wizard initial classes");
-            AssertEqual(2, manifest.SchemaVersion);
+            AssertEqual(3, manifest.SchemaVersion);
             AssertTrue(!string.IsNullOrWhiteSpace(manifest.DatasetVersionId), "dataset setup manifest should include a dataset version id");
             AssertEqual("masks", manifest.ArtifactSummary.PrimaryLabelKind);
             AssertEqual(0, manifest.ArtifactSummary.PrimaryLabelCount);
@@ -33210,6 +33259,8 @@ internal static partial class Program
         AssertNamedXamlElement(xaml, xName, "ComboBox", "ProjectRecipeListBox");
         AssertNamedXamlElement(xaml, xName, "TextBox", "ProjectConfigPathBox");
         AssertNamedXamlElement(xaml, xName, "TextBox", "ProjectManifestPathBox");
+        AssertNamedXamlElement(xaml, xName, "TextBox", "ProjectDatasetVersionBox");
+        AssertNamedXamlElement(xaml, xName, "TextBox", "ProjectDatasetVersionDetailBox");
         AssertNamedXamlElement(xaml, xName, "TextBlock", "ProjectConfigStatusText");
         AssertNamedXamlBinding(xaml, xName, "ApplyProjectRecipeButton", "Command", "ApplyRecipeCommand");
         AssertNamedXamlBinding(xaml, xName, "RefreshProjectRecipeListButton", "Command", "RefreshRecipeListCommand");
@@ -33250,6 +33301,8 @@ internal static partial class Program
             .FirstOrDefault(element => element.Name.LocalName == "TextBox"
                 && string.Equals((string)element.Attribute(xName), "ProjectManifestPathBox", StringComparison.Ordinal));
         AssertTrue(((string)manifestPathBox.Attribute("Text") ?? string.Empty).Contains("Binding ManifestPath", StringComparison.Ordinal), "project manifest path should bind to the view model");
+        AssertNamedXamlBinding(xaml, xName, "ProjectDatasetVersionBox", "Text", "DatasetVersionText");
+        AssertNamedXamlBinding(xaml, xName, "ProjectDatasetVersionDetailBox", "Text", "DatasetVersionDetailText");
 
         if (System.Windows.Application.Current == null)
         {
@@ -33268,6 +33321,8 @@ internal static partial class Program
             AssertTrue(window.FindName("ProjectRecipeListBox") is System.Windows.Controls.ComboBox, "WPF project recipe list proxy was not registered");
             AssertTrue(window.FindName("ProjectConfigPathBox") is System.Windows.Controls.TextBox, "WPF project config path proxy was not registered");
             AssertTrue(window.FindName("ProjectManifestPathBox") is System.Windows.Controls.TextBox, "WPF project manifest path proxy was not registered");
+            AssertTrue(window.FindName("ProjectDatasetVersionBox") is System.Windows.Controls.TextBox, "WPF dataset version proxy was not registered");
+            AssertTrue(window.FindName("ProjectDatasetVersionDetailBox") is System.Windows.Controls.TextBox, "WPF dataset version detail proxy was not registered");
             AssertTrue(window.FindName("ProjectConfigStatusText") is System.Windows.Controls.TextBlock, "WPF project config status proxy was not registered");
             AssertTrue(window.FindName("ApplyProjectRecipeButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF project recipe apply button should use WPF-UI button");
             AssertTrue(window.FindName("RefreshProjectRecipeListButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF project recipe refresh button should use WPF-UI button");

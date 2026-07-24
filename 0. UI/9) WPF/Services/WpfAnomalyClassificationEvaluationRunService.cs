@@ -73,15 +73,18 @@ namespace MvcVisionSystem
                 errors.Add(request.PreparationError);
             }
 
-            if (!string.Equals(request.ModelName, "yolov8", StringComparison.OrdinalIgnoreCase))
+            bool isSupportedModel =
+                string.Equals(request.ModelName, "yolov8", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(request.ModelName, "yolo11", StringComparison.OrdinalIgnoreCase);
+            if (!isSupportedModel)
             {
-                errors.Add("YOLOv8 anomaly classification \uD3C9\uAC00\uB294 YOLOv8 \uB7F0\uD0C0\uC784\uC5D0\uC11C\uB9CC \uC2E4\uD589\uD569\uB2C8\uB2E4.");
+                errors.Add("\uC774\uC0C1\uD0D0\uC9C0 \uBD84\uB958 \uD3C9\uAC00\uB294 YOLOv8 \uB610\uB294 YOLO11 \uB7F0\uD0C0\uC784\uC5D0\uC11C\uB9CC \uC2E4\uD589\uD569\uB2C8\uB2E4.");
             }
 
             ValidateFile(request.ScriptPath, "\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00 \uC2A4\uD06C\uB9BD\uD2B8", errors);
             ValidateFile(request.PythonExecutablePath, "Python \uC2E4\uD589 \uD30C\uC77C", errors);
-            ValidateFile(request.WorkerScriptPath, "YOLOv8 TCP adapter", errors);
-            ValidateDirectory(request.ModelRootPath, "YOLOv8 \uB85C\uCEEC \uC18C\uC2A4 \uD3F4\uB354", errors);
+            ValidateFile(request.WorkerScriptPath, "Ultralytics TCP adapter", errors);
+            ValidateDirectory(request.ModelRootPath, "Ultralytics \uB85C\uCEEC \uC18C\uC2A4 \uD3F4\uB354", errors);
             ValidateFile(request.WeightsPath, "\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378 \uD30C\uC77C", errors);
             ValidateDirectory(request.DatasetRootPath, "anomaly classification \uD3C9\uAC00 \uB370\uC774\uD130\uC14B", errors);
             ValidateDirectory(request.OutputDirectory, "\uD3C9\uAC00 \uACB0\uACFC \uC800\uC7A5 \uD3F4\uB354", errors);

@@ -64,7 +64,9 @@ namespace MvcVisionSystem
                     metricsSummary,
                     ModelRegistryService.CandidateDecisionAdopted,
                     decisionSummary,
-                    savedToRecipe: true);
+                    savedToRecipe: true,
+                    datasetVersionId: global.Data.ProjectSettings.TrainingGuide.LastTrainingDatasetVersionId,
+                    datasetContentSha256: global.Data.ProjectSettings.TrainingGuide.LastTrainingDatasetContentSha256);
 
                 hasPendingTrainingWeightsRecipeSave = false;
                 pendingTrainingBaselineWeightsPath = string.Empty;

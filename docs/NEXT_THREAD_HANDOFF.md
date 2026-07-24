@@ -112,7 +112,7 @@ Treat the following as completed/protected unless there is a reproduced defect:
 - Current image queue row state, keyboard navigation, light preview loading, lazy thumbnails, and 10K background catalog/detail indexing.
 - Dataset Health is a separate read-only Model Center window, not another long left-panel block.
 - External native YOLO data.yaml intake remains an explicitly selected training input and must not overwrite the recipe-owned exported dataset.
-- The Model Center adapter catalog is read-only: it exposes only the declared recipe-format, YOLOv5, local-YOLOv8, ONNX inference-only, and verified-scope local-YOLO11 contracts. It must not imply that all GitHub models or all YOLO11 task/runtime combinations are executable.
+- The Model Center adapter catalog is read-only: it exposes only the declared recipe-format, YOLOv5 detection, local-YOLOv8, U-Net segmentation, ONNX inference-only, and verified-scope local-YOLO11 contracts. It must not imply that all GitHub models or all YOLO11 task/runtime combinations are executable.
 
 For the exact contracts and required regression gates, read docs/STABLE_VERIFIED_AREAS.md before changing any protected area.
 
@@ -333,19 +333,14 @@ unverified unless their own focused evidence exists.
 
 ## 10. Next Priorities
 
-1. Keep all completed workflow slices stable and resume implementation only for a reproduced regression or a newly approved adapter/data workflow. This prevents another broad UI pass or repeated verification of already closed contracts. It excludes speculative polish and recombining independent commits.
-   Prerequisite: a reproduced defect, changed requirement, or explicit new adapter/data request.
-   Recommended model: none until the prerequisite exists
-   Reasoning effort: n/a
+The 2026-07-23 Recipe/anomaly/model-adapter truth-alignment and Recipe Dataset Version v2 priorities are complete. The latter now links exact image/annotation/class/split content to immutable local history, training, and model records. Keep both protected unless a focused regression fails.
 
-2. Convert an independent NG-rich object-detection camera/session source into a labeled held-out test split, then rerun the controlled YOLOv5 versus YOLOv8 test comparison. The `D:\라벨테스트` Switch Housing synthetic cross-product result is complete and remains `hold`; do not repeat it unless its source, weights, threshold, or acceptance criteria change. The discovered `D:\기타이미지\2022.11.16_SIT 이미지` candidate has 10,447 JPEGs (`OK` 5,950 / `NG` 4,497) but no YAML or annotation files, so it is not yet an object-detection evaluation set. This establishes separate quality evidence with provenance and no content overlap; it excludes treating image-level folder names as boxes or promoting a model from the existing synthetic report.
-   The 2026-07-20 read-only audit found 9,996 unique contents, 111 duplicate-content groups, and 18 duplicate groups with conflicting OK/NG labels. No exact duplicate crosses PC1 and PC2. The source is suitable only as an image-level candidate until the operator supplies defect classes and bounding boxes; any eventual split must remove/adjudicate conflicting groups and prove content-hash separation. Full record: `docs\WORK_TRACKING.md` (`2026-07-20 independent production-camera object-detection holdout data audit`).
-   The 2026-07-20 circular-disk package now also has a completed 20-epoch CPU YOLOv5s/YOLOv8n comparison on its 150-image test split: YOLOv8n measured mAP50/mAP50-95 `0.955/0.678` and 27.575ms median native takt, versus YOLOv5s `0.900/0.567` and 52.45ms. The fixed comparison preserved the 2,005-file source SHA-256 after cleaning its generated YOLOv5 cache and is explicitly `engine-benchmark`, not model adoption. The source remains single-image synthetic data, so do not count it as this independent-camera priority.
-   Prerequisite: operator confirmation that this is the intended source, object classes and bounding-box labeling rules, and a completed labeled held-out split with no content overlap with training/validation data.
+1. Acquire a new, approved NG-rich object-detection camera/session source, define its object classes and box rules, create a content-separated held-out test split, and rerun the unchanged controlled engine comparison. This is next because current synthetic comparisons prove runtime/format behavior but not field generalization. It includes provenance, label audit, SHA-256 non-overlap, fixed thresholds, and error review; it excludes treating folder-level OK/NG names as boxes or tuning on the held-out test. The operator-excluded `D:\기타이미지\2022.11.16_SIT 이미지` path must not be inspected or used.
+   Prerequisite: a newly approved source with trustworthy bounding boxes and enough NG examples.
    Recommended model: none until the data is available
    Reasoning effort: n/a
 
-3. Acquire balanced independent production-camera/cross-session normal and abnormal anomaly data, keep it outside training initially, and rerun the anomaly evaluation guard. This distinguishes a repeatable classifier runtime from generalizable anomaly quality; it excludes tuning against the preserved circular or MultiIndustry synthetic evaluation sets.
+2. Acquire balanced independent production-camera/cross-session normal and abnormal anomaly data, keep it outside training initially, and rerun the unchanged anomaly evaluation guard. This distinguishes a repeatable classifier runtime from generalizable anomaly quality; it includes provenance, content-overlap checks, confidence-gated errors, and an adopt/hold decision, and excludes tuning against the preserved circular or MultiIndustry synthetic evaluation sets.
    The 2026-07-20 circular synthetic 1,000-image candidate remains `hold` at 90/104 confidence-gated test accuracy with seven false OK ring-deformation cases. Do not tune the threshold against that test or substitute it for new acquisition evidence.
    Prerequisite: new normal and abnormal images with provenance and representative operating conditions.
    Recommended model: none until the data is available
@@ -401,7 +396,7 @@ Run real external-data training, real EXE, or model-comparison commands only whe
 ## 13. 2026-07-18 Model Adapter Catalog Slice
 
 - Status: `Complete` for the declared-contract scope.
-- The full-width Model Center now presents five Korean, read-only cards: implemented recipe interchange formats, YOLOv5 object detection, the local YOLOv8 worker, ONNX inference-only, and verified-scope local YOLO11. Each card declares 작업, 데이터, 실행기, 근거, and 다음 행동. YOLO11 detection and segmentation are executable only within the runtime/weight/app paths recorded in sections 7 and 16; anomaly classification and arbitrary external YOLO11 runtimes remain unverified.
+- The full-width Model Center presents six Korean, read-only cards: implemented recipe interchange formats, YOLOv5 object detection, the local YOLOv8 worker, U-Net segmentation, ONNX inference-only, and verified-scope local YOLO11. Each card declares 작업, 데이터, 실행기, 근거, and 다음 행동. U-Net is segmentation-only. YOLO11 detection, segmentation, and anomaly classification are executable only within the recorded local runtime/weight/app paths; its anomaly candidate remains `hold`, and arbitrary external runtimes remain unverified.
 - `ModelAdapterCatalogService` derives the format inventory from the implemented export capability service. It does not create a generic GitHub download/run path, alter a runtime, install a package, modify data, start training/inference, register a model, or make a quality/adoption claim.
 - Current-source evidence: required isolated 0-warning/0-error build; `--model-adapter-catalog`, `--wpf-yolo-model-settings-panel`, `--wpf-labeling-shell`, and `--wpf-responsive-layout` passed. Current captures are `artifacts\ui\model-adapter-catalog-20260718\after-model-adapter-catalog-1920.png` and `after-model-adapter-catalog-1366.png`. The closest pre-catalog baseline is `artifacts\ui\model-workspace-20260718\after-model-workspace-1920.png`; it is not a catalog-specific runtime-tab before capture.
 - Boundary: do not reopen for generic model-platform breadth. Reopen only for an incorrect/missing declared contract, stale export inventory, binding failure, or reproduced layout defect. Data-dependent quality priorities remain unchanged.
@@ -703,3 +698,88 @@ not model accuracy or product maturity; the focused-workstation estimate remains
 `4.0/5`. Do not recreate or use the deleted clone. No new product implementation
 is justified without a reproduced operator defect or changed approved adapter/data
 contract. Independent camera/session data remains an optional field-adoption gate.
+
+## 27. 2026-07-23 Latest Checkpoint: Recipe Dataset Version v2
+
+Status: `Complete` in the current worktree; not committed or pushed.
+
+- Exact recipe-owned image/annotation content, ordered classes, and split
+  ownership now produce a deterministic `dsv2-<64 hex>` identity.
+- Repeated unchanged saves reuse one immutable metadata history entry. Label
+  geometry, class, or split changes create a new identity without copying or
+  mutating the source dataset.
+- Internal training and model-registry records retain the exact Dataset Version
+  and content SHA-256. External native YOLO intake maps its existing read-only
+  source fingerprint to an external Dataset Version.
+- Anomaly classification includes generated class-folder split ownership.
+  Training-progress-only metadata saves reuse the version captured at start and
+  do not rescan the dataset on every status update.
+- The Model Center Project panel shows the version, shortened content SHA-256,
+  image/label counts, and immutable-history count.
+- The isolated build, seven focused switches, current-source UI capture, and
+  actual-EXE smoke passed. The first EXE attempt exposed only an invalid test
+  fixture: four arbitrary bytes had been named `.png`; after creating a real
+  PNG, Recipe application and version presentation passed.
+- Evidence: `docs/RECIPE_DATASET_VERSION_V2_20260723.md` and
+  `artifacts/ui/recipe-dataset-version-v2`.
+
+Boundary / next dependency: this is local reproducibility metadata, not a full
+dataset copy, cloud VCS, collaboration feature, automatic adoption, or
+field-quality proof. Maturity remains `4.0/5`.
+
+## 28. 2026-07-23 Latest Checkpoint: Recipe And Adapter Contract Truth Alignment
+
+Status: `Complete` in the current worktree; not committed or pushed.
+
+- Anomaly Recipe manifests now record `image-level-normal-abnormal` and
+  navigation-only `panZoom` instead of the obsolete `box-and-mask` drawing
+  profile. Existing image-level review counts remain the label evidence.
+- Dataset setup and learning guidance consistently say that the whole image is
+  judged `정상(OK)` or `이상(NG)`. The anomaly learning-tool state contains only
+  Pan/Zoom and no undo/redo/delete annotation commands. Returning to object
+  detection restores Select.
+- The read-only Model Adapter Catalog contains six contracts. U-Net is
+  presented as the verified segmentation-only PyTorch adapter using the
+  app-owned canonical raster-mask export. YOLO11 names its verified local
+  detection, segmentation, and anomaly-classification scope, keeps the current
+  anomaly result as `hold`, and leaves arbitrary external runtimes unverified.
+- The isolated build passed with zero warnings and errors. Focused gates
+  `--wpf-anomaly-purpose-flow`, `--wpf-learning-workflow-panel`,
+  `--wpf-dataset-setup-ui`, `--model-adapter-catalog`, and
+  `--wpf-labeling-shell` passed.
+- Current-source before/after 1920x1080 evidence is under
+  `artifacts/ui/20260723-contract-truth-alignment`. The after Model Center shows
+  the U-Net card in the catalog; the after anomaly guide presents the dedicated
+  image-level OK/NG task instead of defect-region instructions.
+
+Boundary / next dependency: no model worker, weight, labels, source images,
+inference results, adoption state, or canvas hot path changed. The focused
+workstation estimate remains `4.0/5`. The next field-quality priorities are
+blocked on newly approved independent camera/session data. Recipe Dataset
+Version v2 is complete in section 27; the approved YOLO11 anomaly-classification
+runtime closure is complete in section 29. Independent camera/session evidence
+remains the anomaly model-adoption prerequisite.
+
+## 29. 2026-07-23 Latest Checkpoint: YOLO11 Anomaly Runtime Closure
+
+Status: `Complete`.
+
+- With explicit approval, official `yolo11n-cls.pt` SHA-256
+  `C62D41BF9625777760018BF914D2E6CD472420CCD01706D97A61CB6C82502BD7`
+  was loaded in the existing Ultralytics `8.4.101` environment.
+- One-epoch connectivity and 20-epoch app-service/TCP training passed on the
+  supplied circular 500 OK / 500 NG data. The 1,000-file source tree SHA-256
+  remained unchanged.
+- On the identical 104-image test fingerprint at confidence `0.8`, YOLO11
+  scored `82/104` (`78.8%`) versus YOLOv8 `90/104` (`86.5%`). Both remain
+  `hold`; training completion did not adopt a model.
+- The bundled batch evaluator compatibility gap was fixed, Model Center
+  evaluation accepts verified YOLOv8/YOLO11 profiles, and the actual EXE
+  reopened the YOLO11 profile and persisted `Abnormal` after held-out NG
+  inference.
+- Evidence:
+  `docs/YOLO11_ANOMALY_CLASSIFICATION_PREREQUISITE_AUDIT_20260723.md`.
+
+Boundary / next dependency: runtime/workflow support is complete only for the
+recorded local profile. Independent normal/abnormal camera-session data is
+required before any production-quality or adoption claim.
