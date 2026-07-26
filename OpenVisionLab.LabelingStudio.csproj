@@ -21,6 +21,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <ArtifactsRoot>$(MSBuildProjectDirectory)\artifacts</ArtifactsRoot>
     <OutputPath>$(ArtifactsRoot)\run\$(Configuration)\</OutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
