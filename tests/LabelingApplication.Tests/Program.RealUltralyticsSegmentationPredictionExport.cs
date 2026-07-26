@@ -12,9 +12,11 @@ using System.Linq;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class RealUltralyticsSegmentationPredictionExportSmokeTests
 {
-    private static int RunRealUltralyticsSegmentationPredictionExportSmoke(string[] args)
+    internal static int RunRealUltralyticsSegmentationPredictionExportSmoke(string[] args)
     {
         string artifactRoot = string.Empty;
         try

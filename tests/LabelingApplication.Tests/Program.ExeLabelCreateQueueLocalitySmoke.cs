@@ -13,9 +13,12 @@ using System.Windows.Automation;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static Program;
+using static TestSupport;
+
+internal static class ExeLabelCreateQueueLocalitySmokeTests
 {
-    private static int RunExeLabelCreateQueueLocalitySmoke(string[] args)
+    internal static int RunExeLabelCreateQueueLocalitySmoke(string[] args)
     {
         const int imageCount = 125;
         string recipeName = "label_create_queue_locality_" + DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
@@ -299,62 +302,6 @@ internal static partial class Program
         }
 
         return null;
-    }
-
-    private static AutomationElement FindVisibleAutomationElementByName(
-        AutomationElement root,
-        string name,
-        double maximumWidth,
-        double maximumHeight)
-    {
-        foreach (AutomationElement element in EnumerateAutomationDescendants(root))
-        {
-            try
-            {
-                System.Windows.Rect bounds = element.Current.BoundingRectangle;
-                if (!element.Current.IsOffscreen
-                    && string.Equals(element.Current.Name, name, StringComparison.Ordinal)
-                    && bounds.Width > 0D
-                    && bounds.Height > 0D
-                    && bounds.Width <= maximumWidth
-                    && bounds.Height <= maximumHeight)
-                {
-                    return element;
-                }
-            }
-            catch (ElementNotAvailableException)
-            {
-            }
-        }
-
-        return null;
-    }
-
-    private static AutomationElement FindCanvasAnnotationToolByIndex(AutomationElement root, int index)
-    {
-        AutomationElement toolList = FindAutomationElementByAutomationId(root, "CanvasAnnotationToolListBox");
-        if (toolList == null)
-        {
-            return null;
-        }
-
-        AutomationElement[] items = EnumerateAutomationDescendants(toolList)
-            .Where(element =>
-            {
-                try
-                {
-                    return element.Current.ControlType == ControlType.ListItem
-                        && !element.Current.IsOffscreen
-                        && element.Current.IsEnabled;
-                }
-                catch (ElementNotAvailableException)
-                {
-                    return false;
-                }
-            })
-            .OrderBy(element => element.Current.BoundingRectangle.Top)
-            .ToArray();
-        return index >= 0 && index < items.Length ? items[index] : null;
     }
 
     private static double GetVerticalScrollPercent(AutomationElement queueGrid)

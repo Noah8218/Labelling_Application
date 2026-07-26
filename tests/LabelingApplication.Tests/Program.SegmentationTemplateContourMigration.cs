@@ -10,9 +10,12 @@ using System.Linq;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static Program;
+using static TestSupport;
+
+internal static class SegmentationTemplateContourMigrationTests
 {
-    private static int RunSegmentationTemplateContourMigrationApply(string[] args)
+    internal static int RunSegmentationTemplateContourMigrationApply(string[] args)
     {
         string outputRootPath = GetArgumentValue(args, "--dataset-output-root", string.Empty);
         string sourceImagePath = GetArgumentValue(args, "--source-image", string.Empty);
@@ -34,7 +37,7 @@ internal static partial class Program
                 expectedTargetCount));
     }
 
-    private static void TestYoloSegmentationTemplateContourMigration()
+    internal static void TestYoloSegmentationTemplateContourMigration()
     {
         string root = CreateTempRoot();
         try

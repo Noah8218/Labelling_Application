@@ -8,9 +8,11 @@ using System.Windows.Controls;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class ImageQueueOperatorProfileTests
 {
-    private static void TestWpfImageQueueOperatorFolderProfile(string[] args)
+    internal static void TestWpfImageQueueOperatorFolderProfile(string[] args)
     {
         if (System.Windows.Application.Current == null)
         {

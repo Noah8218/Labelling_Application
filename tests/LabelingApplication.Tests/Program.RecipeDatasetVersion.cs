@@ -12,9 +12,12 @@ using Newtonsoft.Json;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static Program;
+using static TestSupport;
+
+internal static class RecipeDatasetVersionTests
 {
-    private static void TestRecipeDatasetVersionV2()
+    internal static void TestRecipeDatasetVersionV2()
     {
         string datasetRoot = CreateTempRoot();
         string recipeName = "dataset_version_v2_" + Guid.NewGuid().ToString("N");
@@ -172,7 +175,7 @@ internal static partial class Program
         }
     }
 
-    private static int RunExeDatasetVersionSmoke(string[] args)
+    internal static int RunExeDatasetVersionSmoke(string[] args)
     {
         string datasetRoot = string.Empty;
         string recipeDirectory = string.Empty;
@@ -327,7 +330,7 @@ internal static partial class Program
         }
     }
 
-    private static int RunWpfDatasetVersionVisual(string[] args)
+    internal static int RunWpfDatasetVersionVisual(string[] args)
     {
         string datasetRoot = string.Empty;
         string recipeDirectory = string.Empty;

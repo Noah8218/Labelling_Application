@@ -6,14 +6,16 @@ using System.Linq;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class WpfSegmentationAdapterComparisonTests
 {
-    private static void TestWpfSegmentationAdapterComparison()
+    internal static void TestWpfSegmentationAdapterComparison()
     {
         string root = CreateTempRoot();
         try
         {
-            CData data = CreateUnetSegmentationFixture(Path.Combine(root, "recipe"));
+            CData data = UnetSegmentationDatasetExportTests.CreateUnetSegmentationFixture(Path.Combine(root, "recipe"));
             string unetCheckpoint = Path.Combine(root, "unet-best.pt");
             string yoloCheckpoint = Path.Combine(root, "yolo-best.pt");
             string unetRuntimeRoot = Path.Combine(root, "unet-runtime");
@@ -87,8 +89,12 @@ internal static partial class Program
                 PythonModelSettings.EngineYolo11);
             AssertEqual(PythonModelSettings.EngineYolo11, yolo11Request.YoloSettings.ModelEngine);
             AssertEqual(ultralyticsRuntimeRoot, yolo11Request.YoloSettings.ProjectRootPath);
-            AssertEqual(PythonModelSettings.EngineYoloV8, GetSegmentationComparisonYoloEngineArgument(Array.Empty<string>()));
-            AssertEqual(PythonModelSettings.EngineYolo11, GetSegmentationComparisonYoloEngineArgument(new[] { "--yolo-engine", "yolo11" }));
+            AssertEqual(
+                PythonModelSettings.EngineYoloV8,
+                RealExternalSegmentationAdapterComparisonSmokeTests.GetSegmentationComparisonYoloEngineArgument(Array.Empty<string>()));
+            AssertEqual(
+                PythonModelSettings.EngineYolo11,
+                RealExternalSegmentationAdapterComparisonSmokeTests.GetSegmentationComparisonYoloEngineArgument(new[] { "--yolo-engine", "yolo11" }));
 
             var viewModel = new WpfTrainingSettingsPanelViewModel();
             viewModel.SetSegmentationAdapterComparisonContext(context, preserveSelectedCheckpoints: false);

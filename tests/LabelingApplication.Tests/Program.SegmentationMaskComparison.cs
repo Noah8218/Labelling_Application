@@ -9,14 +9,16 @@ using System.Linq;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class SegmentationMaskComparisonTests
 {
-    private static void TestSegmentationMaskComparison()
+    internal static void TestSegmentationMaskComparison()
     {
         string root = CreateTempRoot();
         try
         {
-            CData data = CreateUnetSegmentationFixture(Path.Combine(root, "recipe"));
+            CData data = UnetSegmentationDatasetExportTests.CreateUnetSegmentationFixture(Path.Combine(root, "recipe"));
             string sourceBefore = UnetSegmentationDatasetExportService.ComputeSourceDataTreeSha256(data);
             UnetSegmentationDatasetExportResult export = UnetSegmentationDatasetExportService.Export(data);
             AssertTrue(export.IsReady, string.Join(Environment.NewLine, export.Errors));

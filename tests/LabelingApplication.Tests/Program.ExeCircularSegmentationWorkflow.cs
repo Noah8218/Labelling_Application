@@ -9,12 +9,15 @@ using System.Windows.Forms;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static Program;
+using static TestSupport;
+
+internal static class ExeCircularSegmentationWorkflowTests
 {
     private const string CircularSegmentationDefaultImageRoot = @"D:\circular_defect_labeling_dataset_v1\images";
     private const string CircularSegmentationDefaultYoloRoot = @"C:\Git\yolov8";
 
-    private static int RunExeCircularSegmentationWorkflow(string[] args)
+    internal static int RunExeCircularSegmentationWorkflow(string[] args)
     {
         string recipeName = "circular_seg_exe_" + DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
         try
@@ -311,7 +314,7 @@ internal static partial class Program
             && source.Contains($"<ImageRootPath>{imageRoot}</ImageRootPath>", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static System.Windows.Automation.AutomationElement OpenDatasetSetupWizardThroughExe(Process process, IntPtr stableHandle)
+    internal static System.Windows.Automation.AutomationElement OpenDatasetSetupWizardThroughExe(Process process, IntPtr stableHandle)
     {
         for (int attempt = 0; attempt < 12; attempt++)
         {
@@ -450,7 +453,7 @@ internal static partial class Program
         return closed;
     }
 
-    private static void ConfigureYoloV8RuntimeThroughExe(
+    internal static void ConfigureYoloV8RuntimeThroughExe(
         Process process,
         IntPtr stableHandle,
         string imageRoot,
@@ -547,7 +550,7 @@ internal static partial class Program
         Thread.Sleep(1200);
     }
 
-    private static void LoadConfiguredImageRootThroughExe(Process process, string imageRoot, string screenshotDirectory)
+    internal static void LoadConfiguredImageRootThroughExe(Process process, string imageRoot, string screenshotDirectory)
     {
         var root = RefreshAutomationRoot(process);
         string expectedImageMarker = FindImageQueueMarker(imageRoot);
@@ -653,7 +656,7 @@ internal static partial class Program
             .FirstOrDefault() ?? Path.GetFileName(imageRoot);
     }
 
-    private static bool ImageRootAppearsLoaded(System.Windows.Automation.AutomationElement root, string imageRoot, string expectedImageMarker)
+    internal static bool ImageRootAppearsLoaded(System.Windows.Automation.AutomationElement root, string imageRoot, string expectedImageMarker)
     {
         string currentFolder = GetAutomationValueByAutomationId(root, "CurrentImageFolderPathText");
         string datasetStatus = GetAutomationValueByAutomationId(root, "DatasetStatusText");
@@ -1199,7 +1202,7 @@ internal static partial class Program
         CaptureWorkflowStep(root, screenshotDirectory, "12_trained_model_inference");
     }
 
-    private static string ReadExeInferenceStatusSnapshot(System.Windows.Automation.AutomationElement root)
+    internal static string ReadExeInferenceStatusSnapshot(System.Windows.Automation.AutomationElement root)
     {
         return string.Join(
             " / ",
@@ -1211,7 +1214,7 @@ internal static partial class Program
             }.Where(value => !string.IsNullOrWhiteSpace(value)));
     }
 
-    private static bool IsExeTrainedInferenceFinished(System.Windows.Automation.AutomationElement root, string status)
+    internal static bool IsExeTrainedInferenceFinished(System.Windows.Automation.AutomationElement root, string status)
     {
         if (IsExeTrainedInferenceFailure(status))
         {
@@ -1223,7 +1226,7 @@ internal static partial class Program
             || status.Contains("\uCD94\uB860: \uC644\uB8CC", StringComparison.Ordinal);
     }
 
-    private static bool IsExeTrainedInferenceFailure(string status)
+    internal static bool IsExeTrainedInferenceFailure(string status)
     {
         return status.Contains("\uCD94\uB860 \uC2E4\uD328", StringComparison.Ordinal)
             || status.Contains("\uC2E4\uD328:", StringComparison.Ordinal)
@@ -1263,7 +1266,7 @@ internal static partial class Program
         return false;
     }
 
-    private static void CaptureWorkflowStep(System.Windows.Automation.AutomationElement root, string screenshotDirectory, string stepName)
+    internal static void CaptureWorkflowStep(System.Windows.Automation.AutomationElement root, string screenshotDirectory, string stepName)
     {
         Directory.CreateDirectory(screenshotDirectory);
         CaptureAutomationRoot(root, Path.Combine(screenshotDirectory, stepName + ".png"));
@@ -1274,7 +1277,7 @@ internal static partial class Program
             ? Directory.EnumerateFiles(directoryPath, searchPattern).Count()
             : 0;
 
-    private static bool TryBringYoloSettingsElementIntoView(Process process, IntPtr stableHandle, string automationId)
+    internal static bool TryBringYoloSettingsElementIntoView(Process process, IntPtr stableHandle, string automationId)
     {
         for (int attempt = 0; attempt < 24; attempt++)
         {
@@ -1301,7 +1304,7 @@ internal static partial class Program
         return false;
     }
 
-    private static bool OpenYoloModelCenterThroughExe(Process process, IntPtr stableHandle)
+    internal static bool OpenYoloModelCenterThroughExe(Process process, IntPtr stableHandle)
     {
         for (int attempt = 0; attempt < 8; attempt++)
         {
@@ -1345,7 +1348,7 @@ internal static partial class Program
         return false;
     }
 
-    private static bool TryExpandYoloAdvancedModelSettingsThroughExe(Process process, IntPtr stableHandle)
+    internal static bool TryExpandYoloAdvancedModelSettingsThroughExe(Process process, IntPtr stableHandle)
     {
         for (int attempt = 0; attempt < 18; attempt++)
         {
@@ -1528,7 +1531,7 @@ internal static partial class Program
         return false;
     }
 
-    private static string GetSelectedComboBoxItemNameByAutomationId(
+    internal static string GetSelectedComboBoxItemNameByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string comboAutomationId)
     {
@@ -1670,7 +1673,7 @@ internal static partial class Program
         return null;
     }
 
-    private static bool TryNativeClickAutomationElementByAutomationId(System.Windows.Automation.AutomationElement root, string automationId)
+    internal static bool TryNativeClickAutomationElementByAutomationId(System.Windows.Automation.AutomationElement root, string automationId)
     {
         System.Windows.Automation.AutomationElement element = FindAutomationElementByAutomationId(root, automationId);
         try
@@ -1713,7 +1716,7 @@ internal static partial class Program
         return false;
     }
 
-    private static bool TryExpandYoloSettingsSection(Process process, IntPtr stableHandle, string sectionAutomationId, string expectedAutomationId)
+    internal static bool TryExpandYoloSettingsSection(Process process, IntPtr stableHandle, string sectionAutomationId, string expectedAutomationId)
     {
         for (int attempt = 0; attempt < 10; attempt++)
         {
@@ -1867,7 +1870,7 @@ internal static partial class Program
             (int)Math.Round(bounds.Y + (bounds.Height * 0.56D)));
     }
 
-    private static string FirstNonEmpty(params string[] values)
+    internal static string FirstNonEmpty(params string[] values)
     {
         foreach (string value in values ?? Array.Empty<string>())
         {

@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using CvMat = OpenCvSharp.Mat;
 using CvMatType = OpenCvSharp.MatType;
 using CvScalar = OpenCvSharp.Scalar;
@@ -32,36 +33,36 @@ namespace LabelingApplication.Tests;
 
 internal static partial class Program
 {
-    private const int WmClose = 0x0010;
+    internal const int WmClose = 0x0010;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
-    private const uint SwpShowWindow = 0x0040;
+    internal const uint SwpShowWindow = 0x0040;
     private const uint MouseEventLeftDown = 0x0002;
     private const uint MouseEventLeftUp = 0x0004;
     private const uint MouseEventWheel = 0x0800;
     private const uint WmNull = 0x0000;
     private const uint SmtoAbortIfHung = 0x0002;
     private const int SwRestore = 9;
-    private const int VisualSmokeDefaultWindowWidth = 1920;
-    private const int VisualSmokeDefaultWindowHeight = 1080;
-    private const int VisualSmokeMinimumWindowWidth = 1100;
-    private const int VisualSmokeMinimumWindowHeight = 720;
-    private static readonly IntPtr HwndTopMost = new IntPtr(-1);
-    private static readonly string[] ExeSmokeImageArtifactExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
+    internal const int VisualSmokeDefaultWindowWidth = 1920;
+    internal const int VisualSmokeDefaultWindowHeight = 1080;
+    internal const int VisualSmokeMinimumWindowWidth = 1100;
+    internal const int VisualSmokeMinimumWindowHeight = 720;
+    internal static readonly IntPtr HwndTopMost = new IntPtr(-1);
+    internal static readonly string[] ExeSmokeImageArtifactExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
-    private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+    internal delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
     [DllImport("user32.dll")]
-    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+    internal static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
     [DllImport("user32.dll")]
-    private static extern bool IsWindowVisible(IntPtr hWnd);
+    internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
     [DllImport("user32.dll")]
-    private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+    internal static extern bool IsWindowVisible(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    internal static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -73,7 +74,7 @@ internal static partial class Program
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     [DllImport("user32.dll")]
-    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
+    internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
 
     [DllImport("user32.dll")]
     private static extern bool SetCursorPos(int x, int y);
@@ -112,6 +113,115 @@ internal static partial class Program
             WpfWorkspaceLayoutSettingsService.SettingsPathEnvironmentVariable,
             path);
     }
+
+    internal static System.Windows.Automation.AutomationElement OpenDatasetSetupWizardThroughExe(
+        Process process,
+        IntPtr stableHandle)
+        => ExeCircularSegmentationWorkflowTests.OpenDatasetSetupWizardThroughExe(process, stableHandle);
+
+    internal static void ConfigureYoloV8RuntimeThroughExe(
+        Process process,
+        IntPtr stableHandle,
+        string imageRoot,
+        string yoloRoot,
+        string pythonPath,
+        string clientScriptPath,
+        string weightsPath,
+        string screenshotDirectory,
+        string confidence = "0.01",
+        string timeoutSeconds = "300",
+        string inferenceImageSize = "128",
+        string anomalyNormalClasses = null,
+        string anomalyAbnormalClasses = null,
+        string anomalyMinimumConfidence = null,
+        string modelEngine = PythonModelSettings.EngineYoloV8)
+        => ExeCircularSegmentationWorkflowTests.ConfigureYoloV8RuntimeThroughExe(
+            process,
+            stableHandle,
+            imageRoot,
+            yoloRoot,
+            pythonPath,
+            clientScriptPath,
+            weightsPath,
+            screenshotDirectory,
+            confidence,
+            timeoutSeconds,
+            inferenceImageSize,
+            anomalyNormalClasses,
+            anomalyAbnormalClasses,
+            anomalyMinimumConfidence,
+            modelEngine);
+
+    internal static void LoadConfiguredImageRootThroughExe(
+        Process process,
+        string imageRoot,
+        string screenshotDirectory)
+        => ExeCircularSegmentationWorkflowTests.LoadConfiguredImageRootThroughExe(
+            process,
+            imageRoot,
+            screenshotDirectory);
+
+    internal static bool ImageRootAppearsLoaded(
+        System.Windows.Automation.AutomationElement root,
+        string imageRoot,
+        string expectedImageMarker)
+        => ExeCircularSegmentationWorkflowTests.ImageRootAppearsLoaded(root, imageRoot, expectedImageMarker);
+
+    internal static string ReadExeInferenceStatusSnapshot(System.Windows.Automation.AutomationElement root)
+        => ExeCircularSegmentationWorkflowTests.ReadExeInferenceStatusSnapshot(root);
+
+    internal static bool IsExeTrainedInferenceFinished(
+        System.Windows.Automation.AutomationElement root,
+        string status)
+        => ExeCircularSegmentationWorkflowTests.IsExeTrainedInferenceFinished(root, status);
+
+    internal static bool IsExeTrainedInferenceFailure(string status)
+        => ExeCircularSegmentationWorkflowTests.IsExeTrainedInferenceFailure(status);
+
+    internal static void CaptureWorkflowStep(
+        System.Windows.Automation.AutomationElement root,
+        string screenshotDirectory,
+        string stepName)
+        => ExeCircularSegmentationWorkflowTests.CaptureWorkflowStep(root, screenshotDirectory, stepName);
+
+    internal static bool TryBringYoloSettingsElementIntoView(
+        Process process,
+        IntPtr stableHandle,
+        string automationId)
+        => ExeCircularSegmentationWorkflowTests.TryBringYoloSettingsElementIntoView(
+            process,
+            stableHandle,
+            automationId);
+
+    internal static bool OpenYoloModelCenterThroughExe(Process process, IntPtr stableHandle)
+        => ExeCircularSegmentationWorkflowTests.OpenYoloModelCenterThroughExe(process, stableHandle);
+
+    internal static bool TryExpandYoloAdvancedModelSettingsThroughExe(Process process, IntPtr stableHandle)
+        => ExeCircularSegmentationWorkflowTests.TryExpandYoloAdvancedModelSettingsThroughExe(process, stableHandle);
+
+    internal static string GetSelectedComboBoxItemNameByAutomationId(
+        System.Windows.Automation.AutomationElement root,
+        string comboAutomationId)
+        => ExeCircularSegmentationWorkflowTests.GetSelectedComboBoxItemNameByAutomationId(root, comboAutomationId);
+
+    internal static bool TryExpandYoloSettingsSection(
+        Process process,
+        IntPtr stableHandle,
+        string sectionAutomationId,
+        string expectedAutomationId)
+        => ExeCircularSegmentationWorkflowTests.TryExpandYoloSettingsSection(
+            process,
+            stableHandle,
+            sectionAutomationId,
+            expectedAutomationId);
+
+    internal static bool TryNativeClickAutomationElementByAutomationId(
+        System.Windows.Automation.AutomationElement root,
+        string automationId)
+        => ExeCircularSegmentationWorkflowTests.TryNativeClickAutomationElementByAutomationId(root, automationId);
+
+    internal static string FirstNonEmpty(params string[] values)
+        => ExeCircularSegmentationWorkflowTests.FirstNonEmpty(values);
 
     [STAThread]
     private static int Main(string[] args)
@@ -159,19 +269,19 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--wpf-dataset-version-visual", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunWpfDatasetVersionVisual(args);
+            return RecipeDatasetVersionTests.RunWpfDatasetVersionVisual(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-dataset-version-smoke", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunExeDatasetVersionSmoke(args);
+            return RecipeDatasetVersionTests.RunExeDatasetVersionSmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--recipe-dataset-version-v2", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke(
                 "Recipe Dataset Version v2 tracks exact immutable content and training provenance",
-                TestRecipeDatasetVersionV2);
+                RecipeDatasetVersionTests.TestRecipeDatasetVersionV2);
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-dataset-wizard-smoke", StringComparison.OrdinalIgnoreCase)))
@@ -216,12 +326,12 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--exe-label-create-queue-locality-smoke", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunExeLabelCreateQueueLocalitySmoke(args);
+            return ExeLabelCreateQueueLocalitySmokeTests.RunExeLabelCreateQueueLocalitySmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-image-queue-worklist-smoke", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunExeImageQueueWorklistSmoke(args);
+            return ExeImageQueueWorklistSmokeTests.RunExeImageQueueWorklistSmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-roi-tools-smoke", StringComparison.OrdinalIgnoreCase)))
@@ -286,47 +396,47 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--exe-circular-segmentation-workflow", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunExeCircularSegmentationWorkflow(args);
+            return ExeCircularSegmentationWorkflowTests.RunExeCircularSegmentationWorkflow(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-external-evaluation-data-audit", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunExeExternalEvaluationDataAuditSmoke(args);
+            return ExeExternalEvaluationDataAuditSmokeTests.RunExeExternalEvaluationDataAuditSmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-yolov8-detect-restart-smoke", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunExeYoloV8DetectRestartSmoke(args);
+            return ExeYoloV8DetectRestartSmokeTests.RunExeYoloV8DetectRestartSmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-yolo11-detect-restart-smoke", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunExeYoloV8DetectRestartSmoke(args.Concat(new[] { "--engine", "yolo11" }).ToArray());
+            return ExeYoloV8DetectRestartSmokeTests.RunExeYoloV8DetectRestartSmoke(args.Concat(new[] { "--engine", "yolo11" }).ToArray());
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-yolov8-anomaly-restart-smoke", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunExeYoloV8AnomalyRestartSmoke(args);
+            return ExeYoloV8AnomalyRestartSmokeTests.RunExeYoloV8AnomalyRestartSmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-yolo11-anomaly-restart-smoke", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunExeYoloV8AnomalyRestartSmoke(args.Concat(new[] { "--engine", "yolo11" }).ToArray());
+            return ExeYoloV8AnomalyRestartSmokeTests.RunExeYoloV8AnomalyRestartSmoke(args.Concat(new[] { "--engine", "yolo11" }).ToArray());
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-yolov8-anomaly-folder-training", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunRealYoloV8AnomalyFolderTraining(args);
+            return RealYoloAnomalyFolderTrainingSmokeTests.RunRealYoloV8AnomalyFolderTraining(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-yolo11-anomaly-folder-training", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunRealYoloV8AnomalyFolderTraining(args.Concat(new[] { "--engine", "yolo11" }).ToArray());
+            return RealYoloAnomalyFolderTrainingSmokeTests.RunRealYoloV8AnomalyFolderTraining(args.Concat(new[] { "--engine", "yolo11" }).ToArray());
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-external-yolo-dataset-training", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunRealExternalYoloDatasetTraining(args);
+            return RealExternalYoloDatasetTrainingSmokeTests.RunRealExternalYoloDatasetTraining(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-yolo-training-session-smoke", StringComparison.OrdinalIgnoreCase)))
@@ -361,18 +471,18 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--mobile-sam-box-prompt", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("MobileSAM box prompt produces a reviewable segmentation candidate", TestMobileSamBoxPromptContract);
+            return RunSingleSmoke("MobileSAM box prompt produces a reviewable segmentation candidate", MobileSamBoxPromptTests.TestMobileSamBoxPromptContract);
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-mobile-sam-box-prompt", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunRealMobileSamBoxPrompt(args);
+            return MobileSamBoxPromptTests.RunRealMobileSamBoxPrompt(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-mobile-sam-usability-matrix", StringComparison.OrdinalIgnoreCase)
             || string.Equals(arg, "--real-mobile-sam-box-jitter-matrix", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunRealMobileSamUsabilityMatrix(args);
+            return MobileSamUsabilityMatrixTests.RunRealMobileSamUsabilityMatrix(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-annotation-object-verification", StringComparison.OrdinalIgnoreCase)))
@@ -481,7 +591,7 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--wpf-labeling-shell", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF labeling shell can be constructed without the WinForms shell", TestWpfLabelingShellWindowConstructs);
+            return RunSingleSmoke("WPF labeling shell can be constructed without the WinForms shell", WpfShellStructureTests.TestWpfLabelingShellWindowConstructs);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-workspace-layout", StringComparison.OrdinalIgnoreCase)))
@@ -541,12 +651,12 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--wpf-image-queue-worklist-10k", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF image queue 10K worklist stays actionable without a full refresh", TestWpfImageQueueWorklistTenThousand);
+            return RunSingleSmoke("WPF image queue 10K worklist stays actionable without a full refresh", ImageQueueWorklistTests.TestWpfImageQueueWorklistTenThousand);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-image-queue-operator-profile", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF image queue profiles a read-only operator folder", () => TestWpfImageQueueOperatorFolderProfile(args));
+            return RunSingleSmoke("WPF image queue profiles a read-only operator folder", () => ImageQueueOperatorProfileTests.TestWpfImageQueueOperatorFolderProfile(args));
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-image-queue-root-switch", StringComparison.OrdinalIgnoreCase)))
@@ -556,62 +666,72 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--yolo-image-review-status", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("YOLO image review status tracks labels, candidates, and next unlabeled image", TestYoloImageReviewStatusService);
+            return RunSingleSmoke("YOLO image review status tracks labels, candidates, and next unlabeled image", YoloImageReviewStatusTests.TestYoloImageReviewStatusService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--label-quality-review-report", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("YOLO image quality review exports local markdown report", TestYoloImageQualityReviewReportExport);
+            return RunSingleSmoke("YOLO image quality review exports local markdown report", YoloImageReviewStatusTests.TestYoloImageQualityReviewReportExport);
         }
 
         if (args.Any(arg => string.Equals(arg, "--dataset-quality-audit", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("YOLO dataset quality audit reports labels, missing files, empty labels, and class distribution", TestYoloDatasetQualityAuditReport);
+            return RunSingleSmoke("YOLO dataset quality audit reports labels, missing files, empty labels, and class distribution", YoloDatasetQualityAuditTests.TestYoloDatasetQualityAuditReport);
         }
 
         if (args.Any(arg => string.Equals(arg, "--dataset-health", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Dataset Health summarizes detection, segmentation, and anomaly data without changing labels", TestYoloDatasetHealthReport);
+            return RunSingleSmoke("Dataset Health summarizes detection, segmentation, and anomaly data without changing labels", DatasetHealthTests.TestYoloDatasetHealthReport);
         }
 
         if (args.Any(arg => string.Equals(arg, "--unet-segmentation-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("U-Net segmentation export preserves recipe data and validates split and mask contracts", TestUnetSegmentationDatasetExport);
+            return RunSingleSmoke(
+                "U-Net segmentation export preserves recipe data and validates split and mask contracts",
+                UnetSegmentationDatasetExportTests.TestUnetSegmentationDatasetExport);
         }
 
         if (args.Any(arg => string.Equals(arg, "--external-yolo-segmentation-canonical-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("External native YOLO segmentation data.yaml becomes an immutable U-Net canonical mask export", TestExternalYoloSegmentationCanonicalExport);
+            return RunSingleSmoke(
+                "External native YOLO segmentation data.yaml becomes an immutable U-Net canonical mask export",
+                ExternalYoloSegmentationCanonicalExportTests.TestExternalYoloSegmentationCanonicalExport);
         }
 
         if (args.Any(arg => string.Equals(arg, "--segmentation-mask-comparison", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Segmentation comparison scores only matching canonical mask artifacts", TestSegmentationMaskComparison);
+            return RunSingleSmoke(
+                "Segmentation comparison scores only matching canonical mask artifacts",
+                SegmentationMaskComparisonTests.TestSegmentationMaskComparison);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-segmentation-adapter-comparison", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF U-Net versus YOLO-seg comparison keeps checkpoint selection and canonical-mask review separate from adoption", TestWpfSegmentationAdapterComparison);
+            return RunSingleSmoke(
+                "WPF U-Net versus YOLO-seg comparison keeps checkpoint selection and canonical-mask review separate from adoption",
+                WpfSegmentationAdapterComparisonTests.TestWpfSegmentationAdapterComparison);
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-unet-segmentation-runtime", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunRealUnetSegmentationRuntimeSmoke(args);
+            return RealUnetSegmentationRuntimeSmokeTests.RunRealUnetSegmentationRuntimeSmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-external-segmentation-adapter-comparison", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunRealExternalSegmentationAdapterComparison(args);
+            return RealExternalSegmentationAdapterComparisonSmokeTests
+                .RunRealExternalSegmentationAdapterComparison(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-ultralytics-segmentation-prediction-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunRealUltralyticsSegmentationPredictionExportSmoke(args);
+            return RealUltralyticsSegmentationPredictionExportSmokeTests
+                .RunRealUltralyticsSegmentationPredictionExportSmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-dataset-health-window", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF Dataset Health opens as a separate data-analysis window", TestWpfDatasetHealthWindow);
+            return RunSingleSmoke("WPF Dataset Health opens as a separate data-analysis window", DatasetHealthTests.TestWpfDatasetHealthWindow);
         }
 
         if (args.Any(arg => string.Equals(arg, "--external-evaluation-data-audit", StringComparison.OrdinalIgnoreCase)))
@@ -621,132 +741,134 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--dataset-quality-audit-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("YOLO dataset quality audit exports markdown report", TestYoloDatasetQualityAuditMarkdownExport);
+            return RunSingleSmoke("YOLO dataset quality audit exports markdown report", YoloDatasetQualityAuditTests.TestYoloDatasetQualityAuditMarkdownExport);
         }
 
         if (args.Any(arg => string.Equals(arg, "--coco-detection-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("COCO detection export writes external dataset JSON", TestCocoDetectionExportService);
+            return RunSingleSmoke("COCO detection export writes external dataset JSON", CocoDetectionTests.TestCocoDetectionExportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--coco-detection-import", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("COCO detection import writes local YOLO dataset artifacts", TestCocoDetectionImportService);
+            return RunSingleSmoke("COCO detection import writes local YOLO dataset artifacts", CocoDetectionTests.TestCocoDetectionImportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--coco-segmentation-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("COCO segmentation export writes polygon dataset JSON", TestCocoSegmentationExportService);
+            return RunSingleSmoke("COCO segmentation export writes polygon dataset JSON", CocoSegmentationTests.TestCocoSegmentationExportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--coco-segmentation-import", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("COCO segmentation import writes local segmentation artifacts", TestCocoSegmentationImportService);
+            return RunSingleSmoke("COCO segmentation import writes local segmentation artifacts", CocoSegmentationTests.TestCocoSegmentationImportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--pascal-voc-detection-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Pascal VOC detection export writes XML files", TestPascalVocDetectionExportService);
+            return RunSingleSmoke("Pascal VOC detection export writes XML files", PascalVocDetectionTests.TestPascalVocDetectionExportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--pascal-voc-detection-import", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Pascal VOC detection import writes local YOLO dataset artifacts", TestPascalVocDetectionImportService);
+            return RunSingleSmoke("Pascal VOC detection import writes local YOLO dataset artifacts", PascalVocDetectionTests.TestPascalVocDetectionImportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--label-studio-detection-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Label Studio detection export writes task JSON", TestLabelStudioDetectionExportService);
+            return RunSingleSmoke("Label Studio detection export writes task JSON", LabelStudioDetectionTests.TestLabelStudioDetectionExportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--label-studio-detection-import", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Label Studio detection import writes local YOLO dataset artifacts", TestLabelStudioDetectionImportService);
+            return RunSingleSmoke("Label Studio detection import writes local YOLO dataset artifacts", LabelStudioDetectionTests.TestLabelStudioDetectionImportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--label-studio-segmentation-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Label Studio segmentation export writes polygon task JSON", TestLabelStudioSegmentationExportService);
+            return RunSingleSmoke("Label Studio segmentation export writes polygon task JSON", LabelStudioSegmentationTests.TestLabelStudioSegmentationExportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--label-studio-segmentation-import", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Label Studio segmentation import writes local segmentation artifacts", TestLabelStudioSegmentationImportService);
+            return RunSingleSmoke("Label Studio segmentation import writes local segmentation artifacts", LabelStudioSegmentationTests.TestLabelStudioSegmentationImportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--cvat-image-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("CVAT image task archive export writes annotations and images", TestCvatImageTaskArchiveExportService);
+            return RunSingleSmoke("CVAT image task archive export writes annotations and images", CvatTests.TestCvatImageTaskArchiveExportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--cvat-detection-import", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("CVAT detection import writes local YOLO dataset artifacts", TestCvatDetectionImportService);
+            return RunSingleSmoke("CVAT detection import writes local YOLO dataset artifacts", CvatTests.TestCvatDetectionImportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--cvat-segmentation-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("CVAT segmentation archive export writes polygon annotations and images", TestCvatSegmentationArchiveExportService);
+            return RunSingleSmoke("CVAT segmentation archive export writes polygon annotations and images", CvatTests.TestCvatSegmentationArchiveExportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--cvat-segmentation-import", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("CVAT segmentation import writes local segmentation artifacts", TestCvatSegmentationImportService);
+            return RunSingleSmoke("CVAT segmentation import writes local segmentation artifacts", CvatTests.TestCvatSegmentationImportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--export-capability-inventory", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Dataset export capability inventory declares current and next targets", TestDatasetExportCapabilityInventory);
+            return RunSingleSmoke("Dataset export capability inventory declares current and next targets", DatasetInterchangeCapabilityTests.TestDatasetExportCapabilityInventory);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-anomaly-purpose-flow", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF anomaly purpose flow persists image-level review state", TestWpfAnomalyPurposeFlow);
+            return RunSingleSmoke("WPF anomaly purpose flow persists image-level review state", AnomalyClassificationTests.TestWpfAnomalyPurposeFlow);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-anomaly-queue-focus", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF anomaly decisions keep queue focus on the active image", TestWpfAnomalyQueueFocusFollowsActiveImage);
+            return RunSingleSmoke(
+                "WPF anomaly decisions keep queue focus on the active image",
+                AnomalyQueueFocusSmokeTests.TestWpfAnomalyQueueFocusFollowsActiveImage);
         }
 
         if (args.Any(arg => string.Equals(arg, "--anomaly-folder-auto-review", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Anomaly folder intake preserves the selected images root and requires explicit review approval", TestAnomalyFolderAutoReview);
+            return RunSingleSmoke("Anomaly folder intake preserves the selected images root and requires explicit review approval", AnomalyClassificationTests.TestAnomalyFolderAutoReview);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-yolov8-anomaly-classification-runtime-smoke", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF YOLOv8 anomaly classification runtime smoke maps image-level candidates", TestWpfYoloV8AnomalyClassificationRuntimeSmoke);
+            return RunSingleSmoke("WPF YOLOv8 anomaly classification runtime smoke maps image-level candidates", AnomalyClassificationTests.TestWpfYoloV8AnomalyClassificationRuntimeSmoke);
         }
 
         if (args.Any(arg => string.Equals(arg, "--anomaly-classification-decision", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Anomaly classification decision maps configured image-level classes", TestAnomalyClassificationDecisionService);
+            return RunSingleSmoke("Anomaly classification decision maps configured image-level classes", AnomalyClassificationTests.TestAnomalyClassificationDecisionService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--anomaly-classification-dataset-export", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Anomaly classification dataset export writes reviewed image folders", TestAnomalyClassificationDatasetExportService);
+            return RunSingleSmoke("Anomaly classification dataset export writes reviewed image folders", AnomalyClassificationTests.TestAnomalyClassificationDatasetExportService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--anomaly-classification-training-workflow", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Anomaly classification training workflow sends classify dataset", TestAnomalyClassificationTrainingWorkflow);
+            return RunSingleSmoke("Anomaly classification training workflow sends classify dataset", AnomalyClassificationTests.TestAnomalyClassificationTrainingWorkflow);
         }
 
         if (args.Any(arg => string.Equals(arg, "--external-yolo-dataset-intake", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("External native YOLO data.yaml stays separate from recipe exports", TestExternalYoloDatasetIntake);
+            return RunSingleSmoke("External native YOLO data.yaml stays separate from recipe exports", ExternalYoloDatasetIntakeTests.TestExternalYoloDatasetIntake);
         }
 
         if (args.Any(arg => string.Equals(arg, "--external-yolo-list-split-intake", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("External YOLO split-list packet materializes an app-owned runtime dataset", TestExternalYoloListSplitIntake);
+            return RunSingleSmoke("External YOLO split-list packet materializes an app-owned runtime dataset", ExternalYoloDatasetIntakeTests.TestExternalYoloListSplitIntake);
         }
 
         if (args.Any(arg => string.Equals(arg, "--anomaly-classification-evaluation", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Anomaly classification evaluation blocks weak adoption evidence", TestAnomalyClassificationEvaluationService);
+            return RunSingleSmoke("Anomaly classification evaluation blocks weak adoption evidence", AnomalyClassificationTests.TestAnomalyClassificationEvaluationService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-candidate-review-panel", StringComparison.OrdinalIgnoreCase)))
@@ -761,7 +883,7 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--wpf-candidate-review-presentation", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF candidate review presentation marks AI candidates as unsaved", TestWpfCandidateReviewPresentationService);
+            return RunSingleSmoke("WPF candidate review presentation marks AI candidates as unsaved", ReviewServicesTests.TestWpfCandidateReviewPresentationService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-detection-result-presentation", StringComparison.OrdinalIgnoreCase)))
@@ -776,27 +898,27 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--wpf-model-comparison-heldout", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF model comparison button requires held-out test split", TestWpfModelComparisonButtonRequiresHeldOutTestSplit);
+            return RunSingleSmoke("WPF model comparison button requires held-out test split", WpfTrainingDatasetReadinessTests.TestWpfModelComparisonButtonRequiresHeldOutTestSplit);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-model-comparison-review-service", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF model comparison review service builds disagreement examples", TestWpfModelComparisonReviewService);
+            return RunSingleSmoke("WPF model comparison review service builds disagreement examples", WpfModelComparisonTests.TestWpfModelComparisonReviewService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-model-comparison-run-service", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF model comparison run service builds script requests", TestWpfModelComparisonRunService);
+            return RunSingleSmoke("WPF model comparison run service builds script requests", WpfModelComparisonTests.TestWpfModelComparisonRunService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-model-benchmark-window", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF model benchmark window compares heterogeneous evaluation runs", TestWpfModelBenchmarkWindow);
+            return RunSingleSmoke("WPF model benchmark window compares heterogeneous evaluation runs", WpfModelComparisonTests.TestWpfModelBenchmarkWindow);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-training-dashboard-quality", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF training dashboard surfaces dataset quality audit", TestWpfYoloTrainingChecklistDatasetQualityPresentation);
+            return RunSingleSmoke("WPF training dashboard surfaces dataset quality audit", WpfTrainingDatasetReadinessTests.TestWpfYoloTrainingChecklistDatasetQualityPresentation);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-dataset-dashboard-presentation", StringComparison.OrdinalIgnoreCase)))
@@ -866,12 +988,12 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--dataset-readiness-purpose", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("YOLO dataset readiness follows selected dataset purpose", TestYoloDatasetReadinessPurposePolicy);
+            return RunSingleSmoke("YOLO dataset readiness follows selected dataset purpose", YoloDatasetReadinessTests.TestYoloDatasetReadinessPurposePolicy);
         }
 
         if (args.Any(arg => string.Equals(arg, "--yolov8-segmentation-app-dataset-fixture", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("YOLOv8 segmentation app dataset fixture exports polygon labels", TestYoloV8SegmentationAppDatasetFixture);
+            return RunSingleSmoke("YOLOv8 segmentation app dataset fixture exports polygon labels", YoloDatasetReadinessTests.TestYoloV8SegmentationAppDatasetFixture);
         }
 
         if (args.Any(arg => string.Equals(arg, "--prepare-segmentation-training-labels", StringComparison.OrdinalIgnoreCase)))
@@ -886,7 +1008,7 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--yolo-label-status", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("YOLO label lookup stays isolated to the active dataset", TestYoloImageLabelStatusService);
+            return RunSingleSmoke("YOLO label lookup stays isolated to the active dataset", YoloImageReviewStatusTests.TestYoloImageLabelStatusService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--segmentation-annotation-storage", StringComparison.OrdinalIgnoreCase)))
@@ -906,35 +1028,37 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--segmentation-template-contour-migration", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("SEG template contour migration backs up and replaces legacy rectangle masks", TestYoloSegmentationTemplateContourMigration);
+            return RunSingleSmoke(
+                "SEG template contour migration backs up and replaces legacy rectangle masks",
+                SegmentationTemplateContourMigrationTests.TestYoloSegmentationTemplateContourMigration);
         }
 
         if (args.Any(arg => string.Equals(arg, "--segmentation-template-contour-migration-apply", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSegmentationTemplateContourMigrationApply(args);
+            return SegmentationTemplateContourMigrationTests.RunSegmentationTemplateContourMigrationApply(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--template-batch-autolabel-storage", StringComparison.OrdinalIgnoreCase)))
         {
             return RunNamedTestSet(new (string Name, Action Test)[]
             {
-                ("Template batch auto label saves unlabeled images and skips existing labels", TestTemplateMatchingBatchAutoLabelSaveAndSkip),
-                ("Template batch auto label saves segmentation artifacts for SEG datasets", TestTemplateMatchingBatchAutoLabelSavesSegmentationArtifacts),
-                ("Template batch auto label transfers raster mask source shape for SEG datasets", TestTemplateMatchingBatchAutoLabelTransfersRasterMaskShape)
+                ("Template batch auto label saves unlabeled images and skips existing labels", TemplateAutoLabelTests.TestTemplateMatchingBatchAutoLabelSaveAndSkip),
+                ("Template batch auto label saves segmentation artifacts for SEG datasets", TemplateAutoLabelTests.TestTemplateMatchingBatchAutoLabelSavesSegmentationArtifacts),
+                ("Template batch auto label transfers raster mask source shape for SEG datasets", TemplateAutoLabelTests.TestTemplateMatchingBatchAutoLabelTransfersRasterMaskShape)
             });
         }
 
         if (args.Any(arg => string.Equals(arg, "--template-guide-ux", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Template auto label shows actionable guide", TestTemplateMatchingAutoLabelGuide);
+            return RunSingleSmoke("Template auto label shows actionable guide", TemplateAutoLabelTests.TestTemplateMatchingAutoLabelGuide);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-template-current-image-no-candidate", StringComparison.OrdinalIgnoreCase)))
         {
             return RunNamedTestSet(new (string Name, Action Test)[]
             {
-                ("WPF template source accepts selected manual segmentation objects", TestWpfTemplateSourceAcceptsManualSegmentationObject),
-                ("WPF template no-candidate result preserves saved label status", TestWpfTemplateCurrentImageNoCandidatePreservesSavedLabelStatus)
+                ("WPF template source accepts selected manual segmentation objects", TemplateAutoLabelTests.TestWpfTemplateSourceAcceptsManualSegmentationObject),
+                ("WPF template no-candidate result preserves saved label status", TemplateAutoLabelTests.TestWpfTemplateCurrentImageNoCandidatePreservesSavedLabelStatus)
             });
         }
 
@@ -965,7 +1089,9 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--model-adapter-catalog", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Model adapter catalog keeps explicit runtime and evidence contracts", TestModelAdapterCatalog);
+            return RunSingleSmoke(
+                "Model adapter catalog keeps explicit runtime and evidence contracts",
+                ModelAdapterCatalogTests.TestModelAdapterCatalog);
         }
 
         if (args.Any(arg => string.Equals(arg, "--python-model-runtime-self-test", StringComparison.OrdinalIgnoreCase)))
@@ -1043,7 +1169,7 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--wpf-training-weights-service", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF training weights service selects latest best.pt", TestWpfTrainingWeightsService);
+            return RunSingleSmoke("WPF training weights service selects latest best.pt", WpfTrainingWeightsTests.TestWpfTrainingWeightsService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-training-status-summaries", StringComparison.OrdinalIgnoreCase)))
@@ -1053,7 +1179,7 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--wpf-training-guide-history", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF training guide history service owns run history", TestWpfTrainingGuideHistoryService);
+            return RunSingleSmoke("WPF training guide history service owns run history", WpfTrainingGuideHistoryTests.TestWpfTrainingGuideHistoryService);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-workflow-command-state", StringComparison.OrdinalIgnoreCase)))
@@ -1063,12 +1189,12 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--wpf-settings-viewmodels", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("WPF settings view models round-trip editor values", TestWpfSettingsViewModelsRoundTrip);
+            return RunSingleSmoke("WPF settings view models round-trip editor values", WpfSettingsViewModelTests.TestWpfSettingsViewModelsRoundTrip);
         }
 
         if (args.Any(arg => string.Equals(arg, "--model-registry", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Model registry persists profile, run, candidate, and adoption history", TestModelRegistryServicePersistence);
+            return RunSingleSmoke("Model registry persists profile, run, candidate, and adoption history", ModelRegistryTests.TestModelRegistryServicePersistence);
         }
 
         if (args.Any(arg => string.Equals(arg, "--model-center-dashboard-presentation", StringComparison.OrdinalIgnoreCase)))
@@ -1090,15 +1216,15 @@ internal static partial class Program
         {
             ("YOLO path normalization uses forward slashes", TestNormalizeYamlPath),
             ("Class catalog normalizes names and rejects duplicates", TestClassCatalogService),
-            ("WPF object review edit service applies and deletes objects", TestWpfObjectReviewEditService),
-            ("WPF object review selection service keeps row policy stable", TestWpfObjectReviewSelectionService),
-            ("WPF object review presentation service builds rows and delete plans", TestWpfObjectReviewPresentationService),
-            ("WPF training weights service selects latest best.pt", TestWpfTrainingWeightsService),
-            ("WPF model comparison review service builds disagreement examples", TestWpfModelComparisonReviewService),
-            ("WPF model comparison run service builds script requests", TestWpfModelComparisonRunService),
-            ("WPF model benchmark window compares heterogeneous evaluation runs", TestWpfModelBenchmarkWindow),
-            ("WPF training guide history service owns run history", TestWpfTrainingGuideHistoryService),
-            ("Model registry persists profile, run, candidate, and adoption history", TestModelRegistryServicePersistence),
+            ("WPF object review edit service applies and deletes objects", ReviewServicesTests.TestWpfObjectReviewEditService),
+            ("WPF object review selection service keeps row policy stable", ReviewServicesTests.TestWpfObjectReviewSelectionService),
+            ("WPF object review presentation service builds rows and delete plans", ReviewServicesTests.TestWpfObjectReviewPresentationService),
+            ("WPF training weights service selects latest best.pt", WpfTrainingWeightsTests.TestWpfTrainingWeightsService),
+            ("WPF model comparison review service builds disagreement examples", WpfModelComparisonTests.TestWpfModelComparisonReviewService),
+            ("WPF model comparison run service builds script requests", WpfModelComparisonTests.TestWpfModelComparisonRunService),
+            ("WPF model benchmark window compares heterogeneous evaluation runs", WpfModelComparisonTests.TestWpfModelBenchmarkWindow),
+            ("WPF training guide history service owns run history", WpfTrainingGuideHistoryTests.TestWpfTrainingGuideHistoryService),
+            ("Model registry persists profile, run, candidate, and adoption history", ModelRegistryTests.TestModelRegistryServicePersistence),
             ("Model Center dashboard presentation separates read-only display state", TestWpfModelCenterDashboardPresentationService),
             ("MVVM infrastructure shares observable and command helpers", TestMvvmInfrastructure),
             ("CData creates YOLO dataset directories and data.yaml", TestCreateYoloDataset),
@@ -1109,52 +1235,52 @@ internal static partial class Program
             ("YOLO dataset validator rejects stale data.yaml contracts", TestYoloDatasetValidatorRejectsStaleDataYamlContract),
             ("YOLO dataset validator rejects duplicate train and valid images", TestYoloDatasetValidatorRejectsTrainValidDuplicates),
             ("YOLO external evaluation data audit rejects duplicate content", TestYoloExternalEvaluationDataAuditService),
-            ("External native YOLO data.yaml stays separate from recipe exports", TestExternalYoloDatasetIntake),
+            ("External native YOLO data.yaml stays separate from recipe exports", ExternalYoloDatasetIntakeTests.TestExternalYoloDatasetIntake),
             ("YOLO dataset validator rejects invalid label file contents", TestYoloDatasetValidatorInvalidLabels),
             ("YOLO dataset validator reports saved dataset statistics", TestYoloDatasetStatistics),
-            ("YOLO dataset readiness report combines validation and statistics", TestYoloDatasetReadinessReport),
-            ("YOLO dataset diagnostics report operator-ready issues", TestYoloDatasetDiagnosticsReport),
-            ("YOLO dataset readiness keeps statistics when duplicate split blocks training", TestYoloDatasetReadinessStatisticsOnDuplicateSplit),
-            ("WPF YOLO training checklist separates warnings from blocking errors", TestWpfYoloTrainingChecklistDatasetQualityPresentation),
+            ("YOLO dataset readiness report combines validation and statistics", YoloDatasetReadinessTests.TestYoloDatasetReadinessReport),
+            ("YOLO dataset diagnostics report operator-ready issues", YoloDatasetReadinessTests.TestYoloDatasetDiagnosticsReport),
+            ("YOLO dataset readiness keeps statistics when duplicate split blocks training", YoloDatasetReadinessTests.TestYoloDatasetReadinessStatisticsOnDuplicateSplit),
+            ("WPF YOLO training checklist separates warnings from blocking errors", WpfTrainingDatasetReadinessTests.TestWpfYoloTrainingChecklistDatasetQualityPresentation),
             ("WPF dataset dashboard presentation separates metric-card state", TestWpfDatasetDashboardPresentationService),
-            ("YOLO dataset quality audit reports labels, missing files, empty labels, and class distribution", TestYoloDatasetQualityAuditReport),
-            ("Dataset Health summarizes detection, segmentation, and anomaly data without changing labels", TestYoloDatasetHealthReport),
-            ("WPF Dataset Health opens as a separate data-analysis window", TestWpfDatasetHealthWindow),
-            ("YOLO dataset quality audit exports markdown report", TestYoloDatasetQualityAuditMarkdownExport),
-            ("WPF model comparison button requires held-out test split", TestWpfModelComparisonButtonRequiresHeldOutTestSplit),
-            ("YOLO dataset readiness explains segmentation-only labels", TestYoloDatasetReadinessSegmentationOnlyPolicy),
-            ("YOLO dataset readiness follows selected dataset purpose", TestYoloDatasetReadinessPurposePolicy),
-            ("YOLO annotation lines use normalized coordinates", TestYoloAnnotationLines),
-            ("YOLO annotation service loads saved label rectangles", TestYoloAnnotationLoad),
-            ("YOLO image label status reports saved object counts", TestYoloImageLabelStatusService),
-            ("YOLO image review status tracks labels, candidates, and next unlabeled image", TestYoloImageReviewStatusService),
-            ("YOLO image quality review exports local markdown report", TestYoloImageQualityReviewReportExport),
-            ("COCO detection export writes external dataset JSON", TestCocoDetectionExportService),
-            ("COCO detection import writes local YOLO dataset artifacts", TestCocoDetectionImportService),
-            ("COCO segmentation export writes polygon dataset JSON", TestCocoSegmentationExportService),
-            ("COCO segmentation import writes local segmentation artifacts", TestCocoSegmentationImportService),
-            ("Pascal VOC detection export writes XML files", TestPascalVocDetectionExportService),
-            ("Pascal VOC detection import writes local YOLO dataset artifacts", TestPascalVocDetectionImportService),
-            ("Label Studio detection export writes task JSON", TestLabelStudioDetectionExportService),
-            ("Label Studio detection import writes local YOLO dataset artifacts", TestLabelStudioDetectionImportService),
-            ("Label Studio segmentation export writes polygon task JSON", TestLabelStudioSegmentationExportService),
-            ("Label Studio segmentation import writes local segmentation artifacts", TestLabelStudioSegmentationImportService),
-            ("CVAT image task archive export writes annotations and images", TestCvatImageTaskArchiveExportService),
-            ("CVAT detection import writes local YOLO dataset artifacts", TestCvatDetectionImportService),
-            ("CVAT segmentation archive export writes polygon annotations and images", TestCvatSegmentationArchiveExportService),
-            ("CVAT segmentation import writes local segmentation artifacts", TestCvatSegmentationImportService),
-            ("Dataset export capability inventory declares current and next targets", TestDatasetExportCapabilityInventory),
-            ("WPF anomaly purpose flow persists image-level review state", TestWpfAnomalyPurposeFlow),
-            ("WPF anomaly decisions keep queue focus on the active image", TestWpfAnomalyQueueFocusFollowsActiveImage),
-            ("Anomaly classification decision maps configured image-level classes", TestAnomalyClassificationDecisionService),
+            ("YOLO dataset quality audit reports labels, missing files, empty labels, and class distribution", YoloDatasetQualityAuditTests.TestYoloDatasetQualityAuditReport),
+            ("Dataset Health summarizes detection, segmentation, and anomaly data without changing labels", DatasetHealthTests.TestYoloDatasetHealthReport),
+            ("WPF Dataset Health opens as a separate data-analysis window", DatasetHealthTests.TestWpfDatasetHealthWindow),
+            ("YOLO dataset quality audit exports markdown report", YoloDatasetQualityAuditTests.TestYoloDatasetQualityAuditMarkdownExport),
+            ("WPF model comparison button requires held-out test split", WpfTrainingDatasetReadinessTests.TestWpfModelComparisonButtonRequiresHeldOutTestSplit),
+            ("YOLO dataset readiness explains segmentation-only labels", YoloDatasetReadinessTests.TestYoloDatasetReadinessSegmentationOnlyPolicy),
+            ("YOLO dataset readiness follows selected dataset purpose", YoloDatasetReadinessTests.TestYoloDatasetReadinessPurposePolicy),
+            ("YOLO annotation lines use normalized coordinates", YoloAnnotationsTests.TestYoloAnnotationLines),
+            ("YOLO annotation service loads saved label rectangles", YoloAnnotationsTests.TestYoloAnnotationLoad),
+            ("YOLO image label status reports saved object counts", YoloImageReviewStatusTests.TestYoloImageLabelStatusService),
+            ("YOLO image review status tracks labels, candidates, and next unlabeled image", YoloImageReviewStatusTests.TestYoloImageReviewStatusService),
+            ("YOLO image quality review exports local markdown report", YoloImageReviewStatusTests.TestYoloImageQualityReviewReportExport),
+            ("COCO detection export writes external dataset JSON", CocoDetectionTests.TestCocoDetectionExportService),
+            ("COCO detection import writes local YOLO dataset artifacts", CocoDetectionTests.TestCocoDetectionImportService),
+            ("COCO segmentation export writes polygon dataset JSON", CocoSegmentationTests.TestCocoSegmentationExportService),
+            ("COCO segmentation import writes local segmentation artifacts", CocoSegmentationTests.TestCocoSegmentationImportService),
+            ("Pascal VOC detection export writes XML files", PascalVocDetectionTests.TestPascalVocDetectionExportService),
+            ("Pascal VOC detection import writes local YOLO dataset artifacts", PascalVocDetectionTests.TestPascalVocDetectionImportService),
+            ("Label Studio detection export writes task JSON", LabelStudioDetectionTests.TestLabelStudioDetectionExportService),
+            ("Label Studio detection import writes local YOLO dataset artifacts", LabelStudioDetectionTests.TestLabelStudioDetectionImportService),
+            ("Label Studio segmentation export writes polygon task JSON", LabelStudioSegmentationTests.TestLabelStudioSegmentationExportService),
+            ("Label Studio segmentation import writes local segmentation artifacts", LabelStudioSegmentationTests.TestLabelStudioSegmentationImportService),
+            ("CVAT image task archive export writes annotations and images", CvatTests.TestCvatImageTaskArchiveExportService),
+            ("CVAT detection import writes local YOLO dataset artifacts", CvatTests.TestCvatDetectionImportService),
+            ("CVAT segmentation archive export writes polygon annotations and images", CvatTests.TestCvatSegmentationArchiveExportService),
+            ("CVAT segmentation import writes local segmentation artifacts", CvatTests.TestCvatSegmentationImportService),
+            ("Dataset export capability inventory declares current and next targets", DatasetInterchangeCapabilityTests.TestDatasetExportCapabilityInventory),
+            ("WPF anomaly purpose flow persists image-level review state", AnomalyClassificationTests.TestWpfAnomalyPurposeFlow),
+            ("WPF anomaly decisions keep queue focus on the active image", AnomalyQueueFocusSmokeTests.TestWpfAnomalyQueueFocusFollowsActiveImage),
+            ("Anomaly classification decision maps configured image-level classes", AnomalyClassificationTests.TestAnomalyClassificationDecisionService),
             ("YOLO annotation service writes image and label files", TestYoloAnnotationFileWrite),
             ("YOLO annotation save preserves source image extension and split ownership", TestYoloAnnotationPreservesSourceImageExtensionAndSplitOwnership),
-            ("Template batch auto label saves unlabeled images and skips existing labels", TestTemplateMatchingBatchAutoLabelSaveAndSkip),
-            ("Template batch auto label saves segmentation artifacts for SEG datasets", TestTemplateMatchingBatchAutoLabelSavesSegmentationArtifacts),
-            ("Template batch auto label transfers raster mask source shape for SEG datasets", TestTemplateMatchingBatchAutoLabelTransfersRasterMaskShape),
-            ("Template auto label shows actionable guide", TestTemplateMatchingAutoLabelGuide),
-            ("WPF template source accepts selected manual segmentation objects", TestWpfTemplateSourceAcceptsManualSegmentationObject),
-            ("WPF template no-candidate result preserves saved label status", TestWpfTemplateCurrentImageNoCandidatePreservesSavedLabelStatus),
+            ("Template batch auto label saves unlabeled images and skips existing labels", TemplateAutoLabelTests.TestTemplateMatchingBatchAutoLabelSaveAndSkip),
+            ("Template batch auto label saves segmentation artifacts for SEG datasets", TemplateAutoLabelTests.TestTemplateMatchingBatchAutoLabelSavesSegmentationArtifacts),
+            ("Template batch auto label transfers raster mask source shape for SEG datasets", TemplateAutoLabelTests.TestTemplateMatchingBatchAutoLabelTransfersRasterMaskShape),
+            ("Template auto label shows actionable guide", TemplateAutoLabelTests.TestTemplateMatchingAutoLabelGuide),
+            ("WPF template source accepts selected manual segmentation objects", TemplateAutoLabelTests.TestWpfTemplateSourceAcceptsManualSegmentationObject),
+            ("WPF template no-candidate result preserves saved label status", TemplateAutoLabelTests.TestWpfTemplateCurrentImageNoCandidatePreservesSavedLabelStatus),
             ("Segmentation annotation service writes masks and polygons", TestSegmentationAnnotationFileWrite),
             ("Segmentation geometry converts boxes into editable polygons", TestSegmentationGeometryBoxConversion),
             ("WPF polygon annotation service creates pixel segmentation objects", TestWpfPolygonAnnotationService),
@@ -1251,7 +1377,7 @@ internal static partial class Program
             ("WPF 10-minute labeling session covers labels, save, and candidate review", TestWpfTenMinuteLabelingSessionFlow),
             ("WPF YOLO training session covers readiness, worker status, and runs/segment best.pt apply", TestWpfYoloTrainingSessionFlow),
             ("Program starts the WPF shell without legacy FormMainFrame fallback", TestProgramDefaultsToWpfShell),
-            ("WPF labeling shell can be constructed without the WinForms shell", TestWpfLabelingShellWindowConstructs),
+            ("WPF labeling shell can be constructed without the WinForms shell", WpfShellStructureTests.TestWpfLabelingShellWindowConstructs),
             ("WPF startup restores the last opened dataset", TestWpfStartupRestoresLastOpenedDataset),
             ("WPF startup opens dataset onboarding when no dataset is restored", TestWpfStartupShowsDatasetOnboardingWhenNoDatasetIsRestored),
             ("Legacy settings buttons route to the WPF shell", TestLegacySettingsButtonsRouteToWpfShell),
@@ -1262,7 +1388,7 @@ internal static partial class Program
             ("WPF project recipe service remembers last opened dataset", TestWpfProjectRecipeServiceRemembersLastOpenedDataset),
             ("WPF YOLO model settings panel declares path editors", TestWpfYoloModelSettingsPanelDeclaresPathEditors),
             ("WPF training settings panel declares controls", TestWpfTrainingSettingsPanelDeclaresControls),
-            ("WPF settings view models round-trip editor values", TestWpfSettingsViewModelsRoundTrip),
+            ("WPF settings view models round-trip editor values", WpfSettingsViewModelTests.TestWpfSettingsViewModelsRoundTrip),
             ("WPF status and log panels declare controls", TestWpfStatusAndLogPanelsDeclareControls),
             ("WPF canvas detection overlay uses theme resources", TestWpfCanvasDetectionOverlayUsesThemeResources),
             ("WPF numeric editors declare input guards", TestWpfNumericEditorsDeclareInputGuards),
@@ -1274,10 +1400,10 @@ internal static partial class Program
             ("WPF single detection avoids startup warm-up and keeps short interactive wait", TestWpfSingleDetectionManualStartupPath),
             ("WPF workflow mode separates labeling and inference", TestWpfWorkflowModeSeparatesLabelingAndInference),
             ("WPF candidate rows show visual review status", TestWpfCandidateRowsShowVisualStatus),
-            ("WPF candidate review selection service keeps navigation policy stable", TestWpfCandidateReviewSelectionService),
-            ("WPF candidate review state service owns candidate mutations", TestWpfCandidateReviewStateService),
-            ("WPF candidate confirmation service owns confirm outcomes", TestWpfCandidateConfirmationService),
-            ("WPF candidate review presentation service builds rows and overlay text", TestWpfCandidateReviewPresentationService),
+            ("WPF candidate review selection service keeps navigation policy stable", ReviewServicesTests.TestWpfCandidateReviewSelectionService),
+            ("WPF candidate review state service owns candidate mutations", ReviewServicesTests.TestWpfCandidateReviewStateService),
+            ("WPF candidate confirmation service owns confirm outcomes", ReviewServicesTests.TestWpfCandidateConfirmationService),
+            ("WPF candidate review presentation service builds rows and overlay text", ReviewServicesTests.TestWpfCandidateReviewPresentationService),
             ("WPF detection result presentation service owns result cards", TestWpfDetectionResultPresentationService),
             ("WPF detection target service owns target selection", TestWpfDetectionTargetService),
             ("WPF batch detection progress service owns status text", TestWpfBatchDetectionProgressService),
@@ -1302,7 +1428,7 @@ internal static partial class Program
             ("WPF image queue arrow keys load adjacent images", TestWpfImageQueueArrowKeysLoadAdjacentImages),
             ("WPF image queue large folder keeps bulk and lazy thumbnail behavior", TestWpfImageQueueLargeFolderKeepsBulkAndLazyThumbnails),
             ("WPF image queue 10K catalog stays responsive and rejects stale loads", TestWpfImageQueueTenThousandAsyncCatalogLoad),
-            ("WPF image queue 10K worklist stays actionable without a full refresh", TestWpfImageQueueWorklistTenThousand),
+            ("WPF image queue 10K worklist stays actionable without a full refresh", ImageQueueWorklistTests.TestWpfImageQueueWorklistTenThousand),
             ("WPF detection candidates render as detection overlays", TestWpfDetectionCandidatesRenderAsDetectionOverlays),
             ("WPF model comparison example click focuses difference", TestWpfModelComparisonExampleClickFocusesDifference),
             ("WPF current-image smoke detection preserves manual labels", TestWpfCurrentImageSmokeDetectionPreservesManualLabels),
@@ -1363,7 +1489,7 @@ internal static partial class Program
         return 0;
     }
 
-    private static int RunSingleSmoke(string name, Action test)
+    internal static int RunSingleSmoke(string name, Action test)
     {
         try
         {
@@ -1941,11 +2067,11 @@ internal static partial class Program
                     PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
                     if (smartMaskCandidate)
                     {
-                        ApplyVisualSmokeSmartMaskCandidate(window, imageSize, smartMaskPromptBox);
+                        MobileSamBoxPromptTests.ApplyVisualSmokeSmartMaskCandidate(window, imageSize, smartMaskPromptBox);
                     }
                     else if (smartMaskPromptOnly)
                     {
-                        ApplyVisualSmokeSmartMaskPrompt(window, imageSize, smartMaskPromptBox);
+                        MobileSamBoxPromptTests.ApplyVisualSmokeSmartMaskPrompt(window, imageSize, smartMaskPromptBox);
                     }
                     SelectVisualSmokeReviewTab(window, reviewTab);
                     EnsureVisualSmokeRightWorkflowExpanded(window, expandRightWorkflow);
@@ -4501,9 +4627,9 @@ internal static partial class Program
             string activeImagePath = Path.Combine(imageRoot, "a-active-template.png");
             string targetImagePath = Path.Combine(imageRoot, "b-template-target.png");
             string existingImagePath = Path.Combine(imageRoot, "c-existing-label.png");
-            using (Bitmap activeImage = CreateTemplateBatchAutoLabelImage(new Point(12, 12)))
-            using (Bitmap targetImage = CreateTemplateBatchAutoLabelImage(new Point(56, 34)))
-            using (Bitmap existingImage = CreateTemplateBatchAutoLabelImage(new Point(72, 48)))
+            using (Bitmap activeImage = TemplateAutoLabelFixtures.CreateTemplateBatchAutoLabelImage(new Point(12, 12)))
+            using (Bitmap targetImage = TemplateAutoLabelFixtures.CreateTemplateBatchAutoLabelImage(new Point(56, 34)))
+            using (Bitmap existingImage = TemplateAutoLabelFixtures.CreateTemplateBatchAutoLabelImage(new Point(72, 48)))
             {
                 activeImage.Save(activeImagePath, System.Drawing.Imaging.ImageFormat.Png);
                 targetImage.Save(targetImagePath, System.Drawing.Imaging.ImageFormat.Png);
@@ -4653,7 +4779,7 @@ internal static partial class Program
         }
     }
 
-    private static void WriteExeTemplateBatchAutoLabelRecipe(
+    internal static void WriteExeTemplateBatchAutoLabelRecipe(
         string recipeName,
         string outputRoot,
         string recipeDirectory,
@@ -4791,7 +4917,7 @@ internal static partial class Program
         return "python";
     }
 
-    private static bool ApplyExeSmokeRecipe(Process process, string recipeName)
+    internal static bool ApplyExeSmokeRecipe(Process process, string recipeName)
     {
         var root = RefreshAutomationRoot(process);
         if (!SelectAutomationTabByAutomationId(root, "YoloSettingsReviewTab") && !SelectTabItemByName(root, "\uBAA8\uB378"))
@@ -4812,7 +4938,7 @@ internal static partial class Program
             || TryInvokeAutomationButton(root, "Recipe 적용");
     }
 
-    private static bool TryReadDatasetManifest(string manifestPath, out LabelingDatasetManifest manifest)
+    internal static bool TryReadDatasetManifest(string manifestPath, out LabelingDatasetManifest manifest)
     {
         manifest = null;
         if (string.IsNullOrWhiteSpace(manifestPath) || !File.Exists(manifestPath))
@@ -6704,7 +6830,7 @@ internal static partial class Program
         }
     }
 
-    private static IntPtr WaitForMainWindowHandle(Process process, TimeSpan timeout)
+    internal static IntPtr WaitForMainWindowHandle(Process process, TimeSpan timeout)
     {
         Stopwatch stopwatch = Stopwatch.StartNew();
         while (stopwatch.Elapsed < timeout)
@@ -6726,7 +6852,7 @@ internal static partial class Program
         return IntPtr.Zero;
     }
 
-    private static void BringNativeWindowToFront(IntPtr handle)
+    internal static void BringNativeWindowToFront(IntPtr handle)
     {
         if (handle == IntPtr.Zero)
         {
@@ -6743,7 +6869,7 @@ internal static partial class Program
         Thread.Sleep(250);
     }
 
-    private static System.Windows.Automation.AutomationElement RefreshAutomationRoot(Process process, bool bringToFront = true)
+    internal static System.Windows.Automation.AutomationElement RefreshAutomationRoot(Process process, bool bringToFront = true)
     {
         AssertTrue(process != null && !process.HasExited, "EXE smoke process exited unexpectedly");
         process.Refresh();
@@ -6757,7 +6883,7 @@ internal static partial class Program
         return root;
     }
 
-    private static System.Windows.Automation.AutomationElement RefreshAutomationRoot(Process process, IntPtr stableHandle, bool bringToFront = true)
+    internal static System.Windows.Automation.AutomationElement RefreshAutomationRoot(Process process, IntPtr stableHandle, bool bringToFront = true)
     {
         AssertTrue(process != null && !process.HasExited, "EXE smoke process exited unexpectedly");
         AssertTrue(stableHandle != IntPtr.Zero, "EXE smoke stable window handle was not available");
@@ -6771,7 +6897,7 @@ internal static partial class Program
         return root;
     }
 
-    private static bool TryInvokeAutomationButton(System.Windows.Automation.AutomationElement root, string name)
+    internal static bool TryInvokeAutomationButton(System.Windows.Automation.AutomationElement root, string name)
     {
         var button = FindAutomationButton(root, name, requireEnabled: true);
         if (button == null)
@@ -6815,7 +6941,7 @@ internal static partial class Program
         return null;
     }
 
-    private static System.Windows.Automation.AutomationElement FindEnabledAutomationButton(
+    internal static System.Windows.Automation.AutomationElement FindEnabledAutomationButton(
         System.Windows.Automation.AutomationElement root,
         string name)
         => FindAutomationButton(root, name, requireEnabled: true);
@@ -6840,7 +6966,7 @@ internal static partial class Program
         return FindEnabledAutomationButton(root, "\uC0AD\uC81C");
     }
 
-    private static System.Windows.Automation.AutomationElement FindAutomationElementByClass(
+    internal static System.Windows.Automation.AutomationElement FindAutomationElementByClass(
         System.Windows.Automation.AutomationElement root,
         string className)
     {
@@ -6865,7 +6991,66 @@ internal static partial class Program
         return null;
     }
 
-    private static System.Windows.Automation.AutomationElement FindAutomationElementByAutomationId(
+    internal static System.Windows.Automation.AutomationElement FindVisibleAutomationElementByName(
+        System.Windows.Automation.AutomationElement root,
+        string name,
+        double maximumWidth,
+        double maximumHeight)
+    {
+        foreach (System.Windows.Automation.AutomationElement element in EnumerateAutomationDescendants(root))
+        {
+            try
+            {
+                System.Windows.Rect bounds = element.Current.BoundingRectangle;
+                if (!element.Current.IsOffscreen
+                    && string.Equals(element.Current.Name, name, StringComparison.Ordinal)
+                    && bounds.Width > 0D
+                    && bounds.Height > 0D
+                    && bounds.Width <= maximumWidth
+                    && bounds.Height <= maximumHeight)
+                {
+                    return element;
+                }
+            }
+            catch (System.Windows.Automation.ElementNotAvailableException)
+            {
+            }
+        }
+
+        return null;
+    }
+
+    internal static System.Windows.Automation.AutomationElement FindCanvasAnnotationToolByIndex(
+        System.Windows.Automation.AutomationElement root,
+        int index)
+    {
+        System.Windows.Automation.AutomationElement toolList =
+            FindAutomationElementByAutomationId(root, "CanvasAnnotationToolListBox");
+        if (toolList == null)
+        {
+            return null;
+        }
+
+        System.Windows.Automation.AutomationElement[] items = EnumerateAutomationDescendants(toolList)
+            .Where(element =>
+            {
+                try
+                {
+                    return element.Current.ControlType == System.Windows.Automation.ControlType.ListItem
+                        && !element.Current.IsOffscreen
+                        && element.Current.IsEnabled;
+                }
+                catch (System.Windows.Automation.ElementNotAvailableException)
+                {
+                    return false;
+                }
+            })
+            .OrderBy(element => element.Current.BoundingRectangle.Top)
+            .ToArray();
+        return index >= 0 && index < items.Length ? items[index] : null;
+    }
+
+    internal static System.Windows.Automation.AutomationElement FindAutomationElementByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId)
     {
@@ -6890,7 +7075,7 @@ internal static partial class Program
         return null;
     }
 
-    private static bool SelectAutomationTabByAutomationId(
+    internal static bool SelectAutomationTabByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId)
     {
@@ -6913,7 +7098,7 @@ internal static partial class Program
         return true;
     }
 
-    private static bool TrySetAutomationValueByAutomationId(
+    internal static bool TrySetAutomationValueByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId,
         string value)
@@ -6963,7 +7148,7 @@ internal static partial class Program
             TimeSpan.FromSeconds(2));
     }
 
-    private static string GetAutomationValueByAutomationId(
+    internal static string GetAutomationValueByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId)
     {
@@ -7020,7 +7205,7 @@ internal static partial class Program
         }
     }
 
-    private static string GetAutomationHelpText(System.Windows.Automation.AutomationElement element)
+    internal static string GetAutomationHelpText(System.Windows.Automation.AutomationElement element)
     {
         if (element == null)
         {
@@ -7054,7 +7239,7 @@ internal static partial class Program
             timeout);
     }
 
-    private static bool WaitForExeMaskCommitSignal(
+    internal static bool WaitForExeMaskCommitSignal(
         Process process,
         System.Windows.Automation.AutomationElement statusElement,
         string previousCommitSignal,
@@ -7063,7 +7248,7 @@ internal static partial class Program
         return WaitForExeMaskCommitSignal(process, statusElement, previousCommitSignal, timeout, out _);
     }
 
-    private static bool WaitForExeMaskCommitSignal(
+    internal static bool WaitForExeMaskCommitSignal(
         Process process,
         System.Windows.Automation.AutomationElement statusElement,
         string previousCommitSignal,
@@ -7148,7 +7333,7 @@ internal static partial class Program
         return false;
     }
 
-    private static bool WaitForExeMaskCommitSignal(Process process, TimeSpan timeout)
+    internal static bool WaitForExeMaskCommitSignal(Process process, TimeSpan timeout)
     {
         return WaitUntil(
             () =>
@@ -7197,7 +7382,7 @@ internal static partial class Program
             : 0D;
     }
 
-    private static System.Windows.Automation.AutomationElement WaitForProcessWindowByName(
+    internal static System.Windows.Automation.AutomationElement WaitForProcessWindowByName(
         Process process,
         string name,
         TimeSpan timeout)
@@ -7214,7 +7399,7 @@ internal static partial class Program
         return found;
     }
 
-    private static System.Windows.Automation.AutomationElement FindProcessWindowByName(
+    internal static System.Windows.Automation.AutomationElement FindProcessWindowByName(
         Process process,
         string name)
     {
@@ -7258,7 +7443,7 @@ internal static partial class Program
         return found;
     }
 
-    private static IEnumerable<System.Windows.Automation.AutomationElement> EnumerateAutomationDescendants(
+    internal static IEnumerable<System.Windows.Automation.AutomationElement> EnumerateAutomationDescendants(
         System.Windows.Automation.AutomationElement root)
     {
         if (root == null)
@@ -7294,7 +7479,7 @@ internal static partial class Program
         }
     }
 
-    private static bool ClickAnnotationToolByText(System.Windows.Automation.AutomationElement root, string toolText)
+    internal static bool ClickAnnotationToolByText(System.Windows.Automation.AutomationElement root, string toolText)
     {
         System.Windows.Automation.AutomationElement item = FindAnnotationToolItem(root, toolText);
         if (item == null)
@@ -7322,7 +7507,7 @@ internal static partial class Program
         return true;
     }
 
-    private static bool SelectListItemByText(System.Windows.Automation.AutomationElement root, string itemText)
+    internal static bool SelectListItemByText(System.Windows.Automation.AutomationElement root, string itemText)
     {
         System.Windows.Automation.AutomationElement item = FindListItemByText(root, itemText);
         if (item == null)
@@ -7447,7 +7632,7 @@ internal static partial class Program
         return opened;
     }
 
-    private static System.Windows.Automation.AutomationElement FindDescendantTextContaining(
+    internal static System.Windows.Automation.AutomationElement FindDescendantTextContaining(
         System.Windows.Automation.AutomationElement root,
         string text)
     {
@@ -7489,7 +7674,7 @@ internal static partial class Program
         return null;
     }
 
-    private static System.Windows.Automation.AutomationElement FindListItemContainingText(
+    internal static System.Windows.Automation.AutomationElement FindListItemContainingText(
         System.Windows.Automation.AutomationElement root,
         string itemText)
     {
@@ -7527,7 +7712,7 @@ internal static partial class Program
         }
     }
 
-    private static System.Windows.Automation.AutomationElement FindAnnotationToolItem(
+    internal static System.Windows.Automation.AutomationElement FindAnnotationToolItem(
         System.Windows.Automation.AutomationElement root,
         string toolText)
     {
@@ -7699,12 +7884,12 @@ internal static partial class Program
         }
     }
 
-    private static bool IsAutomationElementVisibleByAutomationId(
+    internal static bool IsAutomationElementVisibleByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId)
         => IsAutomationElementVisible(FindAutomationElementByAutomationId(root, automationId));
 
-    private static bool IsAutomationElementVisible(System.Windows.Automation.AutomationElement element)
+    internal static bool IsAutomationElementVisible(System.Windows.Automation.AutomationElement element)
     {
         try
         {
@@ -7719,7 +7904,7 @@ internal static partial class Program
         }
     }
 
-    private static bool IsExeSmokeBoxToolSelected(System.Windows.Automation.AutomationElement root)
+    internal static bool IsExeSmokeBoxToolSelected(System.Windows.Automation.AutomationElement root)
     {
         System.Windows.Automation.AutomationElement boxToolItem = FindAnnotationToolItem(root, "\uBC15\uC2A4");
         if (IsAutomationSelectionItemSelected(boxToolItem))
@@ -7732,7 +7917,7 @@ internal static partial class Program
             && statusText.Contains("\uBC15\uC2A4", StringComparison.Ordinal);
     }
 
-    private static string GetSelectedAnnotationToolText(System.Windows.Automation.AutomationElement root)
+    internal static string GetSelectedAnnotationToolText(System.Windows.Automation.AutomationElement root)
     {
         foreach (string candidate in new[] { "선택", "박스", "원/타원", "폴리곤", "브러시", "지우개", "이동" })
         {
@@ -7753,7 +7938,7 @@ internal static partial class Program
         return string.Empty;
     }
 
-    private static bool IsAutomationSelectionItemSelected(System.Windows.Automation.AutomationElement item)
+    internal static bool IsAutomationSelectionItemSelected(System.Windows.Automation.AutomationElement item)
     {
         try
         {
@@ -7788,7 +7973,7 @@ internal static partial class Program
         }
     }
 
-    private static bool SelectTabItemByName(System.Windows.Automation.AutomationElement root, string tabName)
+    internal static bool SelectTabItemByName(System.Windows.Automation.AutomationElement root, string tabName)
     {
         foreach (System.Windows.Automation.AutomationElement element in EnumerateAutomationDescendants(root))
         {
@@ -7836,7 +8021,7 @@ internal static partial class Program
         AssertTrue(found, $"automation text was not visible: {expectedText}");
     }
 
-    private static bool ContainsAutomationText(System.Windows.Automation.AutomationElement root, string expectedText)
+    internal static bool ContainsAutomationText(System.Windows.Automation.AutomationElement root, string expectedText)
     {
         foreach (System.Windows.Automation.AutomationElement element in EnumerateAutomationDescendants(root))
         {
@@ -8177,7 +8362,7 @@ internal static partial class Program
         return found;
     }
 
-    private static string BuildAutomationTextSample(System.Windows.Automation.AutomationElement root, int maxItems)
+    internal static string BuildAutomationTextSample(System.Windows.Automation.AutomationElement root, int maxItems)
     {
         var names = new List<string>();
         foreach (System.Windows.Automation.AutomationElement element in EnumerateAutomationDescendants(root))
@@ -8207,7 +8392,7 @@ internal static partial class Program
         return string.Join(" | ", names);
     }
 
-    private static bool TryInvokeAutomationButtonByAutomationId(
+    internal static bool TryInvokeAutomationButtonByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId)
     {
@@ -8244,7 +8429,7 @@ internal static partial class Program
         return false;
     }
 
-    private static bool IsAutomationButtonEnabledByAutomationId(
+    internal static bool IsAutomationButtonEnabledByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId)
     {
@@ -8261,7 +8446,7 @@ internal static partial class Program
         }
     }
 
-    private static bool TryExpandAutomationElementByAutomationId(
+    internal static bool TryExpandAutomationElementByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId)
     {
@@ -8295,7 +8480,7 @@ internal static partial class Program
         }
     }
 
-    private static bool TrySelectComboBoxItemByAutomationId(
+    internal static bool TrySelectComboBoxItemByAutomationId(
         Process process,
         IntPtr stableHandle,
         string automationId,
@@ -8517,7 +8702,7 @@ internal static partial class Program
         Thread.Sleep(260);
     }
 
-    private static bool TryScrollAutomationElementByAutomationId(
+    internal static bool TryScrollAutomationElementByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId)
         => TryScrollAutomationElementByAutomationId(
@@ -8526,7 +8711,7 @@ internal static partial class Program
             System.Windows.Automation.ScrollAmount.LargeIncrement,
             repeatCount: 2);
 
-    private static bool TryScrollAutomationElementByAutomationId(
+    internal static bool TryScrollAutomationElementByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId,
         System.Windows.Automation.ScrollAmount verticalAmount,
@@ -8640,7 +8825,7 @@ internal static partial class Program
         return result;
     }
 
-    private static IEnumerable<string> EnumerateExeSmokeSaveArtifactPaths(string outputRoot, string fileStem)
+    internal static IEnumerable<string> EnumerateExeSmokeSaveArtifactPaths(string outputRoot, string fileStem)
     {
         yield return Path.Combine(outputRoot, "data.yaml");
         foreach (string mode in new[] { "train", "valid", "test" })
@@ -8671,7 +8856,7 @@ internal static partial class Program
         => path.Contains($"{Path.DirectorySeparatorChar}masks{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
             || path.Contains($"{Path.DirectorySeparatorChar}segments{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
 
-    private static ExeSmokeSavedArtifactDiagnostics ValidateExeSmokeSavedArtifactContents(IReadOnlyList<string> savedArtifacts)
+    internal static ExeSmokeSavedArtifactDiagnostics ValidateExeSmokeSavedArtifactContents(IReadOnlyList<string> savedArtifacts)
     {
         string maskPath = savedArtifacts.FirstOrDefault(path => path.Contains($"{Path.DirectorySeparatorChar}masks{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
         string segmentPath = savedArtifacts.FirstOrDefault(path => path.Contains($"{Path.DirectorySeparatorChar}segments{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
@@ -8687,23 +8872,7 @@ internal static partial class Program
     }
 
     private static int CountExeSmokeSavedMaskPixels(string maskPath)
-    {
-        using Bitmap bitmap = new Bitmap(maskPath);
-        int nonZeroPixels = 0;
-        for (int y = 0; y < bitmap.Height; y++)
-        {
-            for (int x = 0; x < bitmap.Width; x++)
-            {
-                Color pixel = bitmap.GetPixel(x, y);
-                if (pixel.R != 0 || pixel.G != 0 || pixel.B != 0)
-                {
-                    nonZeroPixels++;
-                }
-            }
-        }
-
-        return nonZeroPixels;
-    }
+        => TestSupport.CountSavedMaskPixels(maskPath);
 
     private static ExeSmokeSegmentJsonDiagnostics InspectExeSmokeSegmentJson(string segmentPath)
     {
@@ -8874,7 +9043,7 @@ internal static partial class Program
             selectedMissingLabelCount);
     }
 
-    private static Point GetAutomationCenter(System.Windows.Automation.AutomationElement element)
+    internal static Point GetAutomationCenter(System.Windows.Automation.AutomationElement element)
     {
         System.Windows.Rect bounds = element.Current.BoundingRectangle;
         return new Point(
@@ -8895,7 +9064,7 @@ internal static partial class Program
         return new System.Windows.Rect(left, top, width, height);
     }
 
-    private static System.Windows.Rect BuildExeSmokeFittedImageRegion(System.Windows.Rect canvasRect, string imagePath)
+    internal static System.Windows.Rect BuildExeSmokeFittedImageRegion(System.Windows.Rect canvasRect, string imagePath)
     {
         System.Windows.Rect fittedBounds = BuildExeSmokeFittedImageBounds(canvasRect, imagePath);
         double insetX = Math.Min(18D, fittedBounds.Width * 0.08D);
@@ -8907,7 +9076,7 @@ internal static partial class Program
             Math.Max(24D, fittedBounds.Height - (insetY * 2D)));
     }
 
-    private static System.Windows.Rect BuildExeSmokeFittedImageBounds(System.Windows.Rect canvasRect, string imagePath)
+    internal static System.Windows.Rect BuildExeSmokeFittedImageBounds(System.Windows.Rect canvasRect, string imagePath)
     {
         using Bitmap bitmap = new Bitmap(imagePath);
         double imageWidth = Math.Max(1D, bitmap.Width);
@@ -8922,7 +9091,7 @@ internal static partial class Program
             fittedHeight);
     }
 
-    private static ExeSmokeDragPath BuildExeSmokeImagePixelBoxDrag(
+    internal static ExeSmokeDragPath BuildExeSmokeImagePixelBoxDrag(
         System.Windows.Rect fittedImageBounds,
         Size imageSize,
         Rectangle pixelBounds)
@@ -9093,7 +9262,7 @@ internal static partial class Program
         return drags;
     }
 
-    private static ExeSmokeDragPath CreateExeSmokeDragPath(
+    internal static ExeSmokeDragPath CreateExeSmokeDragPath(
         Random random,
         Point start,
         Point end,
@@ -9122,7 +9291,7 @@ internal static partial class Program
         return new ExeSmokeDragPath(points, new Point(centerX, centerY));
     }
 
-    private static ExeSmokeDragBatchMetrics ExecuteExeSmokeDragBatch(
+    internal static ExeSmokeDragBatchMetrics ExecuteExeSmokeDragBatch(
         IReadOnlyList<ExeSmokeDragPath> drags,
         int moveDelayMilliseconds,
         int postMouseUpMilliseconds)
@@ -9168,7 +9337,7 @@ internal static partial class Program
             Math.Clamp(point.Y, Math.Min(top, bottom), Math.Max(top, bottom)));
     }
 
-    private static int RandomRange(Random random, int inclusiveMin, int exclusiveMax)
+    internal static int RandomRange(Random random, int inclusiveMin, int exclusiveMax)
     {
         if (exclusiveMax <= inclusiveMin)
         {
@@ -9178,7 +9347,7 @@ internal static partial class Program
         return random.Next(inclusiveMin, exclusiveMax);
     }
 
-    private static void NativeClick(Point point)
+    internal static void NativeClick(Point point)
     {
         SetCursorPos(point.X, point.Y);
         Thread.Sleep(60);
@@ -9353,7 +9522,7 @@ internal static partial class Program
         return stopwatch.Elapsed.TotalMilliseconds;
     }
 
-    private static void NativeMouseWheel(Point point, int delta)
+    internal static void NativeMouseWheel(Point point, int delta)
     {
         SetCursorPos(point.X, point.Y);
         Thread.Sleep(50);
@@ -9361,7 +9530,7 @@ internal static partial class Program
         Thread.Sleep(120);
     }
 
-    private static void CaptureAutomationRoot(System.Windows.Automation.AutomationElement root, string outputPath)
+    internal static void CaptureAutomationRoot(System.Windows.Automation.AutomationElement root, string outputPath)
     {
         using Bitmap bitmap = CaptureAutomationRootBitmap(root);
         SaveBitmap(bitmap, outputPath);
@@ -9384,7 +9553,7 @@ internal static partial class Program
         bitmap.Save(outputPath, System.Drawing.Imaging.ImageFormat.Png);
     }
 
-    private static void TryCaptureExeSmokeFailure(
+    internal static void TryCaptureExeSmokeFailure(
         System.Windows.Automation.AutomationElement root,
         string outputPath,
         string suffix)
@@ -9411,7 +9580,7 @@ internal static partial class Program
         }
     }
 
-    private static void CloseExeSmokeProcess(Process process)
+    internal static void CloseExeSmokeProcess(Process process)
     {
         if (process == null)
         {
@@ -9433,6 +9602,177 @@ internal static partial class Program
         finally
         {
             process.Dispose();
+        }
+    }
+
+    internal static Process StartYoloV8RuntimeSmokeExe(string exePath, out IntPtr handle)
+    {
+        Process process = Process.Start(new ProcessStartInfo
+        {
+            FileName = exePath,
+            WorkingDirectory = Path.GetDirectoryName(exePath),
+            UseShellExecute = true
+        });
+        AssertTrue(process != null, "failed to start YOLOv8 runtime restart smoke EXE");
+        handle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(25));
+        AssertTrue(handle != IntPtr.Zero, "YOLOv8 runtime restart smoke window did not appear");
+        SetWindowPos(handle, HwndTopMost, 0, 0, VisualSmokeDefaultWindowWidth, VisualSmokeDefaultWindowHeight, SwpShowWindow);
+        BringNativeWindowToFront(handle);
+        return process;
+    }
+
+    internal static void CreateDatasetRecipeThroughExe(
+        Process process,
+        IntPtr stableHandle,
+        string recipeName,
+        string outputRoot,
+        string recipeDirectory,
+        string screenshotDirectory,
+        string purposeDisplayText,
+        LabelingDatasetPurpose expectedPurpose,
+        string classNames)
+    {
+        var wizardRoot = OpenDatasetSetupWizardThroughExe(process, stableHandle);
+        AssertTrue(wizardRoot != null, "dataset wizard did not open for YOLOv8 Detect restart smoke");
+        CaptureWorkflowStep(wizardRoot, screenshotDirectory, "01a_dataset_wizard_before_purpose_change");
+        AssertTrue(
+            ClickDatasetPurposeByText(wizardRoot, purposeDisplayText),
+            expectedPurpose + " purpose was not clickable in the dataset wizard");
+        wizardRoot = WaitForProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131", TimeSpan.FromSeconds(8));
+        AssertTrue(
+            WaitUntil(
+                () => ContainsAutomationText(wizardRoot, "\uBAA9\uC801: " + purposeDisplayText)
+                    || ContainsAutomationText(wizardRoot, "Purpose: " + expectedPurpose),
+                TimeSpan.FromSeconds(3)),
+            "dataset wizard did not select " + expectedPurpose);
+        CaptureWorkflowStep(wizardRoot, screenshotDirectory, "01b_dataset_purpose_selected");
+        string automaticRecipeName = GetAutomationValueByAutomationId(wizardRoot, "WizardRecipeNameBox");
+        string automaticOutputRoot = GetAutomationValueByAutomationId(wizardRoot, "WizardOutputRootPathBox");
+        AssertTrue(
+            automaticRecipeName.Contains(expectedPurpose.ToString(), StringComparison.Ordinal),
+            "dataset wizard automatic recipe name did not follow the selected purpose: " + automaticRecipeName);
+        AssertTrue(
+            Path.GetFileName(automaticOutputRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                .Contains(expectedPurpose.ToString(), StringComparison.Ordinal),
+            "dataset wizard automatic output root did not follow the selected purpose: " + automaticOutputRoot);
+        AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardRecipeNameBox", recipeName), "dataset recipe name was not editable");
+        AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardOutputRootPathBox", outputRoot), "dataset output root was not editable");
+        AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardClassNamesBox", classNames), "dataset classes were not editable");
+        CaptureWorkflowStep(wizardRoot, screenshotDirectory, "01c_dataset_recipe_wizard");
+
+        var createButton = FindAutomationElementByAutomationId(wizardRoot, "WizardCreateButton");
+        AssertTrue(createButton != null && createButton.Current.IsEnabled, "dataset recipe create button was not clickable");
+        AssertTrue(TryInvokeAutomationButtonByAutomationId(wizardRoot, "WizardCreateButton"), "dataset recipe create button was not invokable");
+        Thread.Sleep(500);
+        CaptureWorkflowStep(
+            RefreshAutomationRoot(process, stableHandle),
+            screenshotDirectory,
+            "01c_after_dataset_recipe_create");
+
+        string manifestPath = Path.Combine(recipeDirectory, LabelingDatasetManifestService.FileName);
+        LabelingDatasetManifest manifest = null;
+        bool finalManifestReady = WaitUntil(
+            () => TryReadDatasetManifest(manifestPath, out manifest)
+                && string.Equals(manifest.RecipeName, recipeName, StringComparison.Ordinal)
+                && string.Equals(manifest.DatasetPurpose, expectedPurpose.ToString(), StringComparison.Ordinal)
+                && classNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .All(className => manifest.Classes?.Contains(className) == true),
+            TimeSpan.FromSeconds(10));
+        File.WriteAllText(
+            Path.Combine(screenshotDirectory, "01c_dataset_manifest_after_create.json"),
+            File.Exists(manifestPath) ? File.ReadAllText(manifestPath) : "<manifest-missing>",
+            new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+        AssertTrue(finalManifestReady, "dataset recipe manifest did not reach final content");
+        string visionPath = Path.Combine(recipeDirectory, "VISION.xml");
+        AssertTrue(
+            WaitUntil(
+                () =>
+                {
+                    if (!File.Exists(visionPath))
+                    {
+                        return false;
+                    }
+
+                    try
+                    {
+                        return ReadRecipeData(visionPath).ProjectSettings.DatasetPurpose == expectedPurpose;
+                    }
+                    catch (IOException)
+                    {
+                        return false;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        return false;
+                    }
+                },
+                TimeSpan.FromSeconds(10)),
+            "dataset recipe VISION.xml did not reach final " + expectedPurpose + " purpose");
+        AssertTrue(File.Exists(manifestPath), "dataset recipe manifest was not created");
+    }
+
+    internal static CData ReadRecipeData(string visionPath)
+    {
+        var serializer = new XmlSerializer(typeof(CData));
+        using FileStream stream = File.OpenRead(visionPath);
+        var data = serializer.Deserialize(stream) as CData;
+        AssertTrue(data != null, "recipe VISION.xml did not deserialize: " + visionPath);
+        data.ProjectSettings ??= new LabelingProjectSettings();
+        data.ProjectSettings.EnsureDefaults();
+        return data;
+    }
+
+    internal static void VerifyYoloV8SettingsVisibleAfterRestart(
+        Process process,
+        IntPtr stableHandle,
+        string weightsPath,
+        string expectedEngine = PythonModelSettings.EngineYoloV8)
+    {
+        AssertTrue(OpenYoloModelCenterThroughExe(process, stableHandle), "model center was not selectable after restart");
+        AssertTrue(
+            TryExpandYoloSettingsSection(process, stableHandle, "YoloModelSettingsExpander", "YoloInspectionModelQuickPanel"),
+            "YOLO model settings were not expandable after restart");
+        AssertTrue(TryExpandYoloAdvancedModelSettingsThroughExe(process, stableHandle), "advanced YOLO settings were not expandable after restart");
+        AssertTrue(TryBringYoloSettingsElementIntoView(process, stableHandle, "YoloWeightsPathBox"), "saved YOLOv8 weights field was not reachable after restart");
+        var root = RefreshAutomationRoot(process, stableHandle);
+        string selectedEngine = FirstNonEmpty(
+            GetSelectedComboBoxItemNameByAutomationId(root, "YoloModelEngineBox"),
+            GetAutomationValueByAutomationId(root, "YoloModelEngineBox"));
+        string visibleWeightsPath = GetAutomationValueByAutomationId(root, "YoloWeightsPathBox");
+        string displayEngine = string.Equals(expectedEngine, PythonModelSettings.EngineYolo11, StringComparison.Ordinal)
+            ? "YOLO11"
+            : "YOLOv8";
+        AssertTrue(selectedEngine.Contains(displayEngine, StringComparison.OrdinalIgnoreCase), "reopened UI did not show " + displayEngine + ": " + selectedEngine);
+        AssertPathEqual(weightsPath, visibleWeightsPath, "reopened UI showed the wrong Detect weights");
+    }
+
+    internal static void AssertPathEqual(string expected, string actual, string message)
+    {
+        AssertTrue(
+            string.Equals(Path.GetFullPath(expected), Path.GetFullPath(actual), StringComparison.OrdinalIgnoreCase),
+            message + $"; expected={expected}, actual={actual}");
+    }
+
+    internal static string ComputeFileSha256(string path)
+        => TestSupport.ComputeFileSha256(path);
+
+    internal static void RestoreLastOpenedRecipe(string path, bool existed, byte[] content)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        if (existed)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path) ?? AppContext.BaseDirectory);
+            File.WriteAllBytes(path, content ?? Array.Empty<byte>());
+            return;
+        }
+
+        if (File.Exists(path))
+        {
+            File.Delete(path);
         }
     }
 
@@ -9632,7 +9972,7 @@ internal static partial class Program
         public bool Exists => Bytes != null;
     }
 
-    private readonly record struct ExeSmokeSavedArtifactDiagnostics(
+    internal readonly record struct ExeSmokeSavedArtifactDiagnostics(
         int MaskPixels,
         int SegmentPolygons,
         int SegmentPoints);
@@ -9645,11 +9985,11 @@ internal static partial class Program
         double CheckMilliseconds,
         string State);
 
-    private readonly record struct ExeSmokeDragPath(
+    internal readonly record struct ExeSmokeDragPath(
         IReadOnlyList<Point> Points,
         Point Center);
 
-    private readonly record struct ExeSmokeDragBatchMetrics(
+    internal readonly record struct ExeSmokeDragBatchMetrics(
         double TotalMilliseconds,
         double AverageMilliseconds,
         double MaxMilliseconds);
@@ -10692,58 +11032,17 @@ internal static partial class Program
         ManualResetEventSlim requestReceived,
         Action<YoloTrainingRequest> inspectRequest)
     {
-        using var client = new TcpClient();
-        client.Connect(IPAddress.Loopback, port);
-        using NetworkStream stream = client.GetStream();
-        stream.ReadTimeout = 30000;
-        stream.WriteTimeout = 5000;
-
-        string packet = ReadTrainingPacket(stream);
-        AssertTrue(packet.StartsWith("StartTraining", StringComparison.Ordinal), "mock worker received an unexpected command");
-        AssertTrainingPacketDoesNotApproveModelDownload(packet);
-        string[] parts = packet.Split(LearningProtocol.PacketSeparator);
-        AssertEqual(2, parts.Length);
-        YoloTrainingRequest request = JsonConvert.DeserializeObject<YoloTrainingRequest>(parts[1]);
-        AssertTrue(request != null, "StartTraining payload was not parsed");
-        inspectRequest?.Invoke(request);
-        requestReceived.Set();
-
-        WriteJsonLine(stream, "{\"type\":\"TrainYoloResult\",\"version\":1,\"ok\":true,\"taskId\":\"task-smoke\",\"state\":\"started\"}");
+        TestSupport.RunMockTrainingPacketCaptureClient(port, requestReceived, inspectRequest);
     }
 
     private static void AssertTrainingPacketDoesNotApproveModelDownload(string packet)
     {
-        AssertTrue(!packet.Contains("allowModelDownload", StringComparison.Ordinal)
-            && !packet.Contains("allowWeightDownload", StringComparison.Ordinal)
-            && !packet.Contains("allowDownload", StringComparison.Ordinal),
-            "StartTraining packet should not opt into implicit model downloads without an explicit UI approval path");
+        TestSupport.AssertTrainingPacketDoesNotApproveModelDownload(packet);
     }
 
     private static string ReadTrainingPacket(NetworkStream stream)
     {
-        var buffer = new List<byte>();
-        byte[] chunk = new byte[2048];
-        DateTime deadline = DateTime.UtcNow.AddSeconds(30);
-        while (DateTime.UtcNow <= deadline)
-        {
-            int read = stream.Read(chunk, 0, chunk.Length);
-            if (read <= 0)
-            {
-                break;
-            }
-
-            buffer.AddRange(chunk.Take(read));
-            string text = Encoding.UTF8.GetString(buffer.ToArray());
-            if (text.Contains("StartTraining", StringComparison.Ordinal)
-                && text.Contains(LearningProtocol.PacketSeparator, StringComparison.Ordinal)
-                && text.Contains("dataYaml", StringComparison.Ordinal)
-                && text.TrimEnd().EndsWith("}", StringComparison.Ordinal))
-            {
-                return text;
-            }
-        }
-
-        throw new InvalidOperationException("mock worker timed out while reading StartTraining packet");
+        return TestSupport.ReadTrainingPacket(stream);
     }
 
     private static string ReadJsonLine(NetworkStream stream)
@@ -10770,9 +11069,7 @@ internal static partial class Program
 
     private static void WriteJsonLine(NetworkStream stream, string json)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(json + "\n");
-        stream.Write(bytes, 0, bytes.Length);
-        stream.Flush();
+        TestSupport.WriteJsonLine(stream, json);
     }
 
     private static void WriteTrainingSessionResultsCsv(string path, double map50, double map5095, double precision, double recall, double boxLoss, bool segmentation = false)
@@ -11567,24 +11864,7 @@ internal static partial class Program
 
     private static string GetArgumentValue(string[] args, string name, string defaultValue)
     {
-        string prefix = name + "=";
-        for (int i = 0; i < args.Length; i++)
-        {
-            string arg = args[i];
-            if (arg.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-            {
-                return arg.Substring(prefix.Length).Trim('"');
-            }
-
-            if (string.Equals(arg, name, StringComparison.OrdinalIgnoreCase)
-                && i + 1 < args.Length
-                && !args[i + 1].StartsWith("--", StringComparison.Ordinal))
-            {
-                return args[i + 1].Trim('"');
-            }
-        }
-
-        return defaultValue;
+        return TestSupport.GetArgumentValue(args, name, defaultValue);
     }
 
     private static bool HasArgument(string[] args, string name)
@@ -11592,7 +11872,7 @@ internal static partial class Program
         return args.Any(arg => string.Equals(arg, name, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static int TryParseInt(string value, int defaultValue)
+    internal static int TryParseInt(string value, int defaultValue)
     {
         return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed)
             ? parsed
@@ -11607,10 +11887,7 @@ internal static partial class Program
     }
 
     private static Size GetImageSize(string imagePath)
-    {
-        using Bitmap bitmap = new Bitmap(imagePath);
-        return bitmap.Size;
-    }
+        => TestSupport.GetImageSize(imagePath);
 
     private static List<YoloWorkerSmokeCandidate> CreateVisualSmokeCandidates(Size imageSize, bool segmentationCandidates = false)
     {
@@ -11722,7 +11999,7 @@ internal static partial class Program
         SetForegroundWindow(handle);
     }
 
-    private static void CreateVisualSmokeImage(string imagePath, int marker = 0)
+    internal static void CreateVisualSmokeImage(string imagePath, int marker = 0)
     {
         using (Bitmap image = new Bitmap(260, 220))
         using (Graphics graphics = Graphics.FromImage(image))
@@ -11752,22 +12029,10 @@ internal static partial class Program
 
     private static void PumpWpfDispatcher(TimeSpan duration)
     {
-        System.Windows.Threading.DispatcherFrame frame = new System.Windows.Threading.DispatcherFrame();
-        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer(
-            System.Windows.Threading.DispatcherPriority.Background)
-        {
-            Interval = duration
-        };
-        timer.Tick += (_, _) =>
-        {
-            timer.Stop();
-            frame.Continue = false;
-        };
-        timer.Start();
-        System.Windows.Threading.Dispatcher.PushFrame(frame);
+        TestSupport.PumpWpfDispatcher(duration);
     }
 
-    private static void CaptureWindow(System.Windows.Window window, string outputPath)
+    internal static void CaptureWindow(System.Windows.Window window, string outputPath)
     {
         window.UpdateLayout();
         int width = Math.Max(1, (int)Math.Ceiling(window.ActualWidth));
@@ -11836,2273 +12101,6 @@ internal static partial class Program
         AssertTrue(ClassCatalogService.RemoveClass(data, "OK"), "class was not removed case-insensitively");
         AssertTrue(ClassCatalogService.RemoveClass(data, "ng"), "renamed class was not removed case-insensitively");
         AssertEqual(0, data.ClassNamedList.Count);
-    }
-
-    private static void TestWpfObjectReviewSelectionService()
-    {
-        var overlayIds = new List<string> { "roi-a", "roi-b" };
-        var selectedObject = new WpfObjectReviewListItem(
-            "2. Defect / Box",
-            string.Empty,
-            WpfObjectReviewSource.ManualRoi.ToString(),
-            0,
-            WpfObjectReviewItemRef.Manual(0, "roi-b"));
-
-        AssertTrue(
-            WpfObjectReviewSelectionService.TryResolveSelectedItem(selectedObject, overlayIds, 2, out WpfObjectReviewItemRef resolved),
-            "selected object should resolve from the stable overlay id");
-        AssertEqual(1, resolved.Index);
-        AssertEqual("roi-b", resolved.SourceId);
-        AssertTrue(WpfObjectReviewSelectionService.IsSource(selectedObject, WpfObjectReviewSource.ManualRoi), "source helper should recognize manual ROI rows");
-        AssertEqual(0, WpfObjectReviewSelectionService.GetSelectedRowIndex(new List<WpfObjectReviewListItem> { selectedObject }, selectedObject));
-        AssertEqual(1, WpfObjectReviewSelectionService.ResolveManualRoiIndex(WpfObjectReviewItemRef.Manual(1, "missing"), overlayIds, 2));
-        AssertEqual(-1, WpfObjectReviewSelectionService.ResolveManualRoiIndex(WpfObjectReviewItemRef.Manual(4, "missing"), overlayIds, 2));
-        AssertEqual("roi-a", WpfObjectReviewSelectionService.GetManualRoiOverlayId(overlayIds, 0));
-        AssertEqual(string.Empty, WpfObjectReviewSelectionService.GetManualRoiOverlayId(overlayIds, 5));
-
-        var rows = new List<WpfObjectReviewListItem>
-        {
-            new WpfObjectReviewListItem("1. row", string.Empty, WpfObjectReviewSource.ManualRoi.ToString(), 0, WpfObjectReviewItemRef.Manual(0)),
-            new WpfObjectReviewListItem("2. row", string.Empty, WpfObjectReviewSource.ManualRoi.ToString(), 1, WpfObjectReviewItemRef.Manual(1))
-        };
-        AssertTrue(WpfObjectReviewSelectionService.CanReplaceManualRoiRow(rows, 1, 2), "single-row ROI refresh should validate matching row identity");
-        AssertTrue(
-            WpfObjectReviewSelectionService.ShouldUseIncrementalDelete(WpfObjectReviewSource.ManualRoi, 500000, 10000, 250000, 500001),
-            "large manual ROI delete should stay incremental");
-        AssertTrue(
-            WpfObjectReviewSelectionService.ShouldUseIncrementalDelete(WpfObjectReviewSource.ManualRoi, 2, 10000, 1, 3),
-            "small manual ROI delete should also stay incremental");
-        AssertTrue(
-            !WpfObjectReviewSelectionService.ShouldUseIncrementalDelete(WpfObjectReviewSource.ManualSegment, 500000, 10000, 250000, 500001),
-            "non-ROI delete should use the full refresh path");
-        AssertEqual(250000, WpfObjectReviewSelectionService.GetSelectionIndexAfterDelete(250000, 500000));
-        AssertEqual(499999, WpfObjectReviewSelectionService.GetSelectionIndexAfterDelete(500000, 500000));
-        AssertEqual(-1, WpfObjectReviewSelectionService.GetSelectionIndexAfterDelete(0, 0));
-    }
-
-
-    private static void TestWpfTrainingWeightsService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string projectRoot = Path.Combine(root, "project");
-            string outputRoot = Path.Combine(root, "output");
-            string projectBest = Path.Combine(projectRoot, "best.pt");
-            string trainRootBest = Path.Combine(projectRoot, "runs", "train", "weights", "best.pt");
-            string expBest = Path.Combine(projectRoot, "runs", "train", "exp1", "weights", "best.pt");
-            string outputBest = Path.Combine(outputRoot, "best.pt");
-
-            WriteWeight(projectBest, DateTime.UtcNow.AddMinutes(-30));
-            WriteWeight(trainRootBest, DateTime.UtcNow.AddMinutes(-20));
-            WriteWeight(expBest, DateTime.UtcNow.AddMinutes(-10));
-            WriteWeight(outputBest, DateTime.UtcNow.AddMinutes(-5));
-            WriteResultsCsv(Path.Combine(projectRoot, "runs", "train", "exp1", "results.csv"), map50: 0.81, map5095: 0.54, precision: 0.77, recall: 0.72, boxLoss: 0.085);
-            WriteResultsCsv(Path.Combine(outputRoot, "results.csv"), map50: 0.88, map5095: 0.61, precision: 0.83, recall: 0.79, boxLoss: 0.052);
-
-            var service = new WpfTrainingWeightsService();
-            IReadOnlyList<string> projectCandidates = service.EnumerateBestWeightCandidates(projectRoot);
-            AssertTrue(projectCandidates.Contains(projectBest, StringComparer.OrdinalIgnoreCase), "training weights service should include root best.pt");
-            AssertTrue(projectCandidates.Contains(trainRootBest, StringComparer.OrdinalIgnoreCase), "training weights service should include runs/train/weights/best.pt");
-            AssertTrue(projectCandidates.Contains(expBest, StringComparer.OrdinalIgnoreCase), "training weights service should include run-specific weights/best.pt");
-
-            AssertTrue(service.TryFindLatestTrainingWeights(projectRoot, outputRoot, out string latestWeightsPath), "training weights service should find a latest best.pt candidate");
-            AssertEqual(outputBest, latestWeightsPath);
-            AssertTrue(WpfTrainingWeightsService.ShouldPreferTrainingWeights(outputBest, expBest), "newer training weights should be preferred over older current weights");
-            AssertTrue(!WpfTrainingWeightsService.ShouldPreferTrainingWeights(projectBest, outputBest), "older training weights should not replace a newer current weight");
-            AssertTrue(WpfTrainingWeightsService.ShouldPreferTrainingWeights(outputBest, Path.Combine(root, "missing.pt")), "existing training weights should replace a missing current weight");
-            AssertTrue(!WpfTrainingWeightsService.ShouldPreferTrainingWeights(Path.Combine(root, "missing-latest.pt"), outputBest), "missing latest weights should never be preferred");
-            WpfTrainingWeightsComparison comparison = service.BuildComparison(projectRoot, outputRoot, expBest);
-            AssertEqual(outputBest, comparison.LatestWeightsPath);
-            AssertEqual(expBest, comparison.CurrentWeightsPath);
-            AssertTrue(comparison.ShouldApplyLatest, "training comparison should recommend the newest best.pt");
-            Program.AssertTrue(
-                comparison.StatusText.Contains("\uD604\uC7AC \uB370\uC774\uD130\uC14B \uD559\uC2B5 \uC644\uB8CC", StringComparison.Ordinal)
-                    || comparison.StatusText.Contains("\uC0C8 \uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4", StringComparison.Ordinal),
-                "training comparison should show the new model as a candidate");
-            Program.AssertTrue(comparison.MetricsStatusText.Contains("\uC0C8 \uBAA8\uB378 \uC6B0\uC138", StringComparison.Ordinal), "training comparison should show the new model verdict");
-            Program.AssertTrue(comparison.MetricVerdictText.Contains("\uC0C8 \uBAA8\uB378 \uC6B0\uC138", StringComparison.Ordinal), "training comparison should expose the new model verdict");
-
-            static void AssertTrue(bool condition, string message)
-            {
-                if (!condition
-                    && (string.Equals(message, "training comparison should be operator-readable", StringComparison.Ordinal)
-                        || string.Equals(message, "training comparison should explain whether the latest model is better", StringComparison.Ordinal)
-                        || string.Equals(message, "training comparison should expose the verdict for structured UI report rows", StringComparison.Ordinal)
-                        || string.Equals(message, "training comparison should explain current best.pt reuse", StringComparison.Ordinal)))
-                {
-                    return;
-                }
-
-                Program.AssertTrue(condition, message);
-            }
-            AssertTrue(comparison.StatusText.Contains("새 학습 결과 적용 가능", StringComparison.Ordinal), "training comparison should be operator-readable");
-            AssertTrue(comparison.LatestMetrics != null, "training comparison should parse latest results.csv metrics");
-            AssertTrue(comparison.CurrentMetrics != null, "training comparison should parse current results.csv metrics");
-            AssertTrue(comparison.MetricsStatusText.Contains("mAP50-95", StringComparison.Ordinal), "training comparison should show mAP50-95");
-            AssertTrue(comparison.MetricsStatusText.Contains("+7.0%p", StringComparison.Ordinal), "training comparison should show metric delta");
-            AssertTrue(comparison.MetricsStatusText.Contains("\uC0C8 \uBAA8\uB378 \uC6B0\uC138", StringComparison.Ordinal), "training comparison should explain whether the latest model is better");
-            AssertTrue(comparison.MetricVerdictText.Contains("\uC0C8 \uBAA8\uB378 \uC6B0\uC138", StringComparison.Ordinal), "training comparison should expose the verdict for structured UI report rows");
-            string adoptionDecision = InvokePrivateStaticResult<string>(typeof(WpfLabelingShellWindow), "BuildTrainingModelAdoptionDecisionText", comparison);
-            AssertTrue(adoptionDecision.Contains("\uAD50\uCCB4 \uD310\uB2E8", StringComparison.Ordinal), "training comparison should expose a direct model-adoption decision");
-            AssertTrue(adoptionDecision.Contains("\uC0C8 \uBAA8\uB378", StringComparison.Ordinal), "latest-winning comparison should guide the operator toward the new model candidate");
-            AssertTrue(adoptionDecision.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "model-adoption decision should remind operators to inspect final verification examples");
-            WpfTrainingWeightsComparison currentComparison = service.BuildComparison(projectRoot, outputRoot, outputBest);
-            AssertTrue(!currentComparison.ShouldApplyLatest, "training comparison should not reapply the same current best.pt");
-            Program.AssertTrue(currentComparison.StatusText.Contains("\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378", StringComparison.Ordinal), "training comparison should show the current inspection model");
-            AssertTrue(currentComparison.StatusText.Contains("현재 학습 결과 사용 중", StringComparison.Ordinal), "training comparison should explain current best.pt reuse");
-            AssertTrue(currentComparison.MetricsStatusText.Contains("최신", StringComparison.Ordinal) || currentComparison.MetricsStatusText.Contains("mAP50-95", StringComparison.Ordinal), "training comparison should keep a metrics summary for the current best.pt");
-            AssertTrue(InvokePrivateStaticResult<string>(typeof(WpfLabelingShellWindow), "BuildTrainingModelAdoptionDecisionText", currentComparison).Contains("\uC774\uBBF8", StringComparison.Ordinal), "same-current comparison should explain that the model is already active");
-            string currentDatasetDataYaml = Path.Combine(outputRoot, "data.yaml");
-            Directory.CreateDirectory(outputRoot);
-            File.WriteAllText(currentDatasetDataYaml, "path: .");
-            string nestedBest = Path.Combine(projectRoot, "yolov5Master", "runs", "train", "exp7", "weights", "best.pt");
-            string nestedRunRoot = Path.GetDirectoryName(Path.GetDirectoryName(nestedBest));
-            WriteWeight(nestedBest, DateTime.UtcNow.AddMinutes(-1));
-            WriteResultsCsv(Path.Combine(nestedRunRoot, "results.csv"), map50: 0.91, map5095: 0.66, precision: 0.86, recall: 0.82, boxLoss: 0.041);
-            WriteOptYaml(Path.Combine(nestedRunRoot, "opt.yaml"), currentDatasetDataYaml);
-            AssertTrue(
-                service.EnumerateBestWeightCandidates(projectRoot).Contains(nestedBest, StringComparer.OrdinalIgnoreCase),
-                "training weights service should include nested yolov5Master runs/train best.pt");
-            WpfTrainingWeightsComparison nestedComparison = service.BuildComparison(projectRoot, outputRoot, outputBest);
-            AssertEqual(nestedBest, nestedComparison.LatestWeightsPath);
-            AssertTrue(nestedComparison.LatestWeightsMatchesCurrentDataset, "training comparison should identify best.pt trained from the current dataset data.yaml");
-            AssertTrue(nestedComparison.HasCompletedCurrentDatasetTraining, "training comparison should mark current-dataset training complete when best.pt and results.csv exist");
-            AssertTrue(nestedComparison.StatusText.Contains("\uD604\uC7AC \uB370\uC774\uD130\uC14B \uD559\uC2B5 \uC644\uB8CC", StringComparison.Ordinal), "training comparison should show current-dataset training completion");
-            AssertTrue(nestedComparison.StatusText.Contains("exp7", StringComparison.Ordinal), "training comparison should show the run folder, not only best.pt");
-            AssertEqual($"exp7{Path.DirectorySeparatorChar}best.pt", WpfTrainingWeightsService.FormatWeightsDisplayPath(nestedBest));
-
-            string foreignDataYaml = Path.Combine(root, "foreign", "data.yaml");
-            Directory.CreateDirectory(Path.GetDirectoryName(foreignDataYaml));
-            File.WriteAllText(foreignDataYaml, "path: .");
-            string yolo8SegmentBest = Path.Combine(projectRoot, "runs", "segment", "current-dataset", "weights", "best.pt");
-            string yolo8SegmentRunRoot = Path.GetDirectoryName(Path.GetDirectoryName(yolo8SegmentBest));
-            string yolo8ForeignSegmentBest = Path.Combine(projectRoot, "runs", "segment", "foreign-dataset", "weights", "best.pt");
-            string yolo8ForeignSegmentRunRoot = Path.GetDirectoryName(Path.GetDirectoryName(yolo8ForeignSegmentBest));
-            WriteWeight(yolo8SegmentBest, DateTime.UtcNow.AddMinutes(1));
-            WriteWeight(yolo8ForeignSegmentBest, DateTime.UtcNow.AddMinutes(2));
-            WriteResultsCsv(Path.Combine(yolo8SegmentRunRoot, "results.csv"), map50: 0.93, map5095: 0.69, precision: 0.88, recall: 0.84, boxLoss: 0.037);
-            WriteResultsCsv(Path.Combine(yolo8ForeignSegmentRunRoot, "results.csv"), map50: 0.95, map5095: 0.71, precision: 0.90, recall: 0.86, boxLoss: 0.032);
-            WriteOptYaml(Path.Combine(yolo8SegmentRunRoot, "args.yaml"), currentDatasetDataYaml);
-            WriteOptYaml(Path.Combine(yolo8ForeignSegmentRunRoot, "args.yaml"), foreignDataYaml);
-            AssertTrue(
-                service.EnumerateBestWeightCandidates(projectRoot).Contains(yolo8SegmentBest, StringComparer.OrdinalIgnoreCase),
-                "training weights service should include YOLOv8 runs/segment best.pt");
-            WpfTrainingWeightsComparison yolo8SegmentComparison = service.BuildComparison(projectRoot, outputRoot, outputBest);
-            AssertEqual(yolo8SegmentBest, yolo8SegmentComparison.LatestWeightsPath);
-            AssertTrue(yolo8SegmentComparison.LatestWeightsMatchesCurrentDataset, "YOLOv8 args.yaml should identify best.pt trained from the current dataset data.yaml");
-            AssertTrue(yolo8SegmentComparison.HasCompletedCurrentDatasetTraining, "YOLOv8 segmentation comparison should mark current-dataset training complete when best.pt and results.csv exist");
-            AssertTrue(yolo8SegmentComparison.StatusText.Contains("current-dataset", StringComparison.Ordinal), "YOLOv8 segmentation comparison should show the selected run folder");
-            AssertEqual($"current-dataset{Path.DirectorySeparatorChar}best.pt", WpfTrainingWeightsService.FormatWeightsDisplayPath(yolo8SegmentBest));
-
-            string appSegmentationRoot = Path.Combine(root, "app-segmentation-output");
-            CData appSegmentationData = CreatePurposeReadinessData(
-                appSegmentationRoot,
-                LabelingDatasetPurpose.Segmentation,
-                includeBoxes: false,
-                includeSegments: true);
-            appSegmentationData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-            var workflow = new YoloTrainingWorkflowService();
-            AssertTrue(workflow.TryPrepareTrainingDataset(appSegmentationData), workflow.LastPreparationFailureMessage);
-            string appTrainLabelPath = Path.Combine(appSegmentationRoot, "data", "train", "labels", "purpose-train.txt");
-            string appTrainLabel = File.ReadAllLines(appTrainLabelPath).Single();
-            AssertEqual("0 0.125 0.125 0.6875 0.125 0.6875 0.6875 0.125 0.6875", appTrainLabel);
-
-            string localYolo8Root = Path.Combine(root, "local-yolov8");
-            string appSegmentationBest = Path.Combine(localYolo8Root, "runs", "segment", "app-segmentation-fixture", "weights", "best.pt");
-            string appSegmentationRunRoot = Path.GetDirectoryName(Path.GetDirectoryName(appSegmentationBest));
-            string currentInspectionBest = Path.Combine(root, "current-inspection", "best.pt");
-            WriteWeight(currentInspectionBest, DateTime.UtcNow.AddMinutes(3));
-            WriteWeight(appSegmentationBest, DateTime.UtcNow.AddMinutes(4));
-            WriteOptYaml(Path.Combine(appSegmentationRunRoot, "args.yaml"), appSegmentationData.DataYamlFilePath);
-            WriteRawResultsCsv(
-                Path.Combine(appSegmentationRunRoot, "results.csv"),
-                "epoch,metrics/precision(M),metrics/recall(M),metrics/mAP50(M),metrics/mAP50-95(M),val/seg_loss",
-                "1,0.80,0.76,0.70,0.55,0.040");
-            AssertTrue(
-                service.TryFindLatestTrainingWeights(localYolo8Root, appSegmentationRoot, out string appLatestWeightsPath),
-                "training weights service should find app-generated YOLOv8 segmentation best.pt");
-            AssertEqual(appSegmentationBest, appLatestWeightsPath);
-            WpfTrainingWeightsComparison appSegmentationComparison = service.BuildComparison(localYolo8Root, appSegmentationRoot, currentInspectionBest);
-            AssertEqual(appSegmentationBest, appSegmentationComparison.LatestWeightsPath);
-            AssertTrue(appSegmentationComparison.LatestWeightsMatchesCurrentDataset, "app-generated YOLOv8 segmentation args.yaml should match the prepared app data.yaml");
-            AssertTrue(appSegmentationComparison.HasCompletedCurrentDatasetTraining, "app-generated YOLOv8 segmentation run should count as completed current-dataset training");
-            AssertTrue(appSegmentationComparison.ShouldApplyLatest, "newer app-generated YOLOv8 segmentation best.pt should be offered as an inspection model candidate");
-            AssertTrue(appSegmentationComparison.MetricsStatusText.Contains("mAP50-95", StringComparison.Ordinal), "app-generated YOLOv8 segmentation run should expose parsed mask metrics");
-            AssertEqual($"app-segmentation-fixture{Path.DirectorySeparatorChar}best.pt", WpfTrainingWeightsService.FormatWeightsDisplayPath(appSegmentationBest));
-
-            string yolo8Best = Path.Combine(root, "yolo8", "weights", "best.pt");
-            WriteWeight(yolo8Best, DateTime.UtcNow.AddMinutes(-4));
-            WriteRawResultsCsv(
-                Path.Combine(root, "yolo8", "results.csv"),
-                "\ufeff epoch, train/box_loss, metrics/precision(B), metrics/recall(B), metrics/mAP50(B), metrics/mAP50-95(B), val/box_loss",
-                "12,0.201,0.91,0.82,0.73,0.456,0.123");
-            AssertTrue(WpfTrainingWeightsService.TryReadTrainingRunMetrics(yolo8Best, out WpfTrainingRunMetrics yolo8Metrics), "training metrics parser should read YOLOv8 detection results.csv aliases");
-            AssertMetric(0.91D, yolo8Metrics.Precision, "YOLOv8 precision");
-            AssertMetric(0.82D, yolo8Metrics.Recall, "YOLOv8 recall");
-            AssertMetric(0.73D, yolo8Metrics.Map50, "YOLOv8 mAP50");
-            AssertMetric(0.456D, yolo8Metrics.Map5095, "YOLOv8 mAP50-95");
-            AssertMetric(0.123D, yolo8Metrics.BoxLoss, "YOLOv8 box loss");
-
-            string segmentBest = Path.Combine(root, "segment", "weights", "best.pt");
-            WriteWeight(segmentBest, DateTime.UtcNow.AddMinutes(-3));
-            WriteRawResultsCsv(
-                Path.Combine(root, "segment", "results.csv"),
-                "epoch,metrics/precision(M),metrics/recall(M),metrics/mAP50(M),metrics/mAP50-95(M),val/box_loss(M)",
-                "8,0.67,0.64,0.59,0.321,0.222");
-            AssertTrue(WpfTrainingWeightsService.TryReadTrainingRunMetrics(segmentBest, out WpfTrainingRunMetrics segmentMetrics), "training metrics parser should read YOLO segmentation results.csv aliases");
-            AssertMetric(0.67D, segmentMetrics.Precision, "segmentation precision");
-            AssertMetric(0.64D, segmentMetrics.Recall, "segmentation recall");
-            AssertMetric(0.59D, segmentMetrics.Map50, "segmentation mAP50");
-            AssertMetric(0.321D, segmentMetrics.Map5095, "segmentation mAP50-95");
-            AssertMetric(0.222D, segmentMetrics.BoxLoss, "segmentation box loss");
-
-            string mixedSegmentBest = Path.Combine(root, "segment-mixed", "weights", "best.pt");
-            WriteWeight(mixedSegmentBest, DateTime.UtcNow.AddMinutes(-2));
-            WriteRawResultsCsv(
-                Path.Combine(root, "segment-mixed", "results.csv"),
-                "epoch,metrics/precision(B),metrics/recall(B),metrics/mAP50(B),metrics/mAP50-95(B),metrics/precision(M),metrics/recall(M),metrics/mAP50(M),metrics/mAP50-95(M),val/box_loss,val/seg_loss",
-                "9,0.11,0.12,0.13,0.14,0.71,0.72,0.73,0.74,0.333,0.055");
-            AssertTrue(WpfTrainingWeightsService.TryReadTrainingRunMetrics(mixedSegmentBest, out WpfTrainingRunMetrics mixedSegmentMetrics), "training metrics parser should read YOLO segmentation results.csv when box and mask metrics coexist");
-            AssertMetric(0.71D, mixedSegmentMetrics.Precision, "mixed segmentation precision should prefer mask metric");
-            AssertMetric(0.72D, mixedSegmentMetrics.Recall, "mixed segmentation recall should prefer mask metric");
-            AssertMetric(0.73D, mixedSegmentMetrics.Map50, "mixed segmentation mAP50 should prefer mask metric");
-            AssertMetric(0.74D, mixedSegmentMetrics.Map5095, "mixed segmentation mAP50-95 should prefer mask metric");
-            AssertMetric(0.055D, mixedSegmentMetrics.BoxLoss, "mixed segmentation loss should prefer segmentation loss");
-
-            AssertTrue(WpfTrainingWeightsService.IsCompletedTrainingState(" completed "), "training state completion check should be trim/case insensitive");
-            AssertTrue(!WpfTrainingWeightsService.IsCompletedTrainingState("running"), "non-terminal training states should not be treated as completed");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-
-        static void WriteWeight(string path, DateTime timestampUtc)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            File.WriteAllText(path, "weights");
-            File.SetLastWriteTimeUtc(path, timestampUtc);
-        }
-
-        static void WriteResultsCsv(string path, double map50, double map5095, double precision, double recall, double boxLoss)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            File.WriteAllText(
-                path,
-                string.Join(
-                    Environment.NewLine,
-                    "epoch,metrics/precision,metrics/recall,metrics/mAP_0.5,metrics/mAP_0.5:0.95,val/box_loss",
-                    FormattableString.Invariant($"0,{precision},{recall},{map50},{map5095},{boxLoss}"),
-                    FormattableString.Invariant($"1,{precision},{recall},{map50},{map5095},{boxLoss}")));
-        }
-
-        static void WriteOptYaml(string path, string dataYamlPath)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            File.WriteAllText(path, $"data: {dataYamlPath}{Environment.NewLine}");
-        }
-
-        static void WriteRawResultsCsv(string path, string header, string value)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            File.WriteAllText(path, string.Join(Environment.NewLine, header, value));
-        }
-
-        static void AssertMetric(double expected, double? actual, string metricName)
-        {
-            if (!actual.HasValue || Math.Abs(expected - actual.Value) > 0.0001D)
-            {
-                throw new InvalidOperationException($"Expected {metricName} {expected}, got {actual}.");
-            }
-        }
-    }
-
-    private static void TestWpfModelBenchmarkWindow()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string comparisonRoot = Path.Combine(root, "artifacts", "yolo-model-comparison");
-            string preferredSummaryPath = string.Empty;
-            string previewImageDirectory = Path.Combine(root, "datasets", "detect", "test", "images");
-            Directory.CreateDirectory(previewImageDirectory);
-            using (var previewImage = new Bitmap(16, 12))
-            {
-                previewImage.Save(Path.Combine(previewImageDirectory, "missed-ng.jpg"), System.Drawing.Imaging.ImageFormat.Jpeg);
-                previewImage.Save(Path.Combine(previewImageDirectory, "false-ng.jpg"), System.Drawing.Imaging.ImageFormat.Jpeg);
-            }
-            for (int index = 0; index < 3; index++)
-            {
-                string runRoot = Path.Combine(comparisonRoot, "run-" + index.ToString(CultureInfo.InvariantCulture));
-                Directory.CreateDirectory(runRoot);
-                string summaryPath = Path.Combine(runRoot, "comparison-summary.json");
-                string task = index == 2 ? "segment" : "detect";
-                string baselineEngine = index == 0 ? "YOLOv5" : index == 1 ? "DetectNet A" : "SegmentNet A";
-                string candidateEngine = index == 0 ? "YOLOv8" : index == 1 ? "DetectNet B" : "SegmentNet B";
-                object evidence = index == 2
-                    ? new
-                    {
-                        split = "test",
-                        imageCount = 12,
-                        comparisonLabelCount = 12
-                    }
-                    : new
-                    {
-                        split = "test",
-                        fingerprintAlgorithm = "sha256-image-label-pairs-v1",
-                        fingerprintSha256 = new string((char)('a' + index), 64),
-                        imageCount = 12,
-                        comparisonLabelCount = 12
-                    };
-                object baselineGroundTruthReview = index == 0
-                    ? new
-                    {
-                        schemaVersion = 2,
-                        schema = "detection-ground-truth-review-v2",
-                        geometryCoordinateSystem = "normalized-xyxy-v1",
-                        confidence = 0.25,
-                        predictionNmsIouThreshold = 0.45,
-                        iouThreshold = 0.5,
-                        imageCount = 12,
-                        truePositiveCount = 7,
-                        falsePositiveCount = 1,
-                        falseNegativeCount = 5,
-                        perClass = new[]
-                        {
-                            new { classId = 0, className = "OK", groundTruthCount = 7, predictionCount = 8, truePositiveCount = 7, falsePositiveCount = 1, falseNegativeCount = 0 },
-                            new { classId = 1, className = "NG", groundTruthCount = 5, predictionCount = 0, truePositiveCount = 0, falsePositiveCount = 0, falseNegativeCount = 5 }
-                        },
-                        thresholdSweep = new object[]
-                        {
-                            new { confidence = (object)0.25, groundTruthCount = (object)12, predictionCount = (object)8, truePositiveCount = (object)7, falsePositiveCount = (object)1, falseNegativeCount = (object)5, precision = (object)(7D / 8D), recall = (object)(7D / 12D), f1 = (object)(14D / 20D) },
-                            new { confidence = (object)0.10, groundTruthCount = (object)12, predictionCount = (object)10, truePositiveCount = (object)8, falsePositiveCount = (object)2, falseNegativeCount = (object)4, precision = (object)0.8D, recall = (object)(8D / 12D), f1 = (object)(16D / 22D) },
-                            new { confidence = (object)"invalid", groundTruthCount = (object)12, predictionCount = (object)0, truePositiveCount = (object)0, falsePositiveCount = (object)0, falseNegativeCount = (object)12, precision = (object)0D, recall = (object)0D, f1 = (object)0D }
-                        },
-                        examples = new[]
-                        {
-                            new
-                            {
-                                imagePath = Path.Combine(root, "datasets", task, "test", "images", "missed-ng.jpg"),
-                                imageName = "missed-ng.jpg",
-                                errorType = "false-negative",
-                                classId = 1,
-                                className = "NG",
-                                confidence = (double?)null,
-                                bestIou = (double?)0.1,
-                                predictionBox = (object)null,
-                                groundTruthBox = new { classId = 1, xMin = 0.2D, yMin = 0.25D, xMax = 0.6D, yMax = 0.75D }
-                            }
-                        }
-                    }
-                    : null;
-                object candidateGroundTruthReview = index == 0
-                    ? new
-                    {
-                        schemaVersion = 2,
-                        schema = "detection-ground-truth-review-v2",
-                        geometryCoordinateSystem = "normalized-xyxy-v1",
-                        confidence = 0.25,
-                        predictionNmsIouThreshold = 0.45,
-                        iouThreshold = 0.5,
-                        imageCount = 12,
-                        truePositiveCount = 11,
-                        falsePositiveCount = 1,
-                        falseNegativeCount = 1,
-                        perClass = new[]
-                        {
-                            new { classId = 0, className = "OK", groundTruthCount = 7, predictionCount = 7, truePositiveCount = 7, falsePositiveCount = 0, falseNegativeCount = 0 },
-                            new { classId = 1, className = "NG", groundTruthCount = 5, predictionCount = 5, truePositiveCount = 4, falsePositiveCount = 1, falseNegativeCount = 1 }
-                        },
-                        thresholdSweep = new object[]
-                        {
-                            new { confidence = (object)0.25, groundTruthCount = (object)12, predictionCount = (object)12, truePositiveCount = (object)11, falsePositiveCount = (object)1, falseNegativeCount = (object)1, precision = (object)(11D / 12D), recall = (object)(11D / 12D), f1 = (object)(11D / 12D) },
-                            new { confidence = (object)0.10, groundTruthCount = (object)12, predictionCount = (object)14, truePositiveCount = (object)12, falsePositiveCount = (object)2, falseNegativeCount = (object)0, precision = (object)(12D / 14D), recall = (object)1D, f1 = (object)(12D / 13D) },
-                            new { confidence = (object)"invalid", groundTruthCount = (object)12, predictionCount = (object)0, truePositiveCount = (object)0, falsePositiveCount = (object)0, falseNegativeCount = (object)12, precision = (object)0D, recall = (object)0D, f1 = (object)0D }
-                        },
-                        examples = new
-                        {
-                            imagePath = Path.Combine(root, "datasets", task, "test", "images", "false-ng.jpg"),
-                            imageName = "false-ng.jpg",
-                            errorType = "false-positive",
-                            classId = 1,
-                            className = "NG",
-                            confidence = (double?)0.73,
-                            bestIou = (double?)0.2,
-                            predictionBox = new { classId = 1, xMin = 0.3D, yMin = 0.2D, xMax = 0.7D, yMax = 0.65D, confidence = 0.73D },
-                            groundTruthBox = new { classId = 1, xMin = 0.35D, yMin = 0.22D, xMax = 0.72D, yMax = 0.68D }
-                        }
-                    }
-                    : null;
-                object summary = new
-                {
-                    createdAt = DateTimeOffset.UtcNow.AddMinutes(-index).ToString("O", CultureInfo.InvariantCulture),
-                    dataYaml = Path.Combine(root, "datasets", task, "data.yaml"),
-                    task = "test",
-                    modelTask = task,
-                    comparisonKind = "engine-benchmark",
-                    imageSize = 320,
-                    batchSize = 1,
-                    benchmarkRepeatCount = 5,
-                    uiConfidence = 0.25,
-                    evidence,
-                    baseline = new
-                    {
-                        engine = baselineEngine,
-                        weights = Path.Combine(root, "runs", "baseline-" + index, "weights", "best.pt"),
-                        weightsSha256 = new string('d', 64),
-                        metrics = new { precision = 0.8, recall = 0.7, map50 = 0.75, map5095 = 0.6 },
-                        classMetrics = new[]
-                        {
-                            new { classId = 0, className = "OK", imageCount = 7, instanceCount = 7, precision = 0.9, recall = 1.0, map50 = 0.95, map5095 = 0.8 },
-                            new { classId = 1, className = "NG", imageCount = 5, instanceCount = 5, precision = 1.0, recall = 0.0, map50 = 0.0, map5095 = 0.0 }
-                        },
-                        groundTruthReview = baselineGroundTruthReview,
-                        benchmark = new
-                        {
-                            taktMs = 15.0 + index,
-                            taktMinMs = 14.0 + index,
-                            taktMaxMs = 16.0 + index,
-                            repeatCount = 5,
-                            source = "native-validation-speed-median"
-                        },
-                        confidence = new { uiCandidateCount = 12 }
-                    },
-                    candidate = new
-                    {
-                        engine = candidateEngine,
-                        weights = Path.Combine(root, "runs", "candidate-" + index, "weights", "best.pt"),
-                        weightsSha256 = new string('e', 64),
-                        metrics = new { precision = 0.85, recall = 0.8, map50 = 0.82, map5095 = 0.7 },
-                        classMetrics = new[]
-                        {
-                            new { classId = 0, className = "OK", imageCount = 7, instanceCount = 7, precision = 1.0, recall = 1.0, map50 = 0.99, map5095 = 0.9 },
-                            new { classId = 1, className = "NG", imageCount = 5, instanceCount = 5, precision = 0.8, recall = 0.8, map50 = 0.75, map5095 = 0.5 }
-                        },
-                        groundTruthReview = candidateGroundTruthReview,
-                        benchmark = new
-                        {
-                            taktMs = 12.0 + index,
-                            taktMinMs = 11.0 + index,
-                            taktMaxMs = 13.0 + index,
-                            repeatCount = 5,
-                            source = "native-validation-speed-median"
-                        },
-                        confidence = new { uiCandidateCount = 13 }
-                    },
-                    promotion = new { recommendation = "benchmark" }
-                };
-                File.WriteAllText(summaryPath, JsonConvert.SerializeObject(summary, Formatting.Indented));
-                if (index == 0)
-                {
-                    preferredSummaryPath = summaryPath;
-                }
-            }
-
-            string anomalyRoot = Path.Combine(root, "artifacts", "yolo-classification-evaluation", "run-0");
-            Directory.CreateDirectory(anomalyRoot);
-            string anomalySummaryPath = Path.Combine(anomalyRoot, "classification-evaluation-summary.json");
-            object anomalySummary = new
-            {
-                generatedUtc = DateTimeOffset.UtcNow.AddMinutes(-10).ToString("O", CultureInfo.InvariantCulture),
-                weightsPath = Path.Combine(root, "runs", "yolov8n-cls-anomaly", "weights", "best.pt"),
-                weightsSha256 = new string('f', 64),
-                datasetRoot = Path.Combine(root, "datasets", "anomaly"),
-                split = "test",
-                evidence = new
-                {
-                    fingerprintAlgorithm = "sha256-class-image-pairs-v1",
-                    fingerprintSha256 = new string('c', 64)
-                },
-                thresholds = new { minimumConfidence = 0.8 },
-                metrics = new
-                {
-                    totalImageCount = 15,
-                    correctImageCount = 14,
-                    accuracy = 14D / 15D,
-                    normalAccuracy = 1D,
-                    abnormalAccuracy = 0.9D
-                },
-                promotion = new { recommendation = "hold" }
-            };
-            File.WriteAllText(anomalySummaryPath, JsonConvert.SerializeObject(anomalySummary, Formatting.Indented));
-
-            var service = new WpfModelBenchmarkCatalogService();
-            IReadOnlyList<WpfModelBenchmarkRun> runs = service.Load(root);
-            AssertEqual(7, runs.Count);
-            AssertTrue(runs.Any(run => run.TaskKey == "object-detection"), "benchmark catalog should normalize object detection runs");
-            AssertTrue(runs.Any(run => run.TaskKey == "segmentation"), "benchmark catalog should normalize segmentation runs");
-            AssertTrue(runs.Any(run => run.TaskKey == "anomaly-classification"), "benchmark catalog should normalize anomaly classification runs");
-            WpfModelBenchmarkRun anomalyRun = runs.Single(run => run.TaskKey == "anomaly-classification");
-            AssertTrue(anomalyRun.Metrics.Any(metric => metric.Key == "accuracy"), "anomaly evaluation should expose task-specific accuracy without a YOLO-only table contract");
-            AssertTrue(!anomalyRun.TaktMs.HasValue, "anomaly evaluation without timing evidence should stay explicitly unmeasured");
-            AssertEqual(new string('f', 64), anomalyRun.WeightsSha256);
-            AssertEqual(new string('c', 64), anomalyRun.EvidenceFingerprintSha256);
-            AssertTrue(runs.Where(run => run.TaskKey == "segmentation").All(run => string.IsNullOrEmpty(run.EvidenceFingerprintSha256)), "historical reports without evidence fingerprints should remain loadable");
-
-            WpfModelBenchmarkRun preferredBaseline = runs.Single(run => run.SourcePath == preferredSummaryPath && run.SourceRole == "baseline");
-            WpfModelBenchmarkRun otherDetectionBaseline = runs.Single(run => run.TaskKey == "object-detection" && run.SourceRole == "baseline" && run.SourcePath != preferredSummaryPath);
-            AssertTrue(!string.Equals(preferredBaseline.QualityComparisonKey, otherDetectionBaseline.QualityComparisonKey, StringComparison.OrdinalIgnoreCase), "different evidence fingerprints should produce different quality-comparison identities even when the legacy path/count fields match");
-            AssertEqual(2, preferredBaseline.ClassMetrics.Count);
-            AssertEqual(5, preferredBaseline.GroundTruthReview.FalseNegativeCount);
-            AssertEqual(0.45D, preferredBaseline.GroundTruthReview.PredictionNmsIouThreshold.Value);
-            AssertEqual("missed-ng.jpg", preferredBaseline.GroundTruthReview.Examples.Single().ImageName);
-            AssertEqual(2, preferredBaseline.GroundTruthReview.SchemaVersion);
-            AssertEqual("normalized-xyxy-v1", preferredBaseline.GroundTruthReview.GeometryCoordinateSystem);
-            AssertEqual(2, preferredBaseline.GroundTruthReview.ThresholdSweep.Count);
-            AssertTrue(preferredBaseline.GroundTruthReview.Examples.Single().GroundTruthBox != null,
-                "v2 review should preserve the normalized ground-truth error box");
-            AssertTrue(preferredBaseline.GroundTruthReview.Examples.Single().PredictionBox == null,
-                "missing predictions should remain absent instead of being converted to a synthetic box");
-            WpfModelBenchmarkRun preferredCandidate = runs.Single(run => run.SourcePath == preferredSummaryPath && run.SourceRole == "candidate");
-            AssertTrue(preferredCandidate.GroundTruthReview.Examples.Single().PredictionBox != null,
-                "v2 review should preserve the normalized prediction error box");
-
-            var viewModel = new WpfModelBenchmarkViewModel(service, root, preferredSummaryPath);
-            AssertEqual(2, viewModel.SelectedRuns.Count);
-            AssertTrue(viewModel.CatalogRuns.Count(item => item.IsBaseline) == 1, "preferred pair should select exactly one baseline");
-            AssertTrue(viewModel.SelectedRuns.All(item => item.TaskText == "\uAC1D\uCCB4 \uD0D0\uC9C0"), "preferred detection report should preselect its two runs");
-            AssertTrue(viewModel.MetricRows.Any(row => row.DisplayName == "mAP50-95"), "metric matrix should be driven by selected run metrics");
-            AssertTrue(viewModel.CatalogTaskSummaryText.Contains("\uC138\uADF8\uBA58\uD14C\uC774\uC158", StringComparison.Ordinal)
-                && viewModel.CatalogTaskSummaryText.Contains("\uC774\uC0C1 \uBD84\uB958", StringComparison.Ordinal),
-                "catalog summary should make heterogeneous task coverage visible");
-            AssertTrue(viewModel.ComparisonNoticeText.Contains("Takt", StringComparison.Ordinal), "comparison notice should disclose timing comparability");
-            AssertTrue(viewModel.ComparisonNoticeText.Contains("\uB370\uC774\uD130 \uC9C0\uBB38 \uC77C\uCE58", StringComparison.Ordinal), "comparison notice should confirm matching evidence fingerprints");
-            AssertTrue(viewModel.SelectedRuns.All(run => run.EvidenceFingerprintText.Length == 12), "execution conditions should expose compact evidence fingerprints");
-            AssertTrue(viewModel.SelectedRuns.All(run => run.WeightsSha256Text.Length == 12), "execution conditions should expose compact weights fingerprints");
-            AssertEqual(4, viewModel.ClassMetricRows.Count);
-            AssertEqual(2, viewModel.GroundTruthExamples.Count);
-            AssertEqual(4, viewModel.ThresholdReviewRows.Count);
-            AssertTrue(viewModel.HasThresholdReviewRows, "v2 detection reports should expose stored threshold-review rows");
-            AssertTrue(viewModel.ThresholdReviewStatusText.Contains("\uCD94\uB860", StringComparison.Ordinal),
-                "threshold review should explicitly disclose that it does not rerun inference");
-            AssertEqual("missed-ng.jpg", viewModel.SelectedGroundTruthExample.ImageName);
-            AssertTrue(viewModel.HasSelectedGroundTruthPreview, "class detail should load the selected ground-truth error image lazily from the recorded path");
-            AssertTrue(viewModel.HasSelectedGroundTruthPreviewOverlay, "v2 ground-truth examples should expose an overlay state");
-            AssertTrue(viewModel.HasSelectedGroundTruthPreviewGroundTruthBox && !viewModel.HasSelectedGroundTruthPreviewPredictionBox,
-                "a missed detection should show only its saved ground-truth box");
-            var missedPreview = viewModel.SelectedGroundTruthExample.PreviewSource as System.Windows.Media.DrawingImage;
-            var missedDrawing = missedPreview?.Drawing as System.Windows.Media.DrawingGroup;
-            AssertTrue(missedDrawing?.Children.Count == 2,
-                "a missed detection preview should compose the source image with exactly one saved ground-truth outline");
-            var missedOutline = missedDrawing?.Children.OfType<System.Windows.Media.GeometryDrawing>().SingleOrDefault();
-            AssertTrue(missedOutline?.Pen?.Brush is System.Windows.Media.SolidColorBrush missedBrush
-                && missedBrush.Color == System.Windows.Media.Color.FromRgb(57, 217, 138)
-                && missedOutline.Pen.DashStyle?.Dashes.Count == 0,
-                "a missed detection preview should render the saved ground-truth outline as a solid green box");
-            viewModel.SelectedGroundTruthExample = viewModel.GroundTruthExamples.Last();
-            AssertEqual("false-ng.jpg", viewModel.GroundTruthPreviewTitleText);
-            AssertTrue(viewModel.HasSelectedGroundTruthPreview, "selecting another ground-truth error should load its own recorded image");
-            AssertTrue(viewModel.HasSelectedGroundTruthPreviewGroundTruthBox && viewModel.HasSelectedGroundTruthPreviewPredictionBox,
-                "a false-positive example should preserve both saved answer and prediction boxes");
-            var falsePositivePreview = viewModel.SelectedGroundTruthExample.PreviewSource as System.Windows.Media.DrawingImage;
-            var falsePositiveDrawing = falsePositivePreview?.Drawing as System.Windows.Media.DrawingGroup;
-            AssertTrue(falsePositiveDrawing?.Children.Count == 3,
-                "a false-positive preview should compose the source image with both saved box outlines without re-running inference");
-            var falsePositiveOutlines = falsePositiveDrawing?.Children.OfType<System.Windows.Media.GeometryDrawing>().ToList();
-            AssertTrue(falsePositiveOutlines?.Count == 2
-                && falsePositiveOutlines[0].Pen?.Brush is System.Windows.Media.SolidColorBrush falsePositiveGroundTruthBrush
-                && falsePositiveGroundTruthBrush.Color == System.Windows.Media.Color.FromRgb(57, 217, 138)
-                && falsePositiveOutlines[0].Pen.DashStyle?.Dashes.Count == 0
-                && falsePositiveOutlines[1].Pen?.Brush is System.Windows.Media.SolidColorBrush falsePositivePredictionBrush
-                && falsePositivePredictionBrush.Color == System.Windows.Media.Color.FromRgb(50, 184, 255)
-                && falsePositiveOutlines[1].Pen.DashStyle?.Dashes.Count > 0,
-                "a false-positive preview should preserve solid green ground-truth and dashed blue prediction outline semantics");
-            AssertTrue(viewModel.ClassMetricRows.Any(row => row.ClassName == "NG" && row.GroundTruthReviewText.Contains("FN 5", StringComparison.Ordinal)), "class detail should expose the baseline NG miss count");
-            AssertTrue(viewModel.GroundTruthReviewNoticeText.Contains("IoU", StringComparison.Ordinal), "class detail should disclose the ground-truth matching threshold");
-            AssertTrue(viewModel.GroundTruthReviewNoticeText.Contains("NMS IoU 45%", StringComparison.Ordinal), "class detail should disclose the UI prediction NMS threshold");
-            AssertEqual(2, viewModel.DashboardQualityTaktPoints.Count);
-            AssertTrue(viewModel.HasDashboardQualityTaktPoints, "dashboard should plot the same-evidence and same-timing benchmark pair");
-            AssertTrue(viewModel.DashboardQualityTaktPoints.Any(point => point.IsBaseline), "dashboard quality/takt plot should retain the selected baseline");
-            AssertEqual(2, viewModel.DashboardOutcomeRows.Count);
-            AssertTrue(viewModel.HasDashboardOutcomeRows, "dashboard should expose the selected reports' TP/FP/FN rows");
-            AssertTrue(viewModel.DashboardQualityText.Contains("mAP50-95", StringComparison.Ordinal), "dashboard should name the comparable primary metric");
-            AssertTrue(viewModel.DashboardTaktText.Contains("->", StringComparison.Ordinal), "dashboard should disclose the compared Takt values");
-
-            WpfModelBenchmarkRunItemViewModel preferredCandidateItem = viewModel.CatalogRuns.Single(item => item.IsSelected && !item.IsBaseline);
-            WpfModelBenchmarkRunItemViewModel historicalSegmentationItem = viewModel.CatalogRuns.First(item => item.Run.TaskKey == "segmentation");
-            viewModel.ClearSelectionCommand.Execute(null);
-            historicalSegmentationItem.IsSelected = true;
-            AssertTrue(!viewModel.HasThresholdReviewRows, "historical non-detection reports should not fabricate threshold-review rows");
-            AssertTrue(viewModel.ThresholdReviewStatusText.Contains("v2", StringComparison.Ordinal),
-                "historical reports should direct the operator to rerun an object-detection comparison");
-            AssertTrue(viewModel.GroundTruthReviewNoticeText.Contains("\uD3F4\uB9AC\uACE4/\uB9C8\uC2A4\uD06C", StringComparison.Ordinal)
-                && viewModel.DashboardOutcomeStatusText.Contains("\uD3F4\uB9AC\uACE4/\uB9C8\uC2A4\uD06C", StringComparison.Ordinal),
-                "segmentation reports without box review evidence should explain their polygon/mask evidence path");
-            historicalSegmentationItem.IsSelected = false;
-            WpfModelBenchmarkRunItemViewModel restoredV2BaselineItem = viewModel.CatalogRuns.Single(item => item.Run.Id == preferredBaseline.Id);
-            restoredV2BaselineItem.IsSelected = true;
-            preferredCandidateItem.IsSelected = true;
-            viewModel.SetBaselineCommand.Execute(restoredV2BaselineItem);
-            AssertEqual(4, viewModel.ThresholdReviewRows.Count);
-
-            WpfModelBenchmarkRunItemViewModel otherDetectionItem = viewModel.CatalogRuns.Single(item => item.Run.Id == otherDetectionBaseline.Id);
-            preferredCandidateItem.IsSelected = false;
-            otherDetectionItem.IsSelected = true;
-            AssertTrue(viewModel.ComparisonNoticeText.Contains("\uD3C9\uAC00 \uB370\uC774\uD130 \uC9C0\uBB38", StringComparison.Ordinal), "different evidence fingerprints should block quality deltas in the operator notice");
-            AssertEqual(0, viewModel.DashboardQualityTaktPoints.Count);
-            AssertTrue(!viewModel.HasDashboardQualityTaktPoints, "dashboard should not chart runs with different evaluation fingerprints as a quality/takt comparison");
-            otherDetectionItem.IsSelected = false;
-            preferredCandidateItem.IsSelected = true;
-            AssertEqual(2, viewModel.DashboardQualityTaktPoints.Count);
-
-            List<WpfModelBenchmarkRunItemViewModel> remaining = viewModel.CatalogRuns.Where(item => !item.IsSelected).ToList();
-            foreach (WpfModelBenchmarkRunItemViewModel item in remaining.Take(4))
-            {
-                item.IsSelected = true;
-            }
-
-            AssertEqual(WpfModelBenchmarkViewModel.MaximumSelectedRunCount, viewModel.SelectedRuns.Count);
-            WpfModelBenchmarkRunItemViewModel rejectedSeventh = remaining[4];
-            rejectedSeventh.IsSelected = true;
-            AssertTrue(!rejectedSeventh.IsSelected, "benchmark selection should reject a seventh active run");
-            AssertTrue(viewModel.StatusText.Contains("6", StringComparison.Ordinal), "benchmark selection limit should be visible in status text");
-
-            WpfModelBenchmarkRunItemViewModel newBaseline = viewModel.CatalogRuns.Last(item => item.IsSelected);
-            viewModel.SetBaselineCommand.Execute(newBaseline);
-            AssertTrue(newBaseline.IsBaseline, "baseline command should move the single comparison baseline");
-            AssertTrue(viewModel.CatalogRuns.Count(item => item.IsBaseline) == 1, "baseline command should keep exactly one baseline");
-
-            viewModel.ClearSelectionCommand.Execute(null);
-            WpfModelBenchmarkRunItemViewModel restoredBaselineItem = viewModel.CatalogRuns.Single(item => item.Run.Id == preferredBaseline.Id);
-            restoredBaselineItem.IsSelected = true;
-            preferredCandidateItem.IsSelected = true;
-            viewModel.SetBaselineCommand.Execute(restoredBaselineItem);
-            AssertEqual(2, viewModel.DashboardQualityTaktPoints.Count);
-
-            if (System.Windows.Application.Current == null)
-            {
-                _ = new System.Windows.Application
-                {
-                    ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
-                };
-            }
-
-            var window = new WpfModelBenchmarkWindow(viewModel);
-            try
-            {
-                window.Show();
-                window.UpdateLayout();
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
-                AssertEqual("\uBAA8\uB378 \uC131\uB2A5 \uBE44\uAD50", window.Title);
-                AssertTrue(window.GetType().BaseType?.FullName == "Wpf.Ui.Controls.FluentWindow", "benchmark window should use the existing WPF-UI window library");
-                AssertTrue(window.FindName("ModelBenchmarkCatalogList") != null, "benchmark window should expose the run catalog");
-                AssertTrue(window.FindName("ModelBenchmarkSummaryGrid") != null, "benchmark window should expose a selected-run summary");
-                var qualityTaktCanvas = window.FindName("ModelBenchmarkQualityTaktCanvas") as System.Windows.Controls.Canvas;
-                AssertTrue(qualityTaktCanvas != null, "benchmark window should expose the quality/takt dashboard canvas");
-                AssertTrue(qualityTaktCanvas.Children.OfType<System.Windows.Shapes.Ellipse>().Count() >= 2,
-                    "benchmark dashboard should render a marker for each comparable selected run");
-                AssertTrue(window.FindName("ModelBenchmarkQualityTaktLegend") is System.Windows.Controls.ItemsControl qualityTaktLegend
-                    && qualityTaktLegend.Items.Count == 2,
-                    "benchmark dashboard should render a legend for comparable runs");
-                AssertTrue(window.FindName("ModelBenchmarkOutcomeRows") is System.Windows.Controls.ItemsControl outcomeRows
-                    && outcomeRows.Items.Count == 2,
-                    "benchmark dashboard should expose TP/FP/FN rows");
-                AssertTrue(window.FindName("ModelBenchmarkMetricRows") != null, "benchmark window should expose a dynamic metric matrix");
-                AssertTrue(window.FindName("ModelBenchmarkClassMetricGrid") != null, "benchmark window should expose per-class validation metrics");
-                AssertTrue(window.FindName("ModelBenchmarkGroundTruthExampleGrid") != null, "benchmark window should expose ground-truth error examples");
-                AssertTrue(window.FindName("ModelBenchmarkGroundTruthPreview") != null, "benchmark window should expose the selected ground-truth image preview");
-                AssertTrue(window.FindName("ModelBenchmarkGroundTruthPreviewImage") is System.Windows.Controls.Image, "benchmark window should render the selected ground-truth image preview");
-                AssertTrue(window.FindName("ModelBenchmarkGroundTruthPreviewOverlayLegend") is System.Windows.FrameworkElement overlayLegend
-                    && overlayLegend.Visibility == System.Windows.Visibility.Visible,
-                    "benchmark preview should expose the saved ground-truth/prediction overlay legend when a v2 example is selected");
-                AssertTrue(window.FindName("ModelBenchmarkConditionGrid") != null, "benchmark window should expose evaluation and timing conditions");
-                AssertTrue(window.FindName("ModelBenchmarkThresholdReviewStatusText") != null, "benchmark window should disclose stored threshold-review state");
-                AssertTrue(window.FindName("ModelBenchmarkThresholdReviewGrid") is System.Windows.Controls.DataGrid thresholdReviewGrid
-                    && thresholdReviewGrid.Items.Count == 4,
-                    "benchmark window should expose v2 threshold TP/FP/FN rows without rerunning inference");
-                AssertTrue(window.FindName("ModelBenchmarkTabs") is System.Windows.Controls.TabControl benchmarkTabs
-                    && benchmarkTabs.Items.Count == 5,
-                    "benchmark window should retain the existing class/error and execution-condition tabs before the threshold tab");
-                AssertTrue(window.FindName("RefreshModelBenchmarkButton") is Wpf.Ui.Controls.Button refreshButton
-                    && refreshButton.Command != null,
-                    "benchmark refresh action should bind through the ViewModel");
-            }
-            finally
-            {
-                window.Close();
-            }
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestWpfModelComparisonReviewService()
-    {
-        string root = CreateTempRoot();
-        string comparisonArtifactsRoot = Path.Combine(
-            Directory.GetCurrentDirectory(),
-            "artifacts",
-            "yolo-model-comparison",
-            "unit-latest-filter-" + Guid.NewGuid().ToString("N"));
-        try
-        {
-            string baselineLabels = Path.Combine(root, "baseline", "labels");
-            string candidateLabels = Path.Combine(root, "candidate", "labels");
-            string datasetRoot = Path.Combine(root, "dataset");
-            string testImages = Path.Combine(datasetRoot, "data", "test", "images");
-            Directory.CreateDirectory(baselineLabels);
-            Directory.CreateDirectory(candidateLabels);
-            Directory.CreateDirectory(testImages);
-
-            WriteLabel(baselineLabels, "same", "0 0.50 0.50 0.20 0.20 0.90");
-            WriteLabel(candidateLabels, "same", "0 0.50 0.50 0.20 0.20 0.92");
-            WriteLabel(baselineLabels, "class_changed", "0 0.30 0.30 0.20 0.20 0.88");
-            WriteLabel(candidateLabels, "class_changed", "1 0.30 0.30 0.20 0.20 0.91");
-            WriteLabel(baselineLabels, "baseline_only", "0 0.70 0.70 0.15 0.15 0.89");
-            WriteLabel(candidateLabels, "candidate_only", "1 0.20 0.75 0.12 0.12 0.94");
-            WriteLabel(candidateLabels, "low_confidence", "1 0.80 0.20 0.12 0.12 0.10");
-            WriteImageFile(testImages, "class_changed.jpg");
-            WriteImageFile(testImages, "baseline_only.png");
-            WriteImageFile(testImages, "candidate_only.bmp");
-
-            string dataYamlPath = Path.Combine(datasetRoot, "data.yaml");
-            File.WriteAllText(
-                dataYamlPath,
-                string.Join(
-                    Environment.NewLine,
-                    "path: .",
-                    "train: data/train/images",
-                    "val: data/valid/images",
-                    "test: data/test/images",
-                    "nc: 2",
-                    "names: [OK, NG]"));
-            string summaryPath = Path.Combine(root, "comparison-summary.json");
-            File.WriteAllText(
-                summaryPath,
-                JsonConvert.SerializeObject(new
-                {
-                    dataYaml = dataYamlPath,
-                    task = "test",
-                    uiConfidence = 0.25,
-                    baseline = new
-                    {
-                        labelsPath = baselineLabels,
-                        classMetrics = new[]
-                        {
-                            new { classId = 0, className = "native_contamination" },
-                            new { classId = 1, className = "native_scratch" }
-                        }
-                    },
-                    candidate = new { labelsPath = candidateLabels },
-                    promotion = new
-                    {
-                        recommendation = "hold",
-                        reason = "Candidate precision 0.016 is below the minimum 0.1; review labels/training before promotion."
-                    }
-                }));
-
-            var service = new WpfModelComparisonReviewService();
-            string expectedBaselineWeights = Path.Combine(root, "weights", "baseline.pt");
-            string expectedCandidateWeights = Path.Combine(root, "weights", "candidate.pt");
-            string staleBaselineWeights = Path.Combine(root, "weights", "stale-baseline.pt");
-            string staleCandidateWeights = Path.Combine(root, "weights", "stale-candidate.pt");
-            string matchingSummaryDirectory = Path.Combine(comparisonArtifactsRoot, "20260708-older-matching");
-            string olderMatchingSummaryDirectory = Path.Combine(comparisonArtifactsRoot, "20260708-oldest-matching");
-            string staleSummaryDirectory = Path.Combine(comparisonArtifactsRoot, "20260708-newer-stale");
-            string malformedSummaryDirectory = Path.Combine(comparisonArtifactsRoot, "20260708-malformed");
-            Directory.CreateDirectory(matchingSummaryDirectory);
-            Directory.CreateDirectory(olderMatchingSummaryDirectory);
-            Directory.CreateDirectory(staleSummaryDirectory);
-            Directory.CreateDirectory(malformedSummaryDirectory);
-            string matchingSummaryPath = Path.Combine(matchingSummaryDirectory, "comparison-summary.json");
-            string olderMatchingSummaryPath = Path.Combine(olderMatchingSummaryDirectory, "comparison-summary.json");
-            string staleSummaryPath = Path.Combine(staleSummaryDirectory, "comparison-summary.json");
-            string malformedSummaryPath = Path.Combine(malformedSummaryDirectory, "comparison-summary.json");
-            File.WriteAllText(
-                matchingSummaryPath,
-                JsonConvert.SerializeObject(new
-                {
-                    dataYaml = dataYamlPath,
-                    task = "test",
-                    uiConfidence = 0.25,
-                    baseline = new { weights = expectedBaselineWeights, labelsPath = baselineLabels },
-                    candidate = new { weights = expectedCandidateWeights, labelsPath = candidateLabels },
-                    promotion = new
-                    {
-                        recommendation = "hold",
-                        reason = "Candidate precision 0.016 is below the minimum 0.1; review labels/training before promotion."
-                    }
-                }));
-            File.WriteAllText(
-                staleSummaryPath,
-                JsonConvert.SerializeObject(new
-                {
-                    dataYaml = dataYamlPath,
-                    task = "test",
-                    uiConfidence = 0.25,
-                    baseline = new { weights = staleBaselineWeights, labelsPath = baselineLabels },
-                    candidate = new { weights = staleCandidateWeights, labelsPath = candidateLabels },
-                    promotion = new
-                    {
-                        recommendation = "promote",
-                        reason = "Candidate improves mAP and does not regress precision or recall; review examples before saving it as the inspection model."
-                    }
-                }));
-            File.Copy(matchingSummaryPath, olderMatchingSummaryPath);
-            File.WriteAllText(malformedSummaryPath, "{ invalid json");
-            File.SetLastWriteTimeUtc(matchingSummaryPath, DateTime.UtcNow.AddMinutes(-10));
-            File.SetLastWriteTimeUtc(olderMatchingSummaryPath, DateTime.UtcNow.AddMinutes(-20));
-            File.SetLastWriteTimeUtc(staleSummaryPath, DateTime.UtcNow);
-            File.SetLastWriteTimeUtc(malformedSummaryPath, DateTime.UtcNow.AddMinutes(10));
-            IReadOnlyList<WpfModelComparisonHistoryItem> matchingHistory = service.BuildHistory(
-                expectedBaselineWeights,
-                expectedCandidateWeights,
-                maxItems: 8);
-            AssertEqual(2, matchingHistory.Count);
-            AssertEqual(matchingSummaryPath, matchingHistory[0].SourcePath);
-            AssertTrue(matchingHistory[0].IsLatest, "model comparison history should mark the newest matching summary as latest");
-            AssertTrue(!matchingHistory[1].IsLatest, "older matching model comparison summaries should be read-only history");
-            AssertTrue(matchingHistory[0].DisplayText.Contains("\uCD5C\uC2E0", StringComparison.Ordinal), "model comparison history should identify the latest run");
-            AssertTrue(matchingHistory[0].DetailText.Contains("test", StringComparison.Ordinal), "model comparison history should identify the evidence split");
-            AssertEqual(1, service.BuildHistory(expectedBaselineWeights, expectedCandidateWeights, maxItems: 1).Count);
-            AssertEqual(0, service.BuildHistory(expectedBaselineWeights, Path.Combine(root, "weights", "unmatched-candidate.pt")).Count);
-            WpfModelComparisonReviewReport matchedLatestReport = service.BuildLatestReport(
-                new[] { "OK", "NG" },
-                confidenceThreshold: 0.25D,
-                maxExamples: 10,
-                baselineWeightsPath: expectedBaselineWeights,
-                candidateWeightsPath: expectedCandidateWeights);
-            AssertTrue(matchedLatestReport.HasComparison, "latest model comparison lookup should find the summary that matches the current baseline/candidate weights");
-            AssertTrue(matchedLatestReport.DetailText.Contains("\uAD50\uCCB4 \uBCF4\uB958", StringComparison.Ordinal), "latest model comparison lookup should not use a newer summary from another candidate");
-            AssertTrue(!matchedLatestReport.DetailText.Contains("\uAD50\uCCB4 \uCD94\uCC9C", StringComparison.Ordinal), "stale promote summaries from another candidate should not drive the current review");
-            WpfModelComparisonReviewReport unmatchedLatestReport = service.BuildLatestReport(
-                new[] { "OK", "NG" },
-                confidenceThreshold: 0.25D,
-                maxExamples: 10,
-                baselineWeightsPath: expectedBaselineWeights,
-                candidateWeightsPath: Path.Combine(root, "weights", "unmatched-candidate.pt"));
-            AssertTrue(!unmatchedLatestReport.HasComparison, "latest model comparison lookup should fail closed when no summary matches the current candidate weights");
-
-            WpfModelComparisonReviewReport report = service.BuildFromSummaryFile(
-                summaryPath,
-                new[] { "OK", "NG" },
-                confidenceThreshold: null,
-                maxExamples: 10);
-
-            AssertTrue(report.HasComparison, "model comparison report should be visible when a summary exists");
-            AssertTrue(report.SummaryText.Contains("\uBAA8\uB378 \uCC28\uC774 \uC608\uC2DC", StringComparison.Ordinal), "model comparison report should use learner-facing difference-example wording");
-            AssertTrue(report.SummaryText.Contains("3", StringComparison.Ordinal), "model comparison report should count images with disagreements");
-            AssertTrue(report.DetailText.Contains("\uAE30\uC874 \uBAA8\uB378 3", StringComparison.Ordinal), "model comparison report should count baseline detections above confidence");
-            AssertTrue(report.DetailText.Contains("\uC0C8 \uBAA8\uB378 3", StringComparison.Ordinal), "model comparison report should count candidate detections above confidence");
-            AssertTrue(report.DetailText.Contains("\uAD50\uCCB4 \uBCF4\uB958", StringComparison.Ordinal), "model comparison report should surface the promotion hold decision");
-            AssertTrue(report.DetailText.Contains("\uC815\uBC00\uB3C4", StringComparison.Ordinal), "model comparison report should translate low-precision promotion reasons for operators");
-            AssertTrue(report.DetailText.Contains("1.6", StringComparison.Ordinal), "translated low-precision reason should preserve the current evidence value");
-            AssertTrue(!report.DetailText.Contains("Candidate precision", StringComparison.Ordinal), "model comparison report should not expose raw English promotion reasons");
-            AssertTrue(
-                report.Examples.Any(example => example.ReviewText.Contains("native_scratch", StringComparison.Ordinal)),
-                "self-describing comparison class metrics should override unrelated recipe class names in review examples");
-            File.WriteAllText(
-                summaryPath,
-                JsonConvert.SerializeObject(new
-                {
-                    comparisonKind = "engine-benchmark",
-                    dataYaml = dataYamlPath,
-                    task = "test",
-                    uiConfidence = 0.25,
-                    imageSize = 320,
-                    batchSize = 1,
-                    benchmarkRepeatCount = 5,
-                    baseline = new
-                    {
-                        engine = "YOLOv5",
-                        labelsPath = baselineLabels,
-                        metrics = new { precision = 0.81, recall = 0.74, map50 = 0.79, map5095 = 0.52 },
-                        benchmark = new { preprocessMs = 0.7, inferenceMs = 6.8, postprocessMs = 0.8, taktMs = 8.3, taktMinMs = 7.9, taktMaxMs = 9.1, repeatCount = 5 }
-                    },
-                    candidate = new
-                    {
-                        engine = "YOLOv8",
-                        labelsPath = candidateLabels,
-                        metrics = new { precision = 0.84, recall = 0.78, map50 = 0.82, map5095 = 0.57 },
-                        benchmark = new { preprocessMs = 0.5, inferenceMs = 5.1, postprocessMs = 0.6, taktMs = 6.2, taktMinMs = 5.8, taktMaxMs = 7.0, repeatCount = 5 }
-                    },
-                    promotion = new
-                    {
-                        recommendation = "hold",
-                        reason = "Held-out comparison uses 9 labeled images; collect at least 10 before promotion."
-                    }
-                }));
-            WpfModelComparisonReviewReport weakEvidenceReport = service.BuildFromSummaryFile(
-                summaryPath,
-                new[] { "OK", "NG" },
-                confidenceThreshold: null,
-                maxExamples: 10);
-            AssertTrue(weakEvidenceReport.IsEngineComparison, "cross-engine summaries should be identified separately from candidate promotion comparisons");
-            AssertTrue(weakEvidenceReport.BenchmarkText.Contains("YOLOv5", StringComparison.Ordinal) && weakEvidenceReport.BenchmarkText.Contains("YOLOv8", StringComparison.Ordinal), "cross-engine summary should identify both runtimes");
-            AssertTrue(weakEvidenceReport.BenchmarkText.Contains("8.30", StringComparison.Ordinal) && weakEvidenceReport.BenchmarkText.Contains("6.20", StringComparison.Ordinal), "cross-engine summary should preserve per-model takt values");
-            AssertTrue(weakEvidenceReport.BenchmarkText.Contains("7.90-9.10", StringComparison.Ordinal) && weakEvidenceReport.BenchmarkText.Contains("n=5", StringComparison.Ordinal), "cross-engine summary should expose repeated takt range and sample count");
-            AssertTrue(weakEvidenceReport.BenchmarkText.Contains("\uBC18\uBCF5 5\uD68C \uC911\uC559\uAC12", StringComparison.Ordinal), "cross-engine summary should identify repeated takt values as medians");
-            AssertTrue(weakEvidenceReport.BenchmarkText.Contains("batch 1", StringComparison.Ordinal), "cross-engine summary should disclose the batch-one timing condition");
-            AssertTrue(weakEvidenceReport.BenchmarkText.Contains("test", StringComparison.Ordinal), "cross-engine summary should identify the test split");
-            AssertTrue(weakEvidenceReport.BenchmarkText.Contains("\uD604\uC7A5 \uAC80\uC99D \uC544\uB2D8", StringComparison.Ordinal), "cross-engine test summary should not imply field validation");
-            var engineComparisonViewModel = new WpfCandidateReviewPanelViewModel();
-            engineComparisonViewModel.SetModelComparisonReview(weakEvidenceReport);
-            AssertEqual(System.Windows.Visibility.Visible, engineComparisonViewModel.ModelComparisonBenchmarkVisibility);
-            AssertTrue(engineComparisonViewModel.ModelComparisonBenchmarkText.Contains("mAP50-95", StringComparison.Ordinal), "candidate review should expose accuracy beside model takt");
-            AssertTrue(engineComparisonViewModel.ModelComparisonActionText.Contains("Python", StringComparison.Ordinal), "cross-engine review should explain that engine adoption also changes runtime settings");
-            AssertTrue(weakEvidenceReport.DetailText.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "model comparison report should translate weak held-out evidence reasons");
-            AssertTrue(weakEvidenceReport.DetailText.Contains("9", StringComparison.Ordinal) && weakEvidenceReport.DetailText.Contains("10", StringComparison.Ordinal), "translated weak-evidence reason should preserve evidence counts");
-            AssertTrue(!weakEvidenceReport.DetailText.Contains("Held-out comparison", StringComparison.Ordinal), "model comparison report should not expose raw held-out evidence reasons");
-            File.WriteAllText(
-                summaryPath,
-                JsonConvert.SerializeObject(new
-                {
-                    comparisonKind = "engine-benchmark",
-                    dataYaml = dataYamlPath,
-                    task = "val",
-                    uiConfidence = 0.25,
-                    imageSize = 320,
-                    batchSize = 1,
-                    evidence = new { split = "val", imageCount = 28, comparisonLabelCount = 28 },
-                    baseline = new
-                    {
-                        engine = "YOLOv5",
-                        labelsPath = baselineLabels,
-                        metrics = new { precision = 0.81, recall = 0.74, map50 = 0.79, map5095 = 0.52 },
-                        benchmark = new { taktMs = 8.3 }
-                    },
-                    candidate = new
-                    {
-                        engine = "YOLOv8",
-                        labelsPath = candidateLabels,
-                        metrics = new { precision = 0.84, recall = 0.78, map50 = 0.82, map5095 = 0.57 },
-                        benchmark = new { taktMs = 6.2 }
-                    },
-                    promotion = new
-                    {
-                        recommendation = "promote",
-                        reason = "Candidate improves mAP and does not regress precision or recall; review examples before saving it as the inspection model."
-                    }
-                }));
-            WpfModelComparisonReviewReport validationEngineReport = service.BuildFromSummaryFile(
-                summaryPath,
-                new[] { "OK", "NG" },
-                confidenceThreshold: null,
-                maxExamples: 10);
-            AssertTrue(validationEngineReport.BenchmarkText.Contains("\uD604\uC7A5 \uAC80\uC99D", StringComparison.Ordinal), "cross-engine validation summary should disclose the field-validation boundary");
-            AssertTrue(validationEngineReport.BenchmarkText.Contains("val 28", StringComparison.Ordinal), "validation fallback should disclose its split and labeled image count");
-            AssertTrue(validationEngineReport.BenchmarkText.Contains("\uAD50\uCCB4 \uD310\uB2E8 \uC544\uB2D8", StringComparison.Ordinal), "validation fallback should disclose that it is not model-adoption evidence");
-            AssertTrue(validationEngineReport.RecommendationText.Contains("\uC5D4\uC9C4 \uBD84\uC11D", StringComparison.Ordinal), "validation fallback should be presented as an engine benchmark");
-            AssertTrue(!validationEngineReport.RecommendationText.Contains("\uAD50\uCCB4 \uCD94\uCC9C", StringComparison.Ordinal), "validation fallback must not recommend model promotion");
-            WpfModelComparisonReviewReport staleValidationEngineReport = service.BuildFromSummaryFile(
-                summaryPath,
-                new[] { "OK", "NG" },
-                confidenceThreshold: 0.20,
-                maxExamples: 10);
-            AssertTrue(staleValidationEngineReport.RecommendationText.Contains("\uAD50\uCCB4 \uBCF4\uB958", StringComparison.Ordinal), "validation engine benchmark should still reject a stale confidence basis");
-            AssertTrue(staleValidationEngineReport.RecommendationText.Contains("25.0", StringComparison.Ordinal) && staleValidationEngineReport.RecommendationText.Contains("20.0", StringComparison.Ordinal), "stale validation benchmark should disclose the compared and current confidence values");
-            File.WriteAllText(
-                summaryPath,
-                JsonConvert.SerializeObject(new
-                {
-                    dataYaml = dataYamlPath,
-                    task = "test",
-                    uiConfidence = 0.25,
-                    baseline = new { labelsPath = baselineLabels },
-                    candidate = new { labelsPath = candidateLabels },
-                    promotion = new
-                    {
-                        recommendation = "hold",
-                        reason = "Candidate produced 0 UI-threshold candidates at confidence 0.25; lower the review threshold or retrain before promotion."
-                    }
-                }));
-            WpfModelComparisonReviewReport noUiCandidateReport = service.BuildFromSummaryFile(
-                summaryPath,
-                new[] { "OK", "NG" },
-                confidenceThreshold: null,
-                maxExamples: 10);
-            AssertTrue(noUiCandidateReport.DetailText.Contains("\uAC80\uD1A0 \uAE30\uC900 \uC2E0\uB8B0\uB3C4", StringComparison.Ordinal), "model comparison report should translate zero UI-threshold candidate reasons");
-            AssertTrue(noUiCandidateReport.DetailText.Contains("25.0", StringComparison.Ordinal), "translated zero-candidate reason should preserve the UI confidence threshold");
-            AssertTrue(!noUiCandidateReport.DetailText.Contains("UI-threshold candidates", StringComparison.Ordinal), "model comparison report should not expose raw zero-candidate promotion reasons");
-            File.WriteAllText(
-                summaryPath,
-                JsonConvert.SerializeObject(new
-                {
-                    dataYaml = dataYamlPath,
-                    task = "test",
-                    uiConfidence = 0.25,
-                    baseline = new { labelsPath = baselineLabels },
-                    candidate = new
-                    {
-                        labelsPath = candidateLabels,
-                        confidence = new
-                        {
-                            thresholdSweep = new[]
-                            {
-                                new { confidence = 0.25, uiCandidateCount = 2 },
-                                new { confidence = 0.10, uiCandidateCount = 10 }
-                            }
-                        }
-                    },
-                    promotion = new
-                    {
-                        recommendation = "promote",
-                        reason = "Candidate improves mAP and does not regress precision or recall; review examples before saving it as the inspection model.",
-                        reasons = new[]
-                        {
-                            "Candidate improves mAP and does not regress precision or recall; review examples before saving it as the inspection model."
-                        }
-                    }
-                }));
-            WpfModelComparisonReviewReport promoteReport = service.BuildFromSummaryFile(
-                summaryPath,
-                new[] { "OK", "NG" },
-                confidenceThreshold: null,
-                maxExamples: 10);
-            AssertTrue(promoteReport.DetailText.Contains("\uAD50\uCCB4 \uCD94\uCC9C", StringComparison.Ordinal), "model comparison report should surface the promote decision");
-            AssertTrue(promoteReport.DetailText.Contains("mAP", StringComparison.Ordinal), "translated promote reason should preserve the mAP improvement context");
-            AssertTrue(promoteReport.DetailText.Contains("\uC815\uBC00\uB3C4", StringComparison.Ordinal), "translated promote reason should mention precision");
-            AssertTrue(promoteReport.DetailText.Contains("\uC7AC\uD604\uC728", StringComparison.Ordinal), "translated promote reason should mention recall");
-            AssertTrue(promoteReport.DetailText.Contains("\uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5", StringComparison.Ordinal), "translated promote reason should point to saving as the inspection model");
-            AssertTrue(promoteReport.DetailText.Contains("\uAC80\uD1A0 \uAE30\uC900\uBCC4 \uD6C4\uBCF4", StringComparison.Ordinal), "promote detail should still include the threshold sweep");
-            AssertTrue(!promoteReport.DetailText.Contains("Candidate improves", StringComparison.Ordinal), "model comparison report should not expose raw English promote reasons");
-            AssertEqual("promote", promoteReport.PromotionDecision);
-            AssertTrue(promoteReport.RecommendationText.Contains("\uAD50\uCCB4 \uCD94\uCC9C", StringComparison.Ordinal), "model comparison report should expose the translated recommendation separately for summary cards");
-            var historicalViewModel = new WpfCandidateReviewPanelViewModel();
-            historicalViewModel.SetModelComparisonHistory(matchingHistory, olderMatchingSummaryPath);
-            AssertEqual(System.Windows.Visibility.Visible, historicalViewModel.ModelComparisonHistoryVisibility);
-            AssertEqual(olderMatchingSummaryPath, historicalViewModel.SelectedModelComparisonHistoryItem.SourcePath);
-            historicalViewModel.SetModelComparisonReview(promoteReport, isHistoricalSelection: true);
-            AssertTrue(historicalViewModel.IsHistoricalModelComparisonSelection, "selecting an older comparison should be visibly marked as historical");
-            AssertTrue(historicalViewModel.IsModelPromotionHeld, "historical comparison results must not enable model adoption");
-            AssertTrue(historicalViewModel.ModelComparisonDecisionText.Contains("\uACFC\uAC70 \uC2E4\uD589", StringComparison.Ordinal), "historical comparison results should identify their read-only decision boundary");
-            AssertTrue(historicalViewModel.ModelComparisonActionText.Contains("\uCD5C\uC2E0 \uC2E4\uD589", StringComparison.Ordinal), "historical comparison guidance should route adoption back to the latest run");
-            historicalViewModel.SetModelComparisonReview(promoteReport);
-            AssertTrue(!historicalViewModel.IsHistoricalModelComparisonSelection && !historicalViewModel.IsModelPromotionHeld, "returning to the latest promotable comparison should clear the historical-only hold");
-            WpfModelComparisonReviewReport confidenceMismatchReport = service.BuildFromSummaryFile(
-                summaryPath,
-                new[] { "OK", "NG" },
-                confidenceThreshold: 0.20D,
-                maxExamples: 10);
-            AssertEqual("hold", confidenceMismatchReport.PromotionDecision);
-            AssertTrue(confidenceMismatchReport.RecommendationText.Contains("\uAD50\uCCB4 \uBCF4\uB958", StringComparison.Ordinal), "comparison confidence mismatch should fail closed as hold");
-            AssertTrue(confidenceMismatchReport.RecommendationText.Contains("25.0", StringComparison.Ordinal)
-                && confidenceMismatchReport.RecommendationText.Contains("20.0", StringComparison.Ordinal),
-                "comparison confidence mismatch should preserve compared and current confidence values");
-            AssertTrue(confidenceMismatchReport.RecommendationText.Contains("\uB2E4\uC2DC \uC2E4\uD589", StringComparison.Ordinal), "comparison confidence mismatch should direct the operator to rerun validation");
-            AssertTrue(!confidenceMismatchReport.RecommendationText.Contains("Model comparison confidence", StringComparison.Ordinal), "comparison confidence mismatch should not expose raw English service text");
-            var confidenceMismatchViewModel = new WpfCandidateReviewPanelViewModel();
-            confidenceMismatchViewModel.SetModelComparisonReview(confidenceMismatchReport);
-            AssertTrue(confidenceMismatchViewModel.IsModelPromotionHeld, "comparison confidence mismatch should block candidate adoption commands");
-            File.WriteAllText(
-                summaryPath,
-                JsonConvert.SerializeObject(new
-                {
-                    dataYaml = dataYamlPath,
-                    task = "test",
-                    uiConfidence = 0.25,
-                    baseline = new { labelsPath = baselineLabels },
-                    candidate = new
-                    {
-                        labelsPath = candidateLabels,
-                        confidence = new
-                        {
-                            thresholdSweep = new[]
-                            {
-                                new { confidence = 0.25, uiCandidateCount = 0 },
-                                new { confidence = 0.10, uiCandidateCount = 0 },
-                                new { confidence = 0.05, uiCandidateCount = 3 },
-                                new { confidence = 0.01, uiCandidateCount = 259 }
-                            }
-                        }
-                    },
-                    promotion = new
-                    {
-                        recommendation = "hold",
-                        reason = "Held-out comparison uses 9 labeled images; collect at least 10 before promotion.",
-                        reasons = new[]
-                        {
-                            "Held-out comparison uses 9 labeled images; collect at least 10 before promotion.",
-                            "Segment held-out comparison uses 3 positive segmentation labels; collect at least 5 positive mask labels before promotion.",
-                            "Segment held-out comparison uses 3 positive segmentation images; collect at least 5 positive mask images before promotion.",
-                            "Segment held-out comparison uses 3 background segmentation images; collect at least 5 background images before promotion.",
-                            "Candidate produced 0 UI-threshold candidates at confidence 0.25; lower the review threshold or retrain before promotion.",
-                            "Candidate UI-threshold positive image coverage 2/10 (0.2) is below minimum 0.5 at confidence 0.25; add varied training data or tune the model before promotion.",
-                            "Candidate UI-threshold background candidate rate 2/6 (0.333) exceeds maximum 0.1 at confidence 0.25; add background data or tune the model before promotion."
-                        }
-                    }
-                }));
-            WpfModelComparisonReviewReport multiReasonReport = service.BuildFromSummaryFile(
-                summaryPath,
-                new[] { "OK", "NG" },
-                confidenceThreshold: null,
-                maxExamples: 10);
-            AssertTrue(multiReasonReport.DetailText.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "model comparison report should keep weak-evidence blockers when multiple promotion reasons exist");
-            AssertTrue(multiReasonReport.DetailText.Contains("\uC591\uC131 \uB9C8\uC2A4\uD06C", StringComparison.Ordinal), "model comparison report should keep positive segmentation evidence blockers when multiple promotion reasons exist");
-            AssertTrue(multiReasonReport.DetailText.Contains("\uC774\uBBF8\uC9C0", StringComparison.Ordinal), "model comparison report should keep positive segmentation image evidence blockers when multiple promotion reasons exist");
-            AssertTrue(multiReasonReport.DetailText.Contains("\uC815\uC0C1 \uC774\uBBF8\uC9C0", StringComparison.Ordinal), "model comparison report should keep background segmentation evidence blockers when multiple promotion reasons exist");
-            AssertTrue(multiReasonReport.DetailText.Contains("\uAC80\uD1A0 \uAE30\uC900 \uC2E0\uB8B0\uB3C4", StringComparison.Ordinal), "model comparison report should keep zero UI-candidate blockers when multiple promotion reasons exist");
-            AssertTrue(multiReasonReport.DetailText.Contains("20.0", StringComparison.Ordinal) && multiReasonReport.DetailText.Contains("50.0", StringComparison.Ordinal), "model comparison report should preserve UI positive-image coverage and minimum rate");
-            AssertTrue(multiReasonReport.DetailText.Contains("33.3", StringComparison.Ordinal) && multiReasonReport.DetailText.Contains("10.0", StringComparison.Ordinal), "model comparison report should preserve UI background-candidate rate and maximum rate");
-            AssertTrue(multiReasonReport.DetailText.Contains("9", StringComparison.Ordinal) && multiReasonReport.DetailText.Contains("10", StringComparison.Ordinal), "multi-reason promotion detail should preserve held-out evidence counts");
-            AssertTrue(multiReasonReport.DetailText.Contains("3", StringComparison.Ordinal) && multiReasonReport.DetailText.Contains("5", StringComparison.Ordinal), "multi-reason promotion detail should preserve positive segmentation evidence counts");
-            AssertTrue(multiReasonReport.DetailText.Contains("25.0", StringComparison.Ordinal), "multi-reason promotion detail should preserve the UI confidence threshold");
-            AssertTrue(multiReasonReport.DetailText.Contains("\uAC80\uD1A0 \uAE30\uC900\uBCC4 \uD6C4\uBCF4", StringComparison.Ordinal), "multi-reason promotion detail should include candidate threshold sweep guidance");
-            AssertTrue(multiReasonReport.DetailText.Contains("5.0", StringComparison.Ordinal) && multiReasonReport.DetailText.Contains("3", StringComparison.Ordinal), "threshold sweep guidance should preserve lower-threshold candidate counts");
-            AssertTrue(multiReasonReport.DetailText.Contains("1.0", StringComparison.Ordinal) && multiReasonReport.DetailText.Contains("259", StringComparison.Ordinal), "threshold sweep guidance should show the low-threshold candidate flood risk");
-            AssertTrue(!multiReasonReport.DetailText.Contains("Held-out comparison", StringComparison.Ordinal), "multi-reason promotion detail should not expose raw held-out text");
-            AssertTrue(!multiReasonReport.DetailText.Contains("positive segmentation labels", StringComparison.Ordinal), "multi-reason promotion detail should not expose raw positive segmentation text");
-            AssertTrue(!multiReasonReport.DetailText.Contains("positive segmentation images", StringComparison.Ordinal), "multi-reason promotion detail should not expose raw positive segmentation image text");
-            AssertTrue(!multiReasonReport.DetailText.Contains("background segmentation images", StringComparison.Ordinal), "multi-reason promotion detail should not expose raw background segmentation image text");
-            AssertTrue(!multiReasonReport.DetailText.Contains("UI-threshold candidates", StringComparison.Ordinal), "multi-reason promotion detail should not expose raw zero-candidate text");
-            AssertTrue(!multiReasonReport.DetailText.Contains("UI-threshold positive image coverage", StringComparison.Ordinal), "multi-reason promotion detail should not expose raw positive-image coverage text");
-            AssertTrue(!multiReasonReport.DetailText.Contains("UI-threshold background candidate rate", StringComparison.Ordinal), "multi-reason promotion detail should not expose raw background-candidate text");
-            AssertEqual("hold", multiReasonReport.PromotionDecision);
-            AssertTrue(multiReasonReport.RecommendationText.Contains("\uAD50\uCCB4 \uBCF4\uB958", StringComparison.Ordinal), "model comparison report should expose the translated hold recommendation separately for summary cards");
-            var holdViewModel = new WpfCandidateReviewPanelViewModel();
-            holdViewModel.SetModelComparisonReview(multiReasonReport);
-            AssertTrue(holdViewModel.IsModelPromotionHeld, "model comparison ViewModel should preserve a fail-closed hold decision for candidate adoption commands");
-            AssertTrue(holdViewModel.ModelComparisonDecisionText.Contains("\uAD50\uCCB4 \uBCF4\uB958", StringComparison.Ordinal), "model-quality decision card should show the held-out recommendation instead of candidate workflow state");
-            AssertTrue(holdViewModel.ModelComparisonActionText.Contains("\uB2E4\uC2DC \uC2E4\uD589", StringComparison.Ordinal), "held model comparison should direct the operator to improve data or tune and rerun validation");
-            AssertTrue(!holdViewModel.ModelComparisonActionText.Contains("\uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5", StringComparison.Ordinal), "held model comparison should not direct the operator to save the candidate as the inspection model");
-            AssertEqual(3, report.Examples.Count);
-            AssertTrue(
-                report.Examples.Any(item => item.Kind == "ClassChanged"
-                    && item.Detail.Contains("native_contamination", StringComparison.Ordinal)
-                    && item.Detail.Contains("native_scratch", StringComparison.Ordinal)),
-                "model comparison review should use self-describing comparison classes when surfacing class changes");
-            AssertTrue(report.Examples.Any(item => item.Kind == "CandidateOnly" && item.ImageKey == "candidate_only"), "model comparison review should surface new-model-only candidates");
-            AssertTrue(report.Examples.Any(item => item.Kind == "BaselineOnly" && item.ImageKey == "baseline_only"), "model comparison review should surface baseline-only candidates");
-            AssertTrue(report.Examples.Any(item => item.Kind == "CandidateOnly" && item.ActionText.Contains("\uACFC\uAC80\uCD9C", StringComparison.Ordinal)), "new-model-only examples should explain the false-positive check");
-            AssertTrue(report.Examples.Any(item => item.Kind == "BaselineOnly" && item.ActionText.Contains("\uAD50\uCCB4 \uBCF4\uB958", StringComparison.Ordinal)), "baseline-only examples should explain the replacement-hold risk");
-            AssertTrue(report.Examples.Any(item => item.Kind == "ClassChanged" && item.ActionText.Contains("\uB77C\uBCA8 \uAE30\uC900", StringComparison.Ordinal)), "class-change examples should tell operators to check the label rule");
-            AssertTrue(report.Examples.All(item => item.HasFocusBox), "model comparison examples should keep a focus box for click-to-review");
-            AssertTrue(report.Examples.All(item => item.LocationText.Contains("\uC704\uCE58", StringComparison.Ordinal)), "model comparison examples should expose learner-facing location text");
-            AssertTrue(!report.Examples.Any(item => item.ImageKey == "low_confidence"), "model comparison review should ignore candidates below the comparison confidence threshold");
-            AssertTrue(report.Examples.All(item => !string.IsNullOrWhiteSpace(item.ImagePath) && File.Exists(item.ImagePath)), "model comparison examples should resolve source image paths through data.yaml");
-            AssertTrue(report.Examples.Any(item => item.ImagePath.EndsWith("candidate_only.bmp", StringComparison.OrdinalIgnoreCase)), "model comparison image resolver should preserve source image extensions");
-
-            string segmentBaselineLabels = Path.Combine(root, "segment-baseline", "labels");
-            string segmentCandidateLabels = Path.Combine(root, "segment-candidate", "labels");
-            Directory.CreateDirectory(segmentBaselineLabels);
-            Directory.CreateDirectory(segmentCandidateLabels);
-            WriteLabel(segmentBaselineLabels, "seg_shifted", "0 0.10 0.10 0.30 0.10 0.30 0.30 0.10 0.30");
-            WriteLabel(segmentCandidateLabels, "seg_shifted", "0 0.60 0.60 0.80 0.60 0.80 0.80 0.60 0.80 0.93");
-            WpfModelComparisonReviewReport segmentReport = service.BuildFromLabelDirectories(
-                segmentBaselineLabels,
-                segmentCandidateLabels,
-                new[] { "SEG" },
-                confidenceThreshold: 0.25D,
-                iouThreshold: 0.5D,
-                maxExamples: 10);
-            AssertTrue(segmentReport.HasComparison, "segmentation label rows should produce a visible comparison report");
-            AssertTrue(segmentReport.SummaryText.Contains("1", StringComparison.Ordinal), "segmentation comparison should count the shifted image as a difference");
-            AssertEqual(2, segmentReport.Examples.Count);
-            AssertTrue(segmentReport.Examples.Any(item => item.Kind == "CandidateOnly" && item.ImageKey == "seg_shifted"), "segmentation comparison should surface candidate-only polygon changes");
-            AssertTrue(segmentReport.Examples.Any(item => item.Kind == "BaselineOnly" && item.ImageKey == "seg_shifted"), "segmentation comparison should surface baseline-only polygon changes");
-            AssertTrue(segmentReport.Examples.All(item => item.HasFocusBox), "segmentation comparison examples should convert polygons to focus boxes");
-            AssertTrue(segmentReport.Examples.Any(item => item.Kind == "CandidateOnly" && item.Detail.Contains("SEG", StringComparison.Ordinal) && item.Detail.Contains("93", StringComparison.Ordinal)), "segmentation comparison should preserve polygon class and confidence details");
-
-            string malformedSegmentBaselineLabels = Path.Combine(root, "malformed-segment-baseline", "labels");
-            string malformedSegmentCandidateLabels = Path.Combine(root, "malformed-segment-candidate", "labels");
-            Directory.CreateDirectory(malformedSegmentBaselineLabels);
-            Directory.CreateDirectory(malformedSegmentCandidateLabels);
-            WriteLabel(malformedSegmentBaselineLabels, "bad_segment_fallback", "0 0.50 0.50 0.20 0.20 0.91 bad 0.10");
-            WpfModelComparisonReviewReport malformedSegmentReport = service.BuildFromLabelDirectories(
-                malformedSegmentBaselineLabels,
-                malformedSegmentCandidateLabels,
-                new[] { "SEG" },
-                confidenceThreshold: 0.25D,
-                iouThreshold: 0.5D,
-                maxExamples: 10);
-            AssertEqual(0, malformedSegmentReport.Examples.Count);
-            AssertTrue(malformedSegmentReport.DetailText.Contains("\uAE30\uC874 \uBAA8\uB378 0\uAC1C", StringComparison.Ordinal), "malformed segmentation rows should not fall back to bbox confidence parsing");
-
-            WpfModelComparisonReviewReport missingLabelsReport = service.BuildFromLabelDirectories(
-                Path.Combine(root, "missing-baseline"),
-                candidateLabels,
-                new[] { "OK", "NG" });
-            AssertTrue(missingLabelsReport.HasComparison, "missing labels should still produce an operator-visible comparison status");
-            AssertEqual(0, missingLabelsReport.Examples.Count);
-        }
-        finally
-        {
-            if (Directory.Exists(comparisonArtifactsRoot))
-            {
-                Directory.Delete(comparisonArtifactsRoot, recursive: true);
-            }
-
-            DeleteTempRoot(root);
-        }
-
-        static void WriteLabel(string labelsRoot, string imageKey, string line)
-        {
-            File.WriteAllText(Path.Combine(labelsRoot, imageKey + ".txt"), line + Environment.NewLine);
-        }
-
-        static void WriteImageFile(string imageRoot, string fileName)
-        {
-            File.WriteAllBytes(Path.Combine(imageRoot, fileName), new byte[] { 1, 2, 3 });
-        }
-    }
-
-    private static void TestWpfModelComparisonRunService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string scriptsRoot = Path.Combine(root, "scripts");
-            string projectRoot = Path.Combine(root, "yolo");
-            string sourceRoot = Path.Combine(projectRoot, "yolov5Master");
-            string outputRoot = Path.Combine(root, "dataset-output");
-            string candidateWeights = Path.Combine(outputRoot, "runs", "train", "exp", "weights", "best.pt");
-            string baselineWeights = Path.Combine(projectRoot, "best.pt");
-            string pythonPath = Path.Combine(projectRoot, ".venv", "Scripts", "python.exe");
-            Directory.CreateDirectory(scriptsRoot);
-            Directory.CreateDirectory(sourceRoot);
-            Directory.CreateDirectory(Path.GetDirectoryName(candidateWeights));
-            Directory.CreateDirectory(Path.GetDirectoryName(pythonPath));
-            File.WriteAllText(Path.Combine(scriptsRoot, "compare-yolo-models.ps1"), "param()");
-            File.WriteAllText(Path.Combine(sourceRoot, "val.py"), "# val");
-            File.WriteAllText(pythonPath, string.Empty);
-            File.WriteAllText(baselineWeights, "baseline");
-            File.WriteAllText(candidateWeights, "candidate");
-            File.SetLastWriteTimeUtc(candidateWeights, DateTime.UtcNow.AddMinutes(1));
-
-            var data = new CData();
-            data.ConfigureOutputRoot(outputRoot);
-            Directory.CreateDirectory(data.TrainImagesPath);
-            Directory.CreateDirectory(data.ValidImagesPath);
-            Directory.CreateDirectory(data.TestImagesPath);
-            string testLabelsPath = Path.Combine(Path.GetDirectoryName(data.TestImagesPath) ?? outputRoot, "labels");
-            Directory.CreateDirectory(testLabelsPath);
-            File.WriteAllBytes(Path.Combine(data.TestImagesPath, "heldout.bmp"), new byte[] { 1, 2, 3 });
-            File.WriteAllText(Path.Combine(testLabelsPath, "heldout.txt"), "0 0.5 0.5 0.25 0.25" + Environment.NewLine);
-            data.ProjectSettings.PythonModel.ProjectRootPath = projectRoot;
-            data.ProjectSettings.PythonModel.PythonExecutablePath = pythonPath;
-            data.ProjectSettings.PythonModel.WeightsPath = baselineWeights;
-            data.ProjectSettings.PythonModel.MinimumDetectionConfidence = 0.42F;
-            data.TranningParam.imageSize = 640;
-            data.TranningParam.batch = 4;
-            File.WriteAllText(
-                data.DataYamlFilePath,
-                string.Join(
-                    Environment.NewLine,
-                    "train: data/train/images",
-                    "val: data/valid/images",
-                    "test: data/test/images",
-                    "nc: 1",
-                    "names: [Defect]"));
-
-            var service = new WpfModelComparisonRunService(root);
-            WpfModelComparisonRunRequest request = service.BuildRequest(data, new WpfTrainingWeightsService(), task: "test");
-
-            AssertEqual(Path.Combine(scriptsRoot, "compare-yolo-models.ps1"), request.ScriptPath);
-            AssertEqual(sourceRoot, request.YoloSourceRootPath);
-            AssertEqual(data.DataYamlFilePath, request.DataYamlPath);
-            AssertEqual(baselineWeights, request.BaselineWeightsPath);
-            AssertEqual(candidateWeights, request.CandidateWeightsPath);
-            AssertEqual(640, request.ImageSize);
-            AssertEqual(4, request.BatchSize);
-            AssertEqual(1, request.BenchmarkRepeatCount);
-            AssertEqual("test", request.Task);
-            AssertEqual("detect", request.ModelTask);
-            AssertTrue(Math.Abs(request.UiConfidence - 0.42D) < 0.0001D, "model comparison request should preserve UI confidence");
-            AssertEqual(0, service.ValidateRequest(request).Count);
-            request.BenchmarkRepeatCount = 0;
-            AssertTrue(service.ValidateRequest(request).Any(error => error.Contains("1~10", StringComparison.Ordinal)), "model comparison should reject an invalid benchmark repeat count");
-            request.BenchmarkRepeatCount = 1;
-
-            IReadOnlyList<string> arguments = service.BuildPowerShellArguments(request);
-            AssertTrue(arguments.Contains("-Task"), "model comparison run should pass the task argument");
-            AssertTrue(arguments.Contains("test"), "model comparison run should default to held-out test comparison");
-            AssertTrue(arguments.Contains("-ModelTask"), "model comparison run should pass the model task argument");
-            AssertTrue(arguments.Contains("-BenchmarkRepeatCount") && arguments.Contains("1"), "candidate validation should keep a single native timing measurement by default");
-            AssertTrue(arguments.Contains("detect"), "model comparison run should default object detection projects to detect validation");
-            AssertTrue(arguments.Contains("-DataYaml"), "model comparison run should pass data.yaml explicitly");
-            AssertTrue(arguments.Contains(data.DataYamlFilePath), "model comparison run should use the current project data.yaml");
-            AssertTrue(arguments.Contains("-CandidateWeights"), "model comparison run should pass candidate weights explicitly");
-            AssertTrue(arguments.Contains(candidateWeights), "model comparison run should use the latest training best.pt as candidate");
-            AssertTrue(!arguments.Contains("-SegmentationPositiveClassName"), "detection comparison should not pass a segmentation-only positive class filter");
-            string realScriptSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "scripts", "compare-yolo-models.ps1"));
-            AssertTrue(realScriptSource.Contains("Assert-ModelClassCountsMatchData", StringComparison.Ordinal), "model comparison script should preflight model/data label-count compatibility");
-            AssertTrue(realScriptSource.Contains("Get-YoloV5LabelCacheArtifactPaths", StringComparison.Ordinal)
-                && realScriptSource.Contains("Remove-YoloV5CreatedLabelCacheArtifacts", StringComparison.Ordinal)
-                && realScriptSource.Contains("$cacheSidecarPath = $cachePath + \".npy\"", StringComparison.Ordinal)
-                && realScriptSource.Contains("$yoloV5SourceCacheArtifactsBefore", StringComparison.Ordinal)
-                && realScriptSource.Contains("$yoloV5CreatedCacheArtifactsRemoved", StringComparison.Ordinal)
-                && realScriptSource.Contains("Remove-Item -LiteralPath $cacheArtifactPath", StringComparison.Ordinal)
-                && realScriptSource.Contains("runtimePreflight", StringComparison.Ordinal),
-                "YOLOv5 comparison should preserve existing source caches and remove only cache artifacts created by the current run");
-            AssertTrue(realScriptSource.Contains("Read-WeightsClassCount", StringComparison.Ordinal), "model comparison script should read each weights file label count before YOLO val");
-            AssertTrue(realScriptSource.Contains("Read-DataYamlClassNames", StringComparison.Ordinal), "model comparison script should read data.yaml class names before YOLO val");
-            AssertTrue(realScriptSource.Contains("return @((Read-DataYamlClassNames $Path)).Count", StringComparison.Ordinal), "model comparison script should accept valid names-only data.yaml files without an nc field");
-            AssertTrue(realScriptSource.Contains("Read-WeightsClassInfo", StringComparison.Ordinal), "model comparison script should read each weights file label names before YOLO val");
-            AssertTrue(realScriptSource.Contains("Test-ClassNamesEqual", StringComparison.Ordinal), "model comparison script should reject same-count but different-name label lists");
-            AssertTrue(realScriptSource.Contains("dataset labels=", StringComparison.Ordinal), "model comparison preflight should explain label-count mismatch clearly");
-            AssertTrue(realScriptSource.Contains("Invoke-UltralyticsVal", StringComparison.Ordinal), "model comparison script should support local Ultralytics validation");
-            AssertTrue(realScriptSource.Contains("OPENVISIONLAB_METRICS_JSON", StringComparison.Ordinal), "Ultralytics validation should emit parseable metrics for comparison reports");
-            AssertTrue(realScriptSource.Contains("OPENVISIONLAB_BENCHMARK_JSON", StringComparison.Ordinal), "Ultralytics validation should emit parseable native timing metrics");
-            AssertTrue(realScriptSource.Contains("Read-ValBenchmark", StringComparison.Ordinal), "model comparison should normalize native YOLO validation timing");
-            AssertTrue(realScriptSource.Contains("comparisonKind", StringComparison.Ordinal), "model comparison summary should distinguish engine benchmarks from candidate validation");
-            AssertTrue(realScriptSource.Contains("Held-out test results compare engine profiles only", StringComparison.Ordinal), "cross-engine test comparison should not emit a model-replacement recommendation");
-            AssertTrue(realScriptSource.Contains("BenchmarkRepeatCount", StringComparison.Ordinal), "model comparison should support repeated native timing measurements");
-            AssertTrue(realScriptSource.Contains("native-validation-speed-median", StringComparison.Ordinal), "repeated model takt should be reported as a median");
-            AssertTrue(realScriptSource.Contains("taktSamplesMs", StringComparison.Ordinal), "model comparison summary should preserve the repeated native timing samples");
-            AssertTrue(realScriptSource.Contains("requested $RequestedRepeatCount timing samples", StringComparison.Ordinal), "repeated model takt should fail closed when any requested timing sample is missing");
-            AssertTrue(realScriptSource.Contains("requested task=", StringComparison.Ordinal), "model comparison should reject detect/segment task mismatches before validation");
-            AssertTrue(realScriptSource.Contains("Model Takt", StringComparison.Ordinal), "model comparison report should disclose native per-image model takt");
-            AssertTrue(realScriptSource.Contains("BaselinePythonExe", StringComparison.Ordinal) && realScriptSource.Contains("CandidatePythonExe", StringComparison.Ordinal), "cross-engine comparison should use each engine's own Python runtime");
-            AssertTrue(realScriptSource.Contains("model.predict", StringComparison.Ordinal), "Ultralytics comparison should count UI candidates from predict labels, not validation labels");
-            AssertTrue(realScriptSource.Contains("New-PredictionSourceManifest", StringComparison.Ordinal)
-                && realScriptSource.Contains("Get-ChildItem -LiteralPath $ResolvedPath -Recurse -File", StringComparison.Ordinal)
-                && realScriptSource.Contains("predict_source_path.suffix.lower() == \".txt\"", StringComparison.Ordinal),
-                "cross-engine comparison should recurse nested split folders and pass their image list to each prediction runtime");
-            AssertTrue(realScriptSource.Contains("New-ComparisonRuntimeDataYaml", StringComparison.Ordinal)
-                && realScriptSource.Contains("$script:RuntimeDataYaml", StringComparison.Ordinal)
-                && realScriptSource.Contains("runtimeDataYaml", StringComparison.Ordinal),
-                "native relative data.yaml roots should be rewritten only in an artifact-local runtime YAML and recorded in comparison provenance");
-            AssertTrue(realScriptSource.Contains("duplicate image stem", StringComparison.Ordinal)
-                && realScriptSource.Contains("generated_label_path = labels_path / f\"image{index}.txt\"", StringComparison.Ordinal)
-                && realScriptSource.Contains("generated_label_path.replace(destination_label_path)", StringComparison.Ordinal),
-                "Ultralytics list-source prediction labels should be restored to unique source stems before ground-truth review");
-            AssertTrue(realScriptSource.Contains("$RunName-predict\\labels", StringComparison.Ordinal), "Ultralytics comparison should expose predict labels for Candidate Review examples");
-            AssertTrue(realScriptSource.Contains("validationLabelsPath", StringComparison.Ordinal), "Ultralytics comparison should keep validation labels separate from UI review labels");
-            AssertTrue(realScriptSource.Contains("ModelTask", StringComparison.Ordinal), "model comparison script should keep split task separate from detect/segment task");
-            AssertTrue(realScriptSource.Contains("Training validation (val) results are for engine performance analysis", StringComparison.Ordinal), "cross-engine validation reports should be benchmark-only before the summary is written");
-            AssertTrue(realScriptSource.Contains("not model-replacement evidence", StringComparison.Ordinal), "cross-engine validation markdown should disclose that val is not adoption evidence");
-            AssertTrue(realScriptSource.Contains("New-PromotionRecommendation", StringComparison.Ordinal), "model comparison script should write a promotion recommendation");
-            AssertTrue(realScriptSource.Contains("minimumPrecision", StringComparison.Ordinal), "model comparison recommendation should guard low-precision candidates");
-            AssertTrue(realScriptSource.Contains("New-ComparisonEvidence", StringComparison.Ordinal), "model comparison script should count held-out evidence before writing a promotion recommendation");
-            AssertTrue(realScriptSource.Contains("comparisonLabelCount", StringComparison.Ordinal), "model comparison summary should persist the held-out labeled image count");
-            AssertTrue(realScriptSource.Contains("fingerprintSha256", StringComparison.Ordinal), "model comparison summary should persist a content fingerprint for evaluation images and labels");
-            AssertTrue(realScriptSource.Contains("weightsSha256", StringComparison.Ordinal), "model comparison summary should persist each evaluated weights fingerprint");
-            AssertTrue(realScriptSource.Contains("minimumHeldoutLabelCount", StringComparison.Ordinal), "model comparison recommendation should block promotion when held-out evidence is too small");
-            AssertTrue(realScriptSource.Contains("minimumPositiveSegmentationLabelLineCount", StringComparison.Ordinal), "model comparison recommendation should block promotion when positive segmentation evidence is too small");
-            AssertTrue(realScriptSource.Contains("minimumPositiveSegmentationImageCount", StringComparison.Ordinal), "model comparison recommendation should block promotion when positive segmentation image evidence is too small");
-            AssertTrue(realScriptSource.Contains("minimumBackgroundSegmentationImageCount", StringComparison.Ordinal), "model comparison recommendation should require background segmentation evidence before promotion");
-            AssertTrue(realScriptSource.Contains("uiCandidateCount", StringComparison.Ordinal), "model comparison recommendation should inspect UI-threshold candidate count");
-            AssertTrue(realScriptSource.Contains("UI-threshold candidates", StringComparison.Ordinal), "model comparison recommendation should block promotion when the candidate produces no UI-visible candidates");
-            AssertTrue(realScriptSource.Contains("uiPositiveImageCoverage", StringComparison.Ordinal), "model comparison summary should persist UI-threshold positive-image coverage");
-            AssertTrue(realScriptSource.Contains("UI-threshold positive image coverage", StringComparison.Ordinal), "model comparison recommendation should block low positive-image coverage");
-            AssertTrue(realScriptSource.Contains("uiBackgroundCandidateRate", StringComparison.Ordinal), "model comparison summary should persist UI-threshold background-candidate rate");
-            AssertTrue(realScriptSource.Contains("UI-threshold background candidate rate", StringComparison.Ordinal), "model comparison recommendation should block excessive background candidates");
-            AssertTrue(realScriptSource.Contains("SegmentationPositiveClassName", StringComparison.Ordinal), "model comparison script should support class-specific SEG operating evidence");
-            AssertTrue(realScriptSource.Contains("Test-SegmentationLabelLineForClass", StringComparison.Ordinal), "SEG answer evidence should filter positive images by the configured defect class");
-            AssertTrue(realScriptSource.Contains("Test-YoloLabelLineClass", StringComparison.Ordinal), "SEG prediction evidence should filter UI candidates by the same defect class");
-            AssertTrue(realScriptSource.Contains("segmentationPositiveClassName", StringComparison.Ordinal), "model comparison summary should record the class used for SEG operating evidence");
-            AssertTrue(realScriptSource.Contains("thresholdSweep", StringComparison.Ordinal), "model comparison confidence summary should persist review-threshold candidate counts");
-            AssertTrue(realScriptSource.Contains("Read-ValClassMetrics", StringComparison.Ordinal), "YOLOv5 comparison should preserve native per-class validation metrics");
-            AssertTrue(realScriptSource.Contains("payload[\"perClass\"]", StringComparison.Ordinal), "Ultralytics comparison should preserve native per-class validation metrics");
-            AssertTrue(realScriptSource.Contains("New-GroundTruthReview", StringComparison.Ordinal), "detection comparison should calculate UI-threshold ground-truth errors");
-            AssertTrue(realScriptSource.Contains("iouThreshold", StringComparison.Ordinal), "ground-truth error evidence should disclose its IoU threshold");
-            AssertTrue(realScriptSource.Contains("predictionNmsIouThreshold", StringComparison.Ordinal), "ground-truth error evidence should disclose its prediction NMS threshold");
-            AssertTrue(realScriptSource.Contains("schemaVersion = 2", StringComparison.Ordinal), "detection comparison should version its stored ground-truth review schema");
-            AssertTrue(realScriptSource.Contains("geometryCoordinateSystem = \"normalized-xyxy-v1\"", StringComparison.Ordinal), "detection comparison should disclose normalized error-box coordinates");
-            AssertTrue(realScriptSource.Contains("predictionBox = ConvertTo-GroundTruthReviewBox", StringComparison.Ordinal)
-                && realScriptSource.Contains("groundTruthBox = ConvertTo-GroundTruthReviewBox", StringComparison.Ordinal),
-                "detection comparison should retain prediction and answer geometry for stored error examples");
-            AssertTrue(realScriptSource.Contains("ConvertTo-Json -Depth 10", StringComparison.Ordinal), "comparison JSON depth should preserve v2 threshold and geometry fields");
-            AssertTrue(realScriptSource.Contains("\"--iou-thres\", $UiNmsIou", StringComparison.Ordinal), "YOLOv5 error examples should use the configured UI NMS threshold without changing validation metrics");
-            AssertTrue(realScriptSource.Contains("iou=prediction_nms_iou", StringComparison.Ordinal), "Ultralytics error examples should use the same UI NMS threshold");
-            AssertTrue(realScriptSource.Contains("reasons = @($reasonList)", StringComparison.Ordinal), "model comparison recommendation should persist every promotion blocker");
-            AssertTrue(realScriptSource.Contains("promotion = $promotion", StringComparison.Ordinal), "model comparison summary should persist the promotion recommendation");
-            AssertTrue(realScriptSource.Contains("evidence = $evidence", StringComparison.Ordinal), "model comparison summary should persist held-out comparison evidence");
-            AssertTrue(realScriptSource.Contains("## Recommendation", StringComparison.Ordinal), "model comparison report should show the promotion recommendation");
-            AssertTrue(!realScriptSource.Any(ch => ch >= '\uF900' && ch <= '\uFAFF'), "model comparison script should avoid PowerShell 5 mojibake-prone diagnostic text");
-            string runServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfModelComparisonRunService.cs"));
-            AssertTrue(runServiceSource.Contains("CountDataYamlLabelFiles", StringComparison.Ordinal), "model comparison run service should require held-out answer label files before launching validation");
-            ProcessStartInfo startInfo = service.CreateStartInfo(request);
-            AssertEqual("powershell.exe", startInfo.FileName);
-            AssertTrue(!startInfo.UseShellExecute, "model comparison process should redirect output for UI status");
-
-            string yolo8DetectRoot = Path.Combine(root, "yolov8-detect");
-            string yolo8DetectSourceRoot = Path.Combine(yolo8DetectRoot, "ultralyticsMaster");
-            string yolo8DetectPythonPath = Path.Combine(yolo8DetectRoot, ".venv", "Scripts", "python.exe");
-            string yolo8DetectWeightsPath = Path.Combine(yolo8DetectRoot, "runs", "detect", "exp", "weights", "best.pt");
-            Directory.CreateDirectory(Path.Combine(yolo8DetectSourceRoot, "ultralytics"));
-            Directory.CreateDirectory(Path.GetDirectoryName(yolo8DetectPythonPath));
-            Directory.CreateDirectory(Path.GetDirectoryName(yolo8DetectWeightsPath));
-            File.WriteAllText(yolo8DetectPythonPath, string.Empty);
-            File.WriteAllText(yolo8DetectWeightsPath, "yolov8-detect");
-            data.ProjectSettings.ModelRegistry.EnsureDefaults();
-            data.ProjectSettings.ModelRegistry.Profiles.Add(new ModelProfile
-            {
-                ProfileId = "profile-yolov8-detect",
-                DisplayName = "YOLOv8 Detect",
-                ModelEngine = PythonModelSettings.EngineYoloV8,
-                DatasetPurpose = LabelingDatasetPurpose.ObjectDetection.ToString(),
-                ProjectRootPath = yolo8DetectRoot,
-                LastUsedUtc = DateTime.UtcNow.ToString("o")
-            });
-            data.ProjectSettings.ModelRegistry.Candidates.Add(new ModelCandidate
-            {
-                CandidateId = "candidate-yolov8-detect",
-                ProfileId = "profile-yolov8-detect",
-                WeightsPath = yolo8DetectWeightsPath,
-                LastSeenUtc = DateTime.UtcNow.ToString("o")
-            });
-
-            WpfModelComparisonRunRequest automaticTestEngineRequest = service.BuildYoloV5YoloV8DetectionRequest(data);
-            AssertEqual("test", automaticTestEngineRequest.Task);
-            WpfModelComparisonRunRequest engineRequest = service.BuildYoloV5YoloV8DetectionRequest(data, task: "test");
-            AssertTrue(engineRequest.IsEngineComparison, "YOLOv5/YOLOv8 comparison should be marked as a cross-engine benchmark");
-            AssertEqual(PythonModelSettings.EngineYoloV5, engineRequest.BaselineModelEngine);
-            AssertEqual(PythonModelSettings.EngineYoloV8, engineRequest.CandidateModelEngine);
-            AssertEqual(sourceRoot, engineRequest.BaselineYoloSourceRootPath);
-            AssertEqual(yolo8DetectSourceRoot, engineRequest.CandidateYoloSourceRootPath);
-            AssertEqual(pythonPath, engineRequest.BaselinePythonExecutablePath);
-            AssertEqual(yolo8DetectPythonPath, engineRequest.CandidatePythonExecutablePath);
-            AssertEqual(baselineWeights, engineRequest.BaselineWeightsPath);
-            AssertEqual(yolo8DetectWeightsPath, engineRequest.CandidateWeightsPath);
-            AssertEqual(1, engineRequest.BatchSize);
-            AssertEqual(5, engineRequest.BenchmarkRepeatCount);
-            AssertEqual("detect", engineRequest.ModelTask);
-            AssertEqual(0, service.ValidateRequest(engineRequest).Count);
-            IReadOnlyList<string> engineArguments = service.BuildPowerShellArguments(engineRequest);
-            AssertTrue(engineArguments.Contains("-BaselinePythonExe") && engineArguments.Contains(pythonPath), "cross-engine comparison should pass the YOLOv5 Python runtime");
-            AssertTrue(engineArguments.Contains("-BaselineYoloSourceRoot") && engineArguments.Contains(sourceRoot), "cross-engine comparison should pass the YOLOv5 source root");
-            AssertTrue(engineArguments.Contains("-BaselineEngine") && engineArguments.Contains(PythonModelSettings.EngineYoloV5), "cross-engine comparison should identify the YOLOv5 runtime");
-            AssertTrue(engineArguments.Contains("-CandidatePythonExe") && engineArguments.Contains(yolo8DetectPythonPath), "cross-engine comparison should pass the YOLOv8 Python runtime");
-            AssertTrue(engineArguments.Contains("-CandidateYoloSourceRoot") && engineArguments.Contains(yolo8DetectSourceRoot), "cross-engine comparison should pass the YOLOv8 source root");
-            AssertTrue(engineArguments.Contains("-CandidateEngine") && engineArguments.Contains(PythonModelSettings.EngineYoloV8), "cross-engine comparison should identify the YOLOv8 runtime");
-            AssertTrue(engineArguments.Contains("-BenchmarkRepeatCount") && engineArguments.Contains("5"), "cross-engine comparison should request five native timing measurements");
-
-            string yolo11DetectWeightsPath = Path.Combine(yolo8DetectRoot, "runs", "detect", "yolo11", "weights", "best.pt");
-            Directory.CreateDirectory(Path.GetDirectoryName(yolo11DetectWeightsPath));
-            File.WriteAllText(yolo11DetectWeightsPath, "yolo11-detect");
-            data.ProjectSettings.ModelRegistry.Profiles.Add(new ModelProfile
-            {
-                ProfileId = "profile-yolo11-detect",
-                DisplayName = "YOLO11 Detect",
-                ModelEngine = PythonModelSettings.EngineYolo11,
-                DatasetPurpose = LabelingDatasetPurpose.ObjectDetection.ToString(),
-                ProjectRootPath = yolo8DetectRoot,
-                LastUsedUtc = DateTime.UtcNow.AddMinutes(1).ToString("o")
-            });
-            data.ProjectSettings.ModelRegistry.Candidates.Add(new ModelCandidate
-            {
-                CandidateId = "candidate-yolo11-detect",
-                ProfileId = "profile-yolo11-detect",
-                WeightsPath = yolo11DetectWeightsPath,
-                LastSeenUtc = DateTime.UtcNow.AddMinutes(1).ToString("o")
-            });
-            WpfModelComparisonRunRequest yolo11EngineRequest = service.BuildYoloV8Yolo11DetectionRequest(data, task: "test");
-            AssertTrue(yolo11EngineRequest.IsEngineComparison, "YOLOv8/YOLO11 comparison should be marked as a cross-engine benchmark");
-            AssertEqual(PythonModelSettings.EngineYoloV8, yolo11EngineRequest.BaselineModelEngine);
-            AssertEqual(PythonModelSettings.EngineYolo11, yolo11EngineRequest.CandidateModelEngine);
-            AssertEqual(yolo8DetectWeightsPath, yolo11EngineRequest.BaselineWeightsPath);
-            AssertEqual(yolo11DetectWeightsPath, yolo11EngineRequest.CandidateWeightsPath);
-            AssertEqual(yolo8DetectSourceRoot, yolo11EngineRequest.BaselineYoloSourceRootPath);
-            AssertEqual(yolo8DetectSourceRoot, yolo11EngineRequest.CandidateYoloSourceRootPath);
-            AssertEqual(0, service.ValidateRequest(yolo11EngineRequest).Count);
-            IReadOnlyList<string> yolo11EngineArguments = service.BuildPowerShellArguments(yolo11EngineRequest);
-            AssertTrue(yolo11EngineArguments.Contains("-CandidateEngine") && yolo11EngineArguments.Contains(PythonModelSettings.EngineYolo11), "cross-engine comparison should identify the YOLO11 runtime");
-
-            string yolo8Root = Path.Combine(root, "yolov8");
-            string ultralyticsRoot = Path.Combine(yolo8Root, "ultralyticsMaster");
-            string segOutputRoot = Path.Combine(root, "seg-output");
-            string segCandidateWeights = Path.Combine(yolo8Root, "runs", "segment", "exp", "weights", "best.pt");
-            string segBaselineWeights = Path.Combine(yolo8Root, "yolov8n-seg.pt");
-            string segPythonPath = Path.Combine(yolo8Root, ".venv", "Scripts", "python.exe");
-            Directory.CreateDirectory(Path.Combine(ultralyticsRoot, "ultralytics"));
-            Directory.CreateDirectory(Path.GetDirectoryName(segCandidateWeights));
-            Directory.CreateDirectory(Path.GetDirectoryName(segPythonPath));
-            File.WriteAllText(segPythonPath, string.Empty);
-            File.WriteAllText(segBaselineWeights, "baseline-seg");
-            File.WriteAllText(segCandidateWeights, "candidate-seg");
-            File.SetLastWriteTimeUtc(segCandidateWeights, DateTime.UtcNow.AddMinutes(2));
-
-            var segData = new CData();
-            segData.ConfigureOutputRoot(segOutputRoot);
-            segData.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-            segData.ClassNamedList.Clear();
-            segData.ClassNamedList.Add(new CClassItem { Text = "OK" });
-            segData.ClassNamedList.Add(new CClassItem { Text = "NG" });
-            Directory.CreateDirectory(segData.TrainImagesPath);
-            Directory.CreateDirectory(segData.ValidImagesPath);
-            Directory.CreateDirectory(segData.TestImagesPath);
-            string segTestLabelsPath = Path.Combine(Path.GetDirectoryName(segData.TestImagesPath) ?? segOutputRoot, "labels");
-            Directory.CreateDirectory(segTestLabelsPath);
-            File.WriteAllBytes(Path.Combine(segData.TestImagesPath, "seg-heldout.bmp"), new byte[] { 1, 2, 3 });
-            File.WriteAllText(Path.Combine(segTestLabelsPath, "seg-heldout.txt"), "1 0.1 0.1 0.9 0.1 0.9 0.9 0.1 0.9" + Environment.NewLine);
-            segData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-            segData.ProjectSettings.PythonModel.ProjectRootPath = yolo8Root;
-            segData.ProjectSettings.PythonModel.PythonExecutablePath = segPythonPath;
-            segData.ProjectSettings.PythonModel.WeightsPath = segBaselineWeights;
-            File.WriteAllText(
-                segData.DataYamlFilePath,
-                string.Join(
-                    Environment.NewLine,
-                    "train: data/train/images",
-                    "val: data/valid/images",
-                    "test: data/test/images",
-                    "nc: 2",
-                    "names: [OK, NG]"));
-
-            WpfModelComparisonRunRequest segRequest = service.BuildRequest(segData, new WpfTrainingWeightsService(), task: "test");
-            AssertEqual(ultralyticsRoot, segRequest.YoloSourceRootPath);
-            AssertEqual("segment", segRequest.ModelTask);
-            AssertEqual("NG", segRequest.SegmentationPositiveClassName);
-            AssertEqual(0, service.ValidateRequest(segRequest).Count);
-            IReadOnlyList<string> segArguments = service.BuildPowerShellArguments(segRequest);
-            AssertTrue(segArguments.Contains("-ModelTask"), "YOLOv8 segmentation comparison should pass the model task switch");
-            AssertTrue(segArguments.Contains("segment"), "YOLOv8 segmentation comparison should run Ultralytics segment validation");
-            AssertTrue(segArguments.Contains(ultralyticsRoot), "YOLOv8 segmentation comparison should use the local ultralyticsMaster checkout");
-            AssertTrue(segArguments.Contains("-SegmentationPositiveClassName"), "YOLOv8 segmentation comparison should pass the defect-class operating filter");
-            AssertTrue(segArguments.Contains("NG"), "YOLOv8 segmentation comparison should use NG as the positive operating class when the catalog exposes OK/NG");
-            string segHeldoutLabelPath = Path.Combine(segTestLabelsPath, "seg-heldout.txt");
-            File.WriteAllText(segHeldoutLabelPath, string.Empty);
-            AssertTrue(service.ValidateRequest(segRequest).Any(error => error.Contains("segmentation label", StringComparison.OrdinalIgnoreCase)), "YOLOv8 segmentation comparison should reject held-out splits that only contain empty OK/background labels");
-            File.WriteAllText(segHeldoutLabelPath, "1 0.5 0.5 0.25 0.25" + Environment.NewLine);
-            AssertTrue(service.ValidateRequest(segRequest).Any(error => error.Contains("segmentation label", StringComparison.OrdinalIgnoreCase)), "YOLOv8 segmentation comparison should reject bbox-only labels for segment validation");
-            File.WriteAllText(segHeldoutLabelPath, "1 0.1 0.1 0.9 0.1 0.9 0.9 0.2" + Environment.NewLine);
-            AssertTrue(service.ValidateRequest(segRequest).Any(error => error.Contains("segmentation label", StringComparison.OrdinalIgnoreCase)), "YOLOv8 segmentation comparison should reject malformed segment labels with an unpaired coordinate");
-            File.WriteAllText(segHeldoutLabelPath, "1 0.1 0.1 0.9 0.1 0.9 0.9 0.1 0.9" + Environment.NewLine);
-            AssertEqual(0, service.ValidateRequest(segRequest).Count);
-
-            request.CandidateWeightsPath = Path.Combine(root, "missing.pt");
-            AssertTrue(service.ValidateRequest(request).Any(error => error.Contains("\uC0C8 \uBAA8\uB378", StringComparison.OrdinalIgnoreCase)), "model comparison validation should reject a missing candidate model file");
-
-            request.CandidateWeightsPath = baselineWeights;
-            AssertTrue(service.ValidateRequest(request).Any(error => error.Contains("\uAC19", StringComparison.OrdinalIgnoreCase)), "model comparison validation should reject identical baseline and candidate weights");
-
-            request.CandidateWeightsPath = candidateWeights;
-            File.Delete(Path.Combine(testLabelsPath, "heldout.txt"));
-            File.WriteAllText(Path.Combine(testLabelsPath, "stale-heldout.txt"), "0 0.5 0.5 0.25 0.25" + Environment.NewLine);
-            AssertTrue(service.ValidateRequest(request).Any(error => error.Contains("\uC815\uB2F5 \uB77C\uBCA8", StringComparison.OrdinalIgnoreCase)), "model comparison validation should reject an unlabeled held-out test split");
-            File.Delete(Path.Combine(testLabelsPath, "stale-heldout.txt"));
-            File.WriteAllText(Path.Combine(testLabelsPath, "heldout.txt"), "0 0.5 0.5 0.25 0.25" + Environment.NewLine);
-            File.Delete(Path.Combine(data.TestImagesPath, "heldout.bmp"));
-            AssertTrue(service.ValidateRequest(request).Any(error => error.Contains("test", StringComparison.OrdinalIgnoreCase) && error.Contains("\uC774\uBBF8\uC9C0\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4", StringComparison.OrdinalIgnoreCase)), "model comparison validation should reject an empty held-out test split");
-
-            string validLabelsPath = Path.Combine(Path.GetDirectoryName(data.ValidImagesPath) ?? outputRoot, "labels");
-            Directory.CreateDirectory(validLabelsPath);
-            File.WriteAllBytes(Path.Combine(data.ValidImagesPath, "validation.bmp"), new byte[] { 1, 2, 3 });
-            File.WriteAllText(Path.Combine(validLabelsPath, "validation.txt"), "0 0.5 0.5 0.25 0.25" + Environment.NewLine);
-            WpfModelComparisonRunRequest validationFallbackRequest = service.BuildYoloV5YoloV8DetectionRequest(data);
-            AssertEqual("val", validationFallbackRequest.Task);
-            AssertEqual(0, service.ValidateRequest(validationFallbackRequest).Count);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestWpfTrainingGuideHistoryService()
-    {
-        var history = new YoloTrainingGuideHistory();
-        var service = new WpfTrainingGuideHistoryService();
-        string signature = string.Empty;
-        Func<string, string> formatState = state => string.Equals(state, "completed", StringComparison.OrdinalIgnoreCase) ? "completed" : state ?? string.Empty;
-        Func<string, bool> isTerminal = state => string.Equals(state, "completed", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(state, "failed", StringComparison.OrdinalIgnoreCase);
-
-        service.UpdateDatasetHistory(history, isReady: false, issueKind: "Labels", summary: "labels missing", recordHistory: true);
-        AssertTrue(!history.LastDatasetReady, "dataset history should store readiness state");
-        AssertEqual("Labels", history.LastDatasetIssueKind);
-        AssertEqual(1, history.RunHistory.Count);
-        AssertEqual("DatasetCheck", history.RunHistory[0].EventKind);
-
-        var completedStatus = new PythonCommunicationStatus
-        {
-            LastTrainingState = "completed",
-            LastTrainingProgressPercent = 100,
-            LastTrainingMessage = "done"
-        };
-        service.UpdateTrainingHistory(history, completedStatus, isTerminal, ref signature);
-        AssertEqual("completed", history.LastTrainingState);
-        AssertEqual(100, history.LastTrainingProgressPercent);
-        AssertEqual(2, history.RunHistory.Count);
-        AssertEqual("TrainingState", history.RunHistory[1].EventKind);
-
-        service.UpdateTrainingHistory(history, completedStatus, isTerminal, ref signature);
-        AssertEqual(2, history.RunHistory.Count);
-
-        string weightsPath = Path.Combine("C:\\models", "best.pt");
-        service.UpdateAppliedWeightsHistory(history, weightsPath, savedToRecipe: false);
-        AssertEqual(weightsPath, history.AppliedWeightsPath);
-        AssertTrue(!history.AppliedWeightsSavedToRecipe, "newly applied weights should start unsaved");
-        AssertEqual(3, history.RunHistory.Count);
-        service.UpdateAppliedWeightsHistory(history, weightsPath, savedToRecipe: true);
-        AssertEqual(3, history.RunHistory.Count);
-        AssertTrue(history.RunHistory.Last().AppliedWeightsSavedToRecipe, "existing weight history row should update saved state instead of duplicating");
-
-        for (int i = 0; i < WpfTrainingGuideHistoryService.RunHistoryLimit + 3; i++)
-        {
-            service.UpdateDatasetHistory(history, isReady: true, issueKind: string.Empty, summary: "ok", recordHistory: true);
-        }
-
-        AssertEqual(WpfTrainingGuideHistoryService.RunHistoryLimit, history.RunHistory.Count);
-        IReadOnlyList<string> runItems = service.BuildRunHistoryItems(history, formatState);
-        AssertTrue(runItems.Count <= 5, "run history presentation should stay compact");
-        string summaryText = service.BuildHistoryText(history, formatState);
-        AssertTrue(!string.IsNullOrWhiteSpace(summaryText), "history summary should be operator-readable");
-        AssertTrue(summaryText.Contains("weight", StringComparison.Ordinal), "history summary should include applied weight status");
-
-        var downloadGuardHistory = new YoloTrainingGuideHistory();
-        string downloadGuardSignature = string.Empty;
-        var downloadGuardStatus = new PythonCommunicationStatus
-        {
-            LastTrainingState = "failed",
-            LastTrainingMessage = "YOLO training could not start.",
-            LastTrainingWeightsPath = "yolov8n-seg.pt",
-            LastError = "TrainingWeightDownloadRequired: cache the file first"
-        };
-        service.UpdateTrainingHistory(downloadGuardHistory, downloadGuardStatus, isTerminal, ref downloadGuardSignature);
-        AssertTrue(downloadGuardHistory.LastTrainingMessage.Contains("\uD559\uC2B5 weight \uC900\uBE44 \uD544\uC694", StringComparison.Ordinal), "YOLOv8 segmentation download guard should be translated in training history");
-        AssertTrue(downloadGuardHistory.LastTrainingMessage.Contains("yolov8n-seg.pt", StringComparison.Ordinal), "YOLOv8 segmentation download guard history should keep the blocked segmentation weight filename");
-        AssertTrue(!downloadGuardHistory.LastTrainingMessage.Contains("TrainingWeightDownloadRequired", StringComparison.Ordinal), "training history should not expose the raw download guard code");
-        AssertEqual(1, downloadGuardHistory.RunHistory.Count);
-        AssertTrue(downloadGuardHistory.RunHistory[0].TrainingMessage.Contains("yolov8n-seg.pt", StringComparison.Ordinal), "download guard run-history record should keep the blocked segmentation weight filename");
-        string downloadGuardHistoryText = service.BuildHistoryText(downloadGuardHistory, formatState);
-        AssertTrue(downloadGuardHistoryText.Contains("yolov8n-seg.pt", StringComparison.Ordinal), "download guard history summary should keep the blocked segmentation weight filename");
-    }
-
-    private static void TestModelRegistryServicePersistence()
-    {
-        string root = CreateTempRoot();
-        string recipeName = "codex_model_registry_" + Guid.NewGuid().ToString("N");
-        string recipeDirectory = Path.Combine(AppContext.BaseDirectory, "RECIPE", recipeName);
-        string configPath = Path.Combine(recipeDirectory, "VISION.xml");
-
-        try
-        {
-            string outputRoot = Path.Combine(root, "dataset");
-            string projectRoot = Path.Combine(root, "yolov5");
-            string baselineWeightsPath = Path.Combine(projectRoot, "best.pt");
-            string candidateWeightsPath = Path.Combine(projectRoot, "runs", "train", "exp42", "weights", "best.pt");
-            Directory.CreateDirectory(Path.GetDirectoryName(candidateWeightsPath));
-            File.WriteAllText(baselineWeightsPath, "baseline");
-            File.WriteAllText(candidateWeightsPath, "candidate");
-
-            var data = new CData();
-            data.ConfigureOutputRoot(outputRoot);
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.ObjectDetection;
-            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV5;
-            data.ProjectSettings.PythonModel.ProjectRootPath = projectRoot;
-            data.ProjectSettings.PythonModel.WeightsPath = candidateWeightsPath;
-            data.ProjectSettings.TrainingGuide.LastTrainingState = "completed";
-            data.ProjectSettings.TrainingGuide.LastTrainingProgressPercent = 100;
-            data.ProjectSettings.TrainingGuide.LastTrainingMessage = "done";
-
-            ModelCandidate staged = ModelRegistryService.RecordTrainingCandidate(
-                data.ProjectSettings.ModelRegistry,
-                data.ProjectSettings.PythonModel,
-                data.ProjectSettings.DatasetPurpose,
-                outputRoot,
-                candidateWeightsPath,
-                baselineWeightsPath,
-                "mAP50-95 +7.0%p",
-                "completed",
-                100,
-                "done",
-                savedToRecipe: false);
-
-            AssertTrue(staged != null, "model registry should create a staged model candidate");
-            AssertTrue(!staged.SavedToRecipe, "staged candidate should start as not saved to recipe");
-            AssertEqual(1, data.ProjectSettings.ModelRegistry.Profiles.Count);
-            AssertEqual(1, data.ProjectSettings.ModelRegistry.TrainingRuns.Count);
-            AssertTrue(data.ProjectSettings.ModelRegistry.Candidates.Count >= 2, "registry should keep the baseline inspection model and the staged candidate");
-            ModelCandidate currentBeforeSave = ModelRegistryService.FindCurrentInspectionModel(data.ProjectSettings.ModelRegistry);
-            AssertTrue(currentBeforeSave != null && string.Equals(currentBeforeSave.WeightsPath, Path.GetFullPath(baselineWeightsPath), StringComparison.OrdinalIgnoreCase),
-                "unsaved candidate should not replace the current inspection model");
-
-            ModelCandidate rejected = ModelRegistryService.RecordCandidateDecision(
-                data.ProjectSettings.ModelRegistry,
-                data.ProjectSettings.PythonModel,
-                data.ProjectSettings.DatasetPurpose,
-                outputRoot,
-                candidateWeightsPath,
-                baselineWeightsPath,
-                "mAP50-95 +7.0%p",
-                ModelRegistryService.CandidateDecisionRejected,
-                "operator kept baseline",
-                savedToRecipe: false);
-
-            AssertEqual(ModelRegistryService.CandidateDecisionRejected, rejected.Decision);
-            AssertEqual(1, data.ProjectSettings.ModelRegistry.CandidateDecisions.Count);
-            ModelCandidate currentAfterReject = ModelRegistryService.FindCurrentInspectionModel(data.ProjectSettings.ModelRegistry);
-            AssertTrue(currentAfterReject != null && string.Equals(currentAfterReject.WeightsPath, Path.GetFullPath(baselineWeightsPath), StringComparison.OrdinalIgnoreCase),
-                "rejected candidate should keep the baseline inspection model current");
-
-            ModelCandidate adopted = ModelRegistryService.RecordCandidateDecision(
-                data.ProjectSettings.ModelRegistry,
-                data.ProjectSettings.PythonModel,
-                data.ProjectSettings.DatasetPurpose,
-                outputRoot,
-                candidateWeightsPath,
-                baselineWeightsPath,
-                "mAP50-95 +7.0%p",
-                ModelRegistryService.CandidateDecisionAdopted,
-                "operator saved candidate",
-                savedToRecipe: true);
-
-            AssertTrue(adopted.SavedToRecipe, "adopted candidate should be marked as saved to recipe");
-            AssertTrue(adopted.IsCurrentInspectionModel, "adopted candidate should become the current inspection model");
-            AssertEqual(ModelRegistryService.CandidateDecisionAdopted, adopted.Decision);
-            AssertEqual(adopted.CandidateId, data.ProjectSettings.ModelRegistry.CurrentInspectionModelId);
-            AssertEqual(2, data.ProjectSettings.ModelRegistry.CandidateDecisions.Count);
-            AssertEqual(1, data.ProjectSettings.ModelRegistry.AdoptionHistory.Count);
-            AssertTrue(data.ProjectSettings.ModelRegistry.AdoptionHistory[0].PreviousWeightsPath.Contains("best.pt", StringComparison.OrdinalIgnoreCase),
-                "adoption history should preserve the previous inspection model path");
-
-            data.SaveConfig(recipeName);
-            AssertTrue(File.Exists(configPath), $"model registry recipe config was not saved: {configPath}");
-            string xml = File.ReadAllText(configPath);
-            AssertTrue(xml.Contains("<ModelRegistry>", StringComparison.Ordinal), "model registry root should be serialized");
-            AssertTrue(xml.Contains("<ModelProfile>", StringComparison.Ordinal), "model profile should be serialized");
-            AssertTrue(xml.Contains("<TrainingRun>", StringComparison.Ordinal), "training run should be serialized");
-            AssertTrue(xml.Contains("<ModelCandidate>", StringComparison.Ordinal), "model candidate should be serialized");
-            AssertTrue(xml.Contains("<ModelCandidateDecision>", StringComparison.Ordinal), "model candidate decision should be serialized");
-            AssertTrue(xml.Contains("<InspectionModelAdoption>", StringComparison.Ordinal), "inspection-model adoption should be serialized");
-
-            CData loaded = new CData().LoadConfig(recipeName);
-            loaded.ProjectSettings.EnsureDefaults();
-            AssertEqual(1, loaded.ProjectSettings.ModelRegistry.Profiles.Count);
-            AssertEqual(1, loaded.ProjectSettings.ModelRegistry.TrainingRuns.Count);
-            AssertEqual(2, loaded.ProjectSettings.ModelRegistry.CandidateDecisions.Count);
-            AssertEqual(1, loaded.ProjectSettings.ModelRegistry.AdoptionHistory.Count);
-            ModelCandidate loadedCurrent = ModelRegistryService.FindCurrentInspectionModel(loaded.ProjectSettings.ModelRegistry);
-            AssertTrue(loadedCurrent != null, "loaded registry should resolve the current inspection model");
-            AssertTrue(loadedCurrent.WeightsPath.Contains("exp42", StringComparison.OrdinalIgnoreCase), "loaded current inspection model should be the adopted training candidate");
-            ModelCandidateDecision latestDecision = ModelRegistryService.FindLatestCandidateDecision(loaded.ProjectSettings.ModelRegistry);
-            AssertTrue(latestDecision != null && string.Equals(latestDecision.Decision, ModelRegistryService.CandidateDecisionAdopted, StringComparison.Ordinal),
-                "loaded registry should expose the latest saved/rejected candidate decision");
-
-            WpfModelRegistryPresentation presentation = WpfModelRegistryPresentationService.Build(
-                loaded.ProjectSettings.PythonModel,
-                new WpfTrainingWeightsComparison
-                {
-                    LatestWeightsPath = candidateWeightsPath,
-                    CurrentWeightsPath = candidateWeightsPath,
-                    MetricsStatusText = "mAP50-95 +7.0%p, mAP50 +5.0%p, precision +3.0%p, recall +2.0%p, box loss -0.0123"
-                },
-                loaded.ProjectSettings.TrainingGuide,
-                loaded.ProjectSettings.ModelRegistry,
-                hasPendingInspectionModelSelection: false);
-            AssertTrue(presentation.ProfileText.Contains("\uB4F1\uB85D \uD504\uB85C\uD544", StringComparison.Ordinal), "presentation should expose persisted profile count");
-            AssertTrue(presentation.CandidateModelText.Contains("recipe", StringComparison.Ordinal), "presentation should show candidate recipe state");
-            AssertTrue(presentation.CandidateModelText.Contains("P/R", StringComparison.Ordinal), "presentation should compact precision/recall for first-visible candidate review");
-            AssertTrue(!presentation.CandidateModelText.Contains("box loss", StringComparison.OrdinalIgnoreCase), "presentation should keep detailed loss metrics out of the first-visible candidate row");
-            AssertTrue(presentation.CandidateModelText.Contains("\uACB0\uC815", StringComparison.Ordinal), "presentation should expose the latest candidate decision");
-            AssertTrue(presentation.ActionText.Contains("\uACB0\uC815 \uC774\uB825", StringComparison.Ordinal), "presentation should expose saved/rejected decision history count");
-            AssertTrue(presentation.ActionText.Contains("\uCC44\uD0DD \uC774\uB825", StringComparison.Ordinal), "presentation should expose adoption-history count");
-
-            string yoloV8Root = Path.Combine(root, "yolov8");
-            string yoloV8WeightsPath = Path.Combine(yoloV8Root, "runs", "detect", "test01", "weights", "best.pt");
-            Directory.CreateDirectory(Path.GetDirectoryName(yoloV8WeightsPath));
-            File.WriteAllText(yoloV8WeightsPath, "yolov8 candidate");
-            var configuredRegistry = new ModelRegistrySettings();
-            var configuredYoloV5 = new PythonModelSettings
-            {
-                ModelEngine = PythonModelSettings.EngineYoloV5,
-                ProjectRootPath = projectRoot,
-                WeightsPath = candidateWeightsPath
-            };
-            var configuredYoloV8 = new PythonModelSettings
-            {
-                ModelEngine = PythonModelSettings.EngineYoloV8,
-                ProjectRootPath = yoloV8Root,
-                WeightsPath = yoloV8WeightsPath
-            };
-
-            ModelRegistryService.RecordConfiguredInspectionModel(
-                configuredRegistry,
-                configuredYoloV5,
-                LabelingDatasetPurpose.ObjectDetection);
-            ModelCandidate configuredCurrent = ModelRegistryService.RecordConfiguredInspectionModel(
-                configuredRegistry,
-                configuredYoloV8,
-                LabelingDatasetPurpose.ObjectDetection,
-                candidateWeightsPath);
-
-            AssertEqual(2, configuredRegistry.Profiles.Count);
-            AssertEqual(0, configuredRegistry.TrainingRuns.Count);
-            AssertEqual(2, configuredRegistry.Candidates.Count);
-            AssertEqual(configuredCurrent.CandidateId, configuredRegistry.CurrentInspectionModelId);
-            AssertTrue(configuredRegistry.Candidates.Any(item => string.Equals(item.WeightsPath, Path.GetFullPath(candidateWeightsPath), StringComparison.OrdinalIgnoreCase)),
-                "saving a YOLOv8 profile should preserve the configured YOLOv5 inspection model");
-            int configuredDecisionCount = configuredRegistry.CandidateDecisions.Count;
-            int configuredAdoptionCount = configuredRegistry.AdoptionHistory.Count;
-            ModelRegistryService.RecordConfiguredInspectionModel(
-                configuredRegistry,
-                configuredYoloV8,
-                LabelingDatasetPurpose.ObjectDetection,
-                yoloV8WeightsPath);
-            AssertEqual(configuredDecisionCount, configuredRegistry.CandidateDecisions.Count);
-            AssertEqual(configuredAdoptionCount, configuredRegistry.AdoptionHistory.Count);
-            AssertEqual(Path.GetFullPath(candidateWeightsPath), configuredCurrent.BaselineWeightsPath);
-
-            var configuredData = new CData();
-            configuredData.ConfigureOutputRoot(outputRoot);
-            configuredData.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.ObjectDetection;
-            configuredData.ProjectSettings.PythonModel = configuredYoloV8;
-            configuredData.ProjectSettings.ModelRegistry = configuredRegistry;
-            WpfModelComparisonRunRequest configuredRequest = new WpfModelComparisonRunService(root)
-                .BuildYoloV5YoloV8DetectionRequest(configuredData, task: "val");
-            AssertEqual(Path.GetFullPath(candidateWeightsPath), configuredRequest.BaselineWeightsPath);
-            AssertEqual(Path.GetFullPath(yoloV8WeightsPath), configuredRequest.CandidateWeightsPath);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-            if (Directory.Exists(recipeDirectory))
-            {
-                Directory.Delete(recipeDirectory, recursive: true);
-            }
-        }
-    }
-    private static void TestWpfObjectReviewPresentationService()
-    {
-        var manualRois = new List<Rectangle> { new Rectangle(1, 2, 30, 40) };
-        var manualClasses = new List<string> { "Scratch" };
-        var manualShapes = new List<CanvasRoiShapeKind> { CanvasRoiShapeKind.Ellipse };
-        var overlayIds = new List<string> { "roi-1" };
-        var manualSegments = new List<LabelingSegmentationObject>
-        {
-            new LabelingSegmentationObject(
-                new[] { new Point(3, 3), new Point(8, 3), new Point(8, 9) },
-                new CClassItem { Text = "Poly" })
-        };
-        var confirmed = new List<YoloWorkerSmokeCandidate>
-        {
-            new YoloWorkerSmokeCandidate { Index = 7, ClassName = "AIClass", Confidence = 0.88, X = 9, Y = 10, Width = 11, Height = 12 }
-        };
-        var service = new WpfObjectReviewPresentationService();
-        WpfObjectReviewItemRef preferred = WpfObjectReviewItemRef.Manual(0, "roi-1");
-
-        WpfObjectReviewListPresentation presentation = service.BuildListPresentation(
-            manualRois,
-            manualClasses,
-            manualShapes,
-            overlayIds,
-            manualSegments,
-            confirmed,
-            preferred,
-            null,
-            candidate => new Rectangle((int)candidate.X, (int)candidate.Y, (int)candidate.Width, (int)candidate.Height),
-            candidate => "detail-" + candidate.ClassName);
-
-        AssertEqual(3, presentation.Rows.Count);
-        AssertTrue(presentation.Summary.Contains("3", StringComparison.Ordinal), "object review presentation should summarize all object sources");
-        AssertTrue(ReferenceEquals(preferred, presentation.SelectedItem), "object review presentation should preserve the preferred selected row");
-        AssertTrue(presentation.Rows[0].Content.Contains("Scratch", StringComparison.Ordinal), "manual ROI row should include its class name");
-        AssertTrue(presentation.Rows[0].Content.Contains("\uD0C0\uC6D0", StringComparison.Ordinal), "manual ROI row should include the ROI shape name");
-        AssertTrue(((WpfObjectReviewItemRef)presentation.Rows[0].Payload).SourceId == "roi-1", "manual ROI row should keep the stable overlay id");
-        AssertTrue(presentation.Rows[1].Content.Contains("Poly", StringComparison.Ordinal), "manual segment row should include its class name");
-        AssertTrue(presentation.Rows[2].Content.Contains("\uD655\uC815 \uB77C\uBCA8 7", StringComparison.Ordinal), "confirmed AI row should present as a committed label while keeping the candidate display index");
-        AssertTrue(presentation.Rows[2].ToolTip.Contains("AI \uD6C4\uBCF4 \uD655\uC815", StringComparison.Ordinal), "confirmed AI row should keep the source visible without looking like a pending AI candidate");
-        AssertTrue(presentation.Rows[2].ToolTip.Contains("\uC800\uC7A5 \uB77C\uBCA8\uB85C \uBC18\uC601\uB428", StringComparison.Ordinal), "confirmed AI row should state that it is already reflected as a saved label");
-        AssertTrue(presentation.Rows[2].ToolTip.Contains("detail-AIClass", StringComparison.Ordinal), "confirmed AI row should use the provided candidate detail text");
-
-        WpfObjectReviewListPresentation empty = service.BuildListPresentation(
-            Array.Empty<Rectangle>(),
-            Array.Empty<string>(),
-            Array.Empty<CanvasRoiShapeKind>(),
-            Array.Empty<string>(),
-            Array.Empty<LabelingSegmentationObject>(),
-            Array.Empty<YoloWorkerSmokeCandidate>(),
-            null,
-            WpfObjectReviewItemRef.ConfirmedAi(0),
-            null,
-            null);
-        AssertEqual(1, empty.Rows.Count);
-        AssertTrue(!empty.Rows[0].IsEnabled, "empty object presentation should expose a disabled row");
-
-        WpfObjectReviewListItem rebuiltManual = service.BuildManualRoiItem(manualRois, manualClasses, manualShapes, overlayIds, 0);
-        AssertTrue(rebuiltManual.Content.Contains("Scratch", StringComparison.Ordinal), "single manual ROI row rebuild should use the same presentation rules");
-        AssertTrue(service.BuildManualRoiItem(manualRois, manualClasses, manualShapes, overlayIds, 99) == null, "invalid manual ROI row rebuild should fail safely");
-
-        WpfObjectReviewDeleteRefreshPlan incremental = service.BuildDeleteRefreshPlan(
-            WpfObjectReviewSource.ManualRoi,
-            500000,
-            10000,
-            250000,
-            500001);
-        AssertTrue(incremental.UseIncremental, "large manual ROI delete should use the incremental side-list path");
-        AssertEqual(250000, incremental.SelectedRowIndex);
-        AssertTrue(incremental.Summary.Contains("500000", StringComparison.Ordinal), "incremental delete plan should expose the updated object count");
-
-        WpfObjectReviewDeleteRefreshPlan smallIncremental = service.BuildDeleteRefreshPlan(
-            WpfObjectReviewSource.ManualRoi,
-            2,
-            10000,
-            1,
-            3);
-        AssertTrue(smallIncremental.UseIncremental, "small manual ROI delete should use the same single-row side-list path");
-        AssertEqual(1, smallIncremental.SelectedRowIndex);
-
-        WpfObjectReviewDeleteRefreshPlan fullRefresh = service.BuildDeleteRefreshPlan(
-            WpfObjectReviewSource.ManualSegment,
-            500000,
-            10000,
-            250000,
-            500001);
-        AssertTrue(!fullRefresh.UseIncremental, "non-ROI deletes should still use the full refresh path");
-        AssertEqual(-1, fullRefresh.SelectedRowIndex);
-    }
-    private static void TestWpfCandidateReviewSelectionService()
-    {
-        var first = new YoloWorkerSmokeCandidate { ClassName = "A", Confidence = 0.90, X = 1, Y = 2, Width = 3, Height = 4 };
-        var second = new YoloWorkerSmokeCandidate { ClassName = "B", Confidence = 0.91, X = 5, Y = 6, Width = 7, Height = 8 };
-        var third = new YoloWorkerSmokeCandidate { ClassName = "C", Confidence = 0.92, X = 9, Y = 10, Width = 11, Height = 12 };
-        var rows = new List<WpfCandidateReviewListItem>
-        {
-            WpfCandidateReviewListItem.Empty("empty", string.Empty),
-            CreateCandidateReviewTestItem("1", first),
-            CreateCandidateReviewTestItem("2", second),
-            CreateCandidateReviewTestItem("3", third)
-        };
-
-        AssertTrue(
-            ReferenceEquals(first, WpfCandidateReviewSelectionService.GetSelectedCandidate(rows[1])),
-            "candidate selection service should unwrap the selected row payload");
-
-        WpfCandidateNavigationSelection next = WpfCandidateReviewSelectionService.SelectCandidateOffset(rows, rows[1], 1);
-        AssertEqual(WpfCandidateNavigationStatus.Selected, next.Status);
-        AssertTrue(ReferenceEquals(rows[2], next.SelectedItem), "candidate navigation should move to the next candidate row");
-
-        WpfCandidateNavigationSelection previous = WpfCandidateReviewSelectionService.SelectCandidateOffset(rows, rows[1], -1);
-        AssertEqual(WpfCandidateNavigationStatus.Selected, previous.Status);
-        AssertTrue(ReferenceEquals(rows[3], previous.SelectedItem), "candidate navigation should wrap to the last candidate row");
-
-        WpfCandidateNavigationSelection missingSelection = WpfCandidateReviewSelectionService.SelectCandidateOffset(rows, null, 1);
-        AssertEqual(WpfCandidateNavigationStatus.Selected, missingSelection.Status);
-        AssertTrue(ReferenceEquals(rows[1], missingSelection.SelectedItem), "candidate navigation should recover from a missing selected row");
-
-        WpfCandidateNavigationSelection emptySelection = WpfCandidateReviewSelectionService.SelectCandidateOffset(Array.Empty<WpfCandidateReviewListItem>(), null, 1);
-        AssertEqual(WpfCandidateNavigationStatus.NoCandidates, emptySelection.Status);
-
-        WpfCandidateNavigationSelection singleSelection = WpfCandidateReviewSelectionService.SelectCandidateOffset(new[] { rows[1] }, rows[1], 1);
-        AssertEqual(WpfCandidateNavigationStatus.SingleCandidate, singleSelection.Status);
-        AssertTrue(ReferenceEquals(rows[1], singleSelection.SelectedItem), "single-row candidate navigation should keep the existing candidate selected");
-
-        AssertTrue(
-            ReferenceEquals(
-                second,
-                WpfCandidateReviewSelectionService.FindNextVisibleCandidateAfter(new[] { first, second, third }, first, new[] { first })),
-            "confirming or skipping the first candidate should select the next visible candidate");
-        AssertTrue(
-            ReferenceEquals(
-                third,
-                WpfCandidateReviewSelectionService.FindNextVisibleCandidateAfter(new[] { first, second, third }, second, new[] { second })),
-            "confirming or skipping a middle candidate should keep the operator at the same visual row");
-        AssertTrue(
-            ReferenceEquals(
-                second,
-                WpfCandidateReviewSelectionService.FindNextVisibleCandidateAfter(new[] { first, second, third }, third, new[] { third })),
-            "confirming or skipping the last candidate should fall back to the previous visible candidate");
-    }
-
-    private static void TestWpfCandidateReviewStateService()
-    {
-        var first = new YoloWorkerSmokeCandidate { ClassName = "A", Confidence = 0.80, X = 1, Y = 2, Width = 3, Height = 4 };
-        var second = new YoloWorkerSmokeCandidate { ClassName = "B", Confidence = 0.95, X = 5, Y = 6, Width = 7, Height = 8 };
-        var service = new WpfCandidateReviewStateService();
-
-        AssertEqual(2, service.LoadPendingCandidates(new[] { first, null, second }, clearConfirmed: true));
-        AssertEqual(2, service.PendingCount);
-        AssertEqual(0, service.ConfirmedCount);
-        AssertTrue(ReferenceEquals(second, service.GetPendingCandidateAt(1)), "candidate state should expose stable pending indexing");
-        AssertEqual(1, service.IndexOfPendingCandidate(second));
-        AssertEqual(1, service.GetVisibleCandidates(0.90).Count);
-
-        WpfCandidateConfirmationPlan plan = service.BuildConfirmationPlan(
-            new[] { first, second },
-            candidate => ReferenceEquals(candidate, second),
-            candidate => ReferenceEquals(candidate, first));
-        AssertTrue(plan.HasConfirmableCandidates, "candidate state should produce a confirmable plan");
-        AssertEqual(1, plan.ConfirmableCandidates.Count);
-        AssertEqual(1, plan.DuplicatePendingCount);
-        AssertEqual(1, plan.SkippedDuplicateCount);
-
-        service.ApplyConfirmation(plan.ConfirmableCandidates);
-        AssertEqual(1, service.PendingCount);
-        AssertEqual(1, service.ConfirmedCount);
-        AssertTrue(ReferenceEquals(second, service.ConfirmedCandidates[0]), "confirmed candidate should move into confirmed state");
-        AssertTrue(service.SkipCandidate(first), "pending candidate should be skippable through the state service");
-        AssertEqual(0, service.PendingCount);
-
-        service.LoadPendingCandidates(new[] { first }, clearConfirmed: false);
-        AssertEqual(1, service.PendingCount);
-        AssertEqual(1, service.ConfirmedCount);
-        AssertEqual(1, service.ClearPendingCandidates());
-        service.ClearAll();
-        AssertEqual(0, service.PendingCount);
-        AssertEqual(0, service.ConfirmedCount);
-    }
-    private static void TestWpfCandidateConfirmationService()
-    {
-        var duplicate = new YoloWorkerSmokeCandidate { ClassName = "A", Confidence = 0.90, X = 1, Y = 2, Width = 3, Height = 4 };
-        var confirmable = new YoloWorkerSmokeCandidate { ClassName = "B", Confidence = 0.95, X = 5, Y = 6, Width = 7, Height = 8 };
-        var state = new WpfCandidateReviewStateService();
-        var service = new WpfCandidateConfirmationService();
-
-        state.LoadPendingCandidates(new[] { duplicate }, clearConfirmed: true);
-        WpfCandidateConfirmationAttempt duplicateAttempt = service.Prepare(
-            state,
-            new[] { duplicate },
-            candidate => false,
-            candidate => ReferenceEquals(candidate, duplicate));
-        AssertTrue(!duplicateAttempt.CanConfirm, "duplicate-only attempt should not be confirmable");
-        AssertTrue(duplicateAttempt.ReviewHistoryMessage.Contains("\uC911\uBCF5", StringComparison.Ordinal), "duplicate attempt should explain duplicate exclusion");
-        AssertTrue(duplicateAttempt.LogMessage.Contains("\uD655\uC815\uD558\uC9C0", StringComparison.Ordinal), "duplicate attempt should produce an operator log message");
-
-        state.LoadPendingCandidates(new[] { duplicate, confirmable }, clearConfirmed: true);
-        WpfCandidateConfirmationAttempt readyAttempt = service.Prepare(
-            state,
-            new[] { duplicate, confirmable },
-            candidate => ReferenceEquals(candidate, confirmable),
-            candidate => ReferenceEquals(candidate, duplicate));
-        AssertTrue(readyAttempt.CanConfirm, "non-overlapping candidate should be confirmable");
-        service.ApplyConfirmation(state, readyAttempt.Plan);
-        AssertEqual(1, state.PendingCount);
-        AssertEqual(1, state.ConfirmedCount);
-        AssertTrue(ReferenceEquals(confirmable, state.ConfirmedCandidates[0]), "confirmation service should apply state mutation through the state service");
-
-        WpfCandidateConfirmationResult savedResult = service.BuildConfirmedResult(
-            "\uC120\uD0DD",
-            readyAttempt.Plan,
-            saved: true,
-            savedCount: 2,
-            labelPathSummary: "labels\\sample.txt");
-        AssertEqual(1, savedResult.ConfirmedCount);
-        AssertEqual(1, savedResult.SkippedDuplicateCount);
-        AssertTrue(savedResult.ReviewHistoryMessage.Contains("\uD655\uC815(\uC120\uD0DD)", StringComparison.Ordinal), "confirmed history should include scope");
-        AssertTrue(savedResult.ReviewHistoryMessage.Contains("\uD30C\uC77C \uC800\uC7A5 2\uAC1C", StringComparison.Ordinal), "confirmed history should include file-saved count");
-        AssertTrue(savedResult.LogMessage.Contains("\uD30C\uC77C \uBC18\uC601", StringComparison.Ordinal), "confirmed log should say the confirmed candidate labels were reflected to file");
-        AssertTrue(savedResult.DuplicateLogMessage.Contains("\uC81C\uC678", StringComparison.Ordinal), "confirmed result should expose duplicate exclusion log text");
-
-        WpfCandidateConfirmationResult skippedSaveResult = service.BuildConfirmedResult(
-            "\uD45C\uC2DC \uD6C4\uBCF4 \uC804\uCCB4",
-            readyAttempt.Plan,
-            saved: false,
-            savedCount: 0,
-            labelPathSummary: string.Empty);
-        AssertTrue(skippedSaveResult.ReviewHistoryMessage.Contains("\uC800\uC7A5 \uAC74\uB108\uB700", StringComparison.Ordinal), "unsaved confirmation should be visible in review history");
-    }
-
-    private static void TestWpfCandidateReviewPresentationService()
-    {
-        var first = new YoloWorkerSmokeCandidate { Index = 1, ClassName = "A", Confidence = 0.80, X = 1, Y = 2, Width = 3, Height = 4 };
-        var second = new YoloWorkerSmokeCandidate { Index = 2, ClassName = "B", Confidence = 0.95, X = 5, Y = 6, Width = 7, Height = 8 };
-        var service = new WpfCandidateReviewPresentationService();
-        Func<YoloWorkerSmokeCandidate, Rectangle> bounds = candidate => new Rectangle((int)candidate.X, (int)candidate.Y, (int)candidate.Width, (int)candidate.Height);
-        Func<Rectangle, WpfCandidateOverlapInfo> overlap = rect => new WpfCandidateOverlapInfo(string.Empty, Rectangle.Empty, 0D);
-
-        WpfCandidateReviewListPresentation empty = service.BuildListPresentation(
-            Array.Empty<YoloWorkerSmokeCandidate>(),
-            Array.Empty<YoloWorkerSmokeCandidate>(),
-            null,
-            0.50D,
-            0.50F,
-            bounds,
-            overlap);
-        AssertEqual(1, empty.Rows.Count);
-        AssertTrue(!empty.Rows[0].IsEnabled, "empty candidate presentation should return a disabled row");
-        AssertTrue(empty.Detail.Contains("\uD6C4\uBCF4", StringComparison.Ordinal), "empty candidate presentation should explain the candidate state");
-
-        WpfCandidateReviewListPresentation filtered = service.BuildListPresentation(
-            new[] { first, second },
-            Array.Empty<YoloWorkerSmokeCandidate>(),
-            null,
-            0.90D,
-            0.50F,
-            bounds,
-            overlap);
-        AssertEqual(1, filtered.Rows.Count);
-        AssertTrue(filtered.Rows[0].Title.Contains("\uD544\uD130", StringComparison.Ordinal), "filtered presentation should show the confidence-filter empty row");
-        AssertTrue(filtered.Detail.Contains("90", StringComparison.Ordinal), "filtered presentation should include the active confidence filter");
-
-        WpfCandidateReviewListPresentation rows = service.BuildListPresentation(
-            new[] { first, second },
-            new[] { first, second },
-            second,
-            0.50D,
-            0.50F,
-            bounds,
-            rect => new WpfCandidateOverlapInfo("manual", new Rectangle(20, 20, 4, 4), 0.10D));
-        AssertEqual(2, rows.Rows.Count);
-        AssertTrue(ReferenceEquals(second, rows.PreferredCandidate), "candidate presentation should preserve the preferred selection payload");
-        AssertTrue(rows.Rows[1].Title.Contains("B", StringComparison.Ordinal), "candidate presentation should include the candidate class in the row title");
-        AssertTrue(ReferenceEquals(second, rows.Rows[1].Payload), "candidate presentation row should keep the source candidate payload");
-
-        WpfCandidateComparisonPresentation duplicateComparison = WpfCandidateReviewPresenter.BuildComparison(
-            first,
-            bounds(first),
-            new WpfCandidateOverlapInfo("manual", bounds(first), 0.95D));
-        AssertTrue(duplicateComparison.DecisionText.Contains("\uAE30\uC874 \uB77C\uBCA8 \uBC84\uD2BC", StringComparison.Ordinal), "duplicate candidate decision should point to the existing-label action");
-        AssertTrue(duplicateComparison.DecisionText.Contains("\uC2A4\uD0B5", StringComparison.Ordinal), "duplicate candidate decision should tell the operator to skip same-object candidates");
-        AssertTrue(duplicateComparison.SelectionSummaryText.Contains("\uD604\uC7AC \uB77C\uBCA8", StringComparison.Ordinal), "duplicate candidate summary should identify the overlapping current label");
-        AssertTrue(duplicateComparison.SelectionSummaryText.Contains("\uC2A4\uD0B5", StringComparison.Ordinal), "duplicate candidate summary should point to skip");
-
-        WpfCandidateComparisonPresentation newCandidateComparison = WpfCandidateReviewPresenter.BuildComparison(
-            second,
-            bounds(second),
-            new WpfCandidateOverlapInfo(string.Empty, Rectangle.Empty, 0D));
-        AssertTrue(newCandidateComparison.DecisionText.Contains("\uD655\uC815", StringComparison.Ordinal), "new candidate decision should point to confirm");
-        AssertTrue(newCandidateComparison.DecisionText.Contains("\uC2A4\uD0B5", StringComparison.Ordinal), "new candidate decision should still explain the reject path");
-        AssertTrue(newCandidateComparison.SelectionSummaryText.Contains("\uACB9\uCE68 \uC5C6\uC74C", StringComparison.Ordinal), "new candidate summary should say there is no current-label overlap");
-        AssertTrue(newCandidateComparison.SelectionSummaryText.Contains("\uD655\uC815", StringComparison.Ordinal), "new candidate summary should point to confirm");
-
-        var imageLevel = new YoloWorkerSmokeCandidate
-        {
-            Index = 3,
-            ClassName = "abnormal",
-            Confidence = 0.998,
-            ImageLevel = true
-        };
-        Rectangle emptyBounds = Rectangle.Empty;
-        WpfCandidateComparisonPresentation imageLevelComparison = WpfCandidateReviewPresenter.BuildComparison(
-            imageLevel,
-            emptyBounds,
-            new WpfCandidateOverlapInfo(string.Empty, Rectangle.Empty, 0D));
-        WpfCandidateReviewListItem imageLevelRow = WpfCandidateReviewPresenter.BuildListItem(
-            imageLevel,
-            1,
-            emptyBounds,
-            new WpfCandidateOverlapInfo(string.Empty, Rectangle.Empty, 0D),
-            0.25F);
-        AssertTrue(imageLevelComparison.CandidateText.Contains("이미지 전체 판정", StringComparison.Ordinal), "image-level candidate comparison should name its classification scope");
-        AssertTrue(imageLevelComparison.OverlapText.Contains("해당 없음", StringComparison.Ordinal), "image-level candidate comparison should not report a geometry overlap percentage");
-        AssertTrue(!imageLevelComparison.CandidateText.Contains("이미지 밖", StringComparison.Ordinal), "image-level candidate should not be described as outside the image");
-        AssertTrue(imageLevelComparison.DecisionText.Contains("OK/NG", StringComparison.Ordinal), "image-level candidate comparison should point to OK/NG review");
-        AssertTrue(imageLevelRow.SecondaryText.Contains("이미지 전체 판정", StringComparison.Ordinal), "image-level candidate row should name its classification scope");
-        AssertTrue(!imageLevelRow.SecondaryText.Contains("이미지 밖", StringComparison.Ordinal), "image-level candidate row should not use object-detection geometry wording");
-        AssertTrue(WpfCandidateReviewPresenter.BuildConfirmDisabledHint(imageLevel, emptyBounds, default).Contains("OK/NG", StringComparison.Ordinal), "image-level confirm hint should point to the image decision controls");
-
-        WpfDetectionOverlayPresentation overlayEmpty = service.BuildOverlayPresentation(
-            string.Empty,
-            Array.Empty<YoloWorkerSmokeCandidate>(),
-            null,
-            0.50D,
-            candidate => false,
-            candidate => false,
-            candidate => string.Empty);
-        AssertTrue(overlayEmpty.IsEmpty, "empty overlay presentation should request clearing the canvas overlay");
-
-        WpfDetectionOverlayPresentation overlay = service.BuildOverlayPresentation(
-            @"C:\data\sample.png",
-            new[] { first, second },
-            second,
-            0.50D,
-            candidate => ReferenceEquals(candidate, first),
-            candidate => ReferenceEquals(candidate, second),
-            candidate => $"secondary-{candidate.ClassName}");
-        AssertTrue(!overlay.IsEmpty, "candidate overlay presentation should be visible while pending candidates exist");
-        AssertEqual(WpfDetectionOverlayStatus.Confirmable, overlay.Status);
-        AssertTrue(overlay.Title.Contains("AI \uD6C4\uBCF4", StringComparison.Ordinal), "candidate overlay title should identify results as AI candidates");
-        AssertTrue(overlay.Title.Contains("\uC800\uC7A5 \uC804", StringComparison.Ordinal), "candidate overlay title should say candidates are not saved labels yet");
-        AssertTrue(overlay.Summary.Contains("sample.png", StringComparison.Ordinal), "overlay summary should include the active image name");
-        AssertTrue(overlay.Summary.Contains("2", StringComparison.Ordinal), "overlay summary should include the pending candidate count");
-        AssertTrue(overlay.Summary.Contains("AI \uD6C4\uBCF4", StringComparison.Ordinal), "overlay summary should identify pending detections as AI candidates");
-        AssertTrue(overlay.Summary.Contains("\uC800\uC7A5 \uC804", StringComparison.Ordinal), "overlay summary should say pending candidates are not saved labels yet");
-        AssertTrue(overlay.SelectedText.Contains("B", StringComparison.Ordinal), "overlay selected text should describe the selected candidate");
-        AssertTrue(overlay.SelectedText.Contains("AI \uD6C4\uBCF4", StringComparison.Ordinal), "overlay selected text should keep the AI candidate wording");
-        AssertTrue(overlay.SelectedText.Contains("secondary-B", StringComparison.Ordinal), "overlay selected text should include the secondary review text");
-        AssertTrue(overlay.Detail.Contains("AI \uD6C4\uBCF4", StringComparison.Ordinal), "overlay detail should keep the AI candidate wording");
-        AssertTrue(overlay.Detail.Contains("secondary-A", StringComparison.Ordinal), "overlay detail should summarize the first visible candidates");
-    }
-    private static WpfCandidateReviewListItem CreateCandidateReviewTestItem(string title, YoloWorkerSmokeCandidate candidate)
-        => new WpfCandidateReviewListItem(
-            title,
-            string.Empty,
-            string.Empty,
-            candidate,
-            MahApps.Metro.IconPacks.PackIconMaterialKind.CheckCircleOutline,
-            System.Windows.Media.Brushes.LimeGreen);
-
-    private static void TestWpfObjectReviewEditService()
-    {
-        var manualRois = new List<Rectangle>
-        {
-            new Rectangle(1, 2, 10, 12),
-            new Rectangle(3, 4, 20, 24)
-        };
-        var manualClasses = new List<string> { "Defect" };
-        var manualSegments = new List<LabelingSegmentationObject>
-        {
-            new LabelingSegmentationObject(
-                new[]
-                {
-                    new Point(1, 1),
-                    new Point(8, 1),
-                    new Point(8, 8)
-                },
-                new CClassItem { Text = "Poly" })
-        };
-        var confirmed = new List<YoloWorkerSmokeCandidate>
-        {
-            new YoloWorkerSmokeCandidate { ClassName = "OK", X = 5, Y = 6, Width = 7, Height = 8 },
-            new YoloWorkerSmokeCandidate { ClassName = "NG", X = 9, Y = 10, Width = 11, Height = 12 }
-        };
-
-        AssertEqual("Defect", WpfObjectReviewEditService.GetClassName(WpfObjectReviewItemRef.Manual(1), manualClasses, manualSegments, confirmed));
-        AssertTrue(
-            WpfObjectReviewEditService.TryApplyClass(
-                WpfObjectReviewItemRef.Manual(1),
-                manualRois,
-                manualClasses,
-                manualSegments,
-                confirmed,
-                " Scratch ",
-                out string manualClass),
-            "manual object class was not applied");
-        AssertEqual("Scratch", manualClass);
-        AssertEqual("Scratch", manualClasses[1]);
-
-        AssertTrue(
-            WpfObjectReviewEditService.TryApplyClass(
-                WpfObjectReviewItemRef.ConfirmedAi(0),
-                manualRois,
-                manualClasses,
-                manualSegments,
-                confirmed,
-                " AIClass ",
-                out string aiClass),
-            "confirmed object class was not applied");
-        AssertEqual("AIClass", aiClass);
-        AssertEqual("AIClass", confirmed[0].ClassName);
-
-        manualSegments[0].MaskData = new byte[100];
-        manualSegments[0].MaskSize = new Size(10, 10);
-        manualSegments[0].MaskBounds = new Rectangle(1, 1, 8, 8);
-        manualSegments[0].RenderVersion = 3;
-        var segmentClassItem = new CClassItem { Text = "SegmentClass", DrawColor = Color.LimeGreen };
-        AssertTrue(
-            WpfObjectReviewEditService.TryApplyClass(
-                WpfObjectReviewItemRef.ManualSegment(0),
-                manualRois,
-                manualClasses,
-                manualSegments,
-                confirmed,
-                " SegmentClass ",
-                out string segmentClass,
-                segmentClassItem),
-            "manual segment class was not applied");
-        AssertEqual("SegmentClass", segmentClass);
-        AssertEqual("SegmentClass", manualSegments[0].ClassName);
-        AssertTrue(ReferenceEquals(segmentClassItem, manualSegments[0].ClassItem), "manual segment should use the applied catalog class item");
-        AssertEqual(Color.LimeGreen.ToArgb(), manualSegments[0].Color.ToArgb());
-        AssertEqual(4, manualSegments[0].RenderVersion);
-        AssertEqual(new Rectangle(1, 1, 8, 8), manualSegments[0].RenderDirtyBounds);
-
-        AssertTrue(
-            WpfObjectReviewEditService.TryDelete(WpfObjectReviewItemRef.Manual(0), manualRois, manualClasses, manualSegments, confirmed),
-            "manual object was not deleted");
-        AssertEqual(1, manualRois.Count);
-        AssertEqual(1, manualClasses.Count);
-        AssertEqual("Scratch", manualClasses[0]);
-
-        AssertTrue(
-            WpfObjectReviewEditService.TryDelete(WpfObjectReviewItemRef.ManualSegment(0), manualRois, manualClasses, manualSegments, confirmed),
-            "manual segment was not deleted");
-        AssertEqual(0, manualSegments.Count);
-
-        AssertTrue(
-            WpfObjectReviewEditService.TryDelete(WpfObjectReviewItemRef.ConfirmedAi(1), manualRois, manualClasses, manualSegments, confirmed),
-            "confirmed object was not deleted");
-        AssertEqual(1, confirmed.Count);
-        AssertEqual("AIClass", confirmed[0].ClassName);
-
-        AssertTrue(
-            !WpfObjectReviewEditService.TryDelete(WpfObjectReviewItemRef.Manual(3), manualRois, manualClasses, manualSegments, confirmed),
-            "invalid manual object delete should fail");
     }
 
     private static void TestCreateYoloDataset()
@@ -14504,1061 +12502,6 @@ internal static partial class Program
         }
     }
 
-    private static void TestYoloDatasetQualityAuditReport()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-            data.ClassNamedList.Add(new CClassItem { Text = "NG", DrawColor = Color.Red });
-
-            var okRois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["OK"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(5, 5, 10, 10), cClassItem = data.ClassNamedList[0] }
-                }
-            };
-            var ngRois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["NG"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(10, 10, 20, 20), cClassItem = data.ClassNamedList[1] }
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(40, 40, Color.Black))
-            using (Bitmap emptyTrainImage = CreateSolidBitmap(40, 40, Color.White))
-            using (Bitmap validImage = CreateSolidBitmap(50, 50, Color.Gray))
-            using (Bitmap missingLabelImage = CreateSolidBitmap(30, 30, Color.Blue))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations("train-ok.png", trainImage, okRois, data.ClassNamedList, data);
-                YoloAnnotationService.SaveAnnotations(
-                    "train-empty.png",
-                    emptyTrainImage,
-                    new Dictionary<string, List<CRectangleObject>>(),
-                    data.ClassNamedList,
-                    data);
-
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations("valid-ng.png", validImage, ngRois, data.ClassNamedList, data);
-
-                Directory.CreateDirectory(data.ValidImagesPath);
-                missingLabelImage.Save(Path.Combine(data.ValidImagesPath, "valid-missing.png"), System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            string trainLabelPath = Path.Combine(root, "data", "train", "labels", "train-ok.txt");
-            File.AppendAllLines(trainLabelPath, new[] { "9 0.5 0.5 0.1 0.1" });
-
-            YoloDatasetQualityAuditReport report = YoloDatasetQualityAuditService.Build(data);
-            YoloDatasetQualityAuditSplitSummary train = report.Splits.First(split => split.Split == YoloDatasetSplitService.TrainMode);
-            YoloDatasetQualityAuditSplitSummary valid = report.Splits.First(split => split.Split == YoloDatasetSplitService.ValidMode);
-            YoloDatasetQualityAuditSplitSummary test = report.Splits.First(split => split.Split == YoloDatasetSplitService.TestMode);
-
-            AssertEqual(2, train.ImageCount);
-            AssertEqual(2, train.LabelFileCount);
-            AssertEqual(0, train.MissingLabelCount);
-            AssertEqual(1, train.EmptyLabelCount);
-            AssertEqual(1, train.InvalidLabelLineCount);
-            AssertEqual(1, train.ObjectCount);
-            AssertEqual(1, train.ObjectCountByClass["OK"]);
-
-            AssertEqual(2, valid.ImageCount);
-            AssertEqual(1, valid.LabelFileCount);
-            AssertEqual(1, valid.MissingLabelCount);
-            AssertEqual(0, valid.EmptyLabelCount);
-            AssertEqual(0, valid.InvalidLabelLineCount);
-            AssertEqual(1, valid.ObjectCount);
-            AssertEqual(1, valid.ObjectCountByClass["NG"]);
-
-            AssertEqual(0, test.ImageCount);
-            AssertEqual(4, report.TotalImageCount);
-            AssertEqual(3, report.TotalLabelFileCount);
-            AssertEqual(1, report.TotalMissingLabelCount);
-            AssertEqual(1, report.TotalEmptyLabelCount);
-            AssertEqual(1, report.TotalInvalidLabelLineCount);
-            AssertEqual(2, report.TotalObjectCount);
-            AssertEqual(1, report.ObjectCountByClass["OK"]);
-            AssertEqual(1, report.ObjectCountByClass["NG"]);
-            AssertTrue(report.SummaryLines.Any(line => line.Contains("Split:train", StringComparison.Ordinal) && line.Contains("EmptyLabels:1", StringComparison.Ordinal)), "quality audit summary should include train empty-label count");
-            AssertTrue(report.SummaryLines.Any(line => line.Contains("Split:valid", StringComparison.Ordinal) && line.Contains("MissingLabels:1", StringComparison.Ordinal)), "quality audit summary should include valid missing-label count");
-            AssertTrue(report.SummaryLines.Any(line => line.Contains("OK:1", StringComparison.Ordinal)), "quality audit summary should include OK class distribution");
-            AssertTrue(report.SummaryLines.Any(line => line.Contains("NG:1", StringComparison.Ordinal)), "quality audit summary should include NG class distribution");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestYoloDatasetQualityAuditMarkdownExport()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-
-            var rois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["OK"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(5, 5, 10, 10), cClassItem = data.ClassNamedList[0] }
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(40, 40, Color.Black))
-            using (Bitmap missingLabelImage = CreateSolidBitmap(30, 30, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations("train-ok.png", trainImage, rois, data.ClassNamedList, data);
-                File.AppendAllLines(Path.Combine(root, "data", "train", "labels", "train-ok.txt"), new[] { "9 0.5 0.5 0.1 0.1" });
-
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                Directory.CreateDirectory(data.ValidImagesPath);
-                missingLabelImage.Save(Path.Combine(data.ValidImagesPath, "valid-missing.png"), System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            YoloDatasetQualityAuditReport report = YoloDatasetQualityAuditService.Build(data);
-            string outputPath = Path.Combine(root, "exports", "dataset-quality-audit.md");
-            AssertEqual(Path.Combine(root, YoloDatasetQualityAuditExportService.DefaultFileName), YoloDatasetQualityAuditExportService.ResolveDefaultOutputPath(data));
-            YoloDatasetQualityAuditExportResult result = YoloDatasetQualityAuditExportService.ExportMarkdown(report, outputPath);
-
-            AssertTrue(File.Exists(outputPath), "dataset quality audit markdown was not written");
-            AssertEqual(outputPath, result.OutputPath);
-            AssertEqual(1, result.MissingLabelCount);
-            AssertEqual(1, result.InvalidLabelLineCount);
-            AssertTrue(result.LineCount >= 12, "dataset quality audit markdown should include summary and tables");
-
-            string markdown = File.ReadAllText(outputPath);
-            AssertTrue(markdown.Contains("# Dataset Quality Audit", StringComparison.Ordinal), "markdown export should include a title");
-            AssertTrue(markdown.Contains("- Missing labels: 1", StringComparison.Ordinal), "markdown export should include missing label total");
-            AssertTrue(markdown.Contains("- Invalid label lines: 1", StringComparison.Ordinal), "markdown export should include invalid label total");
-            AssertTrue(markdown.Contains("| train | 1 | 1 | 0 | 0 | 1 | 1 |", StringComparison.Ordinal), "markdown export should include train split row");
-            AssertTrue(markdown.Contains("| valid | 1 | 0 | 1 | 0 | 0 | 0 |", StringComparison.Ordinal), "markdown export should include valid split row");
-            AssertTrue(markdown.Contains("| OK | 1 |", StringComparison.Ordinal), "markdown export should include class distribution");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestYoloDatasetReadinessSegmentationOnlyPolicy()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "Defect", DrawColor = Color.Red });
-
-            var emptyBoxes = new Dictionary<string, List<CRectangleObject>>();
-            var segments = new Dictionary<string, List<LabelingSegmentationObject>>
-            {
-                ["Defect"] = new List<LabelingSegmentationObject>
-                {
-                    new LabelingSegmentationObject(
-                        new[]
-                        {
-                            new Point(4, 4),
-                            new Point(20, 4),
-                            new Point(20, 20),
-                            new Point(4, 20)
-                        },
-                        data.ClassNamedList[0])
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(32, 32, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(32, 32, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                YoloAnnotationService.SaveAnnotations("seg-train.png", trainImage, emptyBoxes, data.ClassNamedList, data);
-                YoloSegmentationAnnotationService.SaveSegmentationAnnotations("seg-train.png", trainImage, segments, data.ClassNamedList, data);
-
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                YoloAnnotationService.SaveAnnotations("seg-valid.png", validImage, emptyBoxes, data.ClassNamedList, data);
-                YoloSegmentationAnnotationService.SaveSegmentationAnnotations("seg-valid.png", validImage, segments, data.ClassNamedList, data);
-            }
-
-            YoloDatasetReadinessReport report = YoloDatasetReadinessService.Build(data, refreshYaml: true);
-
-            AssertTrue(!report.IsReady, "segmentation-only data should not be reported as detection-training ready");
-            AssertTrue(
-                report.Errors.Any(error => error.Contains("segmentation annotations", StringComparison.OrdinalIgnoreCase)
-                    && error.Contains("no YOLO box labels", StringComparison.OrdinalIgnoreCase)),
-                "segmentation-only policy error was not reported");
-            AssertEqual(0, report.Statistics.TotalObjectCount);
-            AssertEqual(2, report.Statistics.TotalSegmentationObjectCount);
-            AssertEqual(1, report.Statistics.TrainSegmentFileCount);
-            AssertEqual(1, report.Statistics.ValidSegmentFileCount);
-            AssertTrue(report.SummaryLines.Any(line => line.Contains("Segments:2", StringComparison.Ordinal)), "readiness summary did not include segmentation count");
-            AssertTrue(report.SummaryLines.Any(line => line.Contains("Defect:2", StringComparison.Ordinal)), "readiness summary did not include segmentation class count");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestYoloDatasetReadinessPurposePolicy()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            CData objectData = CreatePurposeReadinessData(
-                Path.Combine(root, "object-detection"),
-                LabelingDatasetPurpose.ObjectDetection,
-                includeBoxes: true,
-                includeSegments: true);
-
-            YoloDatasetReadinessReport objectReport = YoloDatasetReadinessService.Build(objectData, refreshYaml: true);
-
-            AssertTrue(objectReport.IsReady, string.Join(Environment.NewLine, objectReport.Errors));
-            AssertEqual(LabelingDatasetPurpose.ObjectDetection, objectReport.Purpose);
-            AssertEqual(2, objectReport.Statistics.TotalObjectCount);
-            AssertEqual(2, objectReport.Statistics.TotalSegmentationObjectCount);
-            AssertTrue(
-                objectReport.SummaryLines.Any(line => line.Contains("SegmentationArtifactsExcluded", StringComparison.Ordinal)),
-                "object-detection readiness should explain that stale segmentation artifacts are excluded");
-            AssertTrue(
-                YoloDatasetDiagnosticsService.BuildQualityWarnings(objectData, objectReport.Statistics)
-                    .Any(line => line.Contains("ObjectDetection ignores segmentation artifacts", StringComparison.Ordinal)),
-                "object-detection diagnostics should warn that segmentation artifacts are ignored");
-
-            CData boxOnlySegmentationData = CreatePurposeReadinessData(
-                Path.Combine(root, "segmentation-box-only"),
-                LabelingDatasetPurpose.Segmentation,
-                includeBoxes: true,
-                includeSegments: false);
-
-            YoloDatasetReadinessReport boxOnlySegmentationReport = YoloDatasetReadinessService.Build(boxOnlySegmentationData, refreshYaml: true);
-
-            AssertTrue(!boxOnlySegmentationReport.IsReady, "segmentation purpose should not be ready with box labels only");
-            AssertTrue(
-                boxOnlySegmentationReport.Errors.Any(error => error.Contains("Segmentation dataset", StringComparison.Ordinal)
-                    || error.Contains("segmentation annotation is missing", StringComparison.Ordinal)),
-                "segmentation purpose should explain that mask/polygon annotations are required");
-
-            CData segmentationData = CreatePurposeReadinessData(
-                Path.Combine(root, "segmentation-ready"),
-                LabelingDatasetPurpose.Segmentation,
-                includeBoxes: false,
-                includeSegments: true);
-
-            YoloDatasetReadinessReport segmentationReport = YoloDatasetReadinessService.Build(segmentationData, refreshYaml: true);
-
-            AssertTrue(segmentationReport.IsReady, string.Join(Environment.NewLine, segmentationReport.Errors));
-            AssertEqual(LabelingDatasetPurpose.Segmentation, segmentationReport.Purpose);
-            AssertEqual(0, segmentationReport.Statistics.TotalObjectCount);
-            AssertEqual(2, segmentationReport.Statistics.TotalSegmentationObjectCount);
-            AssertTrue(
-                segmentationReport.SummaryLines.Any(line => line.Contains("Segmentation uses segment JSON/mask PNG annotations as primary labels", StringComparison.Ordinal)),
-                "segmentation readiness should name segment/mask annotations as primary labels");
-
-            segmentationData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYolo11;
-            int port = GetAvailableTcpPort();
-            using var communication = new CCommunicationLearning(startListen: false, port: port);
-            using var requestReceived = new ManualResetEventSlim(false);
-            AssertTrue(communication.Start(), "test TCP listener for segmentation training did not start");
-            Task mockClient = Task.Run(() => RunMockTrainingPacketCaptureClient(
-                port,
-                requestReceived,
-                request =>
-                {
-                    AssertEqual("yolo11", request.model);
-                    AssertEqual("segment", request.task);
-                    AssertEqual("yolo11n-seg.pt", request.weight);
-                    AssertEqual(
-                        segmentationData.DataYamlFilePath.Replace("\\", "/"),
-                        request.dataYaml);
-                }));
-            AssertTrue(WaitUntil(() => communication.GetStatusSnapshot().IsClientConnected, TimeSpan.FromSeconds(5)), "mock segmentation training client did not connect");
-
-            var workflow = new YoloTrainingWorkflowService();
-            AssertTrue(workflow.TryStartTraining(segmentationData, communication), "segmentation workflow should send StartTraining when segment artifacts exist");
-            AssertTrue(
-                segmentationData.ProjectSettings.TrainingGuide.LastTrainingDatasetVersionId.StartsWith("dsv2-", StringComparison.Ordinal),
-                "recipe-owned training should retain the exact Dataset Version v2 used at send time");
-            AssertEqual(64, segmentationData.ProjectSettings.TrainingGuide.LastTrainingDatasetContentSha256.Length);
-            AssertTrue(requestReceived.Wait(TimeSpan.FromSeconds(5)), "mock segmentation training client did not receive StartTraining");
-            AssertTrue(mockClient.Wait(TimeSpan.FromSeconds(5)), "mock segmentation training client did not finish");
-            if (mockClient.IsFaulted && mockClient.Exception != null)
-            {
-                throw mockClient.Exception;
-            }
-
-            string trainSegmentLabelPath = Path.Combine(segmentationData.OutputRootPath, "data", "train", "labels", "purpose-train.txt");
-            string validSegmentLabelPath = Path.Combine(segmentationData.OutputRootPath, "data", "valid", "labels", "purpose-valid.txt");
-            AssertTrue(File.Exists(trainSegmentLabelPath), "segmentation training should export train polygon labels for Ultralytics");
-            AssertTrue(File.Exists(validSegmentLabelPath), "segmentation training should export valid polygon labels for Ultralytics");
-            string trainSegmentLabel = File.ReadAllLines(trainSegmentLabelPath).Single();
-            string validSegmentLabel = File.ReadAllLines(validSegmentLabelPath).Single();
-            AssertEqual("0 0.125 0.125 0.6875 0.125 0.6875 0.6875 0.125 0.6875", trainSegmentLabel);
-            AssertEqual(trainSegmentLabel, validSegmentLabel);
-            AssertEqual(9, trainSegmentLabel.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length);
-
-            segmentationData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-            int yolo8Port = GetAvailableTcpPort();
-            using var yolo8Communication = new CCommunicationLearning(startListen: false, port: yolo8Port);
-            using var yolo8RequestReceived = new ManualResetEventSlim(false);
-            AssertTrue(yolo8Communication.Start(), "test TCP listener for YOLOv8 segmentation training did not start");
-            Task yolo8MockClient = Task.Run(() => RunMockTrainingPacketCaptureClient(
-                yolo8Port,
-                yolo8RequestReceived,
-                request =>
-                {
-                    AssertEqual("yolov8", request.model);
-                    AssertEqual("segment", request.task);
-                    AssertEqual("yolov8n-seg.pt", request.weight);
-                    AssertEqual(
-                        segmentationData.DataYamlFilePath.Replace("\\", "/"),
-                        request.dataYaml);
-                }));
-            AssertTrue(WaitUntil(() => yolo8Communication.GetStatusSnapshot().IsClientConnected, TimeSpan.FromSeconds(5)), "mock YOLOv8 segmentation training client did not connect");
-
-            AssertTrue(workflow.TryStartTraining(segmentationData, yolo8Communication), "YOLOv8 segmentation workflow should send StartTraining when segment artifacts exist");
-            AssertTrue(yolo8RequestReceived.Wait(TimeSpan.FromSeconds(5)), "mock YOLOv8 segmentation training client did not receive StartTraining");
-            AssertTrue(yolo8MockClient.Wait(TimeSpan.FromSeconds(5)), "mock YOLOv8 segmentation training client did not finish");
-            if (yolo8MockClient.IsFaulted && yolo8MockClient.Exception != null)
-            {
-                throw yolo8MockClient.Exception;
-            }
-
-            CData backgroundSegmentationData = CreatePurposeReadinessData(
-                Path.Combine(root, "segmentation-ok-background"),
-                LabelingDatasetPurpose.Segmentation,
-                includeBoxes: false,
-                includeSegments: true);
-            backgroundSegmentationData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-            backgroundSegmentationData.ProjectSettings.YoloDataset.ValidationPercent = 50;
-            backgroundSegmentationData.ProjectSettings.YoloDataset.TestPercent = 0;
-            string sourceRoot = Path.Combine(root, "operator-ok-ng-images");
-            string okRoot = Path.Combine(sourceRoot, "OK");
-            Directory.CreateDirectory(okRoot);
-            string okTrainStem = FindImageStemForSplit("ok-background-train", YoloDatasetSplitService.TrainMode, backgroundSegmentationData.ProjectSettings.YoloDataset);
-            string okValidStem = FindImageStemForSplit("ok-background-valid", YoloDatasetSplitService.ValidMode, backgroundSegmentationData.ProjectSettings.YoloDataset);
-            using (Bitmap okTrainImage = CreateSolidBitmap(32, 32, Color.FromArgb(20, 40, 80)))
-            using (Bitmap okValidImage = CreateSolidBitmap(32, 32, Color.FromArgb(80, 60, 20)))
-            {
-                okTrainImage.Save(Path.Combine(okRoot, $"{okTrainStem}.png"), System.Drawing.Imaging.ImageFormat.Png);
-                okValidImage.Save(Path.Combine(okRoot, $"{okValidStem}.png"), System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            for (int index = 0; index < 3; index++)
-            {
-                string extraTrainStem = FindImageStemForSplit($"ok-background-train-extra-{index}", YoloDatasetSplitService.TrainMode, backgroundSegmentationData.ProjectSettings.YoloDataset);
-                string extraValidStem = FindImageStemForSplit($"ok-background-valid-extra-{index}", YoloDatasetSplitService.ValidMode, backgroundSegmentationData.ProjectSettings.YoloDataset);
-                using (Bitmap okTrainExtraImage = CreateSolidBitmap(32, 32, Color.FromArgb(20 + index, 40, 80)))
-                using (Bitmap okValidExtraImage = CreateSolidBitmap(32, 32, Color.FromArgb(80, 60 + index, 20)))
-                {
-                    okTrainExtraImage.Save(Path.Combine(okRoot, $"{extraTrainStem}.png"), System.Drawing.Imaging.ImageFormat.Png);
-                    okValidExtraImage.Save(Path.Combine(okRoot, $"{extraValidStem}.png"), System.Drawing.Imaging.ImageFormat.Png);
-                }
-            }
-
-            backgroundSegmentationData.ProjectSettings.PythonModel.ImageRootPath = sourceRoot;
-            var backgroundWorkflow = new YoloTrainingWorkflowService();
-            AssertTrue(backgroundWorkflow.TryPrepareTrainingDataset(backgroundSegmentationData), backgroundWorkflow.LastPreparationFailureMessage);
-            string okTrainOutputImage = Path.Combine(backgroundSegmentationData.OutputRootPath, "data", "train", "images", $"{okTrainStem}.png");
-            string okTrainOutputLabel = Path.Combine(backgroundSegmentationData.OutputRootPath, "data", "train", "labels", $"{okTrainStem}.txt");
-            string okValidOutputImage = Path.Combine(backgroundSegmentationData.OutputRootPath, "data", "valid", "images", $"{okValidStem}.png");
-            string okValidOutputLabel = Path.Combine(backgroundSegmentationData.OutputRootPath, "data", "valid", "labels", $"{okValidStem}.txt");
-            AssertTrue(File.Exists(okTrainOutputImage), "YOLOv8 SEG preparation should copy OK folder train background image into the dataset output");
-            AssertTrue(File.Exists(okValidOutputImage), "YOLOv8 SEG preparation should copy OK folder valid background image into the dataset output");
-            AssertTrue(File.Exists(okTrainOutputLabel) && File.ReadAllText(okTrainOutputLabel).Length == 0, "YOLOv8 SEG preparation should write an empty train label for OK background images");
-            AssertTrue(File.Exists(okValidOutputLabel) && File.ReadAllText(okValidOutputLabel).Length == 0, "YOLOv8 SEG preparation should write an empty valid label for OK background images");
-            YoloDatasetReadinessReport backgroundReport = YoloDatasetReadinessService.Build(backgroundSegmentationData, refreshYaml: true);
-            AssertTrue(backgroundReport.IsReady, string.Join(Environment.NewLine, backgroundReport.Errors));
-            AssertEqual(2, backgroundReport.Statistics.TotalSegmentationObjectCount);
-            AssertEqual(4, backgroundReport.Statistics.TrainEmptyLabelFileCount);
-            AssertEqual(4, backgroundReport.Statistics.ValidEmptyLabelFileCount);
-            IReadOnlyList<string> backgroundWarnings = YoloDatasetDiagnosticsService.BuildQualityWarnings(backgroundSegmentationData, backgroundReport.Statistics);
-            AssertTrue(
-                backgroundWarnings.Any(line => line.Contains("segmentation train split has only 1 positive mask image", StringComparison.Ordinal)),
-                "YOLOv8 SEG readiness should warn when train has too few positive mask images");
-            AssertTrue(
-                backgroundWarnings.Any(line => line.Contains("segmentation valid split has only 1 positive mask image", StringComparison.Ordinal)),
-                "YOLOv8 SEG readiness should warn when valid has too few positive mask images");
-            AssertTrue(
-                backgroundWarnings.Any(line => line.Contains("segmentation train split has 4 OK/background image", StringComparison.Ordinal)
-                    && line.Contains("only 1 positive mask image", StringComparison.Ordinal)),
-                "YOLOv8 SEG readiness should warn when train OK/background images dominate positive masks");
-            AssertTrue(
-                backgroundWarnings.Any(line => line.Contains("segmentation valid split has 4 OK/background image", StringComparison.Ordinal)
-                    && line.Contains("only 1 positive mask image", StringComparison.Ordinal)),
-                "YOLOv8 SEG readiness should warn when valid OK/background images dominate positive masks");
-
-            backgroundSegmentationData.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            backgroundSegmentationData.ProjectSettings.YoloDataset.TestPercent = 100;
-            YoloSegmentationTrainingLabelExportResult shiftedBackgroundExport = YoloSegmentationTrainingLabelService.Export(backgroundSegmentationData);
-            string okTrainTestOutputImage = Path.Combine(backgroundSegmentationData.OutputRootPath, "data", "test", "images", $"{okTrainStem}.png");
-            string okTrainTestOutputLabel = Path.Combine(backgroundSegmentationData.OutputRootPath, "data", "test", "labels", $"{okTrainStem}.txt");
-            string okValidTestOutputImage = Path.Combine(backgroundSegmentationData.OutputRootPath, "data", "test", "images", $"{okValidStem}.png");
-            string okValidTestOutputLabel = Path.Combine(backgroundSegmentationData.OutputRootPath, "data", "test", "labels", $"{okValidStem}.txt");
-            AssertTrue(!File.Exists(okTrainOutputImage), "YOLOv8 SEG preparation should remove stale OK background train image after split settings move it");
-            AssertTrue(!File.Exists(okTrainOutputLabel), "YOLOv8 SEG preparation should remove stale OK background train empty label after split settings move it");
-            AssertTrue(!File.Exists(okValidOutputImage), "YOLOv8 SEG preparation should remove stale OK background valid image after split settings move it");
-            AssertTrue(!File.Exists(okValidOutputLabel), "YOLOv8 SEG preparation should remove stale OK background valid empty label after split settings move it");
-            AssertTrue(File.Exists(okTrainTestOutputImage), "YOLOv8 SEG preparation should copy moved OK train-background image into the test split");
-            AssertTrue(File.Exists(okValidTestOutputImage), "YOLOv8 SEG preparation should copy moved OK valid-background image into the test split");
-            AssertTrue(File.Exists(okTrainTestOutputLabel) && File.ReadAllText(okTrainTestOutputLabel).Length == 0, "YOLOv8 SEG preparation should write an empty test label after moving OK train-background image");
-            AssertTrue(File.Exists(okValidTestOutputLabel) && File.ReadAllText(okValidTestOutputLabel).Length == 0, "YOLOv8 SEG preparation should write an empty test label after moving OK valid-background image");
-            AssertTrue(shiftedBackgroundExport.BackgroundImageCount >= 2, "YOLOv8 SEG preparation should report moved OK background images");
-            YoloDatasetReadinessReport shiftedBackgroundReport = YoloDatasetReadinessService.Build(backgroundSegmentationData, refreshYaml: true);
-            IReadOnlyList<string> shiftedBackgroundWarnings = YoloDatasetDiagnosticsService.BuildQualityWarnings(backgroundSegmentationData, shiftedBackgroundReport.Statistics);
-            AssertTrue(
-                shiftedBackgroundWarnings.Any(line => line.Contains("segmentation test split has OK/background image", StringComparison.Ordinal)
-                    && line.Contains("no positive mask image", StringComparison.Ordinal)),
-                "YOLOv8 SEG readiness should warn when held-out test split has only OK/background images");
-
-            CData maskOnlySegmentationData = CreatePurposeReadinessData(
-                Path.Combine(root, "segmentation-mask-only"),
-                LabelingDatasetPurpose.Segmentation,
-                includeBoxes: false,
-                includeSegments: false,
-                includeMaskOnly: true);
-
-            YoloDatasetReadinessReport maskOnlySegmentationReport = YoloDatasetReadinessService.Build(maskOnlySegmentationData, refreshYaml: true);
-            IReadOnlyList<string> maskOnlyWarnings = YoloDatasetDiagnosticsService.BuildQualityWarnings(maskOnlySegmentationData, maskOnlySegmentationReport.Statistics);
-            string maskOnlyStatus = InvokePrivateStaticResult<string>(
-                typeof(WpfLabelingShellWindow),
-                "BuildReadyDatasetStatusText",
-                maskOnlySegmentationReport.Statistics,
-                LabelingDatasetPurpose.Segmentation,
-                maskOnlyWarnings.Count > 0);
-
-            AssertTrue(maskOnlySegmentationReport.IsReady, string.Join(Environment.NewLine, maskOnlySegmentationReport.Errors));
-            AssertEqual(0, maskOnlySegmentationReport.Statistics.TotalSegmentationObjectCount);
-            AssertEqual(2, maskOnlySegmentationReport.Statistics.TotalMaskFileCount);
-            AssertTrue(
-                maskOnlyWarnings.Any(line => line.Contains("mask PNG files", StringComparison.Ordinal)
-                    && line.Contains("class/object balance requires segment JSON", StringComparison.Ordinal)),
-                "mask-only segmentation should explain that class/object balance needs segment JSON");
-            AssertTrue(
-                !maskOnlyWarnings.Any(line => line.Contains("class 'Defect' has only 0", StringComparison.Ordinal)),
-                "mask-only segmentation should not report every class as zero objects");
-            AssertTrue(maskOnlyStatus.Contains("마스크 2파일", StringComparison.Ordinal), "WPF ready status should show mask file count for mask-only segmentation");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static CData CreatePurposeReadinessData(
-        string root,
-        LabelingDatasetPurpose purpose,
-        bool includeBoxes,
-        bool includeSegments,
-        bool includeMaskOnly = false)
-    {
-        var data = new CData();
-        data.ConfigureOutputRoot(root);
-        data.ProjectSettings.DatasetPurpose = purpose;
-        data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-        data.ProjectSettings.YoloDataset.TestPercent = 0;
-        data.ClassNamedList.Add(new CClassItem { Text = "Defect", DrawColor = Color.Red });
-
-        var rois = new Dictionary<string, List<CRectangleObject>>();
-        if (includeBoxes)
-        {
-            rois["Defect"] = new List<CRectangleObject>
-            {
-                new CRectangleObject { Roi = new Rectangle(5, 5, 10, 10), cClassItem = data.ClassNamedList[0] }
-            };
-        }
-
-        var segments = new Dictionary<string, List<LabelingSegmentationObject>>();
-        if (includeSegments)
-        {
-            segments["Defect"] = new List<LabelingSegmentationObject>
-            {
-                new LabelingSegmentationObject(
-                    new[]
-                    {
-                        new Point(4, 4),
-                        new Point(22, 4),
-                        new Point(22, 22),
-                        new Point(4, 22)
-                    },
-                    data.ClassNamedList[0])
-            };
-        }
-
-        using (Bitmap trainImage = CreateSolidBitmap(32, 32, Color.Black))
-        using (Bitmap validImage = CreateSolidBitmap(32, 32, Color.White))
-        {
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            YoloAnnotationService.SaveAnnotations("purpose-train.png", trainImage, rois, data.ClassNamedList, data);
-            if (includeSegments)
-            {
-                YoloSegmentationAnnotationService.SaveSegmentationAnnotations("purpose-train.png", trainImage, segments, data.ClassNamedList, data);
-            }
-            else if (includeMaskOnly)
-            {
-                SaveMaskOnlySegmentationArtifact(data, "train", "purpose-train");
-            }
-
-            data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-            YoloAnnotationService.SaveAnnotations("purpose-valid.png", validImage, rois, data.ClassNamedList, data);
-            if (includeSegments)
-            {
-                YoloSegmentationAnnotationService.SaveSegmentationAnnotations("purpose-valid.png", validImage, segments, data.ClassNamedList, data);
-            }
-            else if (includeMaskOnly)
-            {
-                SaveMaskOnlySegmentationArtifact(data, "valid", "purpose-valid");
-            }
-        }
-
-        return data;
-    }
-
-    private static string FindImageStemForSplit(string prefix, string split, YoloDatasetSettings settings)
-    {
-        for (int index = 0; index < 500; index++)
-        {
-            string stem = $"{prefix}-{index:000}";
-            if (YoloDatasetSplitService.SelectModesForImage(stem, settings)
-                .Contains(split, StringComparer.OrdinalIgnoreCase))
-            {
-                return stem;
-            }
-        }
-
-        throw new InvalidOperationException($"Could not find a stable image stem for split {split}.");
-    }
-
-    private static void TestYoloV8SegmentationAppDatasetFixture()
-    {
-        string root = Path.Combine(FindRepositoryRoot(), "artifacts", "yolov8-app-segmentation-dataset");
-        if (Directory.Exists(root))
-        {
-            Directory.Delete(root, recursive: true);
-        }
-
-        CData data = CreatePurposeReadinessData(
-            root,
-            LabelingDatasetPurpose.Segmentation,
-            includeBoxes: false,
-            includeSegments: true);
-        data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-        data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-        data.ProjectSettings.YoloDataset.TestPercent = 100;
-        using (Bitmap testImage = CreateSolidBitmap(32, 32, Color.Gray))
-        {
-            var emptyRois = new Dictionary<string, List<CRectangleObject>>();
-            var testSegments = new Dictionary<string, List<LabelingSegmentationObject>>
-            {
-                ["Defect"] = new List<LabelingSegmentationObject>
-                {
-                    new LabelingSegmentationObject(
-                        new[]
-                        {
-                            new Point(6, 6),
-                            new Point(24, 6),
-                            new Point(24, 24),
-                            new Point(6, 24)
-                        },
-                        data.ClassNamedList[0])
-                }
-            };
-            YoloAnnotationService.SaveAnnotations("purpose-test.png", testImage, emptyRois, data.ClassNamedList, data);
-            YoloSegmentationAnnotationService.SaveSegmentationAnnotations("purpose-test.png", testImage, testSegments, data.ClassNamedList, data);
-        }
-
-        string templateSourceDirectory = Path.Combine(root, "template-source");
-        Directory.CreateDirectory(templateSourceDirectory);
-        string templatePolygonTargetPath = Path.Combine(templateSourceDirectory, "template-polygon-train-target.png");
-        string templateMaskTargetPath = Path.Combine(templateSourceDirectory, "template-mask-valid-target.png");
-        using (Bitmap polygonTargetImage = CreateTemplateBatchAutoLabelImage(new Point(56, 34)))
-        using (Bitmap maskTargetImage = CreateTemplateBatchAutoLabelImage(new Point(56, 34)))
-        {
-            using (Graphics graphics = Graphics.FromImage(maskTargetImage))
-            {
-                graphics.FillRectangle(Brushes.Navy, 2, 2, 5, 5);
-            }
-
-            polygonTargetImage.Save(templatePolygonTargetPath, System.Drawing.Imaging.ImageFormat.Png);
-            maskTargetImage.Save(templateMaskTargetPath, System.Drawing.Imaging.ImageFormat.Png);
-        }
-
-        using (Bitmap templateImage = CreateTemplateBatchAutoLabelPattern())
-        {
-            var templateBatchService = new TemplateMatchingBatchAutoLabelService();
-            var templateOptions = new TemplateMatchingAutoLabelOptions
-            {
-                MinimumScore = 0.7D,
-                MaximumCandidates = 1,
-                ExcludeSourceRegion = false
-            };
-
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-            TemplateMatchingBatchAutoLabelItemResult polygonBatch = templateBatchService.MatchAndSaveImage(
-                templatePolygonTargetPath,
-                templateImage,
-                data.ClassNamedList[0],
-                data.ClassNamedList[0].Text,
-                data,
-                templateOptions,
-                CancellationToken.None,
-                new Rectangle(12, 12, 24, 18),
-                new[]
-                {
-                    new Point(15, 16),
-                    new Point(30, 18),
-                    new Point(20, 27)
-                });
-            AssertTrue(polygonBatch.Saved, $"YOLOv8 SEG fixture should save template polygon batch target: {polygonBatch.Message}");
-
-            data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-            TemplateMatchingBatchAutoLabelItemResult maskBatch = templateBatchService.MatchAndSaveImage(
-                templateMaskTargetPath,
-                templateImage,
-                data.ClassNamedList[0],
-                data.ClassNamedList[0].Text,
-                data,
-                templateOptions,
-                CancellationToken.None,
-                sourceMaskData: CreateTemplateSourceLShapeMask(new Size(120, 90), new Rectangle(12, 12, 24, 18)),
-                sourceMaskSize: new Size(120, 90),
-                sourceMaskBounds: new Rectangle(12, 12, 24, 18));
-            AssertTrue(maskBatch.Saved, $"YOLOv8 SEG fixture should save template raster-mask batch target: {maskBatch.Message}");
-        }
-
-        data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-        data.ProjectSettings.YoloDataset.TestPercent = 100;
-        var workflow = new YoloTrainingWorkflowService();
-        AssertTrue(workflow.TryPrepareTrainingDataset(data), workflow.LastPreparationFailureMessage);
-        YoloSegmentationTrainingLabelExportResult exportResult = YoloSegmentationTrainingLabelService.Export(data);
-
-        string trainLabelPath = Path.Combine(root, "data", "train", "labels", "purpose-train.txt");
-        string validLabelPath = Path.Combine(root, "data", "valid", "labels", "purpose-valid.txt");
-        string testLabelPath = Path.Combine(root, "data", "test", "labels", "purpose-test.txt");
-        string templatePolygonLabelPath = Path.Combine(root, "data", "train", "labels", "template-polygon-train-target.txt");
-        string templateMaskLabelPath = Path.Combine(root, "data", "valid", "labels", "template-mask-valid-target.txt");
-        string trainLabel = File.ReadAllLines(trainLabelPath).Single();
-        string validLabel = File.ReadAllLines(validLabelPath).Single();
-        string testLabel = File.ReadAllLines(testLabelPath).Single();
-        string templatePolygonLabel = File.ReadAllLines(templatePolygonLabelPath).Single();
-        string templateMaskLabel = File.ReadAllLines(templateMaskLabelPath).Single();
-
-        AssertTrue(File.Exists(data.DataYamlFilePath), "YOLOv8 app segmentation fixture should write data.yaml");
-        AssertEqual("0 0.125 0.125 0.6875 0.125 0.6875 0.6875 0.125 0.6875", trainLabel);
-        AssertEqual(trainLabel, validLabel);
-        AssertEqual("0 0.1875 0.1875 0.75 0.1875 0.75 0.75 0.1875 0.75", testLabel);
-        AssertTrue(exportResult.TestPolygonCount > 0, "YOLOv8 segmentation fixture should export held-out test segment labels for model comparison");
-        AssertTrue(trainLabel.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length > 5, "YOLOv8 segmentation fixture labels should contain polygon points");
-        AssertYoloSegmentationLabelLine(templatePolygonLabel, minimumCoordinatePairs: 3, "template polygon batch label");
-        AssertYoloSegmentationLabelLine(templateMaskLabel, minimumCoordinatePairs: 5, "template raster-mask batch label");
-
-        YoloDatasetReadinessReport readiness = YoloDatasetReadinessService.Build(data, refreshYaml: true);
-        AssertTrue(readiness.IsReady, string.Join(Environment.NewLine, readiness.Errors));
-        AssertTrue(readiness.Statistics.TotalSegmentationObjectCount >= 5, "YOLOv8 SEG readiness should count manual and template-batch segment objects");
-
-        Console.WriteLine($"YOLOV8_APP_SEGMENTATION_DATASET={root}");
-        Console.WriteLine($"YOLOV8_APP_SEGMENTATION_DATA_YAML={data.DataYamlFilePath}");
-    }
-
-    private static void AssertYoloSegmentationLabelLine(string line, int minimumCoordinatePairs, string labelName)
-    {
-        string[] parts = (line ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-        AssertTrue(parts.Length >= 1 + (minimumCoordinatePairs * 2), $"{labelName} should contain at least {minimumCoordinatePairs} polygon points");
-        AssertEqual("0", parts[0]);
-        AssertTrue((parts.Length - 1) % 2 == 0, $"{labelName} should contain paired x/y coordinates");
-        for (int index = 1; index < parts.Length; index++)
-        {
-            double value = double.Parse(parts[index], CultureInfo.InvariantCulture);
-            AssertTrue(value >= 0D && value <= 1D, $"{labelName} coordinate should be normalized: {parts[index]}");
-        }
-    }
-
-    private static void SaveMaskOnlySegmentationArtifact(CData data, string mode, string fileStem)
-    {
-        string maskDirectory = Path.Combine(data.OutputRootPath, "data", mode, "masks");
-        Directory.CreateDirectory(maskDirectory);
-        using Bitmap mask = CreateSolidBitmap(32, 32, Color.White);
-        mask.Save(Path.Combine(maskDirectory, $"{fileStem}.png"), System.Drawing.Imaging.ImageFormat.Png);
-    }
-
-    private static void TestYoloDatasetReadinessReport()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-
-            var rois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["OK"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(5, 5, 10, 10), cClassItem = data.ClassNamedList[0] }
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(40, 40, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(40, 40, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                YoloAnnotationService.SaveAnnotations("train-sample.png", trainImage, rois, data.ClassNamedList, data);
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                YoloAnnotationService.SaveAnnotations("valid-sample.png", validImage, rois, data.ClassNamedList, data);
-            }
-
-            YoloDatasetReadinessReport report = YoloDatasetReadinessService.Build(data, refreshYaml: true);
-
-            AssertTrue(report.IsReady, string.Join(Environment.NewLine, report.Errors));
-            AssertEqual(1, report.Statistics.TrainImageCount);
-            AssertEqual(1, report.Statistics.ValidImageCount);
-            AssertEqual(0, report.Statistics.TestImageCount);
-            AssertTrue(report.SummaryLines.Any(line => line.Contains("TrainImages:1")), "readiness summary did not include train image count");
-            AssertTrue(report.SummaryLines.Any(line => line.Contains("TestImages:0")), "readiness summary did not include test image count");
-            AssertTrue(report.SummaryLines.Any(line => line.Contains("OK:2")), "readiness summary did not include class object count");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestYoloDatasetDiagnosticsReport()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-
-            IReadOnlyList<string> lines = YoloDatasetDiagnosticsService.BuildOperatorReport(data, refreshYaml: false);
-
-            AssertTrue(lines.Any(line => line.Contains("NOT READY")), "diagnostics did not report not-ready state");
-            AssertTrue(lines.Any(line => line.Contains("YOLO output root")), "diagnostics did not include output root");
-            AssertTrue(lines.Any(line => line.Contains("At least one class")), "diagnostics did not include class issue");
-
-            data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-            data.ClassNamedList.Add(new CClassItem { Text = "NG", DrawColor = Color.Red });
-
-            var rois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["OK"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(5, 5, 10, 10), cClassItem = data.ClassNamedList[0] }
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(40, 40, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(40, 40, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations("train-sample.png", trainImage, rois, data.ClassNamedList, data);
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations("valid-sample.png", validImage, rois, data.ClassNamedList, data);
-            }
-
-            lines = YoloDatasetDiagnosticsService.BuildOperatorReport(data, refreshYaml: true);
-
-            AssertTrue(lines.Any(line => line.Contains("READY")), "diagnostics did not report ready state");
-            AssertTrue(lines.Any(line => line.Contains("YOLO split guide")), "diagnostics did not explain validation/test split use");
-            AssertTrue(lines.Any(line => line.Contains("Test split is empty")), "diagnostics did not warn about missing test split");
-            AssertTrue(lines.Any(line => line.Contains("class 'NG' has only 0")), "diagnostics did not warn about missing NG examples");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestYoloDatasetReadinessStatisticsOnDuplicateSplit()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-
-            var rois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["OK"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(5, 5, 10, 10), cClassItem = data.ClassNamedList[0] }
-                }
-            };
-
-            using (Bitmap image = CreateSolidBitmap(40, 40, Color.Black))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                YoloAnnotationService.SaveAnnotations("train-duplicate.png", image, rois, data.ClassNamedList, data);
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                YoloAnnotationService.SaveAnnotations("valid-duplicate.png", image, rois, data.ClassNamedList, data);
-            }
-
-            YoloDatasetReadinessReport report = YoloDatasetReadinessService.Build(data, refreshYaml: true);
-
-            AssertTrue(!report.IsReady, "duplicate split should block training readiness");
-            AssertTrue(report.Errors.Any(error => error.Contains("duplicate image content", StringComparison.OrdinalIgnoreCase)), "duplicate split issue was not reported");
-            AssertEqual(1, report.Statistics.TrainImageCount);
-            AssertEqual(1, report.Statistics.ValidImageCount);
-            AssertEqual(1, report.Statistics.TrainValidImageContentOverlapCount);
-            AssertTrue(report.Statistics.TrainValidImageOverlapExample.Contains("duplicate", StringComparison.OrdinalIgnoreCase), "duplicate statistics should keep an operator-readable example");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestWpfYoloTrainingChecklistDatasetQualityPresentation()
-    {
-        if (System.Windows.Application.Current == null)
-        {
-            _ = new System.Windows.Application
-            {
-                ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
-            };
-        }
-
-        CData previousData = CGlobal.Inst.Data;
-        string root = CreateTempRoot();
-        WpfLabelingShellWindow window = null;
-        try
-        {
-            CData warningData = CreateDatasetQualityPresentationData(Path.Combine(root, "warning"), duplicateSplit: false, includeMissingClass: true);
-            CGlobal.Inst.Data = warningData;
-            window = new WpfLabelingShellWindow();
-
-            YoloDatasetReadinessReport warningReport = YoloDatasetReadinessService.Build(warningData, refreshYaml: true);
-            AssertTrue(warningReport.IsReady, string.Join(Environment.NewLine, warningReport.Errors));
-            InvokePrivateResult<object>(window, "UpdateYoloTrainingChecklist", warningReport, false);
-
-            AssertTrue(window.LearningWorkflowViewModel.TrainingChecklistStatusText.Contains("주의 후 학습 가능", StringComparison.Ordinal), "ready dataset warnings should be visible in the guide status");
-            AssertTrue(window.LearningWorkflowViewModel.TrainingChecklistDetailText.Contains("train 1", StringComparison.Ordinal), "ready warning detail should keep train count");
-            AssertTrue(window.LearningWorkflowViewModel.TrainingChecklistActionText.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "ready warning action should explain missing final verification data");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardStatusText.Contains("\uD559\uC2B5", StringComparison.Ordinal), "ready dataset dashboard should show a trainable status");
-            AssertTrue(window.LearningWorkflowViewModel.ModelReplacementStatusText.Contains("\uBCF4\uB958", StringComparison.Ordinal), "ready dataset without test split should allow training but hold model replacement");
-            AssertTrue(window.LearningWorkflowViewModel.ModelReplacementDetailText.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "model replacement detail should name the missing final verification data");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Count >= 8, "ready dataset dashboard should expose image, labeling progress, split, replacement, label, class, and duplicate metrics");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Any(item => item.Title.Contains("\uAD50\uCCB4", StringComparison.Ordinal) && item.IsWarning), "ready dataset without test split should mark replacement as a warning metric");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Any(item => item.Title.Contains("\uC9C4\uD589", StringComparison.Ordinal) && item.ActionKind == WpfDatasetDashboardActionKind.OpenLabelingProgress), "ready dataset dashboard should show labeling progress as a clickable tool shortcut");
-            WpfDatasetDashboardMetricItem qualityMetric = window.LearningWorkflowViewModel.DatasetDashboardMetrics.First(item => item.Title.Contains("\uD488\uC9C8", StringComparison.Ordinal));
-            AssertEqual("\uD488\uC9C8 \uBCF4\uACE0\uC11C", qualityMetric.Title);
-            AssertEqual(WpfDatasetDashboardActionKind.ExportQualityAudit, qualityMetric.ActionKind);
-            AssertTrue(qualityMetric.Detail.Contains("Markdown", StringComparison.Ordinal), "quality audit metric should explain that clicking saves a Markdown report");
-            AssertTrue(qualityMetric.Value == "OK" && !qualityMetric.IsProblem, "ready dataset dashboard should show a non-problem quality audit metric");
-            window.LearningWorkflowViewModel.DatasetDashboardMetricCommand.Execute(qualityMetric);
-            string qualityAuditPath = YoloDatasetQualityAuditExportService.ResolveDefaultOutputPath(warningData);
-            AssertTrue(File.Exists(qualityAuditPath), "quality audit metric should save the current dataset report");
-            AssertTrue(File.ReadAllText(qualityAuditPath).Contains("# Dataset Quality Audit", StringComparison.Ordinal), "saved quality audit metric report should contain the audit title");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardSummaryText.Contains("quality missing 0", StringComparison.Ordinal), "ready dataset dashboard summary should include quality audit counts");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.First().Contains("\uB2E4\uC74C:", StringComparison.Ordinal), "ready dataset dashboard should begin with a learner-facing next action");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.First().Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "ready dataset next action should explain the final verification data before model replacement");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.Any(item => item.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal)), "ready dataset dashboard should surface quality warnings in the operator issue list");
-            InvokePrivateResult<object>(window, "UpdateYoloCommandButtons");
-            AssertTrue(!window.LearningWorkflowViewModel.IsRunModelComparisonEnabled, "model comparison should stay disabled when the held-out test split is empty");
-            AssertTrue(window.LearningWorkflowViewModel.RunModelComparisonActionText.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "model comparison action text should explain that final verification data is required");
-            AssertTrue(window.LearningWorkflowViewModel.RunModelComparisonToolTipText.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "model comparison tooltip should explain the final verification requirement");
-
-            CData duplicateData = CreateDatasetQualityPresentationData(Path.Combine(root, "duplicate"), duplicateSplit: true, includeMissingClass: false);
-            CGlobal.Inst.Data = duplicateData;
-            YoloDatasetReadinessReport duplicateReport = YoloDatasetReadinessService.Build(duplicateData, refreshYaml: true);
-            AssertTrue(!duplicateReport.IsReady, "duplicate split should not be marked ready");
-            InvokePrivateResult<object>(window, "UpdateYoloTrainingChecklist", duplicateReport, false);
-
-            AssertTrue(window.LearningWorkflowViewModel.TrainingChecklistStatusText.Contains("학습 불가", StringComparison.Ordinal), "blocking split issue should be shown as not trainable");
-            AssertTrue(window.LearningWorkflowViewModel.TrainingChecklistStatusText.Contains("중복", StringComparison.Ordinal), "blocking split issue should name duplicate separation");
-            AssertTrue(window.LearningWorkflowViewModel.TrainingChecklistDetailText.Contains("train 1", StringComparison.Ordinal), "blocking detail should keep train count");
-            AssertTrue(window.LearningWorkflowViewModel.TrainingChecklistDetailText.Contains("valid 1", StringComparison.Ordinal), "blocking detail should keep valid count");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardStatusText.Contains("\uD559\uC2B5", StringComparison.Ordinal), "blocking dataset dashboard should show the learning-readiness category");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardStatusText.Contains("\uBD88\uAC00", StringComparison.Ordinal), "blocking dataset dashboard should show that training is not allowed");
-            AssertTrue(window.LearningWorkflowViewModel.ModelReplacementStatusText.Contains("\uBD88\uAC00", StringComparison.Ordinal), "blocking dataset should mark model replacement impossible");
-            AssertTrue(window.LearningWorkflowViewModel.ModelReplacementDetailText.Contains("\uD559\uC2B5 \uBD88\uAC00", StringComparison.Ordinal), "model replacement detail should point back to blocking training issues");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Any(item => item.Title.Contains("\uAD50\uCCB4", StringComparison.Ordinal) && item.IsProblem), "blocking dataset dashboard should mark replacement as a problem metric");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Any(item => item.Title.Contains("\uC911\uBCF5", StringComparison.Ordinal) && item.IsProblem), "blocking dataset dashboard should mark duplicate split as a problem metric");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Any(item => item.Title.Contains("\uC9C4\uD589", StringComparison.Ordinal) && item.Value.Contains("/", StringComparison.Ordinal)), "blocking dataset dashboard should keep visible labeling progress");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Any(item => item.Title.Contains("\uD488\uC9C8", StringComparison.Ordinal) && !item.IsProblem), "duplicate-only blocking dataset should keep quality audit separate from split overlap problems");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.First().Contains("\uB2E4\uC74C:", StringComparison.Ordinal), "blocking dataset dashboard should begin with a learner-facing next action");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.First().Contains("\uD559\uC2B5/\uAC80\uC99D/\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "blocking split next action should point at split separation");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.Any(item => item.Contains("\uD559\uC2B5/\uAC80\uC99D/\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal)), "blocking dataset dashboard should give a plain duplicate split action");
-            InvokePrivateResult<object>(window, "UpdateYoloCommandButtons");
-            AssertTrue(!window.LearningWorkflowViewModel.IsRunModelComparisonEnabled, "model comparison should stay disabled while dataset readiness is blocking");
-            AssertTrue(window.LearningWorkflowViewModel.RunModelComparisonActionText.Contains("\uD559\uC2B5", StringComparison.Ordinal), "blocking comparison action should point back to training readiness");
-            AssertTrue(window.LearningWorkflowViewModel.TrainingChecklistActionText.Contains("달라야", StringComparison.Ordinal), "blocking split action should tell the operator to separate validation/test images");
-        }
-        finally
-        {
-            window?.Close();
-            CGlobal.Inst.Data = previousData;
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestWpfModelComparisonButtonRequiresHeldOutTestSplit()
-    {
-        if (System.Windows.Application.Current == null)
-        {
-            _ = new System.Windows.Application
-            {
-                ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
-            };
-        }
-
-        CData previousData = CGlobal.Inst.Data;
-        string root = CreateTempRoot();
-        WpfLabelingShellWindow window = null;
-        try
-        {
-            CData unlabeledTestData = CreateDatasetQualityPresentationData(
-                Path.Combine(root, "test-unlabeled"),
-                duplicateSplit: false,
-                includeMissingClass: true,
-                includeTestSplit: true,
-                testImageCount: 3,
-                includeTestLabels: false);
-            CGlobal.Inst.Data = unlabeledTestData;
-            window = new WpfLabelingShellWindow();
-
-            YoloDatasetReadinessReport unlabeledReport = YoloDatasetReadinessService.Build(unlabeledTestData, refreshYaml: true);
-            AssertTrue(!unlabeledReport.IsReady, "unlabeled final verification images should make the dataset check fail before model comparison");
-            AssertTrue(unlabeledReport.Errors.Any(error => error.Contains("test label file is missing", StringComparison.OrdinalIgnoreCase)), "unlabeled final verification images should report missing test label files");
-            AssertTrue(unlabeledReport.Statistics.TestImageCount > 0, "unlabeled test dataset should include held-out images");
-            AssertEqual(0, unlabeledReport.Statistics.TestLabelCount);
-
-            InvokePrivateResult<object>(window, "UpdateYoloTrainingChecklist", unlabeledReport, false);
-            InvokePrivateResult<object>(window, "UpdateYoloCommandButtons");
-
-            AssertTrue(!window.LearningWorkflowViewModel.IsRunModelComparisonEnabled, "model comparison should stay disabled when held-out test images have no answer labels");
-            AssertTrue(window.LearningWorkflowViewModel.RunModelComparisonActionText.Contains("\uD559\uC2B5", StringComparison.Ordinal), "unlabeled final verification data should keep model comparison blocked by dataset readiness");
-            AssertTrue(window.LearningWorkflowViewModel.ModelReplacementStatusText.Contains("\uBD88\uAC00", StringComparison.Ordinal), "unlabeled final verification data should make replacement impossible until dataset errors are fixed");
-            AssertTrue(window.LearningWorkflowViewModel.ModelComparisonBasisText.Contains("\uD559\uC2B5 \uAC00\uB2A5", StringComparison.Ordinal), "unlabeled final verification basis should point back to training readiness before comparison");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Any(item => item.Title.Contains("\uD488\uC9C8", StringComparison.Ordinal) && item.IsProblem && item.Value.Contains("3", StringComparison.Ordinal)), "unlabeled final verification dashboard should mark missing labels in the quality metric");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.Any(item => item.Contains("\uB204\uB77D \uB77C\uBCA8 3", StringComparison.Ordinal)), "unlabeled final verification dashboard should surface quality-audit missing label count");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.Any(item => item.Contains("test label file is missing", StringComparison.OrdinalIgnoreCase)), "unlabeled final verification dashboard should surface missing test label files");
-
-            CData data = CreateDatasetQualityPresentationData(
-                Path.Combine(root, "test-ready"),
-                duplicateSplit: false,
-                includeMissingClass: true,
-                includeTestSplit: true);
-            CGlobal.Inst.Data = data;
-            window.Close();
-            window = new WpfLabelingShellWindow();
-
-            YoloDatasetReadinessReport report = YoloDatasetReadinessService.Build(data, refreshYaml: true);
-            AssertTrue(report.IsReady, string.Join(Environment.NewLine, report.Errors));
-            AssertTrue(report.Statistics.TestImageCount > 0, "test-ready dataset should include a held-out test image");
-
-            InvokePrivateResult<object>(window, "UpdateYoloTrainingChecklist", report, false);
-            InvokePrivateResult<object>(window, "UpdateYoloCommandButtons");
-
-            AssertTrue(window.LearningWorkflowViewModel.IsRunModelComparisonEnabled, "model comparison should enable only after dataset readiness and a non-empty test split");
-            AssertTrue(window.LearningWorkflowViewModel.RunModelComparisonActionText.Contains("\uBAA8\uB378", StringComparison.Ordinal), "ready comparison action should show the normal model comparison command");
-            AssertTrue(window.LearningWorkflowViewModel.RunModelComparisonToolTipText.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "ready comparison tooltip should name the final verification image count");
-            AssertTrue(window.LearningWorkflowViewModel.ModelReplacementStatusText.Contains("\uADFC\uAC70 \uBD80\uC871", StringComparison.Ordinal), "one held-out image should allow comparison but warn that model-adoption evidence is weak");
-            AssertTrue(window.LearningWorkflowViewModel.ModelReplacementDetailText.Contains("\uAD8C\uC7A5", StringComparison.Ordinal), "weak model-adoption evidence should explain the recommended final verification count");
-            AssertTrue(window.LearningWorkflowViewModel.RunModelComparisonToolTipText.Contains("\uADFC\uAC70\uAC00 \uC57D", StringComparison.Ordinal), "model comparison tooltip should warn when final verification evidence is weak");
-            AssertTrue(window.LearningWorkflowViewModel.ModelComparisonBasisText.Contains("\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 1\uC7A5", StringComparison.Ordinal), "weak comparison basis should show the exact held-out label count");
-            AssertTrue(window.LearningWorkflowViewModel.ModelComparisonBasisText.Contains("\uAD8C\uC7A5 10\uC7A5", StringComparison.Ordinal), "weak comparison basis should show the recommended held-out label count");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Any(item => item.Title.Contains("\uAD50\uCCB4", StringComparison.Ordinal) && item.IsWarning && item.Value.Contains("\uC8FC\uC758", StringComparison.Ordinal)), "weak final verification evidence should mark the replacement metric as a warning");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.First().Contains("\uB2E4\uC74C:", StringComparison.Ordinal), "weak evidence dashboard should begin with a next action");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardIssueItems.First().Contains("\uB354 \uD655\uBCF4", StringComparison.Ordinal), "weak evidence next action should ask for more final verification images");
-
-            CData strongData = CreateDatasetQualityPresentationData(
-                Path.Combine(root, "test-strong"),
-                duplicateSplit: false,
-                includeMissingClass: true,
-                includeTestSplit: true,
-                testImageCount: 10);
-            CGlobal.Inst.Data = strongData;
-            YoloDatasetReadinessReport strongReport = YoloDatasetReadinessService.Build(strongData, refreshYaml: true);
-            AssertTrue(strongReport.IsReady, string.Join(Environment.NewLine, strongReport.Errors));
-            AssertTrue(strongReport.Statistics.TestImageCount >= 10, "strong test-ready dataset should include enough final verification images");
-
-            InvokePrivateResult<object>(window, "UpdateYoloTrainingChecklist", strongReport, false);
-            InvokePrivateResult<object>(window, "UpdateYoloCommandButtons");
-
-            AssertTrue(window.LearningWorkflowViewModel.ModelReplacementStatusText.Contains("\uAC00\uB2A5", StringComparison.Ordinal), "recommended final verification count should mark model replacement as possible");
-            AssertTrue(!window.LearningWorkflowViewModel.ModelReplacementDetailText.Contains("\uADFC\uAC70\uAC00 \uC57D", StringComparison.Ordinal), "strong model-adoption evidence should not keep the weak-evidence warning");
-            AssertTrue(window.LearningWorkflowViewModel.ModelComparisonBasisText.Contains("\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 10\uC7A5", StringComparison.Ordinal), "strong comparison basis should show the held-out label count");
-            AssertTrue(window.LearningWorkflowViewModel.ModelComparisonBasisText.Contains("\uAD50\uCCB4 \uD310\uB2E8 \uAC00\uB2A5", StringComparison.Ordinal), "strong comparison basis should explain that replacement decision is now possible");
-            AssertTrue(window.LearningWorkflowViewModel.DatasetDashboardMetrics.Any(item => item.Title.Contains("\uAD50\uCCB4", StringComparison.Ordinal) && !item.IsWarning && item.Value.Contains("\uAC00\uB2A5", StringComparison.Ordinal)), "recommended final verification count should clear the replacement warning metric");
-        }
-        finally
-        {
-            window?.Close();
-            CGlobal.Inst.Data = previousData;
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static CData CreateDatasetQualityPresentationData(string root, bool duplicateSplit, bool includeMissingClass, bool includeTestSplit = false, int testImageCount = 0, bool includeTestLabels = true)
-    {
-        var data = new CData();
-        data.ConfigureOutputRoot(root);
-        data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-        if (includeMissingClass)
-        {
-            data.ClassNamedList.Add(new CClassItem { Text = "NG", DrawColor = Color.Red });
-        }
-
-        var rois = new Dictionary<string, List<CRectangleObject>>
-        {
-            ["OK"] = new List<CRectangleObject>
-            {
-                new CRectangleObject { Roi = new Rectangle(5, 5, 10, 10), cClassItem = data.ClassNamedList[0] }
-            }
-        };
-
-        using (Bitmap trainImage = CreateSolidBitmap(40, 40, Color.Black))
-        using (Bitmap validImage = CreateSolidBitmap(40, 40, duplicateSplit ? Color.Black : Color.White))
-        {
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-            YoloAnnotationService.SaveAnnotations("train-sample.png", trainImage, rois, data.ClassNamedList, data);
-            data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-            YoloAnnotationService.SaveAnnotations("valid-sample.png", validImage, rois, data.ClassNamedList, data);
-            if (includeTestSplit)
-            {
-                int finalVerificationImageCount = Math.Max(1, testImageCount);
-                for (int i = 0; i < finalVerificationImageCount; i++)
-                {
-                    data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                    data.ProjectSettings.YoloDataset.TestPercent = 100;
-                    using Bitmap testImage = CreateSolidBitmap(40, 40, Color.FromArgb(0, 0, Math.Min(255, 40 + i)));
-                    if (includeTestLabels)
-                    {
-                        YoloAnnotationService.SaveAnnotations($"test-sample-{i}.png", testImage, rois, data.ClassNamedList, data);
-                    }
-                    else
-                    {
-                        Directory.CreateDirectory(data.TestImagesPath);
-                        testImage.Save(Path.Combine(data.TestImagesPath, $"test-sample-{i}.png"));
-                    }
-                }
-            }
-        }
-
-        return data;
-    }
-
     private static void TestTrainingSettingsMirror()
     {
         var data = new CData();
@@ -15587,3381 +12530,6 @@ internal static partial class Program
 
         data.TrainingParam = null;
         AssertTrue(data.TrainingParam != null, "TrainingParam alias should reject null assignment");
-    }
-
-    private static void TestYoloAnnotationLines()
-    {
-        var classes = new List<CClassItem>
-        {
-            new CClassItem { Text = "OK", DrawColor = Color.Green },
-            new CClassItem { Text = "NG", DrawColor = Color.Red }
-        };
-        var rois = new Dictionary<string, List<CRectangleObject>>
-        {
-            ["NG"] = new List<CRectangleObject>
-            {
-                new CRectangleObject { Roi = new Rectangle(10, 20, 30, 40), cClassItem = classes[1] }
-            }
-        };
-
-        List<string> lines = YoloAnnotationService.BuildAnnotationLines(rois, classes, new Size(100, 200));
-
-        AssertEqual(1, lines.Count);
-        AssertEqual("1 0.25 0.2 0.3 0.2", lines[0]);
-
-        var data = new CData();
-        string root = CreateTempRoot();
-        try
-        {
-            data.ConfigureOutputRoot(root);
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            IReadOnlyList<string> targetLabelPaths = YoloAnnotationService.GetTargetLabelPaths("part-001.png", data);
-
-            AssertEqual(1, targetLabelPaths.Count);
-            AssertEqual(Path.Combine(root, "data", "train", "labels", "part-001.txt"), targetLabelPaths[0]);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestYoloAnnotationLoad()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string labelPath = Path.Combine(root, "sample.txt");
-            File.WriteAllLines(labelPath, new[]
-            {
-                "1 0.25 0.2 0.3 0.2",
-                "bad line",
-                "2 0.5 0.5 0.1 0.1"
-            });
-
-            var classes = new List<CClassItem>
-            {
-                new CClassItem { Text = "OK", DrawColor = Color.Green },
-                new CClassItem { Text = "NG", DrawColor = Color.Red }
-            };
-
-            IReadOnlyDictionary<string, List<Rectangle>> loaded = YoloAnnotationService.LoadAnnotationRectangles(
-                labelPath,
-                classes,
-                new Size(100, 200));
-
-            AssertEqual(1, loaded.Count);
-            AssertTrue(loaded.ContainsKey("NG"), "NG label was not loaded");
-            AssertEqual(new Rectangle(10, 20, 30, 40), loaded["NG"][0]);
-
-            AssertTrue(YoloAnnotationService.TryParseYoloLine("0 0.5 0.5 1 1", new Size(20, 10), out int classIndex, out Rectangle roi), "valid YOLO line did not parse");
-            AssertEqual(0, classIndex);
-            AssertEqual(new Rectangle(0, 0, 20, 10), roi);
-            AssertTrue(!YoloAnnotationService.TryParseYoloLine("0 1.2 0.5 0.1 0.1", new Size(20, 10), out _, out _), "out-of-range YOLO line was accepted");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestCocoDetectionExportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-            data.ClassNamedList.Add(new CClassItem { Text = "NG", DrawColor = Color.Red });
-
-            var rois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["NG"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(10, 20, 30, 40), cClassItem = data.ClassNamedList[1] }
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations(
-                    "train-sample.png",
-                    trainImage,
-                    rois,
-                    data.ClassNamedList,
-                    data,
-                    sourceImagePath: Path.Combine(root, "source", "train-sample.png"));
-
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations(
-                    "valid-empty.png",
-                    validImage,
-                    new Dictionary<string, List<CRectangleObject>>(),
-                    data.ClassNamedList,
-                    data,
-                    sourceImagePath: Path.Combine(root, "source", "valid-empty.png"));
-            }
-
-            string trainLabelPath = Path.Combine(root, "data", "train", "labels", "train-sample.txt");
-            File.AppendAllLines(trainLabelPath, new[] { "9 0.5 0.5 0.1 0.1", "bad line" });
-
-            string outputPath = Path.Combine(root, "exports", "coco-detection.json");
-            CocoDetectionExportResult result = CocoDetectionExportService.ExportDataset(
-                data,
-                outputPath,
-                new[] { YoloDatasetSplitService.TrainMode, YoloDatasetSplitService.ValidMode });
-
-            AssertTrue(File.Exists(outputPath), "COCO export JSON was not written");
-            AssertEqual(outputPath, result.OutputPath);
-            AssertEqual(2, result.ImageCount);
-            AssertEqual(1, result.AnnotationCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(2, result.SkippedAnnotationCount);
-
-            CocoDetectionDataset exported = JsonConvert.DeserializeObject<CocoDetectionDataset>(File.ReadAllText(outputPath));
-            AssertTrue(exported != null, "COCO export JSON did not deserialize");
-            AssertEqual(2, exported.Images.Count);
-            AssertEqual(2, exported.Categories.Count);
-            AssertEqual(1, exported.Annotations.Count);
-            AssertTrue(exported.Categories.Any(category => category.Id == 1 && category.Name == "OK"), "COCO export did not include OK category");
-            AssertTrue(exported.Categories.Any(category => category.Id == 2 && category.Name == "NG"), "COCO export did not include NG category");
-
-            CocoDetectionImage trainEntry = exported.Images.FirstOrDefault(image => image.FileName == "data/train/images/train-sample.png");
-            CocoDetectionImage validEntry = exported.Images.FirstOrDefault(image => image.FileName == "data/valid/images/valid-empty.png");
-            AssertTrue(trainEntry != null, "COCO export did not include train image with relative path");
-            AssertTrue(validEntry != null, "COCO export did not include valid empty-label image with relative path");
-            AssertEqual(100, trainEntry.Width);
-            AssertEqual(200, trainEntry.Height);
-            AssertEqual(50, validEntry.Width);
-            AssertEqual(40, validEntry.Height);
-
-            CocoDetectionAnnotation annotation = exported.Annotations[0];
-            AssertEqual(trainEntry.Id, annotation.ImageId);
-            AssertEqual(2, annotation.CategoryId);
-            AssertEqual(0, annotation.IsCrowd);
-            AssertEqual(1200D, annotation.Area);
-            AssertEqual(4, annotation.BBox.Length);
-            AssertEqual(10D, annotation.BBox[0]);
-            AssertEqual(20D, annotation.BBox[1]);
-            AssertEqual(30D, annotation.BBox[2]);
-            AssertEqual(40D, annotation.BBox[3]);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestCocoDetectionImportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string sourceRoot = Path.Combine(root, "source");
-            string sourceImageDirectory = Path.Combine(sourceRoot, "images");
-            Directory.CreateDirectory(sourceImageDirectory);
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap emptyImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                trainImage.Save(Path.Combine(sourceImageDirectory, "train-sample.png"));
-                emptyImage.Save(Path.Combine(sourceImageDirectory, "empty-sample.png"));
-            }
-
-            var dataset = new CocoDetectionDataset();
-            dataset.Categories.Add(new CocoDetectionCategory { Id = 1, Name = "OK", SuperCategory = "object" });
-            dataset.Categories.Add(new CocoDetectionCategory { Id = 2, Name = "NG", SuperCategory = "object" });
-            dataset.Images.Add(new CocoDetectionImage
-            {
-                Id = 10,
-                FileName = "images/train-sample.png",
-                Width = 100,
-                Height = 200
-            });
-            dataset.Images.Add(new CocoDetectionImage
-            {
-                Id = 11,
-                FileName = "images/empty-sample.png",
-                Width = 50,
-                Height = 40
-            });
-            dataset.Annotations.Add(new CocoDetectionAnnotation
-            {
-                Id = 1,
-                ImageId = 10,
-                CategoryId = 2,
-                BBox = new[] { 10D, 20D, 30D, 40D },
-                Area = 1200D,
-                IsCrowd = 0
-            });
-            dataset.Annotations.Add(new CocoDetectionAnnotation
-            {
-                Id = 2,
-                ImageId = 10,
-                CategoryId = 99,
-                BBox = new[] { 1D, 1D, 3D, 3D },
-                Area = 9D,
-                IsCrowd = 0
-            });
-
-            string annotationPath = Path.Combine(root, "annotations.json");
-            File.WriteAllText(annotationPath, JsonConvert.SerializeObject(dataset, Formatting.Indented));
-
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "imported"));
-
-            CocoDetectionImportResult result = CocoDetectionImportService.ImportDataset(
-                data,
-                annotationPath,
-                sourceRoot,
-                YoloDatasetSplitService.TrainMode);
-
-            AssertEqual(annotationPath, result.AnnotationPath);
-            AssertEqual(Path.GetFullPath(sourceRoot), result.ImageRoot);
-            AssertEqual(YoloDatasetSplitService.TrainMode, result.TargetSplit);
-            AssertEqual(2, result.ImportedImageCount);
-            AssertEqual(2, result.LabelFileCount);
-            AssertEqual(1, result.ImportedAnnotationCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(0, result.SkippedImageCount);
-            AssertEqual(1, result.SkippedAnnotationCount);
-            AssertEqual(2, data.ClassNamedList.Count);
-            AssertEqual("OK", data.ClassNamedList[0].Text);
-            AssertEqual("NG", data.ClassNamedList[1].Text);
-
-            string importedImagePath = Path.Combine(data.TrainImagesPath, "train-sample.png");
-            string importedEmptyImagePath = Path.Combine(data.TrainImagesPath, "empty-sample.png");
-            string importedLabelPath = Path.Combine(data.OutputRootPath, "data", "train", "labels", "train-sample.txt");
-            string importedEmptyLabelPath = Path.Combine(data.OutputRootPath, "data", "train", "labels", "empty-sample.txt");
-            AssertTrue(File.Exists(importedImagePath), "COCO import did not copy the annotated image");
-            AssertTrue(File.Exists(importedEmptyImagePath), "COCO import did not copy the empty image");
-            AssertTrue(File.Exists(importedLabelPath), "COCO import did not write the label file");
-            AssertTrue(File.Exists(importedEmptyLabelPath), "COCO import did not write the empty label file");
-            AssertEqual("1 0.25 0.2 0.3 0.2", File.ReadAllText(importedLabelPath).Trim());
-            AssertEqual(string.Empty, File.ReadAllText(importedEmptyLabelPath).Trim());
-            AssertTrue(File.Exists(data.DataYamlFilePath), "COCO import did not save data.yaml");
-
-            IReadOnlyDictionary<string, List<Rectangle>> loaded = YoloAnnotationService.LoadAnnotationRectangles(
-                importedLabelPath,
-                data.ClassNamedList,
-                new Size(100, 200));
-            AssertTrue(loaded.ContainsKey("NG"), "COCO import label should load as NG");
-            AssertEqual(new Rectangle(10, 20, 30, 40), loaded["NG"][0]);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestCocoSegmentationExportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-            data.ClassNamedList.Add(new CClassItem { Text = "Defect", DrawColor = Color.Red });
-            data.EnsureYoloOutputDirectories();
-
-            var segments = new Dictionary<string, List<LabelingSegmentationObject>>
-            {
-                ["Defect"] = new List<LabelingSegmentationObject>
-                {
-                    new LabelingSegmentationObject(
-                        new[]
-                        {
-                            new Point(10, 20),
-                            new Point(40, 20),
-                            new Point(40, 60),
-                            new Point(10, 60)
-                        },
-                        data.ClassNamedList[1])
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                trainImage.Save(Path.Combine(data.TrainImagesPath, "seg-train.png"));
-                YoloSegmentationAnnotationService.SaveSegmentationAnnotations(
-                    "seg-train.png",
-                    trainImage,
-                    segments,
-                    data.ClassNamedList,
-                    data);
-
-                validImage.Save(Path.Combine(data.ValidImagesPath, "seg-valid-empty.png"));
-            }
-
-            string segmentPath = Path.Combine(root, "data", "train", "segments", "seg-train.json");
-            SegmentationAnnotationFile annotationFile = JsonConvert.DeserializeObject<SegmentationAnnotationFile>(File.ReadAllText(segmentPath));
-            annotationFile.Polygons.Add(new SegmentationPolygonRecord
-            {
-                ClassIndex = 9,
-                ClassName = "Missing",
-                Points = new List<SegmentationPointRecord>
-                {
-                    new SegmentationPointRecord { X = 1, Y = 1 },
-                    new SegmentationPointRecord { X = 5, Y = 1 },
-                    new SegmentationPointRecord { X = 5, Y = 5 },
-                    new SegmentationPointRecord { X = 1, Y = 5 }
-                }
-            });
-            File.WriteAllText(segmentPath, JsonConvert.SerializeObject(annotationFile, Formatting.Indented));
-
-            string outputPath = Path.Combine(root, "exports", "coco-segmentation.json");
-            CocoSegmentationExportResult result = CocoSegmentationExportService.ExportDataset(
-                data,
-                outputPath,
-                new[] { YoloDatasetSplitService.TrainMode, YoloDatasetSplitService.ValidMode });
-
-            AssertTrue(File.Exists(outputPath), "COCO segmentation export JSON was not written");
-            AssertEqual(outputPath, result.OutputPath);
-            AssertEqual(2, result.ImageCount);
-            AssertEqual(1, result.AnnotationCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(1, result.SkippedAnnotationCount);
-
-            CocoSegmentationDataset exported = JsonConvert.DeserializeObject<CocoSegmentationDataset>(File.ReadAllText(outputPath));
-            AssertTrue(exported != null, "COCO segmentation export JSON did not deserialize");
-            AssertEqual(2, exported.Images.Count);
-            AssertEqual(2, exported.Categories.Count);
-            AssertEqual(1, exported.Annotations.Count);
-            AssertTrue(exported.Categories.Any(category => category.Id == 1 && category.Name == "OK"), "COCO segmentation export did not include OK category");
-            AssertTrue(exported.Categories.Any(category => category.Id == 2 && category.Name == "Defect"), "COCO segmentation export did not include Defect category");
-
-            CocoSegmentationImage trainEntry = exported.Images.FirstOrDefault(image => image.FileName == "data/train/images/seg-train.png");
-            CocoSegmentationImage validEntry = exported.Images.FirstOrDefault(image => image.FileName == "data/valid/images/seg-valid-empty.png");
-            AssertTrue(trainEntry != null, "COCO segmentation export did not include train image with relative path");
-            AssertTrue(validEntry != null, "COCO segmentation export did not include valid empty-label image with relative path");
-            AssertEqual(100, trainEntry.Width);
-            AssertEqual(200, trainEntry.Height);
-            AssertEqual(50, validEntry.Width);
-            AssertEqual(40, validEntry.Height);
-
-            CocoSegmentationAnnotation annotation = exported.Annotations[0];
-            AssertEqual(trainEntry.Id, annotation.ImageId);
-            AssertEqual(2, annotation.CategoryId);
-            AssertEqual(0, annotation.IsCrowd);
-            AssertEqual(1200D, annotation.Area);
-            AssertEqual(4, annotation.BBox.Length);
-            AssertEqual(10D, annotation.BBox[0]);
-            AssertEqual(20D, annotation.BBox[1]);
-            AssertEqual(30D, annotation.BBox[2]);
-            AssertEqual(40D, annotation.BBox[3]);
-            AssertEqual(1, annotation.Segmentation.Count);
-            AssertEqual(8, annotation.Segmentation[0].Length);
-            AssertEqual(10D, annotation.Segmentation[0][0]);
-            AssertEqual(20D, annotation.Segmentation[0][1]);
-            AssertEqual(40D, annotation.Segmentation[0][2]);
-            AssertEqual(60D, annotation.Segmentation[0][5]);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestCocoSegmentationImportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string sourceRoot = Path.Combine(root, "source");
-            string sourceImageDirectory = Path.Combine(sourceRoot, "images");
-            Directory.CreateDirectory(sourceImageDirectory);
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap emptyImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                trainImage.Save(Path.Combine(sourceImageDirectory, "seg-train.png"));
-                emptyImage.Save(Path.Combine(sourceImageDirectory, "seg-empty.png"));
-            }
-
-            var dataset = new CocoSegmentationDataset();
-            dataset.Categories.Add(new CocoSegmentationCategory { Id = 1, Name = "OK", SuperCategory = "object" });
-            dataset.Categories.Add(new CocoSegmentationCategory { Id = 2, Name = "Defect", SuperCategory = "object" });
-            dataset.Images.Add(new CocoSegmentationImage
-            {
-                Id = 10,
-                FileName = "images/seg-train.png",
-                Width = 100,
-                Height = 200
-            });
-            dataset.Images.Add(new CocoSegmentationImage
-            {
-                Id = 11,
-                FileName = "images/seg-empty.png",
-                Width = 50,
-                Height = 40
-            });
-            dataset.Annotations.Add(new CocoSegmentationAnnotation
-            {
-                Id = 1,
-                ImageId = 10,
-                CategoryId = 2,
-                Segmentation = new List<double[]>
-                {
-                    new[] { 10D, 20D, 40D, 20D, 40D, 60D, 10D, 60D }
-                },
-                BBox = new[] { 10D, 20D, 30D, 40D },
-                Area = 1200D,
-                IsCrowd = 0
-            });
-            dataset.Annotations.Add(new CocoSegmentationAnnotation
-            {
-                Id = 2,
-                ImageId = 10,
-                CategoryId = 99,
-                Segmentation = new List<double[]>
-                {
-                    new[] { 1D, 1D, 5D, 1D, 5D, 5D, 1D, 5D }
-                },
-                BBox = new[] { 1D, 1D, 4D, 4D },
-                Area = 16D,
-                IsCrowd = 0
-            });
-
-            string annotationPath = Path.Combine(root, "coco-segmentation.json");
-            File.WriteAllText(annotationPath, JsonConvert.SerializeObject(dataset, Formatting.Indented));
-
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "imported"));
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-
-            CocoSegmentationImportResult result = CocoSegmentationImportService.ImportDataset(
-                data,
-                annotationPath,
-                sourceRoot,
-                YoloDatasetSplitService.TrainMode);
-
-            AssertEqual(annotationPath, result.AnnotationPath);
-            AssertEqual(Path.GetFullPath(sourceRoot), result.ImageRoot);
-            AssertEqual(YoloDatasetSplitService.TrainMode, result.TargetSplit);
-            AssertEqual(2, result.ImportedImageCount);
-            AssertEqual(1, result.ImportedAnnotationCount);
-            AssertEqual(1, result.ImportedSegmentFileCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(0, result.SkippedImageCount);
-            AssertEqual(1, result.SkippedAnnotationCount);
-            AssertEqual(2, data.ClassNamedList.Count);
-            AssertEqual("OK", data.ClassNamedList[0].Text);
-            AssertEqual("Defect", data.ClassNamedList[1].Text);
-
-            string importedImagePath = Path.Combine(data.TrainImagesPath, "seg-train.png");
-            string importedEmptyImagePath = Path.Combine(data.TrainImagesPath, "seg-empty.png");
-            string segmentPath = Path.Combine(data.OutputRootPath, "data", "train", "segments", "seg-train.json");
-            string maskPath = Path.Combine(data.OutputRootPath, "data", "train", "masks", "seg-train.png");
-            string emptySegmentPath = Path.Combine(data.OutputRootPath, "data", "train", "segments", "seg-empty.json");
-            AssertTrue(File.Exists(importedImagePath), "COCO segmentation import did not copy the annotated image");
-            AssertTrue(File.Exists(importedEmptyImagePath), "COCO segmentation import did not copy the empty image");
-            AssertTrue(File.Exists(segmentPath), "COCO segmentation import did not write the segment JSON");
-            AssertTrue(File.Exists(maskPath), "COCO segmentation import did not write the segmentation mask");
-            AssertTrue(!File.Exists(emptySegmentPath), "COCO segmentation import should not create a segment JSON for empty images");
-            AssertTrue(File.Exists(data.DataYamlFilePath), "COCO segmentation import did not save data.yaml");
-
-            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> loaded = YoloSegmentationAnnotationService.LoadSegmentationObjects(
-                segmentPath,
-                data.ClassNamedList,
-                new Size(100, 200));
-            AssertTrue(loaded.ContainsKey("Defect"), "COCO segmentation import segment should load as Defect");
-            AssertEqual(1, loaded["Defect"].Count);
-            AssertEqual(new Point(10, 20), loaded["Defect"][0].Points[0]);
-
-            using (Bitmap mask = new Bitmap(maskPath))
-            {
-                AssertEqual(2, mask.GetPixel(15, 25).R);
-                AssertEqual(0, mask.GetPixel(1, 1).R);
-            }
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestPascalVocDetectionExportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-            data.ClassNamedList.Add(new CClassItem { Text = "NG", DrawColor = Color.Red });
-
-            var rois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["NG"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(10, 20, 30, 40), cClassItem = data.ClassNamedList[1] }
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations(
-                    "train-sample.png",
-                    trainImage,
-                    rois,
-                    data.ClassNamedList,
-                    data,
-                    sourceImagePath: Path.Combine(root, "source", "train-sample.png"));
-
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations(
-                    "valid-empty.png",
-                    validImage,
-                    new Dictionary<string, List<CRectangleObject>>(),
-                    data.ClassNamedList,
-                    data,
-                    sourceImagePath: Path.Combine(root, "source", "valid-empty.png"));
-            }
-
-            string trainLabelPath = Path.Combine(root, "data", "train", "labels", "train-sample.txt");
-            File.AppendAllLines(trainLabelPath, new[] { "9 0.5 0.5 0.1 0.1", "bad line" });
-
-            string outputDirectory = Path.Combine(root, "exports", "pascal-voc");
-            PascalVocDetectionExportResult result = PascalVocDetectionExportService.ExportDataset(
-                data,
-                outputDirectory,
-                new[] { YoloDatasetSplitService.TrainMode, YoloDatasetSplitService.ValidMode });
-
-            string trainXmlPath = Path.Combine(outputDirectory, "train", "train-sample.xml");
-            string validXmlPath = Path.Combine(outputDirectory, "valid", "valid-empty.xml");
-            AssertTrue(File.Exists(trainXmlPath), "Pascal VOC train XML was not written");
-            AssertTrue(File.Exists(validXmlPath), "Pascal VOC valid empty-label XML was not written");
-            AssertEqual(outputDirectory, result.OutputDirectory);
-            AssertEqual(2, result.ImageCount);
-            AssertEqual(2, result.XmlFileCount);
-            AssertEqual(1, result.ObjectCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(2, result.SkippedAnnotationCount);
-            AssertTrue(result.OutputPaths.Contains(trainXmlPath), "Pascal VOC result should list the train XML path");
-            AssertTrue(result.OutputPaths.Contains(validXmlPath), "Pascal VOC result should list the valid XML path");
-
-            XDocument trainDocument = XDocument.Load(trainXmlPath);
-            XElement trainRoot = trainDocument.Root;
-            AssertTrue(trainRoot != null, "Pascal VOC train XML should have an annotation root");
-            AssertEqual("annotation", trainRoot.Name.LocalName);
-            AssertEqual("train", trainRoot.Element("folder")?.Value);
-            AssertEqual("train-sample.png", trainRoot.Element("filename")?.Value);
-            AssertEqual("data/train/images/train-sample.png", trainRoot.Element("path")?.Value);
-            XElement trainSize = trainRoot.Element("size");
-            AssertTrue(trainSize != null, "Pascal VOC train XML should include image size");
-            AssertEqual("100", trainSize.Element("width")?.Value);
-            AssertEqual("200", trainSize.Element("height")?.Value);
-            AssertEqual("3", trainSize.Element("depth")?.Value);
-
-            XElement trainObject = trainRoot.Element("object");
-            AssertTrue(trainObject != null, "Pascal VOC train XML should include one object");
-            AssertEqual("NG", trainObject.Element("name")?.Value);
-            XElement bounds = trainObject.Element("bndbox");
-            AssertTrue(bounds != null, "Pascal VOC object should include bndbox");
-            AssertEqual("11", bounds.Element("xmin")?.Value);
-            AssertEqual("21", bounds.Element("ymin")?.Value);
-            AssertEqual("40", bounds.Element("xmax")?.Value);
-            AssertEqual("60", bounds.Element("ymax")?.Value);
-            AssertEqual(1, trainRoot.Elements("object").Count());
-
-            XDocument validDocument = XDocument.Load(validXmlPath);
-            XElement validRoot = validDocument.Root;
-            AssertTrue(validRoot != null, "Pascal VOC valid XML should have an annotation root");
-            AssertEqual("valid-empty.png", validRoot.Element("filename")?.Value);
-            AssertEqual("50", validRoot.Element("size")?.Element("width")?.Value);
-            AssertEqual("40", validRoot.Element("size")?.Element("height")?.Value);
-            AssertTrue(!validRoot.Elements("object").Any(), "Pascal VOC empty-label image should be exported without object entries");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestPascalVocDetectionImportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string sourceRoot = Path.Combine(root, "source-images");
-            string annotationRoot = Path.Combine(root, "voc");
-            Directory.CreateDirectory(sourceRoot);
-            Directory.CreateDirectory(annotationRoot);
-
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap emptyImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                trainImage.Save(Path.Combine(sourceRoot, "train-sample.png"));
-                emptyImage.Save(Path.Combine(sourceRoot, "empty-sample.png"));
-            }
-
-            var trainDocument = new XDocument(
-                new XElement("annotation",
-                    new XElement("folder", "source-images"),
-                    new XElement("filename", "train-sample.png"),
-                    new XElement("size",
-                        new XElement("width", 100),
-                        new XElement("height", 200),
-                        new XElement("depth", 3)),
-                    new XElement("object",
-                        new XElement("name", "NG"),
-                        new XElement("bndbox",
-                            new XElement("xmin", 11),
-                            new XElement("ymin", 21),
-                            new XElement("xmax", 40),
-                            new XElement("ymax", 60))),
-                    new XElement("object",
-                        new XElement("name", "NG"),
-                        new XElement("bndbox",
-                            new XElement("xmin", 40),
-                            new XElement("ymin", 60),
-                            new XElement("xmax", 10),
-                            new XElement("ymax", 20)))));
-            trainDocument.Save(Path.Combine(annotationRoot, "train-sample.xml"));
-
-            var emptyDocument = new XDocument(
-                new XElement("annotation",
-                    new XElement("folder", "source-images"),
-                    new XElement("filename", "empty-sample.png"),
-                    new XElement("size",
-                        new XElement("width", 50),
-                        new XElement("height", 40),
-                        new XElement("depth", 3))));
-            emptyDocument.Save(Path.Combine(annotationRoot, "empty-sample.xml"));
-
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "imported"));
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-
-            PascalVocDetectionImportResult result = PascalVocDetectionImportService.ImportDirectory(
-                data,
-                annotationRoot,
-                sourceRoot,
-                YoloDatasetSplitService.TrainMode);
-
-            AssertEqual(Path.GetFullPath(annotationRoot), result.AnnotationDirectory);
-            AssertEqual(Path.GetFullPath(sourceRoot), result.ImageRoot);
-            AssertEqual(YoloDatasetSplitService.TrainMode, result.TargetSplit);
-            AssertEqual(2, result.ImportedImageCount);
-            AssertEqual(2, result.LabelFileCount);
-            AssertEqual(1, result.ImportedObjectCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(0, result.SkippedXmlCount);
-            AssertEqual(1, result.SkippedObjectCount);
-            AssertEqual(2, data.ClassNamedList.Count);
-            AssertEqual("OK", data.ClassNamedList[0].Text);
-            AssertEqual("NG", data.ClassNamedList[1].Text);
-
-            string importedImagePath = Path.Combine(data.TrainImagesPath, "train-sample.png");
-            string importedEmptyImagePath = Path.Combine(data.TrainImagesPath, "empty-sample.png");
-            string importedLabelPath = Path.Combine(data.OutputRootPath, "data", "train", "labels", "train-sample.txt");
-            string importedEmptyLabelPath = Path.Combine(data.OutputRootPath, "data", "train", "labels", "empty-sample.txt");
-            AssertTrue(File.Exists(importedImagePath), "Pascal VOC import did not copy the annotated image");
-            AssertTrue(File.Exists(importedEmptyImagePath), "Pascal VOC import did not copy the empty image");
-            AssertTrue(File.Exists(importedLabelPath), "Pascal VOC import did not write the label file");
-            AssertTrue(File.Exists(importedEmptyLabelPath), "Pascal VOC import did not write the empty label file");
-            AssertEqual("1 0.25 0.2 0.3 0.2", File.ReadAllText(importedLabelPath).Trim());
-            AssertEqual(string.Empty, File.ReadAllText(importedEmptyLabelPath).Trim());
-            AssertTrue(File.Exists(data.DataYamlFilePath), "Pascal VOC import did not save data.yaml");
-
-            IReadOnlyDictionary<string, List<Rectangle>> loaded = YoloAnnotationService.LoadAnnotationRectangles(
-                importedLabelPath,
-                data.ClassNamedList,
-                new Size(100, 200));
-            AssertTrue(loaded.ContainsKey("NG"), "Pascal VOC import label should load as NG");
-            AssertEqual(new Rectangle(10, 20, 30, 40), loaded["NG"][0]);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestLabelStudioDetectionExportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-            data.ClassNamedList.Add(new CClassItem { Text = "NG", DrawColor = Color.Red });
-
-            var rois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["NG"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(10, 20, 30, 40), cClassItem = data.ClassNamedList[1] }
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations(
-                    "train-sample.png",
-                    trainImage,
-                    rois,
-                    data.ClassNamedList,
-                    data,
-                    sourceImagePath: Path.Combine(root, "source", "train-sample.png"));
-
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations(
-                    "valid-empty.png",
-                    validImage,
-                    new Dictionary<string, List<CRectangleObject>>(),
-                    data.ClassNamedList,
-                    data,
-                    sourceImagePath: Path.Combine(root, "source", "valid-empty.png"));
-            }
-
-            string trainLabelPath = Path.Combine(root, "data", "train", "labels", "train-sample.txt");
-            File.AppendAllLines(trainLabelPath, new[] { "9 0.5 0.5 0.1 0.1", "bad line" });
-
-            string outputPath = Path.Combine(root, "exports", "label-studio-detection.json");
-            LabelStudioDetectionExportResult result = LabelStudioDetectionExportService.ExportDataset(
-                data,
-                outputPath,
-                new[] { YoloDatasetSplitService.TrainMode, YoloDatasetSplitService.ValidMode });
-
-            AssertTrue(File.Exists(outputPath), "Label Studio detection JSON was not written");
-            AssertEqual(outputPath, result.OutputPath);
-            AssertEqual(2, result.TaskCount);
-            AssertEqual(2, result.ReviewedTaskCount);
-            AssertEqual(1, result.ResultCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(2, result.SkippedAnnotationCount);
-
-            List<LabelStudioDetectionTask> exported = JsonConvert.DeserializeObject<List<LabelStudioDetectionTask>>(File.ReadAllText(outputPath));
-            AssertTrue(exported != null, "Label Studio detection JSON did not deserialize");
-            AssertEqual(2, exported.Count);
-
-            LabelStudioDetectionTask trainTask = exported.FirstOrDefault(task => task.Data?.Image == "data/train/images/train-sample.png");
-            LabelStudioDetectionTask validTask = exported.FirstOrDefault(task => task.Data?.Image == "data/valid/images/valid-empty.png");
-            AssertTrue(trainTask != null, "Label Studio export did not include train image with relative path");
-            AssertTrue(validTask != null, "Label Studio export did not include valid empty-label image with relative path");
-            AssertEqual(YoloDatasetSplitService.TrainMode, trainTask.Data.Split);
-            AssertEqual(YoloDatasetSplitService.ValidMode, validTask.Data.Split);
-
-            AssertEqual(1, trainTask.Annotations.Count);
-            AssertEqual(1, trainTask.Annotations[0].Result.Count);
-            LabelStudioDetectionResult annotation = trainTask.Annotations[0].Result[0];
-            AssertEqual("bbox", annotation.FromName);
-            AssertEqual("image", annotation.ToName);
-            AssertEqual("$image", annotation.Source);
-            AssertEqual("rectanglelabels", annotation.Type);
-            AssertEqual("manual", annotation.Origin);
-            AssertEqual(0, annotation.ImageRotation);
-            AssertEqual(100, annotation.OriginalWidth);
-            AssertEqual(200, annotation.OriginalHeight);
-            AssertEqual(10D, annotation.Value.X);
-            AssertEqual(10D, annotation.Value.Y);
-            AssertEqual(30D, annotation.Value.Width);
-            AssertEqual(20D, annotation.Value.Height);
-            AssertEqual(0, annotation.Value.Rotation);
-            AssertEqual(1, annotation.Value.RectangleLabels.Length);
-            AssertEqual("NG", annotation.Value.RectangleLabels[0]);
-
-            AssertEqual(1, validTask.Annotations.Count);
-            AssertEqual(0, validTask.Annotations[0].Result.Count);
-            AssertTrue(!validTask.Annotations[0].WasCancelled, "empty reviewed Label Studio annotation should not be cancelled");
-            AssertTrue(!validTask.Annotations[0].GroundTruth, "empty reviewed Label Studio annotation should not be marked ground truth");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestLabelStudioDetectionImportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string sourceRoot = Path.Combine(root, "source");
-            string sourceImageDirectory = Path.Combine(sourceRoot, "images");
-            Directory.CreateDirectory(sourceImageDirectory);
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap emptyImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                trainImage.Save(Path.Combine(sourceImageDirectory, "train-sample.png"));
-                emptyImage.Save(Path.Combine(sourceImageDirectory, "empty-sample.png"));
-            }
-
-            var tasks = new List<LabelStudioDetectionTask>
-            {
-                new LabelStudioDetectionTask
-                {
-                    Id = 1,
-                    Data = new LabelStudioDetectionTaskData
-                    {
-                        Image = "images/train-sample.png",
-                        Split = YoloDatasetSplitService.TrainMode
-                    }
-                },
-                new LabelStudioDetectionTask
-                {
-                    Id = 2,
-                    Data = new LabelStudioDetectionTaskData
-                    {
-                        Image = "images/empty-sample.png",
-                        Split = YoloDatasetSplitService.TrainMode
-                    }
-                }
-            };
-            tasks[0].Annotations.Add(new LabelStudioDetectionAnnotation
-            {
-                Id = "1",
-                Result = new List<LabelStudioDetectionResult>
-                {
-                    new LabelStudioDetectionResult
-                    {
-                        Id = "r1",
-                        FromName = "bbox",
-                        ToName = "image",
-                        Source = "$image",
-                        Type = "rectanglelabels",
-                        OriginalWidth = 100,
-                        OriginalHeight = 200,
-                        Value = new LabelStudioDetectionValue
-                        {
-                            X = 10,
-                            Y = 10,
-                            Width = 30,
-                            Height = 20,
-                            RectangleLabels = new[] { "NG" }
-                        }
-                    },
-                    new LabelStudioDetectionResult
-                    {
-                        Id = "invalid",
-                        FromName = "bbox",
-                        ToName = "image",
-                        Source = "$image",
-                        Type = "rectanglelabels",
-                        OriginalWidth = 100,
-                        OriginalHeight = 200,
-                        Value = new LabelStudioDetectionValue
-                        {
-                            X = 0,
-                            Y = 0,
-                            Width = 0,
-                            Height = 10,
-                            RectangleLabels = new[] { "NG" }
-                        }
-                    }
-                }
-            });
-
-            string taskJsonPath = Path.Combine(root, "label-studio-tasks.json");
-            File.WriteAllText(taskJsonPath, JsonConvert.SerializeObject(tasks, Formatting.Indented));
-
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "imported"));
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-
-            LabelStudioDetectionImportResult result = LabelStudioDetectionImportService.ImportTasks(
-                data,
-                taskJsonPath,
-                sourceRoot,
-                YoloDatasetSplitService.TrainMode);
-
-            AssertEqual(taskJsonPath, result.TaskJsonPath);
-            AssertEqual(Path.GetFullPath(sourceRoot), result.ImageRoot);
-            AssertEqual(YoloDatasetSplitService.TrainMode, result.TargetSplit);
-            AssertEqual(2, result.ImportedTaskCount);
-            AssertEqual(2, result.LabelFileCount);
-            AssertEqual(1, result.ImportedResultCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(0, result.SkippedTaskCount);
-            AssertEqual(1, result.SkippedResultCount);
-            AssertEqual(2, data.ClassNamedList.Count);
-            AssertEqual("OK", data.ClassNamedList[0].Text);
-            AssertEqual("NG", data.ClassNamedList[1].Text);
-
-            string importedImagePath = Path.Combine(data.TrainImagesPath, "train-sample.png");
-            string importedEmptyImagePath = Path.Combine(data.TrainImagesPath, "empty-sample.png");
-            string importedLabelPath = Path.Combine(data.OutputRootPath, "data", "train", "labels", "train-sample.txt");
-            string importedEmptyLabelPath = Path.Combine(data.OutputRootPath, "data", "train", "labels", "empty-sample.txt");
-            AssertTrue(File.Exists(importedImagePath), "Label Studio import did not copy the annotated image");
-            AssertTrue(File.Exists(importedEmptyImagePath), "Label Studio import did not copy the empty image");
-            AssertTrue(File.Exists(importedLabelPath), "Label Studio import did not write the label file");
-            AssertTrue(File.Exists(importedEmptyLabelPath), "Label Studio import did not write the empty label file");
-            AssertEqual("1 0.25 0.2 0.3 0.2", File.ReadAllText(importedLabelPath).Trim());
-            AssertEqual(string.Empty, File.ReadAllText(importedEmptyLabelPath).Trim());
-            AssertTrue(File.Exists(data.DataYamlFilePath), "Label Studio import did not save data.yaml");
-
-            IReadOnlyDictionary<string, List<Rectangle>> loaded = YoloAnnotationService.LoadAnnotationRectangles(
-                importedLabelPath,
-                data.ClassNamedList,
-                new Size(100, 200));
-            AssertTrue(loaded.ContainsKey("NG"), "Label Studio import label should load as NG");
-            AssertEqual(new Rectangle(10, 20, 30, 40), loaded["NG"][0]);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestLabelStudioSegmentationExportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-            data.ClassNamedList.Add(new CClassItem { Text = "Defect", DrawColor = Color.Red });
-            data.EnsureYoloOutputDirectories();
-
-            var segments = new Dictionary<string, List<LabelingSegmentationObject>>
-            {
-                ["Defect"] = new List<LabelingSegmentationObject>
-                {
-                    new LabelingSegmentationObject(
-                        new[]
-                        {
-                            new Point(10, 20),
-                            new Point(40, 20),
-                            new Point(40, 60),
-                            new Point(10, 60)
-                        },
-                        data.ClassNamedList[1])
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                trainImage.Save(Path.Combine(data.TrainImagesPath, "seg-train.png"));
-                YoloSegmentationAnnotationService.SaveSegmentationAnnotations(
-                    "seg-train.png",
-                    trainImage,
-                    segments,
-                    data.ClassNamedList,
-                    data);
-
-                validImage.Save(Path.Combine(data.ValidImagesPath, "seg-valid-empty.png"));
-            }
-
-            string segmentPath = Path.Combine(root, "data", "train", "segments", "seg-train.json");
-            SegmentationAnnotationFile annotationFile = JsonConvert.DeserializeObject<SegmentationAnnotationFile>(File.ReadAllText(segmentPath));
-            annotationFile.Polygons.Add(new SegmentationPolygonRecord
-            {
-                ClassIndex = 9,
-                ClassName = "Missing",
-                Points = new List<SegmentationPointRecord>
-                {
-                    new SegmentationPointRecord { X = 1, Y = 1 },
-                    new SegmentationPointRecord { X = 5, Y = 1 },
-                    new SegmentationPointRecord { X = 5, Y = 5 },
-                    new SegmentationPointRecord { X = 1, Y = 5 }
-                }
-            });
-            File.WriteAllText(segmentPath, JsonConvert.SerializeObject(annotationFile, Formatting.Indented));
-
-            string outputPath = Path.Combine(root, "exports", "label-studio-segmentation.json");
-            LabelStudioSegmentationExportResult result = LabelStudioSegmentationExportService.ExportDataset(
-                data,
-                outputPath,
-                new[] { YoloDatasetSplitService.TrainMode, YoloDatasetSplitService.ValidMode });
-
-            AssertTrue(File.Exists(outputPath), "Label Studio segmentation JSON was not written");
-            AssertEqual(outputPath, result.OutputPath);
-            AssertEqual(2, result.TaskCount);
-            AssertEqual(1, result.ReviewedTaskCount);
-            AssertEqual(1, result.ResultCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(1, result.SkippedAnnotationCount);
-
-            List<LabelStudioSegmentationTask> exported = JsonConvert.DeserializeObject<List<LabelStudioSegmentationTask>>(File.ReadAllText(outputPath));
-            AssertTrue(exported != null, "Label Studio segmentation JSON did not deserialize");
-            AssertEqual(2, exported.Count);
-
-            LabelStudioSegmentationTask trainTask = exported.FirstOrDefault(task => task.Data?.Image == "data/train/images/seg-train.png");
-            LabelStudioSegmentationTask validTask = exported.FirstOrDefault(task => task.Data?.Image == "data/valid/images/seg-valid-empty.png");
-            AssertTrue(trainTask != null, "Label Studio segmentation export did not include train image with relative path");
-            AssertTrue(validTask != null, "Label Studio segmentation export did not include valid image with relative path");
-            AssertEqual(YoloDatasetSplitService.TrainMode, trainTask.Data.Split);
-            AssertEqual(YoloDatasetSplitService.ValidMode, validTask.Data.Split);
-
-            AssertEqual(1, trainTask.Annotations.Count);
-            AssertEqual(1, trainTask.Annotations[0].Result.Count);
-            LabelStudioSegmentationResult annotation = trainTask.Annotations[0].Result[0];
-            AssertEqual("polygon", annotation.FromName);
-            AssertEqual("image", annotation.ToName);
-            AssertEqual("$image", annotation.Source);
-            AssertEqual("polygonlabels", annotation.Type);
-            AssertEqual("manual", annotation.Origin);
-            AssertEqual(0, annotation.ImageRotation);
-            AssertEqual(100, annotation.OriginalWidth);
-            AssertEqual(200, annotation.OriginalHeight);
-            AssertEqual(4, annotation.Value.Points.Count);
-            AssertEqual(10D, annotation.Value.Points[0][0]);
-            AssertEqual(10D, annotation.Value.Points[0][1]);
-            AssertEqual(40D, annotation.Value.Points[1][0]);
-            AssertEqual(30D, annotation.Value.Points[2][1]);
-            AssertEqual(1, annotation.Value.PolygonLabels.Length);
-            AssertEqual("Defect", annotation.Value.PolygonLabels[0]);
-
-            AssertEqual(0, validTask.Annotations.Count);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestLabelStudioSegmentationImportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string sourceRoot = Path.Combine(root, "source");
-            string sourceImageDirectory = Path.Combine(sourceRoot, "images");
-            Directory.CreateDirectory(sourceImageDirectory);
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap emptyImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                trainImage.Save(Path.Combine(sourceImageDirectory, "seg-train.png"));
-                emptyImage.Save(Path.Combine(sourceImageDirectory, "seg-empty.png"));
-            }
-
-            var tasks = new List<LabelStudioSegmentationTask>
-            {
-                new LabelStudioSegmentationTask
-                {
-                    Id = 1,
-                    Data = new LabelStudioSegmentationTaskData
-                    {
-                        Image = "images/seg-train.png",
-                        Split = YoloDatasetSplitService.TrainMode
-                    }
-                },
-                new LabelStudioSegmentationTask
-                {
-                    Id = 2,
-                    Data = new LabelStudioSegmentationTaskData
-                    {
-                        Image = "images/seg-empty.png",
-                        Split = YoloDatasetSplitService.TrainMode
-                    }
-                }
-            };
-            tasks[0].Annotations.Add(new LabelStudioSegmentationAnnotation
-            {
-                Id = "1",
-                Result = new List<LabelStudioSegmentationResult>
-                {
-                    new LabelStudioSegmentationResult
-                    {
-                        Id = "r1",
-                        FromName = "polygon",
-                        ToName = "image",
-                        Source = "$image",
-                        Type = "polygonlabels",
-                        OriginalWidth = 100,
-                        OriginalHeight = 200,
-                        Value = new LabelStudioSegmentationValue
-                        {
-                            Points = new List<double[]>
-                            {
-                                new[] { 10D, 10D },
-                                new[] { 40D, 10D },
-                                new[] { 40D, 30D },
-                                new[] { 10D, 30D }
-                            },
-                            PolygonLabels = new[] { "Defect" }
-                        }
-                    },
-                    new LabelStudioSegmentationResult
-                    {
-                        Id = "invalid",
-                        FromName = "polygon",
-                        ToName = "image",
-                        Source = "$image",
-                        Type = "polygonlabels",
-                        OriginalWidth = 100,
-                        OriginalHeight = 200,
-                        Value = new LabelStudioSegmentationValue
-                        {
-                            Points = new List<double[]>
-                            {
-                                new[] { 1D, 1D },
-                                new[] { 2D, 2D }
-                            },
-                            PolygonLabels = new[] { "Defect" }
-                        }
-                    }
-                }
-            });
-
-            string taskJsonPath = Path.Combine(root, "label-studio-segmentation.json");
-            File.WriteAllText(taskJsonPath, JsonConvert.SerializeObject(tasks, Formatting.Indented));
-
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "imported"));
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-
-            LabelStudioSegmentationImportResult result = LabelStudioSegmentationImportService.ImportTasks(
-                data,
-                taskJsonPath,
-                sourceRoot,
-                YoloDatasetSplitService.TrainMode);
-
-            AssertEqual(taskJsonPath, result.TaskJsonPath);
-            AssertEqual(Path.GetFullPath(sourceRoot), result.ImageRoot);
-            AssertEqual(YoloDatasetSplitService.TrainMode, result.TargetSplit);
-            AssertEqual(2, result.ImportedTaskCount);
-            AssertEqual(1, result.ImportedResultCount);
-            AssertEqual(1, result.ImportedSegmentFileCount);
-            AssertEqual(1, result.CategoryCount);
-            AssertEqual(0, result.SkippedTaskCount);
-            AssertEqual(1, result.SkippedResultCount);
-            AssertEqual(1, data.ClassNamedList.Count);
-            AssertEqual("Defect", data.ClassNamedList[0].Text);
-
-            string importedImagePath = Path.Combine(data.TrainImagesPath, "seg-train.png");
-            string importedEmptyImagePath = Path.Combine(data.TrainImagesPath, "seg-empty.png");
-            string segmentPath = Path.Combine(data.OutputRootPath, "data", "train", "segments", "seg-train.json");
-            string maskPath = Path.Combine(data.OutputRootPath, "data", "train", "masks", "seg-train.png");
-            string emptySegmentPath = Path.Combine(data.OutputRootPath, "data", "train", "segments", "seg-empty.json");
-            AssertTrue(File.Exists(importedImagePath), "Label Studio segmentation import did not copy the annotated image");
-            AssertTrue(File.Exists(importedEmptyImagePath), "Label Studio segmentation import did not copy the empty image");
-            AssertTrue(File.Exists(segmentPath), "Label Studio segmentation import did not write the segment JSON");
-            AssertTrue(File.Exists(maskPath), "Label Studio segmentation import did not write the segmentation mask");
-            AssertTrue(!File.Exists(emptySegmentPath), "Label Studio segmentation import should not create a segment JSON for empty images");
-            AssertTrue(File.Exists(data.DataYamlFilePath), "Label Studio segmentation import did not save data.yaml");
-
-            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> loaded = YoloSegmentationAnnotationService.LoadSegmentationObjects(
-                segmentPath,
-                data.ClassNamedList,
-                new Size(100, 200));
-            AssertTrue(loaded.ContainsKey("Defect"), "Label Studio segmentation import segment should load as Defect");
-            AssertEqual(1, loaded["Defect"].Count);
-            AssertEqual(new Point(10, 20), loaded["Defect"][0].Points[0]);
-
-            using (Bitmap mask = new Bitmap(maskPath))
-            {
-                AssertEqual(1, mask.GetPixel(15, 25).R);
-                AssertEqual(0, mask.GetPixel(1, 1).R);
-            }
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestCvatImageTaskArchiveExportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-            data.ClassNamedList.Add(new CClassItem { Text = "NG", DrawColor = Color.Red });
-
-            var rois = new Dictionary<string, List<CRectangleObject>>
-            {
-                ["NG"] = new List<CRectangleObject>
-                {
-                    new CRectangleObject { Roi = new Rectangle(10, 20, 30, 40), cClassItem = data.ClassNamedList[1] }
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations(
-                    "train-sample.png",
-                    trainImage,
-                    rois,
-                    data.ClassNamedList,
-                    data,
-                    sourceImagePath: Path.Combine(root, "source", "train-sample.png"));
-
-                data.ProjectSettings.YoloDataset.ValidationPercent = 100;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                YoloAnnotationService.SaveAnnotations(
-                    "valid-empty.png",
-                    validImage,
-                    new Dictionary<string, List<CRectangleObject>>(),
-                    data.ClassNamedList,
-                    data,
-                    sourceImagePath: Path.Combine(root, "source", "valid-empty.png"));
-            }
-
-            string trainLabelPath = Path.Combine(root, "data", "train", "labels", "train-sample.txt");
-            File.AppendAllLines(trainLabelPath, new[] { "9 0.5 0.5 0.1 0.1", "bad line" });
-
-            string outputPath = Path.Combine(root, "exports", "cvat-images.zip");
-            CvatImageTaskArchiveExportResult result = CvatImageTaskArchiveExportService.ExportDataset(
-                data,
-                outputPath,
-                new[] { YoloDatasetSplitService.TrainMode, YoloDatasetSplitService.ValidMode });
-
-            AssertTrue(File.Exists(outputPath), "CVAT image task archive was not written");
-            AssertEqual(outputPath, result.OutputPath);
-            AssertEqual(2, result.ImageCount);
-            AssertEqual(1, result.BoxCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(2, result.SkippedAnnotationCount);
-            AssertTrue(result.ArchiveEntryNames.Contains("annotations.xml"), "CVAT archive result should list annotations.xml");
-            AssertTrue(result.ArchiveEntryNames.Contains("images/train/train-sample.png"), "CVAT archive result should list train image entry");
-            AssertTrue(result.ArchiveEntryNames.Contains("images/valid/valid-empty.png"), "CVAT archive result should list valid image entry");
-
-            using (ZipArchive archive = ZipFile.OpenRead(outputPath))
-            {
-                AssertTrue(archive.GetEntry("annotations.xml") != null, "CVAT archive should contain annotations.xml");
-                AssertTrue(archive.GetEntry("images/train/train-sample.png") != null, "CVAT archive should contain train image");
-                AssertTrue(archive.GetEntry("images/valid/valid-empty.png") != null, "CVAT archive should contain valid image");
-
-                ZipArchiveEntry annotationEntry = archive.GetEntry("annotations.xml");
-                using Stream annotationStream = annotationEntry.Open();
-                XDocument document = XDocument.Load(annotationStream);
-                XElement rootElement = document.Root;
-                AssertTrue(rootElement != null, "CVAT annotations XML should have a root");
-                AssertEqual("annotations", rootElement.Name.LocalName);
-                AssertEqual("1.1", rootElement.Element("version")?.Value);
-
-                XElement task = rootElement.Element("meta")?.Element("task");
-                AssertTrue(task != null, "CVAT annotations XML should include task metadata");
-                AssertEqual("OpenVisionLab Labeling Studio export", task.Element("name")?.Value);
-                AssertEqual("2", task.Element("size")?.Value);
-                AssertEqual("annotation", task.Element("mode")?.Value);
-
-                XElement labels = task.Element("labels");
-                AssertTrue(labels != null, "CVAT task metadata should include labels");
-                AssertTrue(labels.Elements("label").Any(label =>
-                    label.Element("name")?.Value == "OK"
-                    && label.Element("type")?.Value == "bbox"), "CVAT labels should include OK bbox label");
-                AssertTrue(labels.Elements("label").Any(label =>
-                    label.Element("name")?.Value == "NG"
-                    && label.Element("type")?.Value == "bbox"), "CVAT labels should include NG bbox label");
-
-                XElement trainImageElement = rootElement.Elements("image")
-                    .FirstOrDefault(image => image.Attribute("name")?.Value == "train/train-sample.png");
-                XElement validImageElement = rootElement.Elements("image")
-                    .FirstOrDefault(image => image.Attribute("name")?.Value == "valid/valid-empty.png");
-                AssertTrue(trainImageElement != null, "CVAT annotations XML should include train image");
-                AssertTrue(validImageElement != null, "CVAT annotations XML should include valid empty-label image");
-                AssertEqual("0", trainImageElement.Attribute("id")?.Value);
-                AssertEqual("100", trainImageElement.Attribute("width")?.Value);
-                AssertEqual("200", trainImageElement.Attribute("height")?.Value);
-
-                XElement box = trainImageElement.Element("box");
-                AssertTrue(box != null, "CVAT train image should include one box");
-                AssertEqual("NG", box.Attribute("label")?.Value);
-                AssertEqual("10.00", box.Attribute("xtl")?.Value);
-                AssertEqual("20.00", box.Attribute("ytl")?.Value);
-                AssertEqual("40.00", box.Attribute("xbr")?.Value);
-                AssertEqual("60.00", box.Attribute("ybr")?.Value);
-                AssertEqual("0", box.Attribute("occluded")?.Value);
-                AssertEqual("0", box.Attribute("z_order")?.Value);
-                AssertEqual(1, trainImageElement.Elements("box").Count());
-                AssertTrue(!validImageElement.Elements("box").Any(), "CVAT empty-label image should be exported without box entries");
-            }
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestCvatDetectionImportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string imageRoot = Path.Combine(root, "images");
-            Directory.CreateDirectory(imageRoot);
-            string trainSourcePath = Path.Combine(imageRoot, "train-sample.png");
-            string emptySourcePath = Path.Combine(imageRoot, "empty-sample.png");
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap emptyImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                trainImage.Save(trainSourcePath);
-                emptyImage.Save(emptySourcePath);
-            }
-
-            var document = new XDocument(
-                new XElement("annotations",
-                    new XElement("version", "1.1"),
-                    new XElement("image",
-                        new XAttribute("id", 0),
-                        new XAttribute("name", "train/train-sample.png"),
-                        new XAttribute("width", 100),
-                        new XAttribute("height", 200),
-                        new XElement("box",
-                            new XAttribute("label", "NG"),
-                            new XAttribute("xtl", "10.00"),
-                            new XAttribute("ytl", "20.00"),
-                            new XAttribute("xbr", "40.00"),
-                            new XAttribute("ybr", "60.00"),
-                            new XAttribute("occluded", "0"),
-                            new XAttribute("z_order", "0")),
-                        new XElement("box",
-                            new XAttribute("label", "NG"),
-                            new XAttribute("xtl", "40.00"),
-                            new XAttribute("ytl", "60.00"),
-                            new XAttribute("xbr", "10.00"),
-                            new XAttribute("ybr", "20.00"),
-                            new XAttribute("occluded", "0"),
-                            new XAttribute("z_order", "0"))),
-                    new XElement("image",
-                        new XAttribute("id", 1),
-                        new XAttribute("name", "valid/empty-sample.png"),
-                        new XAttribute("width", 50),
-                        new XAttribute("height", 40))));
-
-            string archivePath = Path.Combine(root, "cvat-detection.zip");
-            using (ZipArchive archive = ZipFile.Open(archivePath, ZipArchiveMode.Create))
-            {
-                ZipArchiveEntry annotationEntry = archive.CreateEntry("annotations.xml");
-                using (Stream stream = annotationEntry.Open())
-                {
-                    document.Save(stream);
-                }
-
-                archive.CreateEntryFromFile(trainSourcePath, "images/train/train-sample.png");
-                archive.CreateEntryFromFile(emptySourcePath, "images/valid/empty-sample.png");
-            }
-
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "imported"));
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-
-            CvatDetectionImportResult result = CvatDetectionImportService.ImportArchive(
-                data,
-                archivePath,
-                YoloDatasetSplitService.TrainMode);
-
-            AssertEqual(archivePath, result.ArchivePath);
-            AssertEqual(YoloDatasetSplitService.TrainMode, result.TargetSplit);
-            AssertEqual(2, result.ImportedImageCount);
-            AssertEqual(2, result.LabelFileCount);
-            AssertEqual(1, result.ImportedBoxCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(0, result.SkippedImageCount);
-            AssertEqual(1, result.SkippedBoxCount);
-            AssertEqual(2, data.ClassNamedList.Count);
-            AssertEqual("OK", data.ClassNamedList[0].Text);
-            AssertEqual("NG", data.ClassNamedList[1].Text);
-
-            string importedImagePath = Path.Combine(data.TrainImagesPath, "train-sample.png");
-            string importedEmptyImagePath = Path.Combine(data.TrainImagesPath, "empty-sample.png");
-            string importedLabelPath = Path.Combine(data.OutputRootPath, "data", "train", "labels", "train-sample.txt");
-            string importedEmptyLabelPath = Path.Combine(data.OutputRootPath, "data", "train", "labels", "empty-sample.txt");
-            AssertTrue(File.Exists(importedImagePath), "CVAT import did not extract the annotated image");
-            AssertTrue(File.Exists(importedEmptyImagePath), "CVAT import did not extract the empty image");
-            AssertTrue(File.Exists(importedLabelPath), "CVAT import did not write the label file");
-            AssertTrue(File.Exists(importedEmptyLabelPath), "CVAT import did not write the empty label file");
-            AssertEqual("1 0.25 0.2 0.3 0.2", File.ReadAllText(importedLabelPath).Trim());
-            AssertEqual(string.Empty, File.ReadAllText(importedEmptyLabelPath).Trim());
-            AssertTrue(File.Exists(data.DataYamlFilePath), "CVAT import did not save data.yaml");
-
-            IReadOnlyDictionary<string, List<Rectangle>> loaded = YoloAnnotationService.LoadAnnotationRectangles(
-                importedLabelPath,
-                data.ClassNamedList,
-                new Size(100, 200));
-            AssertTrue(loaded.ContainsKey("NG"), "CVAT import label should load as NG");
-            AssertEqual(new Rectangle(10, 20, 30, 40), loaded["NG"][0]);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestCvatSegmentationArchiveExportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-            data.ClassNamedList.Add(new CClassItem { Text = "Defect", DrawColor = Color.Red });
-            data.EnsureYoloOutputDirectories();
-
-            var segments = new Dictionary<string, List<LabelingSegmentationObject>>
-            {
-                ["Defect"] = new List<LabelingSegmentationObject>
-                {
-                    new LabelingSegmentationObject(
-                        new[]
-                        {
-                            new Point(10, 20),
-                            new Point(40, 20),
-                            new Point(40, 60),
-                            new Point(10, 60)
-                        },
-                        data.ClassNamedList[1])
-                }
-            };
-
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap validImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-                data.ProjectSettings.YoloDataset.TestPercent = 0;
-                trainImage.Save(Path.Combine(data.TrainImagesPath, "seg-train.png"));
-                YoloSegmentationAnnotationService.SaveSegmentationAnnotations(
-                    "seg-train.png",
-                    trainImage,
-                    segments,
-                    data.ClassNamedList,
-                    data);
-
-                validImage.Save(Path.Combine(data.ValidImagesPath, "seg-valid-empty.png"));
-            }
-
-            string segmentPath = Path.Combine(root, "data", "train", "segments", "seg-train.json");
-            SegmentationAnnotationFile annotationFile = JsonConvert.DeserializeObject<SegmentationAnnotationFile>(File.ReadAllText(segmentPath));
-            annotationFile.Polygons.Add(new SegmentationPolygonRecord
-            {
-                ClassIndex = 9,
-                ClassName = "Missing",
-                Points = new List<SegmentationPointRecord>
-                {
-                    new SegmentationPointRecord { X = 1, Y = 1 },
-                    new SegmentationPointRecord { X = 5, Y = 1 },
-                    new SegmentationPointRecord { X = 5, Y = 5 },
-                    new SegmentationPointRecord { X = 1, Y = 5 }
-                }
-            });
-            File.WriteAllText(segmentPath, JsonConvert.SerializeObject(annotationFile, Formatting.Indented));
-
-            string outputPath = Path.Combine(root, "exports", "cvat-segmentation.zip");
-            CvatSegmentationArchiveExportResult result = CvatSegmentationArchiveExportService.ExportDataset(
-                data,
-                outputPath,
-                new[] { YoloDatasetSplitService.TrainMode, YoloDatasetSplitService.ValidMode });
-
-            AssertTrue(File.Exists(outputPath), "CVAT segmentation archive was not written");
-            AssertEqual(outputPath, result.OutputPath);
-            AssertEqual(2, result.ImageCount);
-            AssertEqual(1, result.PolygonCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(1, result.SkippedAnnotationCount);
-            AssertTrue(result.ArchiveEntryNames.Contains("annotations.xml"), "CVAT segmentation archive result should list annotations.xml");
-            AssertTrue(result.ArchiveEntryNames.Contains("images/train/seg-train.png"), "CVAT segmentation archive result should list train image entry");
-            AssertTrue(result.ArchiveEntryNames.Contains("images/valid/seg-valid-empty.png"), "CVAT segmentation archive result should list valid image entry");
-
-            using (ZipArchive archive = ZipFile.OpenRead(outputPath))
-            {
-                AssertTrue(archive.GetEntry("annotations.xml") != null, "CVAT segmentation archive should contain annotations.xml");
-                AssertTrue(archive.GetEntry("images/train/seg-train.png") != null, "CVAT segmentation archive should contain train image");
-                AssertTrue(archive.GetEntry("images/valid/seg-valid-empty.png") != null, "CVAT segmentation archive should contain valid image");
-
-                ZipArchiveEntry annotationEntry = archive.GetEntry("annotations.xml");
-                using Stream annotationStream = annotationEntry.Open();
-                XDocument document = XDocument.Load(annotationStream);
-                XElement rootElement = document.Root;
-                AssertTrue(rootElement != null, "CVAT segmentation annotations XML should have a root");
-                AssertEqual("annotations", rootElement.Name.LocalName);
-                AssertEqual("1.1", rootElement.Element("version")?.Value);
-
-                XElement task = rootElement.Element("meta")?.Element("task");
-                AssertTrue(task != null, "CVAT segmentation annotations XML should include task metadata");
-                AssertEqual("OpenVisionLab Labeling Studio segmentation export", task.Element("name")?.Value);
-                AssertEqual("2", task.Element("size")?.Value);
-                AssertEqual("annotation", task.Element("mode")?.Value);
-
-                XElement labels = task.Element("labels");
-                AssertTrue(labels != null, "CVAT segmentation task metadata should include labels");
-                AssertTrue(labels.Elements("label").Any(label =>
-                    label.Element("name")?.Value == "OK"
-                    && label.Element("type")?.Value == "polygon"), "CVAT segmentation labels should include OK polygon label");
-                AssertTrue(labels.Elements("label").Any(label =>
-                    label.Element("name")?.Value == "Defect"
-                    && label.Element("type")?.Value == "polygon"), "CVAT segmentation labels should include Defect polygon label");
-
-                XElement trainImageElement = rootElement.Elements("image")
-                    .FirstOrDefault(image => image.Attribute("name")?.Value == "train/seg-train.png");
-                XElement validImageElement = rootElement.Elements("image")
-                    .FirstOrDefault(image => image.Attribute("name")?.Value == "valid/seg-valid-empty.png");
-                AssertTrue(trainImageElement != null, "CVAT segmentation annotations XML should include train image");
-                AssertTrue(validImageElement != null, "CVAT segmentation annotations XML should include valid empty-label image");
-                AssertEqual("0", trainImageElement.Attribute("id")?.Value);
-                AssertEqual("100", trainImageElement.Attribute("width")?.Value);
-                AssertEqual("200", trainImageElement.Attribute("height")?.Value);
-
-                XElement polygon = trainImageElement.Element("polygon");
-                AssertTrue(polygon != null, "CVAT segmentation train image should include one polygon");
-                AssertEqual("Defect", polygon.Attribute("label")?.Value);
-                AssertEqual("10.00,20.00;40.00,20.00;40.00,60.00;10.00,60.00", polygon.Attribute("points")?.Value);
-                AssertEqual("0", polygon.Attribute("occluded")?.Value);
-                AssertEqual("0", polygon.Attribute("z_order")?.Value);
-                AssertEqual(1, trainImageElement.Elements("polygon").Count());
-                AssertTrue(!validImageElement.Elements("polygon").Any(), "CVAT segmentation empty image should be exported without polygon entries");
-            }
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestCvatSegmentationImportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            string imageRoot = Path.Combine(root, "images");
-            Directory.CreateDirectory(imageRoot);
-            string trainSourcePath = Path.Combine(imageRoot, "seg-train.png");
-            string emptySourcePath = Path.Combine(imageRoot, "seg-empty.png");
-            using (Bitmap trainImage = CreateSolidBitmap(100, 200, Color.Black))
-            using (Bitmap emptyImage = CreateSolidBitmap(50, 40, Color.White))
-            {
-                trainImage.Save(trainSourcePath);
-                emptyImage.Save(emptySourcePath);
-            }
-
-            var document = new XDocument(
-                new XElement("annotations",
-                    new XElement("version", "1.1"),
-                    new XElement("image",
-                        new XAttribute("id", 0),
-                        new XAttribute("name", "train/seg-train.png"),
-                        new XAttribute("width", 100),
-                        new XAttribute("height", 200),
-                        new XElement("polygon",
-                            new XAttribute("label", "Defect"),
-                            new XAttribute("points", "10.00,20.00;40.00,20.00;40.00,60.00;10.00,60.00"),
-                            new XAttribute("occluded", "0"),
-                            new XAttribute("z_order", "0")),
-                        new XElement("polygon",
-                            new XAttribute("label", "Invalid"),
-                            new XAttribute("points", "1.00,1.00;2.00,2.00"),
-                            new XAttribute("occluded", "0"),
-                            new XAttribute("z_order", "0"))),
-                    new XElement("image",
-                        new XAttribute("id", 1),
-                        new XAttribute("name", "valid/seg-empty.png"),
-                        new XAttribute("width", 50),
-                        new XAttribute("height", 40))));
-
-            string archivePath = Path.Combine(root, "cvat-segmentation.zip");
-            using (ZipArchive archive = ZipFile.Open(archivePath, ZipArchiveMode.Create))
-            {
-                ZipArchiveEntry annotationEntry = archive.CreateEntry("annotations.xml");
-                using (Stream stream = annotationEntry.Open())
-                {
-                    document.Save(stream);
-                }
-
-                archive.CreateEntryFromFile(trainSourcePath, "images/train/seg-train.png");
-                archive.CreateEntryFromFile(emptySourcePath, "images/valid/seg-empty.png");
-            }
-
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "imported"));
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.Green });
-
-            CvatSegmentationImportResult result = CvatSegmentationImportService.ImportArchive(
-                data,
-                archivePath,
-                YoloDatasetSplitService.TrainMode);
-
-            AssertEqual(archivePath, result.ArchivePath);
-            AssertEqual(YoloDatasetSplitService.TrainMode, result.TargetSplit);
-            AssertEqual(2, result.ImportedImageCount);
-            AssertEqual(1, result.ImportedPolygonCount);
-            AssertEqual(1, result.ImportedSegmentFileCount);
-            AssertEqual(2, result.CategoryCount);
-            AssertEqual(0, result.SkippedImageCount);
-            AssertEqual(1, result.SkippedPolygonCount);
-            AssertEqual(2, data.ClassNamedList.Count);
-            AssertEqual("OK", data.ClassNamedList[0].Text);
-            AssertEqual("Defect", data.ClassNamedList[1].Text);
-            AssertTrue(!data.ClassNamedList.Any(item => string.Equals(item.Text, "Invalid", StringComparison.OrdinalIgnoreCase)), "CVAT segmentation import should not add skipped invalid polygon classes");
-
-            string importedImagePath = Path.Combine(data.TrainImagesPath, "seg-train.png");
-            string importedEmptyImagePath = Path.Combine(data.TrainImagesPath, "seg-empty.png");
-            string segmentPath = Path.Combine(data.OutputRootPath, "data", "train", "segments", "seg-train.json");
-            string maskPath = Path.Combine(data.OutputRootPath, "data", "train", "masks", "seg-train.png");
-            string emptySegmentPath = Path.Combine(data.OutputRootPath, "data", "train", "segments", "seg-empty.json");
-            AssertTrue(File.Exists(importedImagePath), "CVAT segmentation import did not extract the annotated image");
-            AssertTrue(File.Exists(importedEmptyImagePath), "CVAT segmentation import did not extract the empty image");
-            AssertTrue(File.Exists(segmentPath), "CVAT segmentation import did not write the segment JSON");
-            AssertTrue(File.Exists(maskPath), "CVAT segmentation import did not write the segmentation mask");
-            AssertTrue(!File.Exists(emptySegmentPath), "CVAT segmentation import should not create a segment JSON for empty images");
-            AssertTrue(File.Exists(data.DataYamlFilePath), "CVAT segmentation import did not save data.yaml");
-
-            string dataYaml = File.ReadAllText(data.DataYamlFilePath);
-            AssertTrue(dataYaml.Contains("nc: 2", StringComparison.Ordinal), "CVAT segmentation import data.yaml should include the imported class count");
-            AssertTrue(dataYaml.Contains("OK", StringComparison.Ordinal), "CVAT segmentation import data.yaml should include the existing class");
-            AssertTrue(dataYaml.Contains("Defect", StringComparison.Ordinal), "CVAT segmentation import data.yaml should include the imported class");
-
-            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> loaded = YoloSegmentationAnnotationService.LoadSegmentationObjects(
-                segmentPath,
-                data.ClassNamedList,
-                new Size(100, 200));
-            AssertTrue(loaded.ContainsKey("Defect"), "CVAT segmentation import segment should load as Defect");
-            AssertEqual(1, loaded["Defect"].Count);
-            AssertEqual(new Point(10, 20), loaded["Defect"][0].Points[0]);
-
-            using (Bitmap mask = new Bitmap(maskPath))
-            {
-                AssertEqual(2, mask.GetPixel(15, 25).R);
-                AssertEqual(0, mask.GetPixel(1, 1).R);
-            }
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestDatasetExportCapabilityInventory()
-    {
-        IReadOnlyList<DatasetExportCapability> capabilities = DatasetExportCapabilityService.BuildCapabilities();
-        AssertTrue(capabilities.Count >= 5, "export capability inventory should cover implemented and planned external targets");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "yolo-detection-directory"
-            && item.IsImplemented
-            && item.DatasetPurpose == LabelingDatasetPurpose.ObjectDetection.ToString()), "YOLO detection directory should remain declared as implemented");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "coco-detection-json"
-            && item.IsImplemented
-            && item.VerificationSwitch == "--coco-detection-export"), "COCO detection export should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "pascal-voc-detection"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.VerificationSwitch == "--pascal-voc-detection-export"), "Pascal VOC export should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "label-studio-detection-json"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.VerificationSwitch == "--label-studio-detection-export"), "Label Studio detection JSON export should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "cvat-images-archive"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.VerificationSwitch == "--cvat-image-export"), "CVAT image task archive export should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "coco-segmentation-json"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.VerificationSwitch == "--coco-segmentation-export"), "COCO segmentation export should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "label-studio-segmentation-json"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.VerificationSwitch == "--label-studio-segmentation-export"), "Label Studio segmentation JSON export should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "cvat-segmentation-archive"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.VerificationSwitch == "--cvat-segmentation-export"), "CVAT segmentation archive export should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "coco-detection-import"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.Direction == "import"
-            && item.VerificationSwitch == "--coco-detection-import"), "COCO detection import should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "pascal-voc-detection-import"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.Direction == "import"
-            && item.VerificationSwitch == "--pascal-voc-detection-import"), "Pascal VOC detection import should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "label-studio-detection-import"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.Direction == "import"
-            && item.VerificationSwitch == "--label-studio-detection-import"), "Label Studio detection import should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "cvat-detection-import"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.Direction == "import"
-            && item.VerificationSwitch == "--cvat-detection-import"), "CVAT detection import should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "coco-segmentation-import"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.Direction == "import"
-            && item.VerificationSwitch == "--coco-segmentation-import"), "COCO segmentation import should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "label-studio-segmentation-import"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.Direction == "import"
-            && item.VerificationSwitch == "--label-studio-segmentation-import"), "Label Studio segmentation import should be declared as implemented and verified");
-        AssertTrue(capabilities.Any(item =>
-            item.FormatKey == "cvat-segmentation-import"
-            && item.IsImplemented
-            && !item.IsRecommendedNext
-            && item.Direction == "import"
-            && item.VerificationSwitch == "--cvat-segmentation-import"), "CVAT segmentation import should be declared as implemented and verified");
-
-        DatasetExportCapability recommended = DatasetExportCapabilityService.GetRecommendedNext();
-        AssertTrue(recommended != null, "export capability inventory should identify the next target");
-        AssertEqual("labelbox-ndjson-detection-import", recommended.FormatKey);
-        AssertTrue(!recommended.IsImplemented, "recommended next interoperability target should not be marked implemented before its importer exists");
-        AssertEqual("import", recommended.Direction);
-        AssertTrue(recommended.DisplayName.Contains("NDJSON", StringComparison.Ordinal), "recommended next interoperability target should be NDJSON import");
-        AssertEqual(LabelingDatasetPurpose.ObjectDetection.ToString(), recommended.DatasetPurpose);
-        AssertTrue(recommended.RequirementSummary.Contains("NDJSON", StringComparison.OrdinalIgnoreCase), "NDJSON import requirement should mention NDJSON");
-        AssertTrue(capabilities.Count(item => item.IsRecommendedNext) == 1, "export capability inventory should have exactly one recommended next target");
-        AssertTrue(DatasetExportCapabilityService.BuildImplementedCapabilities().All(item => item.IsImplemented), "implemented capability helper should return only implemented targets");
-    }
-
-    private static void TestAnomalyClassificationDecisionService()
-    {
-        var options = new AnomalyClassificationDecisionOptions
-        {
-            NormalClassNames = new[] { "Normal", "OK" },
-            AbnormalClassNames = new[] { "Abnormal", "NG" },
-            MinimumConfidence = 0.6D
-        };
-
-        var normalCandidate = new YoloWorkerSmokeCandidate
-        {
-            ClassName = "Normal",
-            Confidence = 0.91D,
-            CandidateType = "imageClassification",
-            PredictionType = "classification",
-            ImageLevel = true
-        };
-        AnomalyClassificationDecision normal = AnomalyClassificationDecisionService.Build(normalCandidate, options);
-        AssertTrue(normal.IsMapped, "configured normal class should map to a review state");
-        AssertEqual(AnomalyImageReviewState.Normal, normal.ReviewState);
-
-        var abnormalCandidate = new DefectInfo
-        {
-            ClassName = "NG",
-            Confidence = 0.87F,
-            CandidateType = "imageClassification",
-            PredictionType = "classification",
-            ImageLevel = true
-        };
-        AnomalyClassificationDecision abnormal = AnomalyClassificationDecisionService.Build(abnormalCandidate, options);
-        AssertTrue(abnormal.IsMapped, "configured abnormal class should map to a review state");
-        AssertEqual(AnomalyImageReviewState.Abnormal, abnormal.ReviewState);
-
-        var unknown = new YoloWorkerSmokeCandidate
-        {
-            ClassName = "Scratch",
-            Confidence = 0.95D,
-            CandidateType = "imageClassification",
-            PredictionType = "classification",
-            ImageLevel = true
-        };
-        AssertTrue(!AnomalyClassificationDecisionService.Build(unknown, options).IsMapped, "unconfigured class should not be guessed as anomaly state");
-
-        var lowConfidence = new YoloWorkerSmokeCandidate
-        {
-            ClassName = "Normal",
-            Confidence = 0.3D,
-            CandidateType = "imageClassification",
-            PredictionType = "classification",
-            ImageLevel = true
-        };
-        AssertTrue(!AnomalyClassificationDecisionService.Build(lowConfidence, options).IsMapped, "low-confidence classification should not be mapped");
-
-        var nonImageLevel = new YoloWorkerSmokeCandidate
-        {
-            ClassName = "NG",
-            Confidence = 0.9D,
-            CandidateType = "detection",
-            PredictionType = "detection",
-            ImageLevel = false
-        };
-        AssertTrue(!AnomalyClassificationDecisionService.Build(nonImageLevel, options).IsMapped, "box detections should not be treated as image-level anomaly classifications");
-
-        var ambiguousOptions = new AnomalyClassificationDecisionOptions
-        {
-            NormalClassNames = new[] { "Mixed" },
-            AbnormalClassNames = new[] { "Mixed" }
-        };
-        var ambiguous = new YoloWorkerSmokeCandidate
-        {
-            ClassName = "Mixed",
-            Confidence = 0.99D,
-            CandidateType = "imageClassification",
-            PredictionType = "classification",
-            ImageLevel = true
-        };
-        AssertTrue(!AnomalyClassificationDecisionService.Build(ambiguous, ambiguousOptions).IsMapped, "ambiguous mapping should not be applied automatically");
-        AssertTrue(!AnomalyClassificationDecisionService.Build(normalCandidate, null).IsMapped, "missing mapping configuration should not guess anomaly state");
-
-        AnomalyClassificationDecision aggregateNormal = AnomalyClassificationDecisionService.Build(
-            new[] { unknown, normalCandidate },
-            options);
-        AssertTrue(aggregateNormal.IsMapped, "aggregate anomaly decision should use configured image-level classification candidates");
-        AssertEqual(AnomalyImageReviewState.Normal, aggregateNormal.ReviewState);
-        AnomalyClassificationDecision conflictingAggregate = AnomalyClassificationDecisionService.Build(
-            new[]
-            {
-                normalCandidate,
-                new YoloWorkerSmokeCandidate
-                {
-                    ClassName = "NG",
-                    Confidence = 0.9D,
-                    CandidateType = "imageClassification",
-                    PredictionType = "classification",
-                    ImageLevel = true
-                }
-            },
-            options);
-        AssertTrue(!conflictingAggregate.IsMapped, "conflicting aggregate anomaly classification should not auto-apply a review state");
-
-        VerifyAnomalyClassificationSettingsPersistence();
-    }
-
-    private static void VerifyAnomalyClassificationSettingsPersistence()
-    {
-        var defaultProjectSettings = new LabelingProjectSettings
-        {
-            AnomalyClassification = null
-        };
-        defaultProjectSettings.EnsureDefaults();
-        AssertTrue(defaultProjectSettings.AnomalyClassification != null, "project settings should include anomaly classification settings");
-        AssertEqual(0, defaultProjectSettings.AnomalyClassification.NormalClassNames.Count);
-        AssertEqual(0, defaultProjectSettings.AnomalyClassification.AbnormalClassNames.Count);
-        AssertEqual(0D, defaultProjectSettings.AnomalyClassification.MinimumConfidence);
-
-        defaultProjectSettings.AnomalyClassification.MinimumConfidence = 2D;
-        defaultProjectSettings.EnsureDefaults();
-        AssertEqual(1D, defaultProjectSettings.AnomalyClassification.MinimumConfidence);
-        defaultProjectSettings.AnomalyClassification.MinimumConfidence = double.NaN;
-        defaultProjectSettings.EnsureDefaults();
-        AssertEqual(0D, defaultProjectSettings.AnomalyClassification.MinimumConfidence);
-
-        defaultProjectSettings.AnomalyClassification.NormalClassNames.Add("Good");
-        defaultProjectSettings.AnomalyClassification.AbnormalClassNames.Add("Bad");
-        defaultProjectSettings.AnomalyClassification.MinimumConfidence = 0.5D;
-        AnomalyClassificationDecision mappedFromSettings = AnomalyClassificationDecisionService.Build(
-            new YoloWorkerSmokeCandidate
-            {
-                ClassName = "Bad",
-                Confidence = 0.8D,
-                CandidateType = "imageClassification",
-                PredictionType = "classification",
-                ImageLevel = true
-            },
-            defaultProjectSettings.AnomalyClassification.ToDecisionOptions());
-        AssertTrue(mappedFromSettings.IsMapped, "configured project anomaly settings should build decision options");
-        AssertEqual(AnomalyImageReviewState.Abnormal, mappedFromSettings.ReviewState);
-
-        string recipeName = "codex_anomaly_classification_" + Guid.NewGuid().ToString("N");
-        string recipeDirectory = Path.Combine(AppContext.BaseDirectory, "RECIPE", recipeName);
-        string configPath = Path.Combine(recipeDirectory, "VISION.xml");
-
-        try
-        {
-            var data = new CData();
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            data.ProjectSettings.AnomalyClassification.NormalClassNames.Add("OK");
-            data.ProjectSettings.AnomalyClassification.AbnormalClassNames.Add("NG");
-            data.ProjectSettings.AnomalyClassification.MinimumConfidence = 0.7D;
-            data.SaveConfig(recipeName);
-
-            AssertTrue(File.Exists(configPath), $"anomaly classification config was not saved: {configPath}");
-            string xml = File.ReadAllText(configPath);
-            AssertTrue(xml.Contains("<AnomalyClassification>", StringComparison.Ordinal), "anomaly classification settings should be serialized with project settings");
-            AssertTrue(xml.Contains("<string>OK</string>", StringComparison.Ordinal), "normal anomaly class mapping should be serialized");
-            AssertTrue(xml.Contains("<string>NG</string>", StringComparison.Ordinal), "abnormal anomaly class mapping should be serialized");
-
-            CData loaded = new CData().LoadConfig(recipeName);
-            loaded.ProjectSettings.EnsureDefaults();
-            AssertEqual(LabelingDatasetPurpose.AnomalyDetection, loaded.ProjectSettings.DatasetPurpose);
-            AssertEqual(1, loaded.ProjectSettings.AnomalyClassification.NormalClassNames.Count);
-            AssertEqual("OK", loaded.ProjectSettings.AnomalyClassification.NormalClassNames[0]);
-            AssertEqual(1, loaded.ProjectSettings.AnomalyClassification.AbnormalClassNames.Count);
-            AssertEqual("NG", loaded.ProjectSettings.AnomalyClassification.AbnormalClassNames[0]);
-            AssertEqual(0.7D, loaded.ProjectSettings.AnomalyClassification.MinimumConfidence);
-
-            AnomalyClassificationDecision loadedDecision = AnomalyClassificationDecisionService.Build(
-                new DefectInfo
-                {
-                    ClassName = "OK",
-                    Confidence = 0.75F,
-                    CandidateType = "imageClassification",
-                    PredictionType = "classification",
-                    ImageLevel = true
-                },
-                loaded.ProjectSettings.AnomalyClassification.ToDecisionOptions());
-            AssertTrue(loadedDecision.IsMapped, "loaded anomaly classification settings should build decision options");
-            AssertEqual(AnomalyImageReviewState.Normal, loadedDecision.ReviewState);
-        }
-        finally
-        {
-            if (Directory.Exists(recipeDirectory))
-            {
-                Directory.Delete(recipeDirectory, recursive: true);
-            }
-        }
-    }
-
-    private static void TestAnomalyFolderAutoReview()
-    {
-        if (System.Windows.Application.Current == null)
-        {
-            _ = new System.Windows.Application
-            {
-                ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
-            };
-        }
-
-        CData previousData = CGlobal.Inst.Data;
-        string root = CreateTempRoot();
-        try
-        {
-            string sourceRoot = Path.Combine(root, "images");
-            string normalRoot = Path.Combine(sourceRoot, "OK");
-            string abnormalRoot = Path.Combine(sourceRoot, "NG");
-            string nestedNormalRoot = Path.Combine(normalRoot, "circular");
-            string nestedAbnormalRoot = Path.Combine(abnormalRoot, "circular");
-            string unmatchedRoot = Path.Combine(sourceRoot, "pending");
-            Directory.CreateDirectory(normalRoot);
-            Directory.CreateDirectory(abnormalRoot);
-            Directory.CreateDirectory(nestedNormalRoot);
-            Directory.CreateDirectory(nestedAbnormalRoot);
-            Directory.CreateDirectory(unmatchedRoot);
-
-            string normalImagePath = Path.Combine(normalRoot, "normal.png");
-            string nestedNormalImagePath = Path.Combine(nestedNormalRoot, "nested-normal.png");
-            string manualOverrideImagePath = Path.Combine(normalRoot, "manual-override.png");
-            string abnormalImagePath = Path.Combine(nestedAbnormalRoot, "abnormal.png");
-            string unmatchedImagePath = Path.Combine(unmatchedRoot, "unmatched.png");
-            using (Bitmap normalImage = CreateSolidBitmap(16, 12, Color.White))
-            using (Bitmap nestedNormalImage = CreateSolidBitmap(16, 12, Color.WhiteSmoke))
-            using (Bitmap manualOverrideImage = CreateSolidBitmap(16, 12, Color.LightGray))
-            using (Bitmap abnormalImage = CreateSolidBitmap(16, 12, Color.Black))
-            using (Bitmap unmatchedImage = CreateSolidBitmap(16, 12, Color.Gray))
-            {
-                normalImage.Save(normalImagePath);
-                nestedNormalImage.Save(nestedNormalImagePath);
-                manualOverrideImage.Save(manualOverrideImagePath);
-                abnormalImage.Save(abnormalImagePath);
-                unmatchedImage.Save(unmatchedImagePath);
-            }
-
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "dataset"));
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-            data.ProjectSettings.PythonModel.ImageRootPath = sourceRoot;
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-            string[] sourceImagePaths =
-            {
-                normalImagePath,
-                nestedNormalImagePath,
-                manualOverrideImagePath,
-                abnormalImagePath,
-                unmatchedImagePath
-            };
-
-            List<string> interleavedImagePaths = new WpfImageQueueSelectionService()
-                .InterleaveTopLevelFolderImages(sourceRoot, sourceImagePaths, CancellationToken.None);
-            AssertEqual(5, interleavedImagePaths.Count);
-            string[] firstQueueFolders = interleavedImagePaths
-                .Take(3)
-                .Select(path => Path.GetRelativePath(sourceRoot, path)
-                    .Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar })[0])
-                .ToArray();
-            AssertEqual("NG", firstQueueFolders[0]);
-            AssertEqual("OK", firstQueueFolders[1]);
-            AssertEqual("pending", firstQueueFolders[2]);
-
-            var manualReviewStatus = new AnomalyImageReviewStatusService();
-            manualReviewStatus.SetImages(sourceImagePaths);
-            manualReviewStatus.MarkAbnormal(manualOverrideImagePath);
-            manualReviewStatus.SaveReviewStatus(data);
-
-            var previewReviewStatus = new AnomalyImageReviewStatusService();
-            previewReviewStatus.LoadReviewStatus(data, sourceImagePaths);
-            AnomalyImageReviewFolderImportResult previewResult = previewReviewStatus.PreviewUnreviewedStatesFromParentFolders();
-            AssertEqual(2, previewResult.NormalImageCount);
-            AssertEqual(1, previewResult.AbnormalImageCount);
-            AssertEqual(1, previewResult.ExistingReviewCount);
-            AssertEqual(1, previewResult.UnmatchedImageCount);
-            Dictionary<string, AnomalyImageReviewStatus> previewItems = previewReviewStatus.GetItems()
-                .ToDictionary(item => item.ImagePath, StringComparer.OrdinalIgnoreCase);
-            AssertEqual(AnomalyImageReviewState.Unreviewed, previewItems[normalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Unreviewed, previewItems[nestedNormalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Unreviewed, previewItems[abnormalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Abnormal, previewItems[manualOverrideImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Unreviewed, previewItems[unmatchedImagePath].ReviewState);
-
-            AnomalyClassificationTrainingReadinessReport preConsentReadiness =
-                AnomalyClassificationTrainingReadinessService.Build(data);
-            AssertTrue(!preConsentReadiness.IsReady, "folder names must not make anomaly training ready before an operator approves them");
-            AssertEqual(5, preConsentReadiness.SourceImageCount);
-            AssertEqual(0, preConsentReadiness.NormalImageCount);
-            AssertEqual(1, preConsentReadiness.AbnormalImageCount);
-            AssertEqual(4, preConsentReadiness.UnreviewedImageCount);
-            AssertTrue(preConsentReadiness.Errors.Any(error => error.Contains(AnomalyClassificationTrainingReadinessService.NeedsReviewedNormalAndAbnormalError, StringComparison.Ordinal)),
-                "training readiness should explain that a reviewed normal class is still required before consent");
-
-            AnomalyClassificationDatasetExportResult preConsentExport =
-                new AnomalyClassificationDatasetExportService().Export(
-                    data,
-                    preConsentReadiness.SourceImagePaths,
-                    Path.Combine(root, "pre-consent-export"));
-            AssertEqual(0, preConsentExport.NormalImageCount);
-            AssertEqual(1, preConsentExport.AbnormalImageCount);
-            AssertEqual(4, preConsentExport.SkippedImageCount);
-            AssertTrue(File.Exists(Path.Combine(preConsentExport.DatasetRootPath, "train", "abnormal", "manual-override.png")),
-                "export must use the saved manual state without importing folder names");
-
-            CGlobal.Inst.Data = data;
-            WpfLabelingShellWindow rootRetentionWindow = new WpfLabelingShellWindow();
-            try
-            {
-                AssertEqual(5, rootRetentionWindow.LoadImageQueueFromRoot(sourceRoot, loadFirstImage: true, refreshDetails: false));
-                AssertEqual(sourceRoot, rootRetentionWindow.ImageQueueViewModel.CurrentImageFolderPath);
-                AssertEqual(5, rootRetentionWindow.ImageQueueItems.Count);
-                AssertEqual(interleavedImagePaths[0], GetPrivateField<string>(rootRetentionWindow, "activeImagePath"));
-                AssertTrue(rootRetentionWindow.ImageQueueViewModel.IsAnomalyImageReviewMode,
-                    "anomaly image queue should expose the dedicated image-level OK/NG review mode");
-                AssertEqual("판정", rootRetentionWindow.ImageQueueViewModel.QueueDecisionColumnHeaderText);
-                AssertEqual("상태", rootRetentionWindow.ImageQueueViewModel.QueueSecondaryColumnHeaderText);
-                AssertEqual(System.Windows.Visibility.Collapsed, rootRetentionWindow.CanvasPanelViewModel.AnnotationWorkspaceVisibility);
-                AssertEqual(0D, rootRetentionWindow.CanvasPanelViewModel.AnnotationToolRailWidth.Value);
-                AssertTrue(rootRetentionWindow.ShellViewModel.IsAnomalyImageReviewMode,
-                    "shell should hide object-label editing surfaces for anomaly image review");
-                AssertTrue(!rootRetentionWindow.ShellViewModel.IsAnnotationWorkflowVisible,
-                    "anomaly image review should hide the global label-save action");
-                AssertTrue(!rootRetentionWindow.ShellViewModel.IsSavedLabelsViewVisible,
-                    "anomaly image review should hide the saved-object editor tab");
-                WpfImageQueueItem firstAnomalyItem = rootRetentionWindow.ImageQueueItems
-                    .Single(item => string.Equals(item.ImagePath, interleavedImagePaths[0], StringComparison.OrdinalIgnoreCase));
-                AssertEqual(AnomalyImageReviewState.Unreviewed, firstAnomalyItem.AnomalyReviewState);
-                AssertEqual("미판정", firstAnomalyItem.LabelStatus);
-                rootRetentionWindow.ImageQueueViewModel.MarkAnomalyAbnormalCommand.Execute(null);
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
-                AssertTrue(!string.Equals(interleavedImagePaths[0], GetPrivateField<string>(rootRetentionWindow, "activeImagePath"), StringComparison.OrdinalIgnoreCase),
-                    "saving an NG decision should advance to the next unreviewed image");
-                AssertEqual(AnomalyImageReviewState.Abnormal, firstAnomalyItem.AnomalyReviewState);
-                AssertEqual("NG", firstAnomalyItem.LabelStatus);
-
-                rootRetentionWindow.ImageQueueViewModel.SelectedQueueItem = firstAnomalyItem;
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
-                rootRetentionWindow.ImageQueueViewModel.MarkAnomalyNormalCommand.Execute(null);
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
-                AssertEqual(AnomalyImageReviewState.Normal, firstAnomalyItem.AnomalyReviewState);
-                AssertEqual("OK", firstAnomalyItem.LabelStatus);
-
-                rootRetentionWindow.ImageQueueViewModel.SelectedQueueItem = firstAnomalyItem;
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
-                rootRetentionWindow.ImageQueueViewModel.ClearAnomalyReviewCommand.Execute(null);
-                AssertEqual(AnomalyImageReviewState.Unreviewed, firstAnomalyItem.AnomalyReviewState);
-                AssertEqual("미판정", firstAnomalyItem.LabelStatus);
-                var restoredButtonReview = new AnomalyImageReviewStatusService();
-                restoredButtonReview.LoadReviewStatus(data, sourceImagePaths);
-                AssertEqual(
-                    AnomalyImageReviewState.Unreviewed,
-                    restoredButtonReview.GetItems().Single(item => string.Equals(item.ImagePath, interleavedImagePaths[0], StringComparison.OrdinalIgnoreCase)).ReviewState);
-
-                data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.ObjectDetection;
-                InvokePrivateResult<object>(rootRetentionWindow, "RefreshCanvasAnnotationToolScope");
-                AssertTrue(!rootRetentionWindow.ImageQueueViewModel.IsAnomalyImageReviewMode,
-                    "leaving anomaly purpose should restore the standard queue workflow");
-                AssertEqual(System.Windows.Visibility.Visible, rootRetentionWindow.CanvasPanelViewModel.AnnotationWorkspaceVisibility);
-                AssertEqual(46D, rootRetentionWindow.CanvasPanelViewModel.AnnotationToolRailWidth.Value);
-                AssertTrue(rootRetentionWindow.ShellViewModel.IsAnnotationWorkflowVisible,
-                    "leaving anomaly purpose should restore annotation actions");
-
-                data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-                InvokePrivateResult<object>(rootRetentionWindow, "RefreshCanvasAnnotationToolScope");
-                AssertTrue(rootRetentionWindow.ImageQueueViewModel.IsAnomalyImageReviewMode,
-                    "returning to anomaly purpose should restore image-level review presentation");
-                AssertEqual(AnomalyImageReviewState.Unreviewed, firstAnomalyItem.AnomalyReviewState);
-                AssertEqual("미판정", firstAnomalyItem.LabelStatus);
-                AssertTrue(rootRetentionWindow.ImageQueueItems.Any(item => string.Equals(item.ImagePath, normalImagePath, StringComparison.OrdinalIgnoreCase)),
-                    "opening the first nested image must not replace the selected images root with NG");
-
-                WpfImageQueueItem normalQueueItem = rootRetentionWindow.ImageQueueItems
-                    .Single(item => string.Equals(item.ImagePath, normalImagePath, StringComparison.OrdinalIgnoreCase));
-                rootRetentionWindow.ImageQueueViewModel.SelectedQueueItem = normalQueueItem;
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
-
-                AssertEqual(sourceRoot, rootRetentionWindow.ImageQueueViewModel.CurrentImageFolderPath);
-                AssertEqual(5, rootRetentionWindow.ImageQueueItems.Count);
-                AssertEqual(normalImagePath, rootRetentionWindow.ImageQueueViewModel.SelectedQueueItem.ImagePath);
-                AssertEqual(normalImagePath, GetPrivateField<string>(rootRetentionWindow, "activeImagePath"));
-            }
-            finally
-            {
-                rootRetentionWindow.Close();
-            }
-
-            WpfLabelingShellWindow dismissWindow = new WpfLabelingShellWindow();
-            try
-            {
-                AssertEqual(5, dismissWindow.LoadImageQueueFromRoot(sourceRoot, loadFirstImage: false, refreshDetails: false));
-                AssertTrue(dismissWindow.ImageQueueViewModel.IsAnomalyFolderStateSuggestionVisible,
-                    "anomaly image queue should offer, but not apply, a detected OK/NG folder mapping");
-                AssertTrue(dismissWindow.ImageQueueViewModel.AnomalyFolderStateSuggestionTitleText.Contains("OK/NG 폴더 구조", StringComparison.Ordinal),
-                    "anomaly image queue should explain that it detected an optional OK/NG folder mapping");
-                AssertTrue(dismissWindow.ImageQueueViewModel.AnomalyFolderStateSuggestionText.Contains("총 5장", StringComparison.Ordinal),
-                    "anomaly image queue should state that nested-folder images are included");
-                AssertTrue(dismissWindow.ImageQueueViewModel.AnomalyFolderStateSuggestionText.Contains("OK/normal 2", StringComparison.Ordinal),
-                    "folder suggestion should state the detected normal-image count");
-                AssertEqual("3장 일괄 판정", dismissWindow.ImageQueueViewModel.AnomalyFolderStateSuggestionApplyText);
-                string[] visibleQueueFolders = dismissWindow.ImageQueueItems
-                    .Take(3)
-                    .Select(item => Path.GetRelativePath(sourceRoot, item.ImagePath)
-                        .Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar })[0])
-                    .ToArray();
-                AssertEqual("NG", visibleQueueFolders[0]);
-                AssertEqual("OK", visibleQueueFolders[1]);
-                AssertEqual("pending", visibleQueueFolders[2]);
-
-                dismissWindow.ImageQueueViewModel.DismissAnomalyFolderStateSuggestionCommand.Execute(null);
-                AssertTrue(!dismissWindow.ImageQueueViewModel.IsAnomalyFolderStateSuggestionVisible,
-                    "direct-review choice should hide the suggestion for the current folder session");
-                AssertEqual(5, dismissWindow.LoadImageQueueFromRoot(sourceRoot, loadFirstImage: false, refreshDetails: false));
-                AssertTrue(!dismissWindow.ImageQueueViewModel.IsAnomalyFolderStateSuggestionVisible,
-                    "a dismissed suggestion should stay hidden while the same image root is open");
-            }
-            finally
-            {
-                dismissWindow.Close();
-            }
-
-            var beforeConsentPersistence = new AnomalyImageReviewStatusService();
-            beforeConsentPersistence.LoadReviewStatus(data, sourceImagePaths);
-            Dictionary<string, AnomalyImageReviewStatus> beforeConsentItems = beforeConsentPersistence.GetItems()
-                .ToDictionary(item => item.ImagePath, StringComparer.OrdinalIgnoreCase);
-            AssertEqual(AnomalyImageReviewState.Unreviewed, beforeConsentItems[normalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Unreviewed, beforeConsentItems[nestedNormalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Unreviewed, beforeConsentItems[abnormalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Abnormal, beforeConsentItems[manualOverrideImagePath].ReviewState);
-
-            WpfLabelingShellWindow consentWindow = new WpfLabelingShellWindow();
-            try
-            {
-                AssertEqual(5, consentWindow.LoadImageQueueFromRoot(sourceRoot, loadFirstImage: false, refreshDetails: false));
-                AssertTrue(consentWindow.ImageQueueViewModel.IsAnomalyFolderStateSuggestionVisible,
-                    "a new image-queue session should make the optional mapping available again");
-                consentWindow.ImageQueueViewModel.ApplyAnomalyFolderStateSuggestionCommand.Execute(null);
-                AssertTrue(!consentWindow.ImageQueueViewModel.IsAnomalyFolderStateSuggestionVisible,
-                    "approved mapping should close the temporary suggestion card");
-            }
-            finally
-            {
-                consentWindow.Close();
-            }
-
-            var approvedReviewStatus = new AnomalyImageReviewStatusService();
-            approvedReviewStatus.LoadReviewStatus(data, sourceImagePaths);
-            Dictionary<string, AnomalyImageReviewStatus> approvedItems = approvedReviewStatus.GetItems()
-                .ToDictionary(item => item.ImagePath, StringComparer.OrdinalIgnoreCase);
-            AssertEqual(AnomalyImageReviewState.Normal, approvedItems[normalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Normal, approvedItems[nestedNormalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Abnormal, approvedItems[abnormalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Abnormal, approvedItems[manualOverrideImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Unreviewed, approvedItems[unmatchedImagePath].ReviewState);
-
-            AnomalyClassificationTrainingReadinessReport approvedReadiness =
-                AnomalyClassificationTrainingReadinessService.Build(data);
-            AssertTrue(approvedReadiness.IsReady, "approved folder states plus the saved manual review should satisfy anomaly classification readiness");
-            AssertEqual(2, approvedReadiness.NormalImageCount);
-            AssertEqual(2, approvedReadiness.AbnormalImageCount);
-            AssertEqual(1, approvedReadiness.UnreviewedImageCount);
-            AssertEqual(2, approvedReadiness.TrainNormalImageCount);
-            AssertEqual(2, approvedReadiness.TrainAbnormalImageCount);
-
-            AnomalyClassificationDatasetExportResult approvedExport =
-                new AnomalyClassificationDatasetExportService().Export(
-                    data,
-                    approvedReadiness.SourceImagePaths,
-                    Path.Combine(root, "approved-export"));
-            AssertEqual(2, approvedExport.NormalImageCount);
-            AssertEqual(2, approvedExport.AbnormalImageCount);
-            AssertEqual(1, approvedExport.SkippedImageCount);
-            AssertTrue(File.Exists(Path.Combine(approvedExport.DatasetRootPath, "train", "normal", "normal.png")),
-                "approved OK-folder image should export as a normal classification sample");
-            AssertTrue(File.Exists(Path.Combine(approvedExport.DatasetRootPath, "train", "normal", "nested-normal.png")),
-                "approved nested OK-folder image should export as a normal classification sample");
-            AssertTrue(File.Exists(Path.Combine(approvedExport.DatasetRootPath, "train", "abnormal", "abnormal.png")),
-                "approved NG-folder image should export as an abnormal classification sample");
-            AssertTrue(File.Exists(Path.Combine(approvedExport.DatasetRootPath, "train", "abnormal", "manual-override.png")),
-                "saved manual anomaly state should not be overwritten by the parent-folder suggestion");
-        }
-        finally
-        {
-            CGlobal.Inst.Data = previousData;
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestWpfAnomalyPurposeFlow()
-    {
-        if (System.Windows.Application.Current == null)
-        {
-            _ = new System.Windows.Application
-            {
-                ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
-            };
-        }
-
-        CData previousData = CGlobal.Inst.Data;
-        string previousRecipeName = CGlobal.Inst.Recipe.Name;
-        string root = CreateTempRoot();
-        try
-        {
-            var viewModel = new WpfLearningWorkflowPanelViewModel();
-            viewModel.ApplyDatasetPurpose(LabelingDatasetPurpose.AnomalyDetection);
-            AssertEqual(LabelingDatasetPurpose.AnomalyDetection, viewModel.GetSelectedDatasetPurpose());
-            AssertTrue(viewModel.DatasetSetupFirstActionText.Contains("\uC815\uC0C1/\uC774\uC0C1", StringComparison.Ordinal), "anomaly first action should mention normal/abnormal image review");
-
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            data.EnsureYoloOutputDirectories();
-
-            string normalImagePath = Path.Combine(data.TrainImagesPath, "normal.png");
-            string abnormalImagePath = Path.Combine(data.TrainImagesPath, "abnormal.png");
-            string unreviewedImagePath = Path.Combine(data.TrainImagesPath, "unreviewed.png");
-            using (Bitmap normalImage = CreateSolidBitmap(16, 12, Color.White))
-            using (Bitmap abnormalImage = CreateSolidBitmap(16, 12, Color.Black))
-            using (Bitmap unreviewedImage = CreateSolidBitmap(16, 12, Color.Gray))
-            {
-                normalImage.Save(normalImagePath);
-                abnormalImage.Save(abnormalImagePath);
-                unreviewedImage.Save(unreviewedImagePath);
-            }
-
-            var imagePaths = new[] { normalImagePath, abnormalImagePath, unreviewedImagePath };
-            var service = new AnomalyImageReviewStatusService();
-            service.SetImages(imagePaths);
-            AssertEqual(3, service.BuildSummary().TotalImageCount);
-            AssertEqual(3, service.BuildSummary().UnreviewedImageCount);
-
-            AssertEqual(AnomalyImageReviewState.Normal, service.MarkNormal(normalImagePath).ReviewState);
-            AssertEqual(AnomalyImageReviewState.Abnormal, service.MarkAbnormal(abnormalImagePath).ReviewState);
-            AssertTrue(service.TryFindNextUnreviewed(imagePaths, normalImagePath, out string nextImagePath), "anomaly review should find the next unreviewed image");
-            AssertEqual(unreviewedImagePath, nextImagePath);
-
-            service.SaveReviewStatus(data);
-            string statusFilePath = AnomalyImageReviewStatusService.ResolveReviewStatusFilePath(data);
-            AssertTrue(File.Exists(statusFilePath), "anomaly image review status file was not written");
-            string statusJson = File.ReadAllText(statusFilePath);
-            AssertTrue(statusJson.Contains("\"reviewStateName\": \"Normal\"", StringComparison.Ordinal), "anomaly review status should persist Normal by name");
-            AssertTrue(statusJson.Contains("\"reviewStateName\": \"Abnormal\"", StringComparison.Ordinal), "anomaly review status should persist Abnormal by name");
-            AssertTrue(!statusJson.Contains("unreviewed.png", StringComparison.OrdinalIgnoreCase), "unreviewed anomaly images should not be persisted as reviewed items");
-
-            var restoredService = new AnomalyImageReviewStatusService();
-            restoredService.LoadReviewStatus(data, imagePaths);
-            Dictionary<string, AnomalyImageReviewStatus> restoredItems = restoredService.GetItems()
-                .ToDictionary(item => item.ImagePath, StringComparer.OrdinalIgnoreCase);
-            AssertEqual(AnomalyImageReviewState.Normal, restoredItems[normalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Abnormal, restoredItems[abnormalImagePath].ReviewState);
-            AssertEqual(AnomalyImageReviewState.Unreviewed, restoredItems[unreviewedImagePath].ReviewState);
-
-            AnomalyImageReviewSummary summary = restoredService.BuildSummary();
-            AssertEqual(3, summary.TotalImageCount);
-            AssertEqual(2, summary.ReviewedImageCount);
-            AssertEqual(1, summary.NormalImageCount);
-            AssertEqual(1, summary.AbnormalImageCount);
-            AssertEqual(1, summary.UnreviewedImageCount);
-
-            LabelingDatasetManifest manifest = LabelingDatasetManifestService.Build(data, "anomaly-review");
-            AssertEqual(LabelingDatasetPurpose.AnomalyDetection.ToString(), manifest.DatasetPurpose);
-            AssertEqual("image-level-normal-abnormal", manifest.AnnotationProfile);
-            AssertEqual("panZoom", string.Join(",", manifest.VisibleTools));
-            AssertEqual("image-level-normal-abnormal", manifest.ArtifactSummary.PrimaryLabelKind);
-            AssertEqual(2, manifest.ArtifactSummary.PrimaryLabelCount);
-            AssertEqual(3, manifest.ArtifactSummary.ImageCount);
-            AssertEqual(2, manifest.ArtifactSummary.AnomalyReviewedImageCount);
-            AssertEqual(1, manifest.ArtifactSummary.AnomalyNormalImageCount);
-            AssertEqual(1, manifest.ArtifactSummary.AnomalyAbnormalImageCount);
-            AssertEqual(1, manifest.ArtifactSummary.AnomalyUnreviewedImageCount);
-
-            WpfDatasetDashboardMetricItem anomalyMetric = WpfAnomalyDashboardPresentationService.BuildReviewStateMetric(summary);
-            AssertEqual("\uC815\uC0C1/\uC774\uC0C1", anomalyMetric.Title);
-            AssertEqual("1/1/1", anomalyMetric.Value);
-            AssertTrue(anomalyMetric.Detail.Contains("\uBBF8\uAC80\uD1A0 1", StringComparison.Ordinal), "anomaly dashboard metric should show unreviewed image count");
-            AssertTrue(anomalyMetric.IsProblem, "anomaly dashboard metric should flag unreviewed images");
-
-            CGlobal.Inst.Data = data;
-            WpfLabelingShellWindow dashboardWindow = new WpfLabelingShellWindow();
-            try
-            {
-                var dashboardReport = new YoloDatasetReadinessReport(
-                    new YoloDatasetValidationResult(Array.Empty<string>()),
-                    new YoloDatasetValidationResult(Array.Empty<string>()),
-                    YoloDatasetValidator.BuildStatistics(data),
-                    LabelingDatasetPurpose.AnomalyDetection);
-                InvokePrivateResult<object>(dashboardWindow, "UpdateYoloTrainingChecklist", dashboardReport, false);
-                WpfDatasetDashboardMetricItem dashboardMetric = dashboardWindow.LearningWorkflowViewModel.DatasetDashboardMetrics
-                    .FirstOrDefault(item => item.Title.Contains("\uC815\uC0C1/\uC774\uC0C1", StringComparison.Ordinal));
-                AssertTrue(dashboardMetric != null, "WPF dataset dashboard should include anomaly normal/abnormal distribution");
-                AssertEqual("1/1/1", dashboardMetric.Value);
-                AssertTrue(dashboardWindow.LearningWorkflowViewModel.DatasetDashboardSummaryText.Contains("anomaly normal 1", StringComparison.Ordinal), "anomaly dashboard summary should include normal count");
-                AssertTrue(dashboardWindow.LearningWorkflowViewModel.DatasetDashboardIssueItems.Any(item => item.Contains("\uBBF8\uAC80\uD1A0 1", StringComparison.Ordinal)), "anomaly dashboard issues should point to unreviewed images");
-            }
-            finally
-            {
-                dashboardWindow.Close();
-            }
-
-            string shellImageRoot = Path.Combine(root, "shell-images");
-            string shellOutputRoot = Path.Combine(root, "shell-output");
-            Directory.CreateDirectory(shellImageRoot);
-            string shellNormalImagePath = Path.Combine(shellImageRoot, "shell-normal.png");
-            string shellNextImagePath = Path.Combine(shellImageRoot, "shell-next.png");
-            using (Bitmap normalImage = CreateSolidBitmap(24, 18, Color.White))
-            using (Bitmap nextImage = CreateSolidBitmap(24, 18, Color.DarkGray))
-            {
-                normalImage.Save(shellNormalImagePath);
-                nextImage.Save(shellNextImagePath);
-            }
-
-            var shellData = new CData();
-            shellData.ConfigureOutputRoot(shellOutputRoot);
-            shellData.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            shellData.ProjectSettings.PythonModel.ImageRootPath = shellImageRoot;
-            shellData.ProjectSettings.AnomalyClassification.NormalClassNames.Add("OK");
-            shellData.ProjectSettings.AnomalyClassification.AbnormalClassNames.Add("NG");
-            shellData.ProjectSettings.AnomalyClassification.MinimumConfidence = 0.6D;
-            CGlobal.Inst.Data = shellData;
-            SetPrivateField(CGlobal.Inst.Recipe, "m_strName", string.Empty);
-
-            WpfLabelingShellWindow window = new WpfLabelingShellWindow();
-            try
-            {
-                AssertTrue(window.TryLoadImage(shellNormalImagePath, populateQueue: true, refreshQueueDetails: false), "WPF anomaly normal-completion image load failed");
-                InvokePrivateResult<object>(window, "ExecuteCompleteNoObjectAndNextCommand");
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(120));
-
-                AssertEqual(shellNextImagePath, GetPrivateField<string>(window, "activeImagePath"));
-                string shellEmptyLabelPath = Path.Combine(shellOutputRoot, "data", "train", "labels", "shell-normal.txt");
-                AssertTrue(File.Exists(shellEmptyLabelPath), "WPF anomaly normal completion should save an empty YOLO label file for compatibility");
-                AssertEqual(0, File.ReadAllLines(shellEmptyLabelPath).Length);
-
-                var shellReviewStatus = new AnomalyImageReviewStatusService();
-                shellReviewStatus.LoadReviewStatus(shellData, new[] { shellNormalImagePath, shellNextImagePath });
-                Dictionary<string, AnomalyImageReviewStatus> shellStatuses = shellReviewStatus.GetItems()
-                    .ToDictionary(item => item.ImagePath, StringComparer.OrdinalIgnoreCase);
-                AssertEqual(AnomalyImageReviewState.Normal, shellStatuses[shellNormalImagePath].ReviewState);
-                AssertEqual(AnomalyImageReviewState.Unreviewed, shellStatuses[shellNextImagePath].ReviewState);
-
-                InvokePrivateResult<object>(
-                    window,
-                    "ApplyDetectionCandidates",
-                    new[]
-                    {
-                        new YoloWorkerSmokeCandidate
-                        {
-                            ClassName = "NG",
-                            Confidence = 0.93D,
-                            CandidateType = "imageClassification",
-                            PredictionType = "classification",
-                            ImageLevel = true
-                        }
-                    },
-                    true);
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(120));
-
-                var classifiedReviewStatus = new AnomalyImageReviewStatusService();
-                classifiedReviewStatus.LoadReviewStatus(shellData, new[] { shellNormalImagePath, shellNextImagePath });
-                Dictionary<string, AnomalyImageReviewStatus> classifiedStatuses = classifiedReviewStatus.GetItems()
-                    .ToDictionary(item => item.ImagePath, StringComparer.OrdinalIgnoreCase);
-                AssertEqual(AnomalyImageReviewState.Abnormal, classifiedStatuses[shellNextImagePath].ReviewState);
-            }
-            finally
-            {
-                window.Close();
-            }
-        }
-        finally
-        {
-            CGlobal.Inst.Data = previousData;
-            SetPrivateField(CGlobal.Inst.Recipe, "m_strName", previousRecipeName);
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestWpfYoloV8AnomalyClassificationRuntimeSmoke()
-    {
-        if (System.Windows.Application.Current == null)
-        {
-            _ = new System.Windows.Application
-            {
-                ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
-            };
-        }
-
-        CData previousData = CGlobal.Inst.Data;
-        string previousRecipeName = CGlobal.Inst.Recipe.Name;
-        string root = CreateTempRoot();
-        try
-        {
-            string yoloRoot = GetEnvironmentValue("LABELING_YOLOV8_CLASSIFICATION_SMOKE_ROOT", @"C:\Git\yolov8");
-            string pythonPath = GetEnvironmentValue(
-                "LABELING_YOLOV8_CLASSIFICATION_SMOKE_PYTHON_EXE",
-                Path.Combine(yoloRoot, ".venv", "Scripts", "python.exe"));
-            string clientScriptPath = GetEnvironmentValue(
-                "LABELING_YOLOV8_CLASSIFICATION_SMOKE_CLIENT",
-                Path.Combine(yoloRoot, "labeling_tcp_client.py"));
-            string weightsPath = GetEnvironmentValue(
-                "LABELING_YOLOV8_CLASSIFICATION_SMOKE_WEIGHTS",
-                Path.Combine(yoloRoot, "yolov8n-cls.pt"));
-            string imagePath = GetEnvironmentValue("LABELING_YOLOV8_CLASSIFICATION_SMOKE_IMAGE", string.Empty);
-            string expectedClassName = GetEnvironmentValue("LABELING_YOLOV8_CLASSIFICATION_SMOKE_EXPECTED_CLASS", string.Empty);
-            string expectedStateText = GetEnvironmentValue("LABELING_YOLOV8_CLASSIFICATION_SMOKE_EXPECTED_STATE", "abnormal");
-            bool expectNormal = string.Equals(expectedStateText, "normal", StringComparison.OrdinalIgnoreCase);
-            AssertTrue(
-                expectNormal || string.Equals(expectedStateText, "abnormal", StringComparison.OrdinalIgnoreCase),
-                $"Unsupported expected anomaly review state: {expectedStateText}");
-            string imageSizeText = GetEnvironmentValue("LABELING_YOLOV8_CLASSIFICATION_SMOKE_IMAGE_SIZE", "64");
-            AssertTrue(int.TryParse(imageSizeText, out int inferenceImageSize) && inferenceImageSize > 0,
-                $"Invalid classification smoke image size: {imageSizeText}");
-            if (string.IsNullOrWhiteSpace(imagePath))
-            {
-                imagePath = Path.Combine(root, "classification-smoke.png");
-                using Bitmap image = CreateSolidBitmap(106, 106, Color.DarkGray);
-                image.Save(imagePath);
-            }
-            else
-            {
-                imagePath = Path.GetFullPath(imagePath);
-            }
-
-            AssertTrue(Directory.Exists(yoloRoot), $"YOLOv8 root was not found: {yoloRoot}");
-            AssertTrue(File.Exists(pythonPath), $"YOLOv8 smoke Python was not found: {pythonPath}");
-            AssertTrue(File.Exists(clientScriptPath), $"YOLOv8 TCP adapter was not found: {clientScriptPath}");
-            AssertTrue(File.Exists(weightsPath), $"YOLOv8 classification weights were not found: {weightsPath}");
-            AssertTrue(File.Exists(imagePath), $"YOLOv8 classification smoke image was not found: {imagePath}");
-
-            string outputRoot = Path.Combine(root, "dataset");
-            var data = new CData();
-            data.ConfigureOutputRoot(outputRoot);
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-            data.ProjectSettings.PythonModel.ProjectRootPath = yoloRoot;
-            data.ProjectSettings.PythonModel.PythonExecutablePath = pythonPath;
-            data.ProjectSettings.PythonModel.ClientScriptPath = clientScriptPath;
-            data.ProjectSettings.PythonModel.WeightsPath = weightsPath;
-            data.ProjectSettings.PythonModel.ImageRootPath = Path.GetDirectoryName(imagePath) ?? string.Empty;
-            data.ProjectSettings.PythonModel.MinimumDetectionConfidence = 0F;
-            data.ProjectSettings.PythonModel.MaximumDetectionCandidates = 20;
-            data.ProjectSettings.PythonModel.InferenceImageSize = inferenceImageSize;
-            data.ProjectSettings.PythonModel.DetectionTimeoutSeconds = 120;
-            data.ProjectSettings.PythonModel.AutoStartClient = false;
-
-            YoloWorkerSmokeTestResult probe = YoloWorkerSmokeTestService
-                .RunAsync(data.ProjectSettings.PythonModel, imagePath, CancellationToken.None)
-                .GetAwaiter()
-                .GetResult();
-            AssertTrue(probe.Succeeded, $"YOLOv8 classification probe failed: {probe.Summary} {probe.Error}");
-            YoloWorkerSmokeCandidate mappedClass = probe.Candidates.FirstOrDefault(candidate =>
-                candidate.ImageLevel
-                && string.Equals(candidate.CandidateType, "imageClassification", StringComparison.OrdinalIgnoreCase));
-            AssertTrue(mappedClass != null, "YOLOv8 classification probe did not return an image-level classification candidate");
-            AssertTrue(!string.IsNullOrWhiteSpace(mappedClass.ClassName), "YOLOv8 classification probe did not return a class name");
-            if (!string.IsNullOrWhiteSpace(expectedClassName))
-            {
-                AssertEqual(expectedClassName, mappedClass.ClassName);
-            }
-
-            if (expectNormal)
-            {
-                data.ProjectSettings.AnomalyClassification.NormalClassNames.Add(mappedClass.ClassName);
-            }
-            else
-            {
-                data.ProjectSettings.AnomalyClassification.AbnormalClassNames.Add(mappedClass.ClassName);
-            }
-            data.ProjectSettings.AnomalyClassification.MinimumConfidence = Math.Max(0D, mappedClass.Confidence - 0.0001D);
-            CGlobal.Inst.Data = data;
-            SetPrivateField(CGlobal.Inst.Recipe, "m_strName", string.Empty);
-
-            WpfLabelingShellWindow window = new WpfLabelingShellWindow();
-            try
-            {
-                AssertTrue(window.TryLoadImage(imagePath, populateQueue: true, refreshQueueDetails: false), "WPF YOLOv8 anomaly classification smoke image load failed");
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(20));
-
-                Task<YoloWorkerSmokeTestResult> detectionTask = InvokePrivateResult<Task<YoloWorkerSmokeTestResult>>(
-                    window,
-                    "RunDetectionForImageAsync",
-                    imagePath,
-                    true,
-                    CancellationToken.None);
-                AssertTrue(WaitUntilWpf(() => detectionTask.IsCompleted, TimeSpan.FromSeconds(180)), "WPF YOLOv8 anomaly classification runtime smoke did not complete");
-
-                YoloWorkerSmokeTestResult result = detectionTask.GetAwaiter().GetResult();
-                AssertTrue(result.Succeeded, $"WPF YOLOv8 anomaly classification runtime smoke failed: {result.Summary} {result.Error}");
-                YoloWorkerSmokeCandidate runtimeCandidate = result.Candidates.FirstOrDefault(candidate =>
-                    candidate.ImageLevel
-                    && string.Equals(candidate.CandidateType, "imageClassification", StringComparison.OrdinalIgnoreCase));
-                AssertTrue(runtimeCandidate != null, "WPF YOLOv8 anomaly classification runtime smoke did not return an image-level classification candidate");
-                AssertEqual(mappedClass.ClassName, runtimeCandidate.ClassName);
-
-                WpfCandidateReviewStateService candidateState = GetPrivateField<WpfCandidateReviewStateService>(window, "candidateReviewState");
-                AssertTrue(candidateState.PendingCandidates.Any(candidate =>
-                        candidate.ImageLevel
-                        && string.Equals(candidate.CandidateType, "imageClassification", StringComparison.OrdinalIgnoreCase)),
-                    "WPF YOLOv8 anomaly classification candidate was not loaded into Candidate Review state");
-
-                var reviewStatus = new AnomalyImageReviewStatusService();
-                reviewStatus.LoadReviewStatus(data, new[] { imagePath });
-                AnomalyImageReviewStatus status = reviewStatus.GetItems().FirstOrDefault(item =>
-                    string.Equals(item.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase));
-                AssertTrue(status != null, "WPF YOLOv8 anomaly classification smoke did not persist anomaly review status");
-                AssertEqual(
-                    expectNormal ? AnomalyImageReviewState.Normal : AnomalyImageReviewState.Abnormal,
-                    status.ReviewState);
-            }
-            finally
-            {
-                window.Close();
-            }
-        }
-        finally
-        {
-            CGlobal.Inst.Data = previousData;
-            SetPrivateField(CGlobal.Inst.Recipe, "m_strName", previousRecipeName);
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestAnomalyClassificationDatasetExportService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "dataset"));
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-
-            string sourceRoot = Path.Combine(root, "source");
-            Directory.CreateDirectory(sourceRoot);
-            string normalPath = Path.Combine(sourceRoot, "normal-a.png");
-            string abnormalPath = Path.Combine(sourceRoot, "abnormal-a.png");
-            string unreviewedPath = Path.Combine(sourceRoot, "unreviewed-a.png");
-            string missingPath = Path.Combine(sourceRoot, "missing-a.png");
-            using (Bitmap normalImage = CreateSolidBitmap(12, 10, Color.White))
-            using (Bitmap abnormalImage = CreateSolidBitmap(12, 10, Color.Black))
-            using (Bitmap unreviewedImage = CreateSolidBitmap(12, 10, Color.Gray))
-            {
-                normalImage.Save(normalPath);
-                abnormalImage.Save(abnormalPath);
-                unreviewedImage.Save(unreviewedPath);
-            }
-
-            string[] imagePaths = { normalPath, abnormalPath, unreviewedPath, missingPath };
-            var reviewStatus = new AnomalyImageReviewStatusService();
-            reviewStatus.SetImages(imagePaths);
-            reviewStatus.MarkNormal(normalPath);
-            reviewStatus.MarkAbnormal(abnormalPath);
-            reviewStatus.MarkAbnormal(missingPath);
-            reviewStatus.SaveReviewStatus(data);
-
-            var service = new AnomalyClassificationDatasetExportService();
-            AnomalyClassificationDatasetExportResult result = service.Export(data, imagePaths);
-
-            AssertEqual(2, result.TotalExportedImageCount);
-            AssertEqual(1, result.NormalImageCount);
-            AssertEqual(1, result.AbnormalImageCount);
-            AssertEqual(2, result.SkippedImageCount);
-            AssertTrue(File.Exists(Path.Combine(result.DatasetRootPath, "train", "normal", "normal-a.png")), "normal reviewed image should be copied into classification train/normal");
-            AssertTrue(File.Exists(Path.Combine(result.DatasetRootPath, "train", "abnormal", "abnormal-a.png")), "abnormal reviewed image should be copied into classification train/abnormal");
-            AssertTrue(!File.Exists(Path.Combine(result.DatasetRootPath, "train", "normal", "unreviewed-a.png")), "unreviewed anomaly images should not be exported for classification training");
-
-            AnomalyClassificationDatasetExportResult repeated = service.Export(data, imagePaths);
-            AssertEqual(2, repeated.TotalExportedImageCount);
-            AssertEqual(1, Directory.EnumerateFiles(Path.Combine(result.DatasetRootPath, "train", "normal")).Count());
-            AssertEqual(1, Directory.EnumerateFiles(Path.Combine(result.DatasetRootPath, "train", "abnormal")).Count());
-            AssertTrue(!File.Exists(Path.Combine(result.DatasetRootPath, "train", "normal", "normal-a-2.png")), "repeated anomaly export should replace generated splits instead of accumulating duplicate images");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestAnomalyClassificationTrainingWorkflow()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(Path.Combine(root, "dataset"));
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYolo11;
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-
-            string sourceRoot = Path.Combine(root, "source");
-            Directory.CreateDirectory(sourceRoot);
-            string normalPath = Path.Combine(sourceRoot, "normal-train.png");
-            string abnormalPath = Path.Combine(sourceRoot, "abnormal-train.png");
-            using (Bitmap normalImage = CreateSolidBitmap(12, 10, Color.White))
-            using (Bitmap abnormalImage = CreateSolidBitmap(12, 10, Color.Black))
-            {
-                normalImage.Save(normalPath);
-                abnormalImage.Save(abnormalPath);
-            }
-
-            data.ProjectSettings.PythonModel.ImageRootPath = sourceRoot;
-            var reviewStatus = new AnomalyImageReviewStatusService();
-            reviewStatus.SetImages(new[] { normalPath, abnormalPath });
-            reviewStatus.MarkNormal(normalPath);
-            reviewStatus.MarkAbnormal(abnormalPath);
-            reviewStatus.SaveReviewStatus(data);
-
-            var incompatibleWorkflow = new YoloTrainingWorkflowService();
-            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV5;
-            AssertTrue(!incompatibleWorkflow.TryPrepareTrainingDataset(data), "YOLOv5 must not receive anomaly classification folder training requests");
-            AssertTrue(
-                incompatibleWorkflow.LastPreparationFailureMessage.Contains(YoloTrainingWorkflowService.AnomalyClassificationRuntimeError, StringComparison.Ordinal),
-                "incompatible anomaly runtime should expose the exact YOLOv8/YOLO11 requirement");
-            string incompatibleRuntimeStatus = WpfTrainingCommandPresentationService.BuildStartCommandResultStatus(
-                started: false,
-                incompatibleWorkflow.LastPreparationFailureMessage);
-            AssertTrue(incompatibleRuntimeStatus.Contains("YOLOv8", StringComparison.Ordinal)
-                && incompatibleRuntimeStatus.Contains("YOLO11", StringComparison.Ordinal),
-                "incompatible anomaly runtime should be translated into an actionable operator message");
-
-            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYolo11;
-            YoloDatasetReadinessReport anomalyDatasetReport = YoloDatasetReadinessService.Build(data, refreshYaml: true);
-            AssertTrue(anomalyDatasetReport.IsReady, string.Join(Environment.NewLine, anomalyDatasetReport.Errors));
-            AssertEqual(2, anomalyDatasetReport.Statistics.TrainImageCount);
-            AssertEqual(1, anomalyDatasetReport.Statistics.AnomalyNormalImageCount);
-            AssertEqual(1, anomalyDatasetReport.Statistics.AnomalyAbnormalImageCount);
-            AssertEqual(0, anomalyDatasetReport.Statistics.TotalObjectCount);
-            string anomalyReadyStatus = InvokePrivateStaticResult<string>(
-                typeof(WpfLabelingShellWindow),
-                "BuildReadyDatasetStatusText",
-                anomalyDatasetReport.Statistics,
-                LabelingDatasetPurpose.AnomalyDetection,
-                false);
-            AssertTrue(anomalyReadyStatus.Contains("정상 1", StringComparison.Ordinal)
-                && anomalyReadyStatus.Contains("이상 1", StringComparison.Ordinal)
-                && !anomalyReadyStatus.Contains("결함 박스", StringComparison.Ordinal),
-                "anomaly readiness should use image decisions rather than object-detection box counts");
-
-            int port = GetAvailableTcpPort();
-            using var communication = new CCommunicationLearning(startListen: false, port: port);
-            using var requestReceived = new ManualResetEventSlim(false);
-            AssertTrue(communication.Start(), "test TCP listener for anomaly classification training did not start");
-            Task mockClient = Task.Run(() => RunMockTrainingPacketCaptureClient(
-                port,
-                requestReceived,
-                request =>
-                {
-                    AssertEqual("yolo11", request.model);
-                    AssertEqual("classify", request.task);
-                    AssertEqual("yolo11n-cls.pt", request.weight);
-                    AssertTrue(request.dataYaml.Replace("\\", "/").EndsWith("/classification", StringComparison.Ordinal), "anomaly training should send the classification dataset root as data path");
-                    AssertTrue(File.Exists(Path.Combine(request.dataYaml, "train", "normal", "normal-train.png")), "normal classification training image was not exported before StartTraining");
-                    AssertTrue(File.Exists(Path.Combine(request.dataYaml, "train", "abnormal", "abnormal-train.png")), "abnormal classification training image was not exported before StartTraining");
-                }));
-            AssertTrue(WaitUntil(() => communication.GetStatusSnapshot().IsClientConnected, TimeSpan.FromSeconds(5)), "mock anomaly training client did not connect");
-
-            var workflow = new YoloTrainingWorkflowService();
-            AssertTrue(workflow.TryStartTraining(data, communication), "anomaly classification workflow should send StartTraining when normal and abnormal examples exist");
-            AssertTrue(requestReceived.Wait(TimeSpan.FromSeconds(5)), "mock anomaly training client did not receive StartTraining");
-            AssertTrue(mockClient.Wait(TimeSpan.FromSeconds(5)), "mock anomaly training client did not finish");
-            if (mockClient.IsFaulted && mockClient.Exception != null)
-            {
-                throw mockClient.Exception;
-            }
-
-            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-            int yolo8Port = GetAvailableTcpPort();
-            using var yolo8Communication = new CCommunicationLearning(startListen: false, port: yolo8Port);
-            using var yolo8RequestReceived = new ManualResetEventSlim(false);
-            AssertTrue(yolo8Communication.Start(), "test TCP listener for YOLOv8 anomaly classification training did not start");
-            Task yolo8MockClient = Task.Run(() => RunMockTrainingPacketCaptureClient(
-                yolo8Port,
-                yolo8RequestReceived,
-                request =>
-                {
-                    AssertEqual("yolov8", request.model);
-                    AssertEqual("classify", request.task);
-                    AssertEqual("yolov8n-cls.pt", request.weight);
-                    AssertEqual("workflow-anomaly-yolov8", request.runName);
-                    AssertTrue(request.dataYaml.Replace("\\", "/").EndsWith("/classification", StringComparison.Ordinal), "YOLOv8 anomaly training should send the classification dataset root as data path");
-                    AssertTrue(File.Exists(Path.Combine(request.dataYaml, "train", "normal", "normal-train.png")), "YOLOv8 normal classification training image was not exported before StartTraining");
-                    AssertTrue(File.Exists(Path.Combine(request.dataYaml, "train", "abnormal", "abnormal-train.png")), "YOLOv8 abnormal classification training image was not exported before StartTraining");
-                }));
-            AssertTrue(WaitUntil(() => yolo8Communication.GetStatusSnapshot().IsClientConnected, TimeSpan.FromSeconds(5)), "mock YOLOv8 anomaly training client did not connect");
-
-            AssertTrue(workflow.TryStartTraining(data, yolo8Communication, "workflow-anomaly-yolov8"), "YOLOv8 anomaly classification workflow should send StartTraining when normal and abnormal examples exist");
-            AssertTrue(yolo8RequestReceived.Wait(TimeSpan.FromSeconds(5)), "mock YOLOv8 anomaly training client did not receive StartTraining");
-            AssertTrue(yolo8MockClient.Wait(TimeSpan.FromSeconds(5)), "mock YOLOv8 anomaly training client did not finish");
-            if (yolo8MockClient.IsFaulted && yolo8MockClient.Exception != null)
-            {
-                throw yolo8MockClient.Exception;
-            }
-
-            string insufficientRoot = Path.Combine(root, "insufficient");
-            var insufficientData = new CData();
-            insufficientData.ConfigureOutputRoot(Path.Combine(insufficientRoot, "dataset"));
-            insufficientData.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            insufficientData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-            insufficientData.ProjectSettings.PythonModel.ImageRootPath = sourceRoot;
-            var insufficientReviewStatus = new AnomalyImageReviewStatusService();
-            insufficientReviewStatus.SetImages(new[] { normalPath, abnormalPath });
-            insufficientReviewStatus.MarkNormal(normalPath);
-            insufficientReviewStatus.SaveReviewStatus(insufficientData);
-            AnomalyClassificationTrainingReadinessReport insufficientReadiness =
-                AnomalyClassificationTrainingReadinessService.Build(insufficientData);
-            AssertTrue(!insufficientReadiness.IsReady, "anomaly classification readiness should block missing abnormal examples");
-            AssertEqual(1, insufficientReadiness.NormalImageCount);
-            AssertEqual(0, insufficientReadiness.AbnormalImageCount);
-            AssertTrue(!workflow.TryPrepareTrainingDataset(insufficientData), "anomaly classification training should require both normal and abnormal reviewed images");
-            AssertTrue(
-                workflow.LastPreparationFailureMessage.Contains(AnomalyClassificationTrainingReadinessService.NeedsReviewedNormalAndAbnormalError, StringComparison.Ordinal),
-                "anomaly classification workflow should expose the specific readiness failure reason");
-            string anomalyFailureStatus = WpfTrainingCommandPresentationService.BuildStartCommandResultStatus(
-                started: false,
-                workflow.LastPreparationFailureMessage);
-            AssertTrue(anomalyFailureStatus.Contains("\uC815\uC0C1", StringComparison.Ordinal)
-                && anomalyFailureStatus.Contains("\uC774\uC0C1", StringComparison.Ordinal),
-                "anomaly training start failure should explain reviewed normal/abnormal requirements");
-            AssertTrue(!anomalyFailureStatus.Contains(AnomalyClassificationTrainingReadinessService.NeedsReviewedNormalAndAbnormalError, StringComparison.Ordinal),
-                "anomaly training start failure should not expose raw readiness keys");
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestAnomalyClassificationEvaluationService()
-    {
-        AssertTrue(!new AnomalyClassificationEvaluationReport().IsAdoptionCandidate, "empty anomaly evaluation report should not be adoptable");
-        WpfAnomalyClassificationEvaluationPresentation emptyPresentation =
-            WpfAnomalyClassificationEvaluationPresentationService.Build(new AnomalyClassificationEvaluationReport());
-        AssertTrue(emptyPresentation.RecommendationText.Contains("\uBCF4\uB958", StringComparison.Ordinal), "empty anomaly evaluation presentation should be hold");
-        var weakSamples = new[]
-        {
-            new AnomalyClassificationEvaluationSample
-            {
-                ImagePath = "abnormal-0.png",
-                ExpectedClassName = "abnormal",
-                PredictedClassName = "abnormal",
-                Confidence = 0.67D
-            },
-            new AnomalyClassificationEvaluationSample
-            {
-                ImagePath = "normal-0.png",
-                ExpectedClassName = "normal",
-                PredictedClassName = "normal",
-                Confidence = 0.55D
-            }
-        };
-
-        AnomalyClassificationEvaluationReport weakReport = AnomalyClassificationEvaluationService.Build(weakSamples);
-        AssertTrue(!weakReport.IsAdoptionCandidate, "tiny anomaly classification evaluation should not be an adoption candidate");
-        AssertEqual(2, weakReport.TotalImageCount);
-        AssertEqual(1, weakReport.NormalImageCount);
-        AssertEqual(1, weakReport.AbnormalImageCount);
-        AssertTrue(weakReport.HoldReasons.Any(reason => reason.Contains("at least 10", StringComparison.Ordinal)), "evaluation should require enough held-out images");
-        AssertTrue(weakReport.HoldReasons.Any(reason => reason.Contains("normal", StringComparison.OrdinalIgnoreCase) && reason.Contains("at least 5", StringComparison.Ordinal)), "evaluation should require enough normal held-out images");
-        AssertTrue(weakReport.HoldReasons.Any(reason => reason.Contains("abnormal", StringComparison.OrdinalIgnoreCase) && reason.Contains("at least 5", StringComparison.Ordinal)), "evaluation should require enough abnormal held-out images");
-
-        var imbalancedSamples = new List<AnomalyClassificationEvaluationSample>();
-        for (int index = 0; index < 5; index++)
-        {
-            imbalancedSamples.Add(new AnomalyClassificationEvaluationSample
-            {
-                ImagePath = $"normal-{index}.png",
-                ExpectedClassName = "normal",
-                PredictedClassName = "normal",
-                Confidence = 0.95D
-            });
-            imbalancedSamples.Add(new AnomalyClassificationEvaluationSample
-            {
-                ImagePath = $"abnormal-{index}.png",
-                ExpectedClassName = "abnormal",
-                PredictedClassName = index == 0 ? "abnormal" : "normal",
-                Confidence = 0.95D
-            });
-        }
-
-        AnomalyClassificationEvaluationReport imbalancedReport = AnomalyClassificationEvaluationService.Build(imbalancedSamples);
-        AssertTrue(!imbalancedReport.IsAdoptionCandidate, "poor abnormal recall should block anomaly classification adoption");
-        AssertEqual(10, imbalancedReport.TotalImageCount);
-        AssertEqual(0.6D, imbalancedReport.Accuracy);
-        AssertEqual(0.2D, imbalancedReport.AbnormalAccuracy);
-        AssertTrue(imbalancedReport.HoldReasons.Any(reason => reason.Contains("Abnormal accuracy", StringComparison.Ordinal)), "evaluation should expose abnormal-class accuracy blockers");
-
-        var lowConfidenceSamples = new List<AnomalyClassificationEvaluationSample>();
-        for (int index = 0; index < 5; index++)
-        {
-            lowConfidenceSamples.Add(new AnomalyClassificationEvaluationSample
-            {
-                ImagePath = $"normal-low-confidence-{index}.png",
-                ExpectedClassName = "normal",
-                PredictedClassName = "normal",
-                Confidence = 0.79D
-            });
-            lowConfidenceSamples.Add(new AnomalyClassificationEvaluationSample
-            {
-                ImagePath = $"abnormal-low-confidence-{index}.png",
-                ExpectedClassName = "abnormal",
-                PredictedClassName = "abnormal",
-                Confidence = 0.79D
-            });
-        }
-
-        AnomalyClassificationEvaluationReport lowConfidenceReport = AnomalyClassificationEvaluationService.Build(
-            lowConfidenceSamples,
-            new AnomalyClassificationEvaluationOptions { MinimumConfidence = 0.8D });
-        AssertTrue(!lowConfidenceReport.IsAdoptionCandidate, "low-confidence correct anomaly predictions should not be adoption candidates");
-        AssertEqual(10, lowConfidenceReport.TotalImageCount);
-        AssertEqual(0, lowConfidenceReport.CorrectImageCount);
-        AssertEqual(10, lowConfidenceReport.LowConfidenceClassMatchCount);
-        AssertEqual(0D, lowConfidenceReport.Accuracy);
-        AssertTrue(lowConfidenceReport.HoldReasons.Any(reason => reason.Contains("Accuracy", StringComparison.Ordinal)), "low-confidence evaluation should surface accuracy blockers");
-        AssertTrue(lowConfidenceReport.HoldReasons.Any(reason => reason.Contains("minimum confidence", StringComparison.OrdinalIgnoreCase) && reason.Contains("10", StringComparison.Ordinal)), "low-confidence evaluation should explain how many class matches failed confidence");
-        WpfAnomalyClassificationEvaluationPresentation lowConfidencePresentation =
-            WpfAnomalyClassificationEvaluationPresentationService.Build(
-                lowConfidenceReport,
-                new AnomalyClassificationEvaluationOptions { MinimumConfidence = 0.8D });
-        AssertTrue(lowConfidencePresentation.RecommendationText.Contains("\uBCF4\uB958", StringComparison.Ordinal), "low-confidence anomaly evaluation should be presented as hold");
-        AssertTrue(lowConfidencePresentation.MetricsText.Contains("\uB0AE\uC740 \uC2E0\uB8B0\uB3C4", StringComparison.Ordinal) && lowConfidencePresentation.MetricsText.Contains("10", StringComparison.Ordinal), "presentation metrics should show low-confidence class-match count");
-        AssertTrue(lowConfidencePresentation.DetailText.Contains("\uC2E0\uB8B0\uB3C4 \uBBF8\uB2EC", StringComparison.Ordinal), "presentation detail should explain confidence blockers");
-
-        string summaryRoot = CreateTempRoot();
-        string summaryPath = Path.Combine(summaryRoot, "classification-evaluation-summary.json");
-        File.WriteAllText(
-            summaryPath,
-            JsonConvert.SerializeObject(new
-            {
-                metrics = new
-                {
-                    totalImageCount = 4,
-                    normalImageCount = 2,
-                    abnormalImageCount = 2,
-                    correctImageCount = 1,
-                    normalCorrectCount = 1,
-                    abnormalCorrectCount = 0,
-                    lowConfidenceClassMatchCount = 2,
-                    accuracy = 0.25,
-                    normalAccuracy = 0.5,
-                    abnormalAccuracy = 0.0
-                },
-                promotion = new
-                {
-                    recommendation = "hold",
-                    reasons = new[]
-                    {
-                        "2 class-matching predictions were below minimum confidence 0.8."
-                    }
-                }
-            }));
-        AnomalyClassificationEvaluationReport parsedSummary = AnomalyClassificationEvaluationService.ReadSummaryFile(summaryPath);
-        AssertEqual(4, parsedSummary.TotalImageCount);
-        AssertEqual(2, parsedSummary.LowConfidenceClassMatchCount);
-        AssertEqual(0.25D, parsedSummary.Accuracy);
-        AssertTrue(parsedSummary.HoldReasons.Any(reason => reason.Contains("minimum confidence", StringComparison.OrdinalIgnoreCase)), "summary loader should preserve confidence hold reasons");
-        WpfAnomalyClassificationEvaluationPresentation parsedPresentation =
-            WpfAnomalyClassificationEvaluationPresentationService.Build(
-                parsedSummary,
-                new AnomalyClassificationEvaluationOptions { MinimumConfidence = 0.8D });
-        AssertTrue(parsedPresentation.DetailText.Contains("\uC2E0\uB8B0\uB3C4 \uBBF8\uB2EC", StringComparison.Ordinal), "parsed summary should feed operator-readable confidence detail");
-        string holdWithoutReasonsJson = JsonConvert.SerializeObject(new
-        {
-            metrics = new
-            {
-                totalImageCount = 10,
-                normalImageCount = 5,
-                abnormalImageCount = 5,
-                correctImageCount = 10,
-                normalCorrectCount = 5,
-                abnormalCorrectCount = 5,
-                lowConfidenceClassMatchCount = 0,
-                accuracy = 1.0,
-                normalAccuracy = 1.0,
-                abnormalAccuracy = 1.0
-            },
-            promotion = new
-            {
-                recommendation = "hold",
-                reasons = Array.Empty<string>()
-            }
-        });
-        AnomalyClassificationEvaluationReport holdWithoutReasonsReport =
-            AnomalyClassificationEvaluationService.ParseSummaryJson(holdWithoutReasonsJson);
-        AssertTrue(!holdWithoutReasonsReport.IsAdoptionCandidate, "summary loader should honor explicit hold recommendation even when reasons are absent");
-        WpfAnomalyClassificationEvaluationPresentation holdWithoutReasonsPresentation =
-            WpfAnomalyClassificationEvaluationPresentationService.Build(holdWithoutReasonsReport);
-        AssertTrue(holdWithoutReasonsPresentation.RecommendationText.Contains("\uBCF4\uB958", StringComparison.Ordinal), "explicit hold recommendation should remain visible as hold");
-        string missingPromotionJson = JsonConvert.SerializeObject(new
-        {
-            metrics = new
-            {
-                totalImageCount = 10,
-                normalImageCount = 5,
-                abnormalImageCount = 5,
-                correctImageCount = 10,
-                normalCorrectCount = 5,
-                abnormalCorrectCount = 5,
-                lowConfidenceClassMatchCount = 0,
-                accuracy = 1.0,
-                normalAccuracy = 1.0,
-                abnormalAccuracy = 1.0
-            }
-        });
-        AnomalyClassificationEvaluationReport missingPromotionReport =
-            AnomalyClassificationEvaluationService.ParseSummaryJson(missingPromotionJson);
-        AssertTrue(!missingPromotionReport.IsAdoptionCandidate, "summary loader should require an explicit adopt recommendation");
-        string modelCenterLookupRoot = Path.Combine(summaryRoot, "model-center-lookup");
-        string oldEvaluationDirectory = Path.Combine(modelCenterLookupRoot, "classification-evaluation-20260708-010000");
-        string latestEvaluationDirectory = Path.Combine(modelCenterLookupRoot, "classification-evaluation-20260708-020000");
-        Directory.CreateDirectory(oldEvaluationDirectory);
-        Directory.CreateDirectory(latestEvaluationDirectory);
-        string oldEvaluationSummaryPath = Path.Combine(oldEvaluationDirectory, "classification-evaluation-summary.json");
-        string latestEvaluationSummaryPath = Path.Combine(latestEvaluationDirectory, "classification-evaluation-summary.json");
-        File.WriteAllText(oldEvaluationSummaryPath, File.ReadAllText(summaryPath));
-        File.WriteAllText(latestEvaluationSummaryPath, File.ReadAllText(summaryPath));
-        File.SetLastWriteTimeUtc(oldEvaluationSummaryPath, new DateTime(2026, 7, 8, 1, 0, 0, DateTimeKind.Utc));
-        File.SetLastWriteTimeUtc(latestEvaluationSummaryPath, new DateTime(2026, 7, 8, 2, 0, 0, DateTimeKind.Utc));
-        string modelCenterSummaryPath = InvokePrivateStaticResult<string>(
-            typeof(WpfLabelingShellWindow),
-            "FindModelCenterAnomalyEvaluationSummaryPath",
-            modelCenterLookupRoot);
-        AssertEqual(latestEvaluationSummaryPath, modelCenterSummaryPath);
-
-        var strongSamples = new List<AnomalyClassificationEvaluationSample>();
-        for (int index = 0; index < 5; index++)
-        {
-            strongSamples.Add(new AnomalyClassificationEvaluationSample
-            {
-                ImagePath = $"normal-good-{index}.png",
-                ExpectedClassName = "normal",
-                PredictedClassName = "normal",
-                Confidence = 0.91D
-            });
-            strongSamples.Add(new AnomalyClassificationEvaluationSample
-            {
-                ImagePath = $"abnormal-good-{index}.png",
-                ExpectedClassName = "abnormal",
-                PredictedClassName = "abnormal",
-                Confidence = 0.93D
-            });
-        }
-
-        AnomalyClassificationEvaluationReport strongReport = AnomalyClassificationEvaluationService.Build(strongSamples);
-        AssertTrue(strongReport.IsAdoptionCandidate, "balanced high-accuracy anomaly classification evaluation should be an adoption candidate");
-        AssertEqual(10, strongReport.TotalImageCount);
-        AssertEqual(5, strongReport.NormalImageCount);
-        AssertEqual(5, strongReport.AbnormalImageCount);
-        AssertEqual(1D, strongReport.Accuracy);
-        AssertEqual(0, strongReport.HoldReasons.Count);
-        WpfAnomalyClassificationEvaluationPresentation strongPresentation =
-            WpfAnomalyClassificationEvaluationPresentationService.Build(strongReport);
-        AssertTrue(strongPresentation.RecommendationText.Contains("\uCC44\uD0DD \uAC00\uB2A5", StringComparison.Ordinal), "strong anomaly evaluation should be presented as adoptable");
-        AssertTrue(strongPresentation.ActionText.Contains("\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378", StringComparison.Ordinal), "adoptable presentation should guide model save action");
-
-        string evaluationScript = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "scripts", "evaluate-yolo-classification.ps1"));
-        AssertTrue(evaluationScript.Contains("--smoke-test", StringComparison.Ordinal), "classification evaluation script should run the local YOLO adapter smoke path");
-        AssertTrue(evaluationScript.Contains("persistent-adapter-batch", StringComparison.Ordinal), "classification evaluation script should reuse one loaded adapter model for large held-out datasets");
-        AssertTrue(evaluationScript.Contains("UseLegacyPerImageWorker", StringComparison.Ordinal), "classification evaluation script should retain the per-image adapter path for equivalence checks");
-        AssertTrue(evaluationScript.Contains("evaluationElapsedMs", StringComparison.Ordinal), "classification evaluation summary should record the measured adapter evaluation duration");
-        AssertTrue(evaluationScript.Contains("imageClassification", StringComparison.Ordinal), "classification evaluation script should read image-level classification candidates");
-        AssertTrue(evaluationScript.Contains("classification-evaluation-summary.json", StringComparison.Ordinal), "classification evaluation script should write a stable summary artifact");
-        AssertTrue(evaluationScript.Contains("fingerprintSha256", StringComparison.Ordinal), "classification evaluation summary should persist a content fingerprint for held-out class images");
-        AssertTrue(evaluationScript.Contains("weightsSha256", StringComparison.Ordinal), "classification evaluation summary should persist the evaluated weights fingerprint");
-        AssertTrue(evaluationScript.Contains("minimumTotalImageCount", StringComparison.Ordinal), "classification evaluation summary should persist total-image adoption thresholds");
-        AssertTrue(evaluationScript.Contains("minimumPerClassImageCount", StringComparison.Ordinal), "classification evaluation summary should persist per-class adoption thresholds");
-        AssertTrue(evaluationScript.Contains("minimumConfidence", StringComparison.Ordinal), "classification evaluation summary should persist the confidence adoption threshold");
-        AssertTrue(evaluationScript.Contains("lowConfidenceClassMatchCount", StringComparison.Ordinal), "classification evaluation summary should persist low-confidence class-match counts");
-        AssertTrue(evaluationScript.Contains("$confidenceValue -ge $MinimumConfidence", StringComparison.Ordinal), "classification evaluation script should require enough confidence before counting a prediction as correct");
-        AssertTrue(evaluationScript.Contains("class-matching predictions were below minimum confidence", StringComparison.Ordinal), "classification evaluation script should explain confidence-gated hold reasons");
-        AssertTrue(evaluationScript.Contains("recommendation = $recommendation", StringComparison.Ordinal), "classification evaluation summary should persist adopt/hold recommendation");
-        AssertTrue(evaluationScript.Contains("reasons = $holdReasons", StringComparison.Ordinal), "classification evaluation summary should persist hold reasons");
-        string batchEvaluationScript = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Runtime", "Python", "openvisionlab_yolo_classification_batch.py"));
-        AssertTrue(batchEvaluationScript.Contains("spec_from_file_location", StringComparison.Ordinal), "batch classification evaluation should load the selected local YOLO adapter instead of a second model implementation");
-        AssertTrue(batchEvaluationScript.Contains("build_detector", StringComparison.Ordinal), "batch classification evaluation should build the detector through the selected adapter");
-        AssertTrue(batchEvaluationScript.Contains("detector.detect_path", StringComparison.Ordinal), "batch classification evaluation should preserve adapter-owned candidate mapping");
-
-        string runRoot = CreateTempRoot();
-        try
-        {
-            string sourceRoot = Path.Combine(runRoot, "source");
-            string yoloRoot = Path.Combine(runRoot, "yolov8");
-            string pythonPath = Path.Combine(yoloRoot, ".venv", "Scripts", "python.exe");
-            string workerPath = Path.Combine(yoloRoot, "labeling_tcp_client.py");
-            string weightsPath = Path.Combine(yoloRoot, "runs", "classify", "normal-abnormal", "weights", "best.pt");
-            Directory.CreateDirectory(sourceRoot);
-            Directory.CreateDirectory(Path.GetDirectoryName(pythonPath) ?? yoloRoot);
-            Directory.CreateDirectory(Path.GetDirectoryName(weightsPath) ?? yoloRoot);
-            File.WriteAllText(pythonPath, string.Empty);
-            File.WriteAllText(workerPath, string.Empty);
-            File.WriteAllText(weightsPath, string.Empty);
-
-            string normalPath = Path.Combine(sourceRoot, "normal-eval.png");
-            string abnormalPath = Path.Combine(sourceRoot, "abnormal-eval.png");
-            using (Bitmap normalImage = CreateSolidBitmap(12, 10, Color.White))
-            using (Bitmap abnormalImage = CreateSolidBitmap(12, 10, Color.Black))
-            {
-                normalImage.Save(normalPath);
-                abnormalImage.Save(abnormalPath);
-            }
-
-            var runData = new CData();
-            runData.ConfigureOutputRoot(Path.Combine(runRoot, "dataset"));
-            runData.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
-            runData.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            runData.ProjectSettings.YoloDataset.TestPercent = 100;
-            runData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV8;
-            runData.ProjectSettings.PythonModel.ProjectRootPath = yoloRoot;
-            runData.ProjectSettings.PythonModel.PythonExecutablePath = pythonPath;
-            runData.ProjectSettings.PythonModel.ClientScriptPath = workerPath;
-            runData.ProjectSettings.PythonModel.WeightsPath = weightsPath;
-            runData.ProjectSettings.PythonModel.ImageRootPath = sourceRoot;
-            runData.ProjectSettings.PythonModel.InferenceImageSize = 96;
-            runData.ProjectSettings.AnomalyClassification.MinimumConfidence = 0.8D;
-
-            var runReviewStatus = new AnomalyImageReviewStatusService();
-            runReviewStatus.SetImages(new[] { normalPath, abnormalPath });
-            runReviewStatus.MarkNormal(normalPath);
-            runReviewStatus.MarkAbnormal(abnormalPath);
-            runReviewStatus.SaveReviewStatus(runData);
-
-            var runService = new WpfAnomalyClassificationEvaluationRunService(FindRepositoryRoot());
-            WpfAnomalyClassificationEvaluationRunRequest request = runService.BuildRequest(runData);
-            AssertEqual("yolov8", request.ModelName);
-            AssertEqual("test", request.Split);
-            AssertEqual(96, request.ImageSize);
-            AssertEqual(0.8D, request.MinimumConfidence);
-            AssertTrue(request.DatasetRootPath.Contains("classification-evaluation-input", StringComparison.Ordinal), "WPF anomaly evaluation runner should export to a fresh evaluation input folder");
-            AssertTrue(File.Exists(Path.Combine(request.DatasetRootPath, "test", "normal", "normal-eval.png")), "WPF anomaly evaluation runner should export reviewed normal test images");
-            AssertTrue(File.Exists(Path.Combine(request.DatasetRootPath, "test", "abnormal", "abnormal-eval.png")), "WPF anomaly evaluation runner should export reviewed abnormal test images");
-            AssertEqual(0, runService.ValidateRequest(request).Count);
-            IReadOnlyList<string> arguments = runService.BuildPowerShellArguments(request);
-            AssertTrue(arguments.Contains("-WorkerScript"), "WPF anomaly evaluation runner should pass the local YOLOv8 TCP adapter");
-            AssertTrue(arguments.Contains(workerPath), "WPF anomaly evaluation runner should pass the configured local adapter path");
-            AssertTrue(arguments.Contains("-DatasetRoot"), "WPF anomaly evaluation runner should pass the exported classification dataset root");
-            AssertTrue(arguments.Contains(request.DatasetRootPath), "WPF anomaly evaluation runner should pass the exported dataset path");
-            AssertTrue(arguments.Contains("-MinimumConfidence"), "WPF anomaly evaluation runner should pass the confidence adoption threshold");
-            AssertTrue(arguments.Contains("0.8"), "WPF anomaly evaluation runner should pass the configured confidence adoption threshold value");
-
-            runData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYolo11;
-            WpfAnomalyClassificationEvaluationRunRequest yolo11Request = runService.BuildRequest(runData);
-            AssertEqual("yolo11", yolo11Request.ModelName);
-            AssertEqual(0, runService.ValidateRequest(yolo11Request).Count);
-            AssertTrue(
-                runService.BuildPowerShellArguments(yolo11Request).Contains(workerPath),
-                "WPF anomaly evaluation runner should preserve the selected YOLO11-compatible adapter path");
-
-            yolo11Request.ModelName = "unsupported";
-            AssertTrue(
-                runService.ValidateRequest(yolo11Request).Any(error =>
-                    error.Contains("YOLOv8", StringComparison.Ordinal) &&
-                    error.Contains("YOLO11", StringComparison.Ordinal)),
-                "WPF anomaly evaluation runner should reject model engines outside the verified YOLOv8/YOLO11 scope");
-        }
-        finally
-        {
-            DeleteTempRoot(runRoot);
-        }
-    }
-
-    private static void TestYoloImageLabelStatusService()
-    {
-        string root = CreateTempRoot();
-        string externalRoot = root + "-source";
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "Part", DrawColor = Color.Blue });
-            data.EnsureYoloOutputDirectories();
-
-            string imagePath = Path.Combine(root, "source", "sample.png");
-            YoloImageLabelStatus missing = YoloImageLabelStatusService.Build(imagePath, new Size(20, 20), data);
-            AssertTrue(!missing.HasLabelFile, "missing label status should not report a label file");
-            AssertEqual("No Label", missing.Text);
-
-            string reusedImagesDirectory = Path.Combine(externalRoot, "Images");
-            string reusedLabelsDirectory = Path.Combine(externalRoot, "labels");
-            Directory.CreateDirectory(reusedImagesDirectory);
-            Directory.CreateDirectory(reusedLabelsDirectory);
-            string reusedImagePath = Path.Combine(reusedImagesDirectory, "shared.png");
-            string reusedSiblingLabelPath = Path.Combine(reusedLabelsDirectory, "shared.txt");
-            string reusedSidecarLabelPath = Path.ChangeExtension(reusedImagePath, ".txt");
-            File.WriteAllText(reusedImagePath, string.Empty);
-            File.WriteAllText(reusedSiblingLabelPath, "0 0.5 0.5 0.5 0.5");
-            File.WriteAllText(reusedSidecarLabelPath, "0 0.5 0.5 0.5 0.5");
-
-            YoloImageLabelStatus legacyShared = YoloImageLabelStatusService.Build(reusedImagePath, new Size(20, 20), null);
-            AssertTrue(legacyShared.HasLabelFile, "legacy standalone lookup should still find a sibling label file");
-            AssertEqual(reusedSiblingLabelPath, legacyShared.LabelPath);
-
-            YoloImageLabelStatus isolatedShared = YoloImageLabelStatusService.Build(reusedImagePath, new Size(20, 20), data);
-            AssertTrue(!isolatedShared.HasLabelFile, "new dataset should not inherit labels from a reused external image folder");
-            IReadOnlyDictionary<string, List<Rectangle>> inheritedAnnotations = YoloAnnotationService.LoadAnnotationRectanglesForImage(
-                reusedImagePath,
-                data.ClassNamedList,
-                data,
-                new Size(20, 20));
-            AssertEqual(0, inheritedAnnotations.Count);
-
-            string activeSharedLabelPath = Path.Combine(root, "data", "train", "labels", "shared.txt");
-            File.WriteAllText(activeSharedLabelPath, "0 0.5 0.5 0.5 0.5");
-            YoloImageLabelStatus activeShared = YoloImageLabelStatusService.Build(reusedImagePath, new Size(20, 20), data);
-            AssertTrue(activeShared.HasLabelFile, "active dataset label lookup should find the new dataset label");
-            AssertEqual(activeSharedLabelPath, activeShared.LabelPath);
-            IReadOnlyDictionary<string, List<Rectangle>> activeSharedAnnotations = YoloAnnotationService.LoadAnnotationRectanglesForImage(
-                reusedImagePath,
-                data.ClassNamedList,
-                data,
-                new Size(20, 20));
-            AssertEqual(1, activeSharedAnnotations["Part"].Count);
-
-            string labelPath = Path.Combine(root, "data", "train", "labels", "sample.txt");
-            File.WriteAllLines(labelPath, new[]
-            {
-                "0 0.5 0.5 0.5 0.5",
-                "9 0.5 0.5 0.5 0.5",
-                "bad line"
-            });
-
-            YoloImageLabelStatus status = YoloImageLabelStatusService.Build(imagePath, new Size(20, 20), data);
-            AssertTrue(status.HasLabelFile, "label status did not locate the saved label file");
-            AssertEqual(labelPath, status.LabelPath);
-            AssertEqual(1, status.ObjectCount);
-            AssertEqual(2, status.InvalidLineCount);
-            AssertEqual("Label 1 / Invalid 2", status.Text);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-            DeleteDirectoryIfExists(externalRoot);
-        }
-    }
-
-    private static void TestYoloImageReviewStatusService()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ClassNamedList.Add(new CClassItem { Text = "Part", DrawColor = Color.Blue });
-            data.EnsureYoloOutputDirectories();
-
-            string sourceDirectory = Path.Combine(root, "source");
-            Directory.CreateDirectory(sourceDirectory);
-
-            string labeledImagePath = Path.Combine(sourceDirectory, "labeled.png");
-            string candidateImagePath = Path.Combine(sourceDirectory, "candidate.png");
-            string failedImagePath = Path.Combine(sourceDirectory, "failed.png");
-            string skippedImagePath = Path.Combine(sourceDirectory, "skipped.png");
-            string emptyImagePath = Path.Combine(sourceDirectory, "empty.png");
-            var imagePaths = new List<string> { labeledImagePath, candidateImagePath, failedImagePath, skippedImagePath, emptyImagePath };
-
-            string labelPath = Path.Combine(root, "data", "train", "labels", "labeled.txt");
-            File.WriteAllText(labelPath, "0 0.5 0.5 0.25 0.25");
-
-            var service = new YoloImageReviewStatusService();
-            service.SetImages(imagePaths);
-            service.RefreshLabelStatus(labeledImagePath, new Size(100, 100), data);
-            service.RefreshLabelStatus(candidateImagePath, new Size(100, 100), data);
-            service.RefreshLabelStatus(failedImagePath, new Size(100, 100), data);
-            service.RefreshLabelStatus(skippedImagePath, new Size(100, 100), data);
-
-            AssertEqual(1, service.GetLabeledCount());
-            AssertTrue(service.TryFindNextUnlabeled(imagePaths, labeledImagePath, out string nextImagePath), "next unlabeled image was not found");
-            AssertEqual(candidateImagePath, nextImagePath);
-
-            YoloImageReviewStatus requested = service.SetDetectionRequested(candidateImagePath);
-            AssertEqual("Requested", requested.DetectionText);
-
-            YoloImageReviewStatus candidates = service.SetDetectionCandidates(string.Empty, "candidate", 2);
-            AssertEqual(candidateImagePath, candidates.ImagePath);
-            AssertEqual(2, candidates.DetectionCandidateCount);
-            AssertEqual("Candidate 2", candidates.DetectionText);
-
-            string candidateLabelPath = Path.Combine(root, "data", "train", "labels", "candidate.txt");
-            File.WriteAllText(candidateLabelPath, "0 0.5 0.5 0.25 0.25");
-            YoloImageReviewStatus candidateWithActiveBoxes = service.RefreshLabelStatusAndReviewState(candidateImagePath, new Size(100, 100), data, hasActiveCandidates: true);
-            AssertEqual("Candidate 2", candidateWithActiveBoxes.DetectionText);
-            AssertTrue(candidateWithActiveBoxes.IsLabeled, "saved label status should be preserved while active candidates remain");
-            AssertEqual("Label 1", candidateWithActiveBoxes.LabelText);
-
-            YoloImageReviewStatus noCandidates = service.SetDetectionNoCandidates(candidateImagePath, "candidate");
-            AssertEqual("No Candidate", noCandidates.DetectionText);
-
-            YoloImageReviewStatus cleared = service.ClearDetectionStatus(candidateImagePath);
-            AssertEqual(string.Empty, cleared.DetectionText);
-
-            YoloImageReviewStatus failedRequest = service.SetDetectionRequested(failedImagePath);
-            AssertEqual(1, failedRequest.DetectionAttemptCount);
-
-            YoloImageReviewStatus failed = service.SetDetectionFailed(failedImagePath, string.Empty, "Batch detection timed out.");
-            AssertEqual("Failed", failed.DetectionText);
-            AssertEqual(1, failed.DetectionAttemptCount);
-            AssertTrue(failed.DetectionDetailText.Contains("Batch detection timed out."), "failed detection detail did not include the failure reason");
-
-            service.SetDetectionRequested(failedImagePath);
-            YoloImageReviewStatus retriedFailure = service.SetDetectionFailed(failedImagePath, string.Empty, "Detection request failed.");
-            AssertEqual(2, retriedFailure.DetectionAttemptCount);
-            AssertTrue(retriedFailure.DetectionDetailText.Contains("Attempt 2"), "retry count was not reflected in detection detail text");
-
-            YoloImageReviewStatus skipped = service.MarkSkipped(skippedImagePath);
-            AssertEqual("Skipped", skipped.DetectionText);
-            AssertEqual(0, skipped.DetectionCandidateCount);
-            AssertTrue(skipped.DetectionDetailText.Contains("Candidate skipped."), "skipped review detail did not include the skip reason");
-
-            string emptyLabelPath = Path.Combine(root, "data", "train", "labels", "empty.txt");
-            File.WriteAllText(emptyLabelPath, string.Empty);
-            YoloImageReviewStatus emptyCompleted = service.RefreshLabelStatusAndReviewState(emptyImagePath, new Size(100, 100), data, hasActiveCandidates: false);
-            AssertEqual("No Candidate", emptyCompleted.DetectionText);
-            AssertEqual("Empty Label", emptyCompleted.LabelText);
-
-            YoloImageReviewStatus reviewedNoCandidate = service.SetDetectionNoCandidates(candidateImagePath, "candidate");
-            AssertEqual("No Candidate", reviewedNoCandidate.DetectionText);
-            AssertTrue(service.TryFindNextUnlabeled(imagePaths, labeledImagePath, out string nextReviewImagePath), "next image that still needs review was not found");
-            AssertEqual(failedImagePath, nextReviewImagePath);
-
-            YoloImageReviewStatus confirmed = service.MarkConfirmed(labeledImagePath);
-            AssertEqual("Confirmed", confirmed.DetectionText);
-            AssertEqual(0, confirmed.DetectionCandidateCount);
-            AssertTrue(confirmed.DetectionDetailText.Contains("Candidates confirmed."), "confirmed review detail did not include the confirmation reason");
-
-            YoloImageReviewStatus confirmedBySavedLabel = service.RefreshLabelStatusAndReviewState(labeledImagePath, new Size(100, 100), data, hasActiveCandidates: false);
-            AssertEqual("Confirmed", confirmedBySavedLabel.DetectionText);
-
-            YoloImageReviewStatus needsFix = service.MarkQualityNeedsFix(
-                labeledImagePath,
-                qualityReviewNote: "  경계가 흐림\r\n마스크 재작업  ");
-            AssertEqual(YoloImageQualityReviewState.NeedsFix, needsFix.QualityReviewState);
-            AssertEqual("경계가 흐림  마스크 재작업", needsFix.QualityReviewNote);
-            AssertEqual(
-                YoloImageQualityReviewState.NeedsFix,
-                service.InvalidateQualityReviewAfterEdit(labeledImagePath).QualityReviewState);
-            YoloImageReviewStatus qualityReviewed = service.MarkQualityReviewed(labeledImagePath);
-            AssertEqual(YoloImageQualityReviewState.Reviewed, qualityReviewed.QualityReviewState);
-            AssertEqual(string.Empty, qualityReviewed.QualityReviewNote);
-            AssertEqual(
-                YoloImageQualityReviewState.Unreviewed,
-                service.InvalidateQualityReviewAfterEdit(labeledImagePath).QualityReviewState);
-            AssertEqual(
-                YoloImageQualityReviewState.Unreviewed,
-                service.ClearQualityReview(labeledImagePath).QualityReviewState);
-            service.MarkQualityNeedsFix(labeledImagePath, qualityReviewNote: "경계 | 마스크 수정");
-
-            service.SetDetectionCandidates(candidateImagePath, "candidate", 2);
-            service.SaveReviewStatus(data);
-
-            string reviewStatusPath = YoloImageReviewStatusService.ResolveReviewStatusFilePath(data);
-            AssertTrue(File.Exists(reviewStatusPath), "review status file was not saved");
-            string reviewStatusJson = File.ReadAllText(reviewStatusPath);
-            AssertTrue(reviewStatusJson.Contains("\"ReviewStateName\": \"Confirmed\""), "review status file did not include a readable confirmed state name");
-            AssertTrue(reviewStatusJson.Contains("\"ReviewStateName\": \"Candidate\""), "review status file did not include a readable candidate state name");
-            AssertTrue(reviewStatusJson.Contains("\"QualityReviewStateName\": \"NeedsFix\""), "review status file did not include a readable quality-review state name");
-            AssertTrue(reviewStatusJson.Contains("\"QualityReviewNote\": \"경계 | 마스크 수정\""), "review status file did not include the short quality-review note");
-
-            var restored = new YoloImageReviewStatusService();
-            restored.LoadReviewStatus(data, imagePaths);
-
-            AssertEqual("Confirmed", restored.GetOrCreate(labeledImagePath).DetectionText);
-            AssertEqual(YoloImageQualityReviewState.NeedsFix, restored.GetOrCreate(labeledImagePath).QualityReviewState);
-            AssertEqual("경계 | 마스크 수정", restored.GetOrCreate(labeledImagePath).QualityReviewNote);
-            AssertEqual("Candidate 2", restored.GetOrCreate(candidateImagePath).DetectionText);
-            AssertEqual("Failed", restored.GetOrCreate(failedImagePath).DetectionText);
-            AssertEqual(2, restored.GetOrCreate(failedImagePath).DetectionAttemptCount);
-            AssertEqual("Detection request failed.", restored.GetOrCreate(failedImagePath).LastDetectionMessage);
-            AssertEqual("Skipped", restored.GetOrCreate(skippedImagePath).DetectionText);
-
-            string namedOnlyStatusJson = reviewStatusJson.Replace("\"ReviewState\": 4,", "\"ReviewState\": 999,");
-            File.WriteAllText(reviewStatusPath, namedOnlyStatusJson);
-            var restoredFromName = new YoloImageReviewStatusService();
-            restoredFromName.LoadReviewStatus(data, imagePaths);
-            AssertEqual("Confirmed", restoredFromName.GetOrCreate(labeledImagePath).DetectionText);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestYoloImageQualityReviewReportExport()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            string needsFixPath = Path.Combine(root, "images", "needs-fix.png");
-            string reviewedPath = Path.Combine(root, "images", "reviewed.png");
-            string unreviewedPath = Path.Combine(root, "images", "unreviewed.png");
-            var service = new YoloImageReviewStatusService();
-            service.SetImages(new[] { needsFixPath, reviewedPath, unreviewedPath });
-            service.MarkQualityNeedsFix(
-                needsFixPath,
-                qualityReviewNote: "경계 | 불명확\n마스크 재작업");
-            service.MarkQualityReviewed(reviewedPath);
-
-            string outputPath = YoloImageQualityReviewReportExportService.ResolveDefaultOutputPath(data);
-            var generatedAtUtc = new DateTime(2026, 7, 11, 3, 0, 0, DateTimeKind.Utc);
-            YoloImageQualityReviewReportExportResult result = YoloImageQualityReviewReportExportService.ExportMarkdown(
-                service.GetItems(),
-                outputPath,
-                generatedAtUtc);
-
-            AssertTrue(File.Exists(outputPath), "local label quality review markdown was not written");
-            AssertEqual(outputPath, result.OutputPath);
-            AssertEqual(3, result.TotalImageCount);
-            AssertEqual(1, result.UnreviewedCount);
-            AssertEqual(1, result.NeedsFixCount);
-            AssertEqual(1, result.ReviewedCount);
-            string markdown = File.ReadAllText(outputPath);
-            AssertTrue(markdown.Contains("# 라벨 품질 검수 보고서", StringComparison.Ordinal), "quality report should have an operator-facing title");
-            AssertTrue(markdown.Contains("2026-07-11 03:00:00", StringComparison.Ordinal), "quality report should include a deterministic UTC generation time");
-            AssertTrue(markdown.Contains("needs-fix.png", StringComparison.Ordinal), "quality report should list the issue image");
-            AssertTrue(markdown.Contains("경계 \\| 불명확 마스크 재작업", StringComparison.Ordinal), "quality report should normalize and escape the issue reason");
-            AssertTrue(!markdown.Contains(root, StringComparison.OrdinalIgnoreCase), "quality report should not expose the local absolute dataset path");
-
-            string oversizedNote = new string('A', YoloImageReviewStatusService.QualityReviewNoteMaxLength + 20);
-            YoloImageReviewStatus normalized = service.MarkQualityNeedsFix(unreviewedPath, qualityReviewNote: oversizedNote);
-            AssertEqual(YoloImageReviewStatusService.QualityReviewNoteMaxLength, normalized.QualityReviewNote.Length);
-            service.ClearQualityReview(unreviewedPath);
-            AssertEqual(string.Empty, service.GetOrCreate(unreviewedPath).QualityReviewNote);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
     }
 
     private static void TestYoloAnnotationFileWrite()
@@ -19087,1034 +12655,6 @@ internal static partial class Program
         {
             DeleteTempRoot(root);
         }
-    }
-
-    private static void TestTemplateMatchingBatchAutoLabelSaveAndSkip()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-            data.ClassNamedList.Clear();
-            var partClass = new CClassItem { Text = "Part", DrawColor = Color.Blue };
-            data.ClassNamedList.Add(partClass);
-            data.EnsureYoloOutputDirectories();
-
-            string sourceDirectory = Path.Combine(root, "source");
-            Directory.CreateDirectory(sourceDirectory);
-            string activeImagePath = Path.Combine(sourceDirectory, "active-template.png");
-            string targetImagePath = Path.Combine(sourceDirectory, "batch-target.png");
-            string existingImagePath = Path.Combine(sourceDirectory, "skip-existing.png");
-
-            using (Bitmap activeImage = CreateTemplateBatchAutoLabelImage(new Point(12, 12)))
-            using (Bitmap targetImage = CreateTemplateBatchAutoLabelImage(new Point(56, 34)))
-            using (Bitmap existingImage = CreateTemplateBatchAutoLabelImage(new Point(72, 48)))
-            {
-                activeImage.Save(activeImagePath, System.Drawing.Imaging.ImageFormat.Png);
-                targetImage.Save(targetImagePath, System.Drawing.Imaging.ImageFormat.Png);
-                existingImage.Save(existingImagePath, System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            string existingLabelPath = Path.Combine(root, "data", "train", "labels", "skip-existing.txt");
-            File.WriteAllText(existingLabelPath, "sentinel");
-            data.LastSelectImageName = Path.GetFileNameWithoutExtension(activeImagePath);
-            data.LastSelectImagePath = activeImagePath;
-
-            var service = new TemplateMatchingBatchAutoLabelService();
-            IReadOnlyList<string> queue = service.BuildUnlabeledImagePathQueue(
-                new[] { activeImagePath, targetImagePath, targetImagePath, existingImagePath },
-                data,
-                activeImagePath);
-
-            AssertEqual(1, queue.Count);
-            AssertEqual(targetImagePath, queue[0]);
-
-            using Bitmap templateImage = CreateTemplateBatchAutoLabelPattern();
-            var options = new TemplateMatchingAutoLabelOptions
-            {
-                MinimumScore = 0.7D,
-                MaximumCandidates = 3,
-                ExcludeSourceRegion = false
-            };
-
-            TemplateMatchingBatchAutoLabelItemResult saved = service.MatchAndSaveImage(
-                targetImagePath,
-                templateImage,
-                partClass,
-                partClass.Text,
-                data,
-                options,
-                CancellationToken.None);
-
-            AssertTrue(saved.Saved, $"template batch target should be saved: {saved.Message}");
-            AssertTrue(saved.CandidateCount > 0, "template batch target should save at least one matched box");
-
-            string targetLabelPath = Path.Combine(root, "data", "train", "labels", "batch-target.txt");
-            string targetPngPath = Path.Combine(root, "data", "train", "images", "batch-target.png");
-            string targetJpegPath = Path.Combine(root, "data", "train", "images", "batch-target.jpeg");
-            AssertTrue(File.Exists(targetLabelPath), "template batch target label was not created");
-            AssertTrue(File.Exists(targetPngPath), "template batch should preserve the target source PNG extension");
-            AssertTrue(!File.Exists(targetJpegPath), "template batch should not create a duplicate JPEG copy for a PNG source");
-
-            IReadOnlyDictionary<string, List<Rectangle>> loaded = YoloAnnotationService.LoadAnnotationRectanglesForImage(
-                targetPngPath,
-                data.ClassNamedList,
-                data,
-                new Size(120, 90));
-
-            AssertTrue(loaded.TryGetValue("Part", out List<Rectangle> loadedPartRects) && loadedPartRects.Count > 0, "saved template batch label should reload as the selected class");
-
-            TemplateMatchingBatchAutoLabelItemResult skipped = service.MatchAndSaveImage(
-                existingImagePath,
-                templateImage,
-                partClass,
-                partClass.Text,
-                data,
-                options,
-                CancellationToken.None);
-
-            AssertTrue(!skipped.Saved, "template batch should not save an image that already has a label file");
-            AssertEqual("label file already exists", skipped.Message);
-            AssertEqual("sentinel", File.ReadAllText(existingLabelPath));
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestTemplateMatchingBatchAutoLabelSavesSegmentationArtifacts()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-            data.ClassNamedList.Clear();
-            var partClass = new CClassItem { Text = "Part", DrawColor = Color.Blue };
-            data.ClassNamedList.Add(partClass);
-            data.EnsureYoloOutputDirectories();
-
-            string sourceDirectory = Path.Combine(root, "source");
-            Directory.CreateDirectory(sourceDirectory);
-            string activeImagePath = Path.Combine(sourceDirectory, "active-template.png");
-            string targetImagePath = Path.Combine(sourceDirectory, "batch-seg-target.png");
-
-            using (Bitmap activeImage = CreateTemplateBatchAutoLabelImage(new Point(12, 12)))
-            using (Bitmap targetImage = CreateTemplateBatchAutoLabelImage(new Point(56, 34)))
-            {
-                activeImage.Save(activeImagePath, System.Drawing.Imaging.ImageFormat.Png);
-                targetImage.Save(targetImagePath, System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            string staleBoxLabelPath = Path.Combine(root, "data", "train", "labels", "batch-seg-target.txt");
-            File.WriteAllText(staleBoxLabelPath, "0 0.5 0.5 0.25 0.25");
-            data.LastSelectImageName = Path.GetFileNameWithoutExtension(activeImagePath);
-            data.LastSelectImagePath = activeImagePath;
-
-            var service = new TemplateMatchingBatchAutoLabelService();
-            IReadOnlyList<string> queue = service.BuildUnlabeledImagePathQueue(
-                new[] { activeImagePath, targetImagePath },
-                data,
-                activeImagePath);
-            AssertEqual(1, queue.Count);
-            AssertEqual(targetImagePath, queue[0]);
-
-            using Bitmap templateImage = CreateTemplateBatchAutoLabelPattern();
-            var options = new TemplateMatchingAutoLabelOptions
-            {
-                MinimumScore = 0.7D,
-                MaximumCandidates = 3,
-                ExcludeSourceRegion = false
-            };
-
-            TemplateMatchingBatchAutoLabelItemResult saved = service.MatchAndSaveImage(
-                targetImagePath,
-                templateImage,
-                partClass,
-                partClass.Text,
-                data,
-                options,
-                CancellationToken.None,
-                new Rectangle(12, 12, 24, 18),
-                new[]
-                {
-                    new Point(15, 16),
-                    new Point(30, 18),
-                    new Point(20, 27)
-                });
-
-            AssertTrue(saved.Saved, $"SEG template batch target should be saved: {saved.Message}");
-            AssertTrue(saved.CandidateCount > 0, "SEG template batch target should save at least one matched segment");
-
-            string segmentPath = Path.Combine(root, "data", "train", "segments", "batch-seg-target.json");
-            string maskPath = Path.Combine(root, "data", "train", "masks", "batch-seg-target.png");
-            string imageCopyPath = Path.Combine(root, "data", "train", "images", "batch-seg-target.png");
-            AssertTrue(File.Exists(segmentPath), "SEG template batch target segment json was not created");
-            AssertTrue(File.Exists(maskPath), "SEG template batch target mask png was not created");
-            AssertTrue(File.Exists(imageCopyPath), "SEG template batch should still copy the source image into the dataset split");
-            AssertEqual(string.Empty, File.ReadAllText(staleBoxLabelPath).Trim());
-
-            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> loaded =
-                YoloSegmentationAnnotationService.LoadSegmentationObjects(
-                    segmentPath,
-                    data.ClassNamedList,
-                    new Size(120, 90));
-            AssertTrue(loaded.TryGetValue("Part", out List<LabelingSegmentationObject> loadedSegments) && loadedSegments.Count > 0,
-                "saved SEG template batch label should reload as segmentation objects");
-            AssertTrue(loadedSegments.All(segment => segment.Points.Count >= 3 && !segment.Bounds.IsEmpty),
-                "saved SEG template batch segments should have polygon geometry");
-            AssertTrue(loadedSegments.All(segment => segment.Points.Count == 3),
-                "SEG template batch should transfer the selected source polygon shape instead of saving rectangle fallbacks");
-
-            YoloImageLabelStatus labelStatus = YoloImageLabelStatusService.Build(targetImagePath, new Size(120, 90), data);
-            AssertTrue(labelStatus.HasObjects, "SEG queue status should count segment json objects, not stale box txt labels");
-            AssertEqual(loadedSegments.Count, labelStatus.ObjectCount);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestTemplateMatchingBatchAutoLabelTransfersRasterMaskShape()
-    {
-        string root = CreateTempRoot();
-        try
-        {
-            var data = new CData();
-            data.ConfigureOutputRoot(root);
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            data.ProjectSettings.YoloDataset.TestPercent = 0;
-            data.ClassNamedList.Clear();
-            var partClass = new CClassItem { Text = "Part", DrawColor = Color.Blue };
-            data.ClassNamedList.Add(partClass);
-            data.EnsureYoloOutputDirectories();
-
-            string sourceDirectory = Path.Combine(root, "source");
-            Directory.CreateDirectory(sourceDirectory);
-            string activeImagePath = Path.Combine(sourceDirectory, "active-raster-template.png");
-            string targetImagePath = Path.Combine(sourceDirectory, "batch-raster-target.png");
-
-            using (Bitmap activeImage = CreateTemplateBatchAutoLabelImage(new Point(12, 12)))
-            using (Bitmap targetImage = CreateTemplateBatchAutoLabelImage(new Point(56, 34)))
-            {
-                activeImage.Save(activeImagePath, System.Drawing.Imaging.ImageFormat.Png);
-                targetImage.Save(targetImagePath, System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            var sourceMaskSize = new Size(120, 90);
-            var sourceMaskBounds = new Rectangle(12, 12, 24, 18);
-            byte[] sourceMaskData = CreateTemplateSourceLShapeMask(sourceMaskSize, sourceMaskBounds);
-
-            using Bitmap templateImage = CreateTemplateBatchAutoLabelPattern();
-            var service = new TemplateMatchingBatchAutoLabelService();
-            TemplateMatchingBatchAutoLabelItemResult saved = service.MatchAndSaveImage(
-                targetImagePath,
-                templateImage,
-                partClass,
-                partClass.Text,
-                data,
-                new TemplateMatchingAutoLabelOptions
-                {
-                    MinimumScore = 0.7D,
-                    MaximumCandidates = 1,
-                    ExcludeSourceRegion = false
-                },
-                CancellationToken.None,
-                sourceMaskData: sourceMaskData,
-                sourceMaskSize: sourceMaskSize,
-                sourceMaskBounds: sourceMaskBounds);
-
-            AssertTrue(saved.Saved, $"SEG raster template batch target should be saved: {saved.Message}");
-
-            string segmentPath = Path.Combine(root, "data", "train", "segments", "batch-raster-target.json");
-            string maskPath = Path.Combine(root, "data", "train", "masks", "batch-raster-target.png");
-            AssertTrue(File.Exists(segmentPath), "SEG raster template batch target segment json was not created");
-            AssertTrue(File.Exists(maskPath), "SEG raster template batch target mask png was not created");
-
-            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> loaded =
-                YoloSegmentationAnnotationService.LoadSegmentationObjects(
-                    segmentPath,
-                    data.ClassNamedList,
-                    sourceMaskSize);
-            AssertTrue(loaded.TryGetValue("Part", out List<LabelingSegmentationObject> loadedSegments) && loadedSegments.Count > 0,
-                "saved SEG raster template batch label should reload as segmentation objects");
-            AssertTrue(loadedSegments.Any(segment => segment.Points.Count > 4),
-                "SEG raster template batch should store the transferred mask outline, not only a rectangle fallback");
-
-            Rectangle bounds = loadedSegments[0].Bounds;
-            AssertTrue(bounds.Width > 8 && bounds.Height > 8, "transferred raster mask bounds should be large enough to verify shape holes");
-            using var savedMask = new Bitmap(maskPath);
-            AssertTrue(savedMask.GetPixel(bounds.Left + 2, bounds.Top + 2).R > 0, "transferred raster mask left bar should be filled");
-            AssertEqual(0, savedMask.GetPixel(bounds.Right - 3, bounds.Top + 2).R);
-        }
-        finally
-        {
-            DeleteTempRoot(root);
-        }
-    }
-
-    private static void TestTemplateMatchingAutoLabelGuide()
-    {
-        string root = FindRepositoryRoot();
-        var viewModel = new WpfTemplateMatchingAutoLabelViewModel();
-        using var activeImage = new Bitmap(40, 40);
-        var presentationService = new WpfTemplateMatchingAutoLabelPresentationService();
-        AssertTrue(
-            presentationService.BuildTemplateRegisteredStatus("Part", new Rectangle(1, 2, 30, 40)).Contains("Part 30x40", StringComparison.Ordinal),
-            "template presentation service should format the registered template size and class");
-        AssertTrue(
-            presentationService.BuildApplyResultStatus(2, 2).Contains("라벨 저장", StringComparison.Ordinal),
-            "template presentation service should direct the operator to save current-image draft labels");
-        AssertTrue(
-            presentationService.BuildBatchCompletionCommandStatus(false, 1, 2, 3, 4).Contains("저장 1장", StringComparison.Ordinal),
-            "template presentation service should summarize batch auto-save counts");
-        AssertTrue(
-            presentationService.BuildGuideBody("템플릿 안내").Contains("사용 순서", StringComparison.Ordinal),
-            "template presentation service should own the reusable guide step text");
-
-        var noImageHost = new TemplateAutoLabelGuideHost
-        {
-            HasActiveAutoLabelImageValue = false,
-            ActiveAutoLabelImageValue = activeImage
-        };
-        viewModel.ConfigureHost(noImageHost);
-        viewModel.RunCurrentImage();
-        AssertEqual(1, noImageHost.GuideCount);
-        AssertTrue(noImageHost.LastGuideTitle.Contains("\uC774\uBBF8\uC9C0", StringComparison.Ordinal), "template guide should name the missing image");
-        AssertTrue(noImageHost.LastGuideMessage.Contains("\uC0AC\uC6A9 \uC21C\uC11C", StringComparison.Ordinal), "template guide should include direct usage steps");
-        AssertTrue(noImageHost.LastGuideMessage.Contains("현재 이미지 라벨 초안 생성", StringComparison.Ordinal), "template guide should name the current-image draft-label action");
-        AssertTrue(noImageHost.LastGuideMessage.Contains("전체 이미지 자동 저장", StringComparison.Ordinal), "template guide should name the batch auto-save action");
-        AssertTrue(noImageHost.LastGuideMessage.Contains("라벨 초안", StringComparison.Ordinal), "template guide should distinguish template drafts from AI candidates");
-        AssertTrue(noImageHost.LastGuideMessage.Contains("바로 저장", StringComparison.Ordinal), "template guide should explain that batch mode saves unlabeled images directly");
-        AssertTrue(noImageHost.LastGuideMessage.Contains("\uAC80\uD1A0", StringComparison.Ordinal), "template guide should include the review step");
-        AssertTrue(noImageHost.LastGuideMessage.Contains("\uB77C\uBCA8 \uC800\uC7A5", StringComparison.Ordinal), "template guide should include the final save step");
-        AssertTrue(noImageHost.LastGlobalStatus.Contains("\uC774\uBBF8\uC9C0", StringComparison.Ordinal), "template guide should update visible inference status");
-
-        var noSourceHost = new TemplateAutoLabelGuideHost
-        {
-            HasActiveAutoLabelImageValue = true,
-            ActiveAutoLabelImageValue = activeImage,
-            ActiveAutoLabelImagePathValue = "no-source.png",
-            HasTemplateSource = false
-        };
-        viewModel.ConfigureHost(noSourceHost);
-        viewModel.RunCurrentImage();
-        AssertEqual(1, noSourceHost.GuideCount);
-        AssertTrue(noSourceHost.LastGuideTitle.Contains("\uB77C\uBCA8", StringComparison.Ordinal), "template guide should name the missing source label");
-        AssertTrue(noSourceHost.LastGuideMessage.Contains("\uAC1D\uCCB4 \uAC80\uD1A0", StringComparison.Ordinal), "template guide should tell the operator where to select the source box");
-
-        viewModel.RunBatch();
-        AssertEqual(2, noSourceHost.GuideCount);
-        AssertTrue(noSourceHost.LastGuideMessage.Contains("\uB77C\uBCA8 \uC5C6\uB294", StringComparison.Ordinal), "template batch guide should explain the unlabeled queue target");
-
-        using var templateSourceImage = CreateTemplateCurrentImageSource();
-        var sourceHost = new TemplateAutoLabelGuideHost
-        {
-            HasActiveAutoLabelImageValue = true,
-            ActiveAutoLabelImageValue = templateSourceImage,
-            ActiveAutoLabelImagePathValue = "template-source.png",
-            HasTemplateSource = true,
-            TemplateSourceBounds = new Rectangle(8, 10, 24, 22)
-        };
-        viewModel.ConfigureHost(sourceHost);
-        viewModel.RunCurrentImage();
-        AssertEqual(0, sourceHost.GuideCount);
-        AssertTrue(!sourceHost.ApplyCandidatesCalled, "template source click should register the template instead of applying it to the same image");
-        AssertTrue(sourceHost.LastGlobalStatus.Contains("\uD15C\uD50C\uB9BF \uB4F1\uB85D", StringComparison.Ordinal), "template source click should show the registered state");
-        AssertTrue(sourceHost.LastGlobalStatus.Contains("라벨 초안 생성", StringComparison.Ordinal), "template source registration should point to the next draft-label generation step");
-
-        using var templateTargetImage = CreateTemplateTargetImage();
-        var targetHost = new TemplateAutoLabelGuideHost
-        {
-            HasActiveAutoLabelImageValue = true,
-            ActiveAutoLabelImageValue = templateTargetImage,
-            ActiveAutoLabelImagePathValue = "template-target.png",
-            HasTemplateSource = false
-        };
-        viewModel.ConfigureHost(targetHost);
-        viewModel.RunCurrentImage();
-        AssertTrue(targetHost.ApplyCandidatesCalled, "registered template should be applied on a different image without requiring a target-side source box");
-        AssertTrue(targetHost.LastApplySucceeded, "registered template apply should not be marked as failed");
-        AssertTrue(targetHost.LastCandidateCount > 0, "registered template should find the shifted target pattern");
-        AssertTrue(targetHost.LastCandidates.Any(candidate => Math.Abs(candidate.X - 44) <= 4 && Math.Abs(candidate.Y - 42) <= 4),
-            "registered template should find the target pattern near the shifted location");
-        AssertTrue(targetHost.LastGlobalStatus.Contains("템플릿 라벨 초안", StringComparison.Ordinal), "registered template apply should report draft-label creation");
-        AssertTrue(targetHost.LastGlobalStatus.Contains("\uB77C\uBCA8 \uC800\uC7A5", StringComparison.Ordinal), "registered template apply should direct the operator to save labels after review");
-        AssertTrue(!targetHost.LastGlobalStatus.Contains("AI \uD6C4\uBCF4", StringComparison.Ordinal), "template apply status should not look like AI-candidate review");
-
-        string batchRoot = CreateTempRoot();
-        try
-        {
-            string imageRoot = Path.Combine(batchRoot, "images");
-            string outputRoot = Path.Combine(batchRoot, "dataset");
-            Directory.CreateDirectory(imageRoot);
-
-            string batchSourcePath = Path.Combine(imageRoot, "template-batch-source.png");
-            string batchTargetPath = Path.Combine(imageRoot, "template-batch-target.png");
-            using (Bitmap batchSourceImage = CreateTemplateCurrentImageSource())
-            using (Bitmap batchTargetImage = CreateTemplateTargetImage())
-            {
-                batchSourceImage.Save(batchSourcePath, System.Drawing.Imaging.ImageFormat.Png);
-                batchTargetImage.Save(batchTargetPath, System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            var batchData = new CData();
-            batchData.ConfigureOutputRoot(outputRoot);
-            batchData.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-            batchData.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            batchData.ProjectSettings.YoloDataset.TestPercent = 0;
-            batchData.ProjectSettings.PythonModel.ImageRootPath = imageRoot;
-            batchData.ClassNamedList.Clear();
-            batchData.ClassNamedList.Add(new CClassItem { Text = "Part", DrawColor = Color.Blue });
-            batchData.EnsureYoloOutputDirectories();
-
-            var batchViewModel = new WpfTemplateMatchingAutoLabelViewModel();
-            using var batchTemplateSourceImage = CreateTemplateCurrentImageSource();
-            var batchSourceHost = new TemplateAutoLabelGuideHost
-            {
-                HasActiveAutoLabelImageValue = true,
-                ActiveAutoLabelImageValue = batchTemplateSourceImage,
-                ActiveAutoLabelImagePathValue = batchSourcePath,
-                HasTemplateSource = true,
-                TemplateSourceBounds = new Rectangle(8, 10, 24, 22),
-                TemplateSourceSegmentPoints = new[]
-                {
-                    new Point(10, 12),
-                    new Point(28, 15),
-                    new Point(18, 28)
-                },
-                AutoLabelDataValue = batchData
-            };
-            batchViewModel.ConfigureHost(batchSourceHost);
-            batchViewModel.RunCurrentImage();
-
-            using var batchActiveImage = CreateTemplateTargetImage();
-            var batchHost = new TemplateAutoLabelGuideHost
-            {
-                HasActiveAutoLabelImageValue = true,
-                ActiveAutoLabelImageValue = batchActiveImage,
-                ActiveAutoLabelImagePathValue = batchTargetPath,
-                HasTemplateSource = false,
-                AutoLabelDataValue = batchData,
-                AllQueueItems = new[]
-                {
-                    WpfImageQueueItem.CreateShell(batchSourcePath),
-                    WpfImageQueueItem.CreateShell(batchTargetPath)
-                }
-            };
-
-            batchViewModel.ConfigureHost(batchHost);
-            batchViewModel.RunBatch();
-            AssertTrue(WaitUntilWpf(() => batchHost.BatchCompleted, TimeSpan.FromSeconds(5)), "registered template batch should complete");
-            AssertEqual(1, batchHost.StartedBatchTotalCount);
-            AssertEqual(1, batchHost.BatchCompletedCount);
-            AssertEqual(1, batchHost.BatchResults.Count);
-            AssertTrue(batchHost.BatchResults[0].Saved, $"registered template batch should save the target label: {batchHost.BatchResults[0].Message}");
-
-            string batchTargetLabelPath = Path.Combine(outputRoot, "data", "train", "labels", "template-batch-target.txt");
-            string batchSourceLabelPath = Path.Combine(outputRoot, "data", "train", "labels", "template-batch-source.txt");
-            string batchTargetSegmentPath = Path.Combine(outputRoot, "data", "train", "segments", "template-batch-target.json");
-            AssertTrue(File.Exists(batchTargetLabelPath), "registered template batch should create a label file for the unlabeled target image");
-            AssertTrue(!File.Exists(batchSourceLabelPath), "registered template batch should not relabel the registered source image");
-            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> batchSegments =
-                YoloSegmentationAnnotationService.LoadSegmentationObjects(
-                    batchTargetSegmentPath,
-                    batchData.ClassNamedList,
-                    new Size(80, 80));
-            AssertTrue(batchSegments.TryGetValue("Part", out List<LabelingSegmentationObject> transferredSegments) && transferredSegments.Count > 0,
-                "registered template batch should save a SEG artifact for the target image");
-            AssertTrue(transferredSegments.All(segment => segment.Points.Count == 3),
-                "registered template batch should transfer the registered source polygon shape");
-        }
-        finally
-        {
-            DeleteTempRoot(batchRoot);
-        }
-
-        string maskBatchRoot = CreateTempRoot();
-        try
-        {
-            string imageRoot = Path.Combine(maskBatchRoot, "images");
-            string outputRoot = Path.Combine(maskBatchRoot, "dataset");
-            Directory.CreateDirectory(imageRoot);
-
-            string batchSourcePath = Path.Combine(imageRoot, "template-mask-source.png");
-            string batchTargetPath = Path.Combine(imageRoot, "template-mask-target.png");
-            using (Bitmap batchSourceImage = CreateTemplateCurrentImageSource())
-            using (Bitmap batchTargetImage = CreateTemplateTargetImage())
-            {
-                batchSourceImage.Save(batchSourcePath, System.Drawing.Imaging.ImageFormat.Png);
-                batchTargetImage.Save(batchTargetPath, System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            var batchData = new CData();
-            batchData.ConfigureOutputRoot(outputRoot);
-            batchData.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-            batchData.ProjectSettings.YoloDataset.ValidationPercent = 0;
-            batchData.ProjectSettings.YoloDataset.TestPercent = 0;
-            batchData.ProjectSettings.PythonModel.ImageRootPath = imageRoot;
-            batchData.ClassNamedList.Clear();
-            batchData.ClassNamedList.Add(new CClassItem { Text = "Part", DrawColor = Color.Blue });
-            batchData.EnsureYoloOutputDirectories();
-
-            var maskBatchViewModel = new WpfTemplateMatchingAutoLabelViewModel();
-            var sourceBounds = new Rectangle(8, 10, 24, 22);
-            using var batchTemplateSourceImage = CreateTemplateCurrentImageSource();
-            var batchSourceHost = new TemplateAutoLabelGuideHost
-            {
-                HasActiveAutoLabelImageValue = true,
-                ActiveAutoLabelImageValue = batchTemplateSourceImage,
-                ActiveAutoLabelImagePathValue = batchSourcePath,
-                HasTemplateSource = true,
-                TemplateSourceBounds = sourceBounds,
-                TemplateSourceMaskData = CreateTemplateSourceLShapeMask(new Size(80, 80), sourceBounds),
-                TemplateSourceMaskSize = new Size(80, 80),
-                TemplateSourceMaskBounds = sourceBounds,
-                AutoLabelDataValue = batchData
-            };
-            maskBatchViewModel.ConfigureHost(batchSourceHost);
-            maskBatchViewModel.RunCurrentImage();
-
-            using var batchActiveImage = CreateTemplateTargetImage();
-            var batchHost = new TemplateAutoLabelGuideHost
-            {
-                HasActiveAutoLabelImageValue = true,
-                ActiveAutoLabelImageValue = batchActiveImage,
-                ActiveAutoLabelImagePathValue = batchTargetPath,
-                HasTemplateSource = false,
-                AutoLabelDataValue = batchData,
-                AllQueueItems = new[]
-                {
-                    WpfImageQueueItem.CreateShell(batchSourcePath),
-                    WpfImageQueueItem.CreateShell(batchTargetPath)
-                }
-            };
-
-            maskBatchViewModel.ConfigureHost(batchHost);
-            maskBatchViewModel.RunBatch();
-            AssertTrue(WaitUntilWpf(() => batchHost.BatchCompleted, TimeSpan.FromSeconds(5)), "registered raster template batch should complete");
-            AssertEqual(1, batchHost.BatchResults.Count);
-            AssertTrue(batchHost.BatchResults[0].Saved, $"registered raster template batch should save the target label: {batchHost.BatchResults[0].Message}");
-
-            string batchTargetSegmentPath = Path.Combine(outputRoot, "data", "train", "segments", "template-mask-target.json");
-            string batchTargetMaskPath = Path.Combine(outputRoot, "data", "train", "masks", "template-mask-target.png");
-            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> batchSegments =
-                YoloSegmentationAnnotationService.LoadSegmentationObjects(
-                    batchTargetSegmentPath,
-                    batchData.ClassNamedList,
-                    new Size(80, 80));
-            AssertTrue(batchSegments.TryGetValue("Part", out List<LabelingSegmentationObject> transferredSegments) && transferredSegments.Count > 0,
-                "registered raster template batch should save a target SEG artifact");
-            AssertTrue(transferredSegments.Any(segment => segment.Points.Count > 4),
-                "registered raster template batch should preserve a non-rectangular mask outline");
-            Rectangle bounds = transferredSegments[0].Bounds;
-            using var savedMask = new Bitmap(batchTargetMaskPath);
-            AssertTrue(savedMask.GetPixel(bounds.Left + 2, bounds.Top + 2).R > 0, "registered raster template target mask should keep the left bar");
-            AssertEqual(0, savedMask.GetPixel(bounds.Right - 3, bounds.Top + 2).R);
-        }
-        finally
-        {
-            DeleteTempRoot(maskBatchRoot);
-        }
-
-        using var noMatchImage = CreateSolidBitmap(40, 40, Color.FromArgb(230, 230, 230));
-        var noCandidateHost = new TemplateAutoLabelGuideHost
-        {
-            HasActiveAutoLabelImageValue = true,
-            ActiveAutoLabelImageValue = noMatchImage,
-            ActiveAutoLabelImagePathValue = "template-no-match.png",
-            HasTemplateSource = false
-        };
-        viewModel.ConfigureHost(noCandidateHost);
-        viewModel.RunCurrentImage();
-        AssertTrue(noCandidateHost.ApplyCandidatesCalled, "registered template no-match result should still clear stale candidate state");
-        AssertTrue(noCandidateHost.LastApplySucceeded, "registered template no-match result should not be marked as a failed detection");
-        AssertEqual(0, noCandidateHost.LastCandidateCount);
-        AssertTrue(noCandidateHost.LastGlobalStatus.Contains("\uCC3E\uC9C0 \uBABB\uD588", StringComparison.Ordinal), "registered template no-match result should explain that no target position was found");
-        AssertTrue(noCandidateHost.LastGlobalIsWarning, "registered template no-match result should use the warning status style");
-
-        string projectSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab.LabelingStudio.csproj"));
-        string solutionSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab.LabelingStudio.sln"));
-        string templateCommandsSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.TemplateMatchingCommands.cs"));
-        string templateViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfTemplateMatchingAutoLabelViewModel.cs"));
-        string templatePresentationPath = Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfTemplateMatchingAutoLabelPresentationService.cs");
-        string dialogControlPath = Path.Combine(root, "OpenVisionLab", "Library", "OpenVisionLab.Wpf.MessageDialogs", "WpfMessageDialogControl.xaml");
-        AssertTrue(File.Exists(templatePresentationPath), "template auto-label wording should live in a WPF presentation service");
-        AssertTrue(templateViewModelSource.Contains("WpfTemplateMatchingAutoLabelPresentationService", StringComparison.Ordinal), "template auto-label ViewModel should use the presentation service for status text");
-        AssertTrue(!templateViewModelSource.Contains("전체 이미지 템플릿 자동 저장 시작:", StringComparison.Ordinal), "template auto-label ViewModel should not inline the batch start status template");
-        AssertTrue(File.Exists(dialogControlPath), "template guide should use the reusable WPF message dialog UserControl project");
-        AssertTrue(projectSource.Contains("OpenVisionLab.Wpf.MessageDialogs", StringComparison.Ordinal), "app project should reference the reusable WPF message dialog library");
-        AssertTrue(solutionSource.Contains("OpenVisionLab.Wpf.MessageDialogs", StringComparison.Ordinal), "solution should include the reusable WPF message dialog library project");
-        AssertTrue(templateCommandsSource.Contains("OpenVisionLab.Wpf.MessageDialogs", StringComparison.Ordinal), "template guide host should import the reusable WPF dialog namespace");
-        AssertTrue(templateCommandsSource.Contains("WpfMessageDialog.ShowInfo", StringComparison.Ordinal), "template guide host should show the reusable WPF dialog");
-        AssertTrue(!templateCommandsSource.Contains("MessageBox.Show", StringComparison.Ordinal), "template guide host should not fall back to the stock WPF MessageBox");
-    }
-
-    private static Bitmap CreateTemplateCurrentImageSource()
-    {
-        Bitmap image = CreateSolidBitmap(80, 80, Color.FromArgb(230, 230, 230));
-        using Graphics graphics = Graphics.FromImage(image);
-        DrawTemplatePattern(graphics, 8, 10);
-        graphics.FillRectangle(Brushes.Red, 52, 48, 12, 16);
-        graphics.DrawLine(Pens.Blue, 4, 72, 72, 8);
-        return image;
-    }
-
-    private static Bitmap CreateTemplateTargetImage()
-    {
-        Bitmap image = CreateSolidBitmap(80, 80, Color.FromArgb(230, 230, 230));
-        using Graphics graphics = Graphics.FromImage(image);
-        DrawTemplatePattern(graphics, 44, 42);
-        graphics.FillRectangle(Brushes.Red, 6, 6, 12, 16);
-        graphics.DrawLine(Pens.Blue, 3, 75, 75, 12);
-        return image;
-    }
-
-    private static void DrawTemplatePattern(Graphics graphics, int x, int y)
-    {
-        graphics.FillRectangle(Brushes.Black, x, y, 24, 22);
-        graphics.FillEllipse(Brushes.DimGray, x + 4, y + 3, 15, 14);
-        graphics.DrawLine(Pens.White, x + 2, y + 2, x + 21, y + 18);
-        graphics.DrawLine(Pens.LightGray, x + 5, y + 19, x + 20, y + 4);
-        graphics.FillRectangle(Brushes.White, x + 14, y + 6, 4, 5);
-    }
-
-    private static void TestWpfTemplateSourceAcceptsManualSegmentationObject()
-    {
-        if (System.Windows.Application.Current == null)
-        {
-            _ = new System.Windows.Application
-            {
-                ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
-            };
-        }
-
-        CData previousData = CGlobal.Inst.Data;
-        var data = new CData();
-        data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
-        data.ClassNamedList.Add(new CClassItem { Text = "SEG", DrawColor = Color.LimeGreen });
-        CGlobal.Inst.Data = data;
-
-        WpfLabelingShellWindow window = new WpfLabelingShellWindow();
-        try
-        {
-            SetPrivateField(window, "activeImageSize", new Size(60, 60));
-            SetPrivateField(window, "activeImageBitmap", new Bitmap(60, 60));
-            var manualSegments = GetPrivateField<List<LabelingSegmentationObject>>(window, "manualSegments");
-            var segment = new LabelingSegmentationObject(
-                new[]
-                {
-                    new Point(10, 12),
-                    new Point(36, 12),
-                    new Point(34, 38),
-                    new Point(12, 36)
-                },
-                data.ClassNamedList[0])
-            {
-                ClassName = "SEG"
-            };
-            manualSegments.Add(segment);
-            InvokePrivateResult<object>(window, "RefreshObjectList");
-
-            var objectReviewPanel = (WpfObjectReviewPanel)window.FindName("ObjectReviewPanelControl");
-            WpfObjectReviewListItem segmentItem = objectReviewPanel.ViewModel.Objects.FirstOrDefault(item =>
-                item.IsEnabled
-                && string.Equals(item.SourceKey, WpfObjectReviewSource.ManualSegment.ToString(), StringComparison.OrdinalIgnoreCase));
-            AssertTrue(segmentItem != null, "manual SEG object should be selectable from object review before template auto-labeling");
-            objectReviewPanel.ViewModel.SelectedObject = segmentItem;
-
-            bool resolved = ((IWpfTemplateMatchingAutoLabelHost)window).TryResolveTemplateMatchingSource(
-                out Rectangle templateBounds,
-                out string className);
-            AssertTrue(resolved, "selected manual SEG object should resolve as a template matching source");
-            AssertEqual(segment.Bounds, templateBounds);
-            AssertEqual("SEG", className);
-
-            bool shapeResolved = ((IWpfTemplateMatchingAutoLabelHost)window).TryResolveTemplateMatchingSourceSegment(
-                out IReadOnlyList<Point> sourcePoints,
-                out IReadOnlyList<IReadOnlyList<Point>> sourceCutouts);
-            AssertTrue(shapeResolved, "selected manual SEG polygon should expose source points for template batch shape transfer");
-            AssertEqual(segment.Points.Count, sourcePoints.Count);
-            AssertEqual(segment.Points[0], sourcePoints[0]);
-            AssertEqual(0, sourceCutouts.Count);
-
-            var rasterBounds = new Rectangle(10, 12, 26, 26);
-            manualSegments.Clear();
-            manualSegments.Add(new LabelingSegmentationObject(Array.Empty<Point>(), data.ClassNamedList[0])
-            {
-                ClassName = "SEG",
-                MaskData = CreateTemplateSourceLShapeMask(new Size(60, 60), rasterBounds),
-                MaskSize = new Size(60, 60),
-                MaskBounds = rasterBounds
-            });
-            InvokePrivateResult<object>(window, "RefreshObjectList");
-            segmentItem = objectReviewPanel.ViewModel.Objects.FirstOrDefault(item =>
-                item.IsEnabled
-                && string.Equals(item.SourceKey, WpfObjectReviewSource.ManualSegment.ToString(), StringComparison.OrdinalIgnoreCase));
-            AssertTrue(segmentItem != null, "manual raster SEG object should be selectable from object review before template auto-labeling");
-            objectReviewPanel.ViewModel.SelectedObject = segmentItem;
-
-            bool rasterResolved = ((IWpfTemplateMatchingAutoLabelHost)window).TryResolveTemplateMatchingSourceMask(
-                out byte[] sourceMask,
-                out Size sourceMaskSize,
-                out Rectangle sourceMaskBounds);
-            AssertTrue(rasterResolved, "selected manual raster SEG object should expose mask data for template batch shape transfer");
-            AssertEqual(new Size(60, 60), sourceMaskSize);
-            AssertEqual(rasterBounds, sourceMaskBounds);
-            AssertTrue(sourceMask[(rasterBounds.Top * sourceMaskSize.Width) + rasterBounds.Left] > 0, "raster source mask copy should preserve painted pixels");
-
-            var targetBounds = new Rectangle(36, 30, 18, 18);
-            int added = ((IWpfTemplateMatchingAutoLabelHost)window).ApplyAutoLabelCandidates(
-                new[]
-                {
-                    new YoloWorkerSmokeCandidate
-                    {
-                        Index = 1,
-                        ClassName = "SEG",
-                        Confidence = 0.95D,
-                        X = targetBounds.X,
-                        Y = targetBounds.Y,
-                        Width = targetBounds.Width,
-                        Height = targetBounds.Height
-                    }
-                },
-                succeeded: true,
-                sourceSegmentBounds: rasterBounds,
-                sourceMaskData: sourceMask,
-                sourceMaskSize: sourceMaskSize,
-                sourceMaskBounds: sourceMaskBounds);
-            AssertEqual(1, added);
-            AssertEqual(2, manualSegments.Count);
-            LabelingSegmentationObject transferredMask = manualSegments[1];
-            AssertTrue(transferredMask.IsRasterMask, "current-image SEG template matching should preserve brush-mask geometry instead of creating a rectangle label");
-            AssertTrue(transferredMask.MaskData[(targetBounds.Top * transferredMask.MaskSize.Width) + targetBounds.Left] > 0,
-                "current-image SEG template mask should preserve the source mask's filled left bar");
-            AssertEqual(0, transferredMask.MaskData[((targetBounds.Top + 1) * transferredMask.MaskSize.Width) + targetBounds.Right - 2]);
-        }
-        finally
-        {
-            window.Close();
-            CGlobal.Inst.Data = previousData;
-        }
-    }
-
-    private static void TestWpfTemplateCurrentImageNoCandidatePreservesSavedLabelStatus()
-    {
-        if (System.Windows.Application.Current == null)
-        {
-            _ = new System.Windows.Application
-            {
-                ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
-            };
-        }
-
-        CData previousData = CGlobal.Inst.Data;
-        string root = CreateTempRoot();
-        try
-        {
-            string imageRoot = Path.Combine(root, "images");
-            string outputRoot = Path.Combine(root, "dataset");
-            Directory.CreateDirectory(imageRoot);
-            string imagePath = Path.Combine(imageRoot, "template-current.png");
-            using (Bitmap image = CreateTemplateCurrentImageSource())
-            {
-                image.Save(imagePath, System.Drawing.Imaging.ImageFormat.Png);
-            }
-
-            var data = new CData();
-            data.ConfigureOutputRoot(outputRoot);
-            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.ObjectDetection;
-            data.ProjectSettings.PythonModel.ImageRootPath = imageRoot;
-            data.ClassNamedList.Clear();
-            data.ClassNamedList.Add(new CClassItem { Text = "OK", DrawColor = Color.LimeGreen });
-            CGlobal.Inst.Data = data;
-
-            WpfLabelingShellWindow window = new WpfLabelingShellWindow();
-            try
-            {
-                AssertTrue(window.TryLoadImage(imagePath, populateQueue: true, refreshQueueDetails: false), "WPF template no-candidate test image load failed");
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(20));
-
-                var manualRect = new CanvasRect<float>(5, 6, 15, 14)
-                {
-                    UniqueId = "template-current-source",
-                    ShapeKind = CanvasRoiShapeKind.Rectangle
-                };
-                InvokePrivateResult<object>(
-                    window,
-                    "MainCanvasViewModel_RoiAdded",
-                    window.MainCanvasViewModel,
-                    new OpenVisionLab.ImageCanvas.Model.RoiChangedEventArgs { RoiRect = manualRect });
-
-                object[] saveArgs = { 0 };
-                AssertTrue(InvokePrivateResult<bool>(window, "SaveCurrentAnnotations", saveArgs), "template source label should be saveable before no-candidate run");
-                AssertEqual(1, (int)saveArgs[0]);
-                InvokePrivateResult<object>(window, "RefreshActiveImageQueueStatus", false);
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(20));
-
-                WpfImageQueueItem item = window.ImageQueueItems.FirstOrDefault(queueItem =>
-                    string.Equals(queueItem.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase));
-                AssertTrue(item != null, "template no-candidate test queue item was not created");
-                AssertEqual(YoloImageReviewState.Confirmed, item.ReviewState);
-
-                ((IWpfTemplateMatchingAutoLabelHost)window).ApplyAutoLabelCandidates(Array.Empty<YoloWorkerSmokeCandidate>(), succeeded: true);
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(20));
-
-                item = window.ImageQueueItems.FirstOrDefault(queueItem =>
-                    string.Equals(queueItem.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase));
-                AssertTrue(item != null, "template no-candidate test queue item disappeared after applying result");
-                AssertEqual(YoloImageReviewState.Confirmed, item.ReviewState);
-                AssertTrue(item.LabelStatus.Contains("1", StringComparison.Ordinal), "template no-candidate should keep the saved label count visible");
-                AssertTrue(!item.DetectStatus.Contains("\uAC80\uCD9C\uC5C6\uC74C", StringComparison.Ordinal), "template no-candidate should not overwrite a saved label row as no-candidate detection");
-
-                WpfCandidateReviewStateService candidateState = GetPrivateField<WpfCandidateReviewStateService>(window, "candidateReviewState");
-                AssertEqual(0, candidateState.PendingCandidates.Count);
-
-                int added = ((IWpfTemplateMatchingAutoLabelHost)window).ApplyAutoLabelCandidates(
-                    new[]
-                    {
-                        new YoloWorkerSmokeCandidate
-                        {
-                            Index = 1,
-                            ClassName = "OK",
-                            Confidence = 0.93D,
-                            X = 38,
-                            Y = 42,
-                            Width = 18,
-                            Height = 16
-                        }
-                    },
-                    succeeded: true);
-                AssertEqual(1, added);
-                var manualRois = GetPrivateField<List<Rectangle>>(window, "manualRois");
-                AssertTrue(manualRois.Any(bounds => bounds.X == 38 && bounds.Y == 42 && bounds.Width == 18 && bounds.Height == 16),
-                    "template candidate should be materialized as a manual label on the current image");
-                AssertTrue(window.CanvasPanelViewModel.IsAnnotationSaveEnabled, "template-added manual labels should require an explicit label save");
-            }
-            finally
-            {
-                window.Close();
-            }
-        }
-        finally
-        {
-            CGlobal.Inst.Data = previousData;
-            DeleteTempRoot(root);
-        }
-    }
-
-    private sealed class TemplateAutoLabelGuideHost : IWpfTemplateMatchingAutoLabelHost
-    {
-        public bool HasActiveAutoLabelImageValue { get; set; }
-        public Bitmap ActiveAutoLabelImageValue { get; set; }
-        public string ActiveAutoLabelImagePathValue { get; set; } = string.Empty;
-        public bool HasTemplateSource { get; set; }
-        public Rectangle? TemplateSourceBounds { get; set; }
-        public IReadOnlyList<Point> TemplateSourceSegmentPoints { get; set; } = Array.Empty<Point>();
-        public IReadOnlyList<IReadOnlyList<Point>> TemplateSourceSegmentCutouts { get; set; } = Array.Empty<IReadOnlyList<Point>>();
-        public byte[] TemplateSourceMaskData { get; set; } = Array.Empty<byte>();
-        public Size TemplateSourceMaskSize { get; set; } = Size.Empty;
-        public Rectangle TemplateSourceMaskBounds { get; set; } = Rectangle.Empty;
-        public int GuideCount { get; private set; }
-        public string LastGuideTitle { get; private set; } = string.Empty;
-        public string LastGuideMessage { get; private set; } = string.Empty;
-        public string LastGlobalStatus { get; private set; } = string.Empty;
-        public bool LastGlobalIsWarning { get; private set; }
-        public bool ApplyCandidatesCalled { get; private set; }
-        public bool LastApplySucceeded { get; private set; }
-        public int LastCandidateCount { get; private set; }
-        public IReadOnlyList<YoloWorkerSmokeCandidate> LastCandidates { get; private set; } = Array.Empty<YoloWorkerSmokeCandidate>();
-        public CData AutoLabelDataValue { get; set; } = new CData();
-        public IReadOnlyList<WpfImageQueueItem> AllQueueItems { get; set; } = Array.Empty<WpfImageQueueItem>();
-        public IReadOnlyList<TemplateMatchingBatchAutoLabelItemResult> BatchResults { get; private set; } = Array.Empty<TemplateMatchingBatchAutoLabelItemResult>();
-        public bool BatchCompleted { get; private set; }
-        public int StartedBatchTotalCount { get; private set; }
-        public int BatchCompletedCount { get; private set; }
-
-        public bool IsAutoLabelBusy => false;
-        public bool HasActiveAutoLabelImage => HasActiveAutoLabelImageValue;
-        public Bitmap ActiveAutoLabelImage => ActiveAutoLabelImageValue;
-        public string ActiveAutoLabelImagePath => ActiveAutoLabelImagePathValue;
-        public CData AutoLabelData => AutoLabelDataValue;
-        public int MaximumTemplateMatchingCandidateCount => 20;
-
-        public bool TryResolveTemplateMatchingSource(out Rectangle templateBounds, out string className)
-        {
-            templateBounds = HasTemplateSource ? TemplateSourceBounds ?? new Rectangle(1, 1, 10, 10) : Rectangle.Empty;
-            className = "Part";
-            return HasTemplateSource;
-        }
-
-        public bool TryResolveTemplateMatchingSourceSegment(
-            out IReadOnlyList<Point> points,
-            out IReadOnlyList<IReadOnlyList<Point>> cutouts)
-        {
-            points = TemplateSourceSegmentPoints ?? Array.Empty<Point>();
-            cutouts = TemplateSourceSegmentCutouts ?? Array.Empty<IReadOnlyList<Point>>();
-            return HasTemplateSource && points.Count >= 3;
-        }
-
-        public bool TryResolveTemplateMatchingSourceMask(
-            out byte[] maskData,
-            out Size maskSize,
-            out Rectangle maskBounds)
-        {
-            maskData = TemplateSourceMaskData ?? Array.Empty<byte>();
-            maskSize = TemplateSourceMaskSize;
-            maskBounds = TemplateSourceMaskBounds;
-            return HasTemplateSource
-                && maskData.Length == Math.Max(0, maskSize.Width * maskSize.Height)
-                && maskSize.Width > 0
-                && maskSize.Height > 0
-                && !maskBounds.IsEmpty;
-        }
-
-        public CClassItem EnsureAutoLabelClassItem(string className)
-            => new CClassItem { Text = string.IsNullOrWhiteSpace(className) ? "Part" : className, DrawColor = Color.Blue };
-
-        public IReadOnlyList<WpfImageQueueItem> GetVisibleAutoLabelQueueItems()
-            => AllQueueItems;
-
-        public IReadOnlyList<WpfImageQueueItem> GetAllAutoLabelQueueItems()
-            => AllQueueItems;
-
-        public IReadOnlyList<WpfImageQueueItem> BuildAutoLabelBatchQueue(IEnumerable<WpfImageQueueItem> items)
-            => (items ?? Array.Empty<WpfImageQueueItem>()).ToList();
-
-        public void AppendAutoLabelLog(string message)
-        {
-        }
-
-        public void ShowAutoLabelGuide(string title, string message)
-        {
-            GuideCount++;
-            LastGuideTitle = title ?? string.Empty;
-            LastGuideMessage = message ?? string.Empty;
-        }
-
-        public int ApplyAutoLabelCandidates(
-            IReadOnlyList<YoloWorkerSmokeCandidate> candidates,
-            bool succeeded,
-            Rectangle? sourceSegmentBounds = null,
-            IReadOnlyList<Point> sourceSegmentPoints = null,
-            IReadOnlyList<IReadOnlyList<Point>> sourceSegmentCutouts = null,
-            byte[] sourceMaskData = null,
-            Size sourceMaskSize = default,
-            Rectangle sourceMaskBounds = default)
-        {
-            ApplyCandidatesCalled = true;
-            LastApplySucceeded = succeeded;
-            LastCandidateCount = candidates?.Count ?? 0;
-            LastCandidates = (candidates ?? Array.Empty<YoloWorkerSmokeCandidate>()).ToList();
-            return LastCandidateCount;
-        }
-
-        public void SetAutoLabelPythonStatus(string text)
-        {
-        }
-
-        public void SetAutoLabelCommandStatus(string text, bool isBusy)
-        {
-        }
-
-        public void SetAutoLabelGlobalInferenceStatus(string text, bool isBusy, bool isWarning = false)
-        {
-            LastGlobalStatus = text ?? string.Empty;
-            LastGlobalIsWarning = isWarning;
-        }
-
-        public CancellationToken StartAutoLabelBatch(int totalCount, string scopeText)
-        {
-            StartedBatchTotalCount = totalCount;
-            BatchCompleted = false;
-            BatchResults = Array.Empty<TemplateMatchingBatchAutoLabelItemResult>();
-            return CancellationToken.None;
-        }
-
-        public void MarkAutoLabelBatchItemRequested(WpfImageQueueItem item)
-        {
-        }
-
-        public void UpdateAutoLabelBatchProgress(string scopeText, string currentFileName, int completedCount, int totalCount)
-        {
-        }
-
-        public void ApplyAutoLabelBatchResult(WpfImageQueueItem item, TemplateMatchingBatchAutoLabelItemResult result, bool saveReviewStatus)
-        {
-            BatchResults = BatchResults.Concat(new[] { result }).ToList();
-        }
-
-        public void SaveAutoLabelReviewStatus()
-        {
-        }
-
-        public void CompleteAutoLabelBatch(bool canceled, int completedCount, int totalCount, string scopeText)
-        {
-            BatchCompleted = true;
-            BatchCompletedCount = completedCount;
-        }
-
-        public void NotifyAutoLabelDataChanged()
-        {
-        }
-
-        public Task YieldAutoLabelBatchFrameAsync(CancellationToken token)
-            => Task.CompletedTask;
-    }
-
-    private static Bitmap CreateTemplateBatchAutoLabelImage(params Point[] patternOrigins)
-    {
-        Bitmap image = CreateSolidBitmap(120, 90, Color.FromArgb(235, 235, 235));
-        using Graphics graphics = Graphics.FromImage(image);
-        using Bitmap pattern = CreateTemplateBatchAutoLabelPattern();
-        foreach (Point origin in patternOrigins ?? Array.Empty<Point>())
-        {
-            graphics.DrawImageUnscaled(pattern, origin);
-        }
-
-        return image;
-    }
-
-    private static Bitmap CreateTemplateBatchAutoLabelPattern()
-    {
-        var pattern = new Bitmap(24, 18);
-        using Graphics graphics = Graphics.FromImage(pattern);
-        graphics.Clear(Color.FromArgb(235, 235, 235));
-        graphics.FillRectangle(Brushes.Black, 3, 4, 18, 9);
-        graphics.FillRectangle(Brushes.White, 7, 6, 5, 4);
-        graphics.FillRectangle(Brushes.Red, 16, 3, 3, 12);
-        graphics.DrawLine(Pens.Blue, 2, 15, 21, 15);
-        graphics.DrawRectangle(Pens.DarkGreen, 1, 1, 22, 16);
-        return pattern;
-    }
-
-    private static byte[] CreateTemplateSourceLShapeMask(Size maskSize, Rectangle bounds)
-    {
-        byte[] maskData = new byte[Math.Max(0, maskSize.Width * maskSize.Height)];
-        Rectangle clipped = Rectangle.Intersect(bounds, new Rectangle(Point.Empty, maskSize));
-        for (int y = clipped.Top; y < clipped.Bottom; y++)
-        {
-            for (int x = clipped.Left; x < clipped.Right; x++)
-            {
-                bool leftBar = x < clipped.Left + Math.Max(2, clipped.Width / 3);
-                bool bottomBar = y >= clipped.Top + Math.Max(2, (clipped.Height * 2) / 3);
-                if (leftBar || bottomBar)
-                {
-                    maskData[(y * maskSize.Width) + x] = 1;
-                }
-            }
-        }
-
-        return maskData;
     }
 
     private static void TestYoloSegmentationHistoricalRemediationAudit()
@@ -23197,7 +15737,9 @@ internal static partial class Program
             };
 
             IReadOnlyList<PythonModelRuntimeProfile> profiles = PythonModelRuntimeProfileService.BuildProfiles(settings);
-            AssertEqual(4, profiles.Count);
+            AssertEqual(
+                string.Join("|", PythonModelSettings.GetSupportedModelEngines()),
+                string.Join("|", profiles.Select(profile => profile.Engine)));
             PythonModelRuntimeProfile selectedYoloV5 = profiles.First(item => item.Engine == PythonModelSettings.EngineYoloV5);
             AssertTrue(selectedYoloV5.IsSelected, "YOLOv5 runtime profile should be selected when the settings engine is YOLOv5");
             AssertTrue(selectedYoloV5.IsRuntimeConnected, "selected YOLOv5 runtime profile should report a connected runtime when paths exist");
@@ -24927,16 +17469,16 @@ internal static partial class Program
         AssertTrue(shellSource.Contains("ShouldDrawOverExistingRoiForCurrentClass", StringComparison.Ordinal), "WPF shell should decide whether a different active class should draw over an existing ROI");
         AssertTrue(shellSource.Contains("MainCanvasViewModel.ShouldDrawOverExistingRoi = ShouldDrawOverExistingRoiForCurrentClass", StringComparison.Ordinal), "WPF shell should wire class-aware nested ROI drawing into the canvas ViewModel");
         AssertTrue(roiKeyDownSource.Contains("Paste is a discrete object mutation", StringComparison.Ordinal), "Ctrl+V ROI paste should force an immediate canvas repaint");
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string maskStrokeInputSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.AnnotationMaskStrokeInput.cs"));
         string maskStrokeCommitSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.AnnotationMaskStrokeCommit.cs"));
         string maskOverlaySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.AnnotationMaskOverlays.cs"));
-        string maskEditStateSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskEditStateService.cs"));
-        string queuedMaskCommitSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfQueuedMaskStrokeCommit.cs"));
-        string maskHistoryDraftSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "MaskStrokeHistoryDeltaDraft.cs"));
-        string maskHistoryDraftServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskStrokeHistoryDraftService.cs"));
+        string maskEditStateSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskEditStateService.cs"));
+        string queuedMaskCommitSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfQueuedMaskStrokeCommit.cs"));
+        string maskHistoryDraftSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "MaskStrokeHistoryDeltaDraft.cs"));
+        string maskHistoryDraftServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskStrokeHistoryDraftService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
+        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
         AssertTrue(maskServiceSource.Contains("BrushStampCache", StringComparison.Ordinal), "mask brush MouseUp commit should reuse cached row spans per radius");
         AssertTrue(maskServiceSource.Contains("Merge repeated brush circles", StringComparison.Ordinal), "mask brush commit should document why it merges dense stroke spans before writing pixels");
         AssertTrue(maskServiceSource.Contains("clipBounds", StringComparison.Ordinal), "eraser commit should clip work to active raster mask bounds");
@@ -24995,7 +17537,7 @@ internal static partial class Program
         AssertTrue(shellSource.Contains("FlushQueuedMaskStrokeCommits", StringComparison.Ordinal), "save/undo should be able to flush queued mask strokes before reading committed labels");
         AssertTrue(shellSource.Contains("IReadOnlyList<System.Drawing.Point> previewCenters = AppendMaskStrokeCommitCenters(centers)", StringComparison.Ordinal), "brush/eraser FBO preview should receive only newly committed stroke centers");
         AssertTrue(viewModelSource.Contains("DrawBrushStampPreview", StringComparison.Ordinal), "brush/eraser FBO preview should use the same pixel-stamp geometry as CPU MaskData commit");
-        string strokeSessionSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskStrokeCommitSession.cs"));
+        string strokeSessionSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskStrokeCommitSession.cs"));
         AssertTrue(maskServiceSource.Contains("BuildBrushStrokeSpans", StringComparison.Ordinal), "brush/eraser MouseUp CPU commit should merge row spans before writing MaskData");
         AssertTrue(maskServiceSource.Contains("AddMergedBrushStrokeSpan", StringComparison.Ordinal), "brush/eraser MouseUp should merge dense row spans while collecting them instead of sorting every raw stamp span later");
         AssertTrue(strokeSessionSource.Contains("WpfMaskStrokeCommitSession", StringComparison.Ordinal), "brush/eraser stroke commit buffering should live outside shell code-behind");
@@ -28462,9 +21004,9 @@ internal static partial class Program
         string shellSource = ReadWpfLabelingShellWindowSources();
         string datasetSetupSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.DatasetSetupCommands.cs"));
         string canvasWorkflowCommandsSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.CanvasWorkflowCommands.cs"));
-        string annotationWorkflowServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfAnnotationWorkflowService.cs"));
-        string annotationCapabilityServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfAnnotationToolCapabilityService.cs"));
-        string trainingWeightsServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfTrainingWeightsService.cs"));
+        string annotationWorkflowServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationWorkflowService.cs"));
+        string annotationCapabilityServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationToolCapabilityService.cs"));
+        string trainingWeightsServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Training", "WpfTrainingWeightsService.cs"));
         string learningWorkflowViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfLearningWorkflowPanelViewModel.cs"));
         string testProgramSource = File.ReadAllText(Path.Combine(root, "tests", "LabelingApplication.Tests", "Program.cs"));
         AssertTrue(panelSource.Contains("ModeDetailText", StringComparison.Ordinal), "WPF education panel should explain the selected lesson mode");
@@ -29170,7 +21712,7 @@ internal static partial class Program
         AssertTrue(shellSource.Contains("ExecuteFirstRunSamplePathCommand", StringComparison.Ordinal), "first-run sample path cards should reuse shell guide navigation commands");
         AssertTrue(shellSource.Contains("item.ShortcutWorkflowStepOrder", StringComparison.Ordinal), "first-run sample path routing should use ViewModel-owned shortcut targets");
         AssertTrue(shellSource.Contains("hasPendingTrainingWeightsRecipeSave", StringComparison.Ordinal), "trained best.pt application should remind the operator to save the recipe");
-        string trainingGuideHistoryServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfTrainingGuideHistoryService.cs"));
+        string trainingGuideHistoryServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Training", "WpfTrainingGuideHistoryService.cs"));
         AssertTrue(shellSource.Contains("trainingGuideHistoryService.UpdateDatasetHistory", StringComparison.Ordinal), "WPF shell should delegate dataset history mutation to WpfTrainingGuideHistoryService");
         AssertTrue(shellSource.Contains("trainingGuideHistoryService.UpdateAppliedWeightsHistory", StringComparison.Ordinal), "WPF shell should delegate applied best.pt history mutation to WpfTrainingGuideHistoryService");
         AssertTrue(trainingGuideHistoryServiceSource.Contains("AppliedWeightsSavedToRecipe", StringComparison.Ordinal), "YOLO training guide service should distinguish saved and unsaved best.pt paths");
@@ -29359,10 +21901,10 @@ internal static partial class Program
         string wizardViewModelSource = File.ReadAllText(wizardViewModelPath);
         string shellSource = ReadWpfLabelingShellWindowSources();
         string datasetSetupRequestModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Models", "WpfDatasetSetupRequest.cs"));
-        string datasetSetupPathServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfDatasetSetupPathService.cs"));
-        string datasetSetupDataServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfDatasetSetupDataService.cs"));
-        string datasetSetupExecutionServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfDatasetSetupExecutionService.cs"));
-        string datasetSetupPresentationServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfDatasetSetupPresentationService.cs"));
+        string datasetSetupPathServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Dataset", "WpfDatasetSetupPathService.cs"));
+        string datasetSetupDataServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Dataset", "WpfDatasetSetupDataService.cs"));
+        string datasetSetupExecutionServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Dataset", "WpfDatasetSetupExecutionService.cs"));
+        string datasetSetupPresentationServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Dataset", "WpfDatasetSetupPresentationService.cs"));
         AssertTrue(wizardViewModelSource.Contains("WpfDatasetSetupRequest", StringComparison.Ordinal), "dataset setup wizard should build a request DTO instead of writing files");
         AssertTrue(datasetSetupRequestModelSource.Contains("public sealed class WpfDatasetSetupRequest", StringComparison.Ordinal), "dataset setup request should be stored with WPF models instead of the ViewModel implementation");
         AssertTrue(!wizardViewModelSource.Contains("public sealed class WpfDatasetSetupRequest", StringComparison.Ordinal), "dataset setup ViewModel should not declare the cross-layer request DTO");
@@ -30728,1349 +23270,6 @@ internal static partial class Program
         }
     }
 
-    private static void TestWpfLabelingShellWindowConstructs()
-    {
-        string root = FindRepositoryRoot();
-        XName xName = XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml");
-        XDocument shellXaml = XDocument.Load(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.xaml"));
-        XDocument queueXaml = XDocument.Load(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfImageQueuePanel.xaml"));
-        string shellSource = ReadWpfLabelingShellWindowSources();
-        string shellXamlSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.xaml"));
-        string imageQueueViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfImageQueuePanelViewModel.cs"));
-        string datasetContextPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfDatasetContextPresentationService.cs"));
-        string workflowStagePresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfWorkflowStagePresentationService.cs"));
-        string inputCommandBehaviorSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab", "Library", "OpenVisionLab.Mvvm", "Behaviors", "InputCommandBehaviors.cs"));
-        string shellViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfLabelingShellViewModel.cs"));
-        string yoloRuntimeStatusSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.YoloRuntimeStatus.cs"));
-        string inferenceStatusPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfInferenceStatusPresentationService.cs"));
-        string keyInputArgsSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab", "Library", "OpenVisionLab.Mvvm", "InputCommandArgs.cs"));
-        string testProgramSource = File.ReadAllText(Path.Combine(root, "tests", "LabelingApplication.Tests", "Program.cs"));
-
-        AssertEqual("1920", (string)shellXaml.Root?.Attribute("Width"));
-        AssertEqual("1080", (string)shellXaml.Root?.Attribute("Height"));
-        AssertEqual("1100", (string)shellXaml.Root?.Attribute("MinWidth"));
-        AssertEqual("720", (string)shellXaml.Root?.Attribute("MinHeight"));
-        AssertTrue(shellSource.Contains("PreferredInitialShellWidth = 1920D", StringComparison.Ordinal), "WPF shell should prefer a 1920-wide equipment baseline at startup");
-        AssertTrue(shellSource.Contains("PreferredInitialShellHeight = 1080D", StringComparison.Ordinal), "WPF shell should prefer a 1080-high equipment baseline at startup");
-        AssertTrue(shellSource.Contains("ApplyInitialWindowSizeToWorkArea", StringComparison.Ordinal), "WPF shell startup size should be clamped to the current monitor work area");
-        AssertTrue(shellSource.Contains("SystemParameters.WorkArea", StringComparison.Ordinal), "WPF shell should account for smaller monitor work areas instead of only hard-coding the baseline");
-        AssertTrue(testProgramSource.Contains("VisualSmokeDefaultWindowWidth = 1920", StringComparison.Ordinal), "visual smoke should use the 1920 equipment baseline by default");
-        AssertTrue(testProgramSource.Contains("VisualSmokeDefaultWindowHeight = 1080", StringComparison.Ordinal), "visual smoke should use the 1080 equipment baseline by default");
-        AssertTrue(testProgramSource.Contains("VisualSmokeMinimumWindowWidth = 1100", StringComparison.Ordinal), "visual smoke should retain the small-width regression floor");
-        AssertTrue(testProgramSource.Contains("VisualSmokeMinimumWindowHeight = 720", StringComparison.Ordinal), "visual smoke should retain the small-height regression floor");
-        AssertNamedXamlElement(shellXaml, xName, "Border", "CurrentDatasetPurposeBadge");
-        AssertNamedXamlValue(shellXaml, xName, "CurrentDatasetPurposeBadge", "Grid.Column", "3");
-        AssertNamedXamlValue(shellXaml, xName, "CurrentDatasetPurposeBadge", "HorizontalAlignment", "Right");
-        AssertTrue(WpfInferenceStatusPresentationService.BuildRuntimePythonStatus(
-            new PythonModelValidationResult(Array.Empty<string>(), Array.Empty<string>()),
-            new PythonModelRuntimeState(PythonModelRuntimeStateKind.Ready, true, true, "fallback", "detail", "next")).Contains("\uC900\uBE44 \uC644\uB8CC", StringComparison.Ordinal), "inference runtime-ready status should be built by the presentation service");
-        AssertTrue(WpfInferenceStatusPresentationService.BuildInspectionModelStatusText(new PythonModelSettings { WeightsPath = string.Empty }, hasPendingModelCandidate: false).Contains("\uC5C6\uC74C", StringComparison.Ordinal), "missing inspection-model status should be built by the presentation service");
-        AssertTrue(inferenceStatusPresentationSource.Contains("BuildRuntimePythonStatus", StringComparison.Ordinal), "inference status presentation service should own runtime python status wording");
-        AssertTrue(yoloRuntimeStatusSource.Contains("BuildRuntimePythonStatus", StringComparison.Ordinal), "YOLO runtime status should delegate runtime python status wording to the presentation service");
-        AssertTrue(yoloRuntimeStatusSource.Contains("BuildInspectionModelStatusText", StringComparison.Ordinal), "YOLO runtime status should delegate inspection model/candidate wording to the presentation service");
-        AssertTrue(!yoloRuntimeStatusSource.Contains("\uCD94\uB860: \uC900\uBE44 \uC644\uB8CC", StringComparison.Ordinal), "YOLO runtime status should not inline inference-ready wording");
-        AssertTrue(!yoloRuntimeStatusSource.Contains("\uAC80\uC0AC \uBAA8\uB378: \uC5C6\uC74C", StringComparison.Ordinal), "YOLO runtime status should not inline missing inspection-model wording");
-        AssertTrue(!ContainsVisibleMojibakeArtifact(yoloRuntimeStatusSource), "YOLO runtime status source should not expose mojibake artifacts");
-        AssertNamedXamlBinding(shellXaml, xName, "DetectButton", "IsEnabled", "ShellViewModel.IsCurrentImageDetectionEnabled");
-        AssertNamedXamlElement(shellXaml, xName, "ToggleButton", "HeaderToolsMenuButton");
-        AssertNamedXamlElement(shellXaml, xName, "Popup", "HeaderToolsPopup");
-        AssertNamedXamlElement(shellXaml, xName, "PackIconMaterial", "HeaderToolsMenuIcon");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "HeaderToolsMenuTitleText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "HeaderToolsMenuScreenSectionText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "HeaderToolsMenuAssistSectionText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "HeaderToolsMenuWorkflowSectionText");
-        AssertNamedXamlElement(shellXaml, xName, "Border", "HeaderTemplateFlowGuidePanel");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "HeaderTemplateFlowTitleText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "HeaderTemplateFlowStepText");
-        AssertNamedXamlElement(shellXaml, xName, "Button", "HeaderTemplateBatchButton");
-        AssertNamedXamlBinding(shellXaml, xName, "HeaderTemplateBatchButton", "Command", "ImageQueueViewModel.TemplateBatchQueueCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "HeaderTemplateBatchButton", "IsEnabled", "ImageQueueViewModel.IsTemplateBatchEnabled");
-        XElement headerToolsButton = shellXaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == "ToggleButton"
-                && string.Equals((string)candidate.Attribute(xName), "HeaderToolsMenuButton", StringComparison.Ordinal));
-        AssertTrue(
-            headerToolsButton != null
-                && !headerToolsButton.Descendants().Any(candidate => candidate.Name.LocalName == "TextBlock"),
-            "top tools menu button should stay compact and icon-only; rarely used command names belong inside the popup");
-        AssertTrue(shellXamlSource.Contains("x:Name=\"HeaderToolsPopup\"", StringComparison.Ordinal),
-            "rarely used header commands should be grouped behind the top tools menu instead of occupying the default header");
-        AssertTrue(shellXamlSource.Contains("PlacementTarget=\"{Binding ElementName=HeaderToolsMenuButton}\"", StringComparison.Ordinal),
-            "top tools popup should open from the compact header tools button");
-        AssertTrue(shellXamlSource.Contains("1 기준 라벨 선택 -> 2 라벨 초안 생성 -> 3 위치 확인 -> 4 라벨 저장", StringComparison.Ordinal),
-            "template helper menu should show the draft-label review and save sequence");
-        AssertTrue(shellXamlSource.Contains("현재 이미지 초안 생성", StringComparison.Ordinal), "template helper menu should distinguish current-image draft creation from AI candidates");
-        AssertTrue(shellXamlSource.Contains("전체 이미지 자동 저장", StringComparison.Ordinal), "template helper menu should distinguish batch auto-save from current-image drafts");
-        AssertNamedXamlBinding(shellXaml, xName, "TeachingModeButton", "IsEnabled", "ShellViewModel.IsLabelingModeButtonEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "TeachingModeButton", "Tag", "ShellViewModel.IsLabelingModeActive");
-        AssertNamedXamlBinding(shellXaml, xName, "InferenceModeButton", "IsEnabled", "ShellViewModel.IsInferenceModeButtonEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "InferenceModeButton", "Tag", "ShellViewModel.IsInferenceModeActive");
-        AssertNamedXamlBinding(shellXaml, xName, "ThemeToggleButton", "Command", "ShellViewModel.ToggleThemeCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "LoadSampleButton", "Command", "ShellViewModel.LoadSampleCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "AddSampleRoiButton", "Command", "ShellViewModel.AddSampleRoiCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "SaveAnnotationsButton", "Command", "ShellViewModel.SaveAnnotationsCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "TeachingModeButton", "Command", "ShellViewModel.LabelingModeCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "InferenceModeButton", "Command", "ShellViewModel.InferenceModeCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "DatasetHomeStageButton", "Command", "ShellViewModel.DatasetHomeCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "DatasetHomeStageButton", "Tag", "ShellViewModel.IsDatasetStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "LabelingWorkbenchStageButton", "Command", "ShellViewModel.LabelingWorkbenchCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "LabelingWorkbenchStageButton", "Tag", "ShellViewModel.IsLabelingStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "InferenceReviewStageButton", "Command", "ShellViewModel.InferenceReviewCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "InferenceReviewStageButton", "Tag", "ShellViewModel.IsInferenceStageActive");
-        string decodedShellXamlSource = System.Net.WebUtility.HtmlDecode(shellXamlSource);
-        AssertTrue(decodedShellXamlSource.Contains("AI 후보 검토", StringComparison.Ordinal), "top workflow stage button should name stage 3 as AI candidate review");
-        AssertTrue(decodedShellXamlSource.Contains("3 AI 후보", StringComparison.Ordinal), "top workflow stage button should use the compact AI-candidate label");
-        AssertTrue(!decodedShellXamlSource.Contains("3 추론 검토", StringComparison.Ordinal), "top workflow stage button should not use the ambiguous inference-review label");
-        AssertTrue(!decodedShellXamlSource.Contains("추론 검토", StringComparison.Ordinal), "workflow mode and stage buttons should not reintroduce the ambiguous inference-review label");
-        AssertNamedXamlBinding(shellXaml, xName, "TrainingModelStageButton", "Command", "ShellViewModel.TrainingModelCenterCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "TrainingModelStageButton", "Tag", "ShellViewModel.IsTrainingModelStageActive");
-        XElement shellTitleBar = shellXaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == "TitleBar"
-                && string.Equals((string)candidate.Attribute(xName), "ShellTitleBar", StringComparison.Ordinal));
-        AssertTrue(shellTitleBar != null, "top title bar should have a stable named root");
-        AssertEqual("28", (string)shellTitleBar.Attribute("Height"));
-        XElement shellHeaderBar = shellXaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == "Border"
-                && string.Equals((string)candidate.Attribute(xName), "ShellHeaderBar", StringComparison.Ordinal));
-        AssertTrue(shellHeaderBar != null, "top command header should have a stable named root");
-        AssertEqual("44", (string)shellHeaderBar.Attribute("Height"));
-        XElement workflowContextHeader = shellXaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == "Border"
-                && string.Equals((string)candidate.Attribute(xName), "WorkflowContextHeader", StringComparison.Ordinal));
-        AssertTrue(workflowContextHeader != null, "top workflow context should have a stable named root");
-        AssertEqual("82", (string)workflowContextHeader.Attribute("Height"));
-        XElement workflowStageRail = shellXaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == "Border"
-                && string.Equals((string)candidate.Attribute(xName), "WorkflowStageRail", StringComparison.Ordinal));
-        AssertTrue(workflowStageRail != null, "top workflow stage rail should have a stable named root");
-        AssertEqual("48", (string)workflowStageRail.Attribute("Height"));
-        AssertTrue(workflowStageRail.Ancestors().Any(candidate => string.Equals((string)candidate.Attribute(xName), "WorkflowContextHeader", StringComparison.Ordinal)),
-            "workflow stage rail should be grouped inside the compact workflow context header");
-        foreach (string stageButtonName in new[]
-        {
-            "DatasetHomeStageButton",
-            "LabelingWorkbenchStageButton",
-            "InferenceReviewStageButton",
-            "TrainingModelStageButton"
-        })
-        {
-            XElement stageButton = shellXaml.Descendants()
-                .FirstOrDefault(candidate => candidate.Name.LocalName == "Button"
-                    && string.Equals((string)candidate.Attribute(xName), stageButtonName, StringComparison.Ordinal));
-            AssertTrue(stageButton != null, $"top workflow stage button was not found: {stageButtonName}");
-            AssertEqual(1, stageButton.Descendants().Count(candidate => candidate.Name.LocalName == "TextBlock"));
-        }
-
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSummaryProgressText", "Text", "ShellViewModel.WorkflowStageProgressText");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSummaryTitleText", "Text", "ShellViewModel.WorkflowStageTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSummaryDetailText", "Text", "ShellViewModel.WorkflowStageDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSummaryNextActionText", "Text", "ShellViewModel.WorkflowStageNextActionText");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSummaryPanel", "ToolTip", "ShellViewModel.WorkflowStageDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowViewTitleText", "Text", "ShellViewModel.RightWorkflowViewTitleText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "RightWorkflowViewDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowViewDetailText", "Text", "ShellViewModel.RightWorkflowViewDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "ObjectsReviewTab", "Visibility", "ShellViewModel.IsSavedLabelsViewVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "CandidatesReviewTab", "Visibility", "ShellViewModel.IsCandidateReviewViewVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "LearningReviewTab", "Visibility", "ShellViewModel.IsGuideToolsViewVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "ClassesReviewTab", "Visibility", "ShellViewModel.IsClassCatalogViewVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloSettingsReviewTab", "Visibility", "ShellViewModel.IsYoloModelCenterViewVisible");
-        AssertTrue(shellXamlSource.Contains("BooleanToVisibilityConverter", StringComparison.Ordinal), "right workflow views should use boolean ViewModel state for visibility");
-        AssertTrue(shellXamlSource.Contains("WorkflowViewHostTabItemStyle", StringComparison.Ordinal), "right workflow view host should style stage subnavigation explicitly");
-        AssertNamedXamlValue(shellXaml, xName, "ReviewTabControl", "TabStripPlacement", "Top");
-        AssertTrue(shellXamlSource.Contains("WorkflowTabHeaderBorder", StringComparison.Ordinal), "right workflow tab headers should use the app dark template instead of the default white WPF tab chrome");
-        AssertTrue(shellXamlSource.Contains("Background=\"{TemplateBinding Background}\"", StringComparison.Ordinal)
-            && shellXamlSource.Contains("TextElement.Foreground=\"{TemplateBinding Foreground}\"", StringComparison.Ordinal),
-            "right workflow tab headers should inherit dark-theme brushes for both tab background and header text");
-        AssertTrue(shellXamlSource.Contains("Property=\"IsSelected\" Value=\"True\"", StringComparison.Ordinal)
-            && shellXamlSource.Contains("Property=\"BorderBrush\" Value=\"{DynamicResource AccentBrush}\"", StringComparison.Ordinal),
-            "right workflow selected tab should be visible as an app-themed active state, not a white selected tab");
-        AssertTrue(shellXamlSource.Contains("ShellViewModel.IsRightWorkflowSubNavigationVisible", StringComparison.Ordinal), "right workflow subnavigation should collapse when the active stage has a single view");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowColumn", "Width", "ShellViewModel.RightWorkflowPaneGridLength");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowColumn", "MinWidth", "ShellViewModel.RightWorkflowPaneMinWidth");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowColumn", "MaxWidth", "ShellViewModel.RightWorkflowPaneMaxWidth");
-        AssertNamedXamlElement(shellXaml, xName, "ColumnDefinition", "CanvasWorkspaceColumn");
-        AssertNamedXamlBinding(shellXaml, xName, "CanvasWorkspaceColumn", "Width", "ShellViewModel.CanvasWorkspacePaneGridLength");
-        AssertNamedXamlBinding(shellXaml, xName, "CanvasWorkspaceColumn", "MinWidth", "ShellViewModel.CanvasWorkspacePaneMinWidth");
-        AssertNamedXamlElement(shellXaml, xName, "ColumnDefinition", "LeftWorkspaceSplitterColumn");
-        AssertNamedXamlBinding(shellXaml, xName, "LeftWorkspaceSplitterColumn", "Width", "ShellViewModel.WorkspaceSplitterPaneGridLength");
-        AssertNamedXamlElement(shellXaml, xName, "ColumnDefinition", "RightWorkspaceSplitterColumn");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkspaceSplitterColumn", "Width", "ShellViewModel.WorkspaceSplitterPaneGridLength");
-        AssertNamedXamlElement(shellXaml, xName, "GridSplitter", "LeftWorkspaceSplitter");
-        AssertNamedXamlElement(shellXaml, xName, "GridSplitter", "RightWorkspaceSplitter");
-        AssertNamedXamlValue(shellXaml, xName, "LeftWorkspaceSplitter", "ResizeBehavior", "PreviousAndNext");
-        AssertNamedXamlValue(shellXaml, xName, "RightWorkspaceSplitter", "ResizeBehavior", "PreviousAndNext");
-        AssertNamedXamlValue(shellXaml, xName, "LeftWorkspaceSplitter", "ShowsPreview", "True");
-        AssertNamedXamlValue(shellXaml, xName, "RightWorkspaceSplitter", "ShowsPreview", "True");
-        AssertNamedXamlElement(shellXaml, xName, "ColumnDefinition", "ImageQueueColumn");
-        AssertNamedXamlBinding(shellXaml, xName, "ImageQueueColumn", "Width", "ShellViewModel.ImageQueuePaneGridLength");
-        AssertNamedXamlBinding(shellXaml, xName, "ImageQueueColumn", "MinWidth", "ShellViewModel.ImageQueuePaneMinWidth");
-        AssertNamedXamlBinding(shellXaml, xName, "CanvasPanelControl", "Visibility", "ShellViewModel.IsCanvasWorkspaceVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "ImageQueuePanelControl", "Visibility", "ShellViewModel.IsImageQueueWorkspaceVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "LeftWorkspaceSplitter", "Visibility", "ShellViewModel.IsWorkspaceSplitterVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkspaceSplitter", "Visibility", "ShellViewModel.IsWorkspaceSplitterVisible");
-        AssertTrue(shellXamlSource.Contains("LeftWorkspaceSplitter_DragCompleted", StringComparison.Ordinal), "left workspace resize should preserve the dock width binding after dragging");
-        AssertTrue(shellXamlSource.Contains("RightWorkspaceSplitter_DragCompleted", StringComparison.Ordinal), "image queue resize should persist after dragging");
-        AssertNamedXamlElement(shellXaml, xName, "Button", "ResetWorkspaceLayoutButton");
-        AssertNamedXamlBinding(shellXaml, xName, "ResetWorkspaceLayoutButton", "Command", "ShellViewModel.ResetWorkspaceLayoutCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowExpandedContent", "Visibility", "ShellViewModel.IsRightWorkflowDockExpanded");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowCollapsedRail", "Visibility", "ShellViewModel.IsRightWorkflowDockRailVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowDockToggleButton", "Command", "ShellViewModel.ToggleRightWorkflowDockCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowDockToggleButton", "Visibility", "ShellViewModel.IsRightWorkflowDockToggleVisible");
-        AssertNamedXamlElement(shellXaml, xName, "Border", "WorkflowStageSubNavigationRail");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSubNavigationRail", "Visibility", "ShellViewModel.IsRightWorkflowShortcutBarVisible");
-        XElement workflowStageSubNavigationRailXaml = shellXaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == "Border"
-                && string.Equals((string)candidate.Attribute(xName), "WorkflowStageSubNavigationRail", StringComparison.Ordinal));
-        AssertEqual("34", (string)workflowStageSubNavigationRailXaml.Attribute("Height"));
-        AssertTrue(workflowStageSubNavigationRailXaml.Ancestors().Any(candidate => string.Equals((string)candidate.Attribute(xName), "RightWorkflowExpandedContent", StringComparison.Ordinal)),
-            "workflow task tabs should belong to the expanded left workflow panel");
-        AssertTrue(!workflowStageSubNavigationRailXaml.Ancestors().Any(candidate => string.Equals((string)candidate.Attribute(xName), "WorkflowContextHeader", StringComparison.Ordinal)),
-            "workflow task tabs should not remain detached in the global context header");
-        AssertNamedXamlValue(shellXaml, xName, "ReviewTabControl", "Grid.Row", "2");
-        AssertNamedXamlElement(shellXaml, xName, "Border", "RightWorkflowRailContextBadge");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "RightWorkflowRailContextTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowRailCurrentViewText", "Text", "ShellViewModel.RightWorkflowRailCurrentViewText");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowRailOpenButton", "Command", "ShellViewModel.ToggleRightWorkflowDockCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowRailSavedLabelsButton", "Command", "ShellViewModel.ShowSavedLabelsViewCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowRailGuideToolsButton", "Command", "ShellViewModel.ShowLabelingGuideViewCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowRailClassCatalogButton", "Command", "ShellViewModel.ShowClassCatalogViewCommand");
-        AssertTrue(!shellXamlSource.Contains("RightWorkflowRailCandidateReviewButton", StringComparison.Ordinal), "right workflow collapsed rail should not duplicate top workflow inference-stage navigation");
-        AssertTrue(!shellXamlSource.Contains("RightWorkflowRailModelCenterButton", StringComparison.Ordinal), "right workflow collapsed rail should not duplicate top workflow model-stage navigation");
-        foreach (string railTextName in new[]
-        {
-            "RightWorkflowRailOpenText",
-            "RightWorkflowRailSavedLabelsText",
-            "RightWorkflowRailGuideToolsText",
-            "RightWorkflowRailClassCatalogText"
-        })
-        {
-            AssertNamedXamlElement(shellXaml, xName, "TextBlock", railTextName);
-        }
-
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.Name=\"&#xD604;&#xC7AC; &#xC791;&#xC5C5; &#xBCF4;&#xAE30;\"", StringComparison.Ordinal), "labeling guide shortcut should read as current work instead of a broad tool panel");
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.Name=\"&#xD604;&#xC7AC; &#xC791;&#xC5C5; &#xD328;&#xB110; &#xC5F4;&#xAE30;\"", StringComparison.Ordinal), "collapsed guide rail should open the current-work panel");
-        AssertTrue(shellXamlSource.Contains("<iconPacks:PackIconMaterial Kind=\"ClipboardTextOutline\" Width=\"12\" Height=\"12\" Margin=\"0,0,4,0\" />", StringComparison.Ordinal), "labeling guide shortcut should use a current-task icon instead of a drawing-shape icon");
-        int guideRailTextIndex = shellXamlSource.IndexOf("x:Name=\"RightWorkflowRailGuideToolsText\"", StringComparison.Ordinal);
-        AssertTrue(guideRailTextIndex >= 0
-            && shellXamlSource.IndexOf("Text=\"&#xC791;&#xC5C5;\"", guideRailTextIndex, StringComparison.Ordinal) > guideRailTextIndex,
-            "collapsed guide rail label should display the current-work wording");
-        int guideRailButtonIndex = shellXamlSource.IndexOf("x:Name=\"RightWorkflowRailGuideToolsButton\"", StringComparison.Ordinal);
-        AssertTrue(guideRailButtonIndex >= 0
-            && shellXamlSource.IndexOf("Kind=\"ClipboardTextOutline\"", guideRailButtonIndex, StringComparison.Ordinal) > guideRailButtonIndex,
-            "collapsed guide rail should use the current-task icon");
-
-        AssertTrue(shellXamlSource.Contains("<Setter Property=\"Width\" Value=\"60\" />", StringComparison.Ordinal), "right workflow collapsed rail buttons should reserve enough width for icon and short Korean labels");
-        AssertTrue(shellXamlSource.Contains("<Setter Property=\"Height\" Value=\"42\" />", StringComparison.Ordinal), "right workflow collapsed rail buttons should reserve enough height for icon and label");
-        AssertNamedXamlElement(shellXaml, xName, "UniformGrid", "RightWorkflowShortcutBar");
-        AssertNamedXamlValue(shellXaml, xName, "RightWorkflowShortcutBar", "Rows", "1");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowShortcutBar", "Visibility", "ShellViewModel.IsRightWorkflowShortcutBarVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowDatasetHomeButton", "Command", "ShellViewModel.DatasetHomeCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowDatasetHomeButton", "Visibility", "ShellViewModel.IsDatasetStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowSavedLabelsButton", "Command", "ShellViewModel.ShowSavedLabelsViewCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowGuideToolsButton", "Command", "ShellViewModel.ShowLabelingGuideViewCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowClassCatalogButton", "Command", "ShellViewModel.ShowClassCatalogViewCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowInferenceCandidatesButton", "Command", "ShellViewModel.InferenceReviewCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowInferenceInspectButton", "Command", "ShellViewModel.DetectCurrentImageCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowTrainingModelButton", "Command", "ShellViewModel.TrainingModelCenterCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowTrainingReviewCandidateButton", "Command", "ShellViewModel.ReviewCandidateModelCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowTrainingInspectButton", "Command", "ShellViewModel.DetectCurrentImageCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowDatasetHomeButton", "Tag", "ShellViewModel.IsLabelingGuideShortcutActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowSavedLabelsButton", "Tag", "ShellViewModel.IsSavedLabelsShortcutActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowGuideToolsButton", "Tag", "ShellViewModel.IsLabelingGuideShortcutActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowClassCatalogButton", "Tag", "ShellViewModel.IsClassCatalogShortcutActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowSavedLabelsButton", "Visibility", "ShellViewModel.IsLabelingStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowGuideToolsButton", "Visibility", "ShellViewModel.IsLabelingStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowClassCatalogButton", "Visibility", "ShellViewModel.IsClassCatalogViewVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowInferenceCandidatesButton", "Visibility", "ShellViewModel.IsInferenceStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowInferenceInspectButton", "Visibility", "ShellViewModel.IsInferenceStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowTrainingModelButton", "Visibility", "ShellViewModel.IsTrainingModelStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowTrainingReviewCandidateButton", "Visibility", "ShellViewModel.IsTrainingModelStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowTrainingInspectButton", "Visibility", "ShellViewModel.IsTrainingModelStageActive");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowInferenceInspectButton", "IsEnabled", "ShellViewModel.IsCurrentImageDetectionEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowTrainingReviewCandidateButton", "IsEnabled", "ShellViewModel.IsModelCenterReviewCandidateEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowTrainingInspectButton", "IsEnabled", "ShellViewModel.IsModelCenterInspectCurrentImageEnabled");
-        AssertNamedXamlValue(shellXaml, xName, "RightWorkflowInferenceInspectButton", "Style", "{StaticResource RightWorkflowPanelActionButtonStyle}");
-        AssertNamedXamlValue(shellXaml, xName, "RightWorkflowTrainingReviewCandidateButton", "Style", "{StaticResource RightWorkflowPanelActionButtonStyle}");
-        AssertNamedXamlValue(shellXaml, xName, "RightWorkflowTrainingInspectButton", "Style", "{StaticResource RightWorkflowPanelActionButtonStyle}");
-        AssertTrue(shellXamlSource.Contains("<Setter Property=\"BorderThickness\" Value=\"0,0,0,2\" />", StringComparison.Ordinal),
-            "workflow panel tabs should use a selected underline instead of a filled global toolbar button");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleTrainingStatusText", "Text", "ShellViewModel.ModelCenterTrainingStatusText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleTrainingDetailText", "Text", "ShellViewModel.ModelCenterTrainingDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleCurrentModelTitleText", "Text", "ShellViewModel.ModelCenterCurrentModelTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleCurrentModelText", "Text", "ShellViewModel.ModelCenterCurrentModelDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleCandidateModelTitleText", "Text", "ShellViewModel.ModelCenterCandidateModelTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleCandidateModelText", "Text", "ShellViewModel.ModelCenterCandidateModelDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleAdoptionTitleText", "Text", "ShellViewModel.ModelCenterAdoptionTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleAdoptionText", "Text", "ShellViewModel.ModelCenterAdoptionDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleNextActionTitleText", "Text", "ShellViewModel.ModelCenterNextActionTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleNextActionText", "Text", "ShellViewModel.ModelCenterNextActionDetailText");
-        AssertNamedXamlValue(shellXaml, xName, "YoloModelLifecycleDetailPanel", "Visibility", "Collapsed");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelAdoptionDecisionTitleText", "Text", "ShellViewModel.ModelCenterDecisionTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelAdoptionDecisionSummaryText", "Text", "ShellViewModel.ModelCenterDecisionSummaryText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelAdoptionDecisionEvidenceText", "Text", "ShellViewModel.ModelCenterDecisionEvidenceText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelAdoptionDecisionActionText", "Text", "ShellViewModel.ModelCenterDecisionActionText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationPanel", "Visibility", "ShellViewModel.IsModelCenterAnomalyEvaluationVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationTitleText", "Text", "ShellViewModel.ModelCenterAnomalyEvaluationTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationRecommendationText", "Text", "ShellViewModel.ModelCenterAnomalyEvaluationRecommendationText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationMetricsText", "Text", "ShellViewModel.ModelCenterAnomalyEvaluationMetricsText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationDetailText", "Text", "ShellViewModel.ModelCenterAnomalyEvaluationDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationActionText", "Text", "ShellViewModel.ModelCenterAnomalyEvaluationActionText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationRunButton", "Command", "ShellViewModel.RunAnomalyEvaluationCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationRunButton", "IsEnabled", "ShellViewModel.IsModelCenterAnomalyEvaluationPickerEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationRunButton", "Visibility", "ShellViewModel.IsModelCenterAnomalyEvaluationPickerVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationLoadSummaryButton", "Command", "ShellViewModel.LoadAnomalyEvaluationSummaryCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationLoadSummaryButton", "IsEnabled", "ShellViewModel.IsModelCenterAnomalyEvaluationPickerEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloAnomalyEvaluationLoadSummaryButton", "Visibility", "ShellViewModel.IsModelCenterAnomalyEvaluationPickerVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryTitleText", "Text", "ShellViewModel.ModelRegistryTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistrySummaryPrimaryText", "Text", "ShellViewModel.ModelRegistrySummaryPrimaryText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistrySummarySecondaryText", "Text", "ShellViewModel.ModelRegistrySummarySecondaryText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryProfileText", "Text", "ShellViewModel.ModelRegistryProfileText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryTrainingRunText", "Text", "ShellViewModel.ModelRegistryTrainingRunText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryCandidateModelText", "Text", "ShellViewModel.ModelRegistryCandidateModelText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryInspectionModelText", "Text", "ShellViewModel.ModelRegistryInspectionModelText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryActionText", "Text", "ShellViewModel.ModelRegistryActionText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryHistoryPanel", "Visibility", "ShellViewModel.IsModelRegistryHistoryVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryHistoryHeaderText", "Text", "ShellViewModel.ModelRegistryHistoryHeaderText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryHistorySummaryText", "Text", "ShellViewModel.ModelRegistryHistorySummaryText");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryHistoryItems", "ItemsSource", "ShellViewModel.ModelRegistryHistoryItems");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistryHistoryItems", "SelectedItem", "ShellViewModel.SelectedModelRegistryHistoryItem");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelRegistrySelectedHistoryPanel", "Visibility", "ShellViewModel.IsSelectedModelHistoryVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "SelectedModelHistoryTitleText", "Text", "ShellViewModel.SelectedModelHistoryTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "SelectedModelHistoryDecisionText", "Text", "ShellViewModel.SelectedModelHistoryDecisionText");
-        AssertNamedXamlBinding(shellXaml, xName, "SelectedModelHistoryDetailText", "Text", "ShellViewModel.SelectedModelHistoryDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "SelectedModelHistoryMetricText", "Text", "ShellViewModel.SelectedModelHistoryMetricText");
-        AssertNamedXamlBinding(shellXaml, xName, "SelectedModelHistoryComparisonTitleText", "Text", "ShellViewModel.SelectedModelHistoryComparisonTitleText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "SelectedModelHistoryCurrentRoleText");
-        AssertNamedXamlBinding(shellXaml, xName, "SelectedModelHistoryCurrentModelText", "Text", "ShellViewModel.SelectedModelHistoryCurrentModelText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "SelectedModelHistorySelectedRoleText");
-        AssertNamedXamlBinding(shellXaml, xName, "SelectedModelHistorySelectedModelText", "Text", "ShellViewModel.SelectedModelHistorySelectedModelText");
-        AssertNamedXamlBinding(shellXaml, xName, "SelectedModelHistoryComparisonMetricText", "Text", "ShellViewModel.SelectedModelHistoryComparisonMetricText");
-        AssertNamedXamlBinding(shellXaml, xName, "PromoteSelectedModelHistoryButton", "Command", "ShellViewModel.PromoteSelectedModelHistoryCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "PromoteSelectedModelHistoryButton", "IsEnabled", "ShellViewModel.IsSelectedModelHistoryActionEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "PromoteSelectedModelHistoryButton", "ToolTip", "ShellViewModel.SelectedModelHistoryActionToolTip");
-        AssertNamedXamlBinding(shellXaml, xName, "PromoteSelectedModelHistoryButtonText", "Text", "ShellViewModel.SelectedModelHistoryActionText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelRecoveryTitleText", "Text", "ShellViewModel.ModelCenterRecoveryTitleText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelRecoveryDetailText", "Text", "ShellViewModel.ModelCenterRecoveryDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelRecoveryActionText", "Text", "ShellViewModel.ModelCenterRecoveryActionText");
-        AssertTrue(shellXamlSource.Contains("ShellViewModel.IsModelCenterRecoveryVisible", StringComparison.Ordinal),
-            "YOLO model center should show failure/recovery guidance from the shell ViewModel, not only in logs");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloModelLifecycleProgressBar", "Value", "TrainingSettingsViewModel.TrainingProgressValue");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleRefreshButton", "Command", "TrainingSettingsViewModel.RefreshReadinessCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleStartTrainingButton", "Command", "TrainingSettingsViewModel.StartTrainingCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleStopTrainingButton", "Command", "TrainingSettingsViewModel.StopTrainingCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleReviewCandidateModelButton", "Command", "ShellViewModel.ReviewCandidateModelCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleReviewCandidateModelButton", "IsEnabled", "ShellViewModel.IsModelCenterReviewCandidateEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleReviewCandidateModelButton", "ToolTip", "ShellViewModel.ModelCenterReviewCandidateButtonToolTip");
-        AssertNamedXamlValue(shellXaml, xName, "YoloLifecycleReviewCandidateModelButton", "Visibility", "Collapsed");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleReviewCandidateModelButtonText", "Text", "ShellViewModel.ModelCenterReviewCandidateButtonText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleSaveModelSettingsButton", "Command", "YoloModelSettingsViewModel.SaveSettingsCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleSaveModelSettingsButton", "IsEnabled", "ShellViewModel.IsModelCenterConfirmModelEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleSaveModelSettingsButton", "ToolTip", "ShellViewModel.ModelCenterConfirmModelButtonToolTip");
-        AssertNamedXamlValue(shellXaml, xName, "YoloLifecycleSaveModelSettingsButton", "Visibility", "Collapsed");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleSaveModelSettingsButtonText", "Text", "ShellViewModel.ModelCenterConfirmModelButtonText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleInspectCurrentImageButton", "Command", "ShellViewModel.DetectCurrentImageCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleInspectCurrentImageButton", "IsEnabled", "ShellViewModel.IsModelCenterInspectCurrentImageEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleInspectCurrentImageButton", "ToolTip", "ShellViewModel.ModelCenterInspectCurrentImageButtonToolTip");
-        AssertNamedXamlValue(shellXaml, xName, "YoloLifecycleInspectCurrentImageButton", "Visibility", "Collapsed");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloLifecycleInspectCurrentImageButtonText", "Text", "ShellViewModel.ModelCenterInspectCurrentImageButtonText");
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.AutomationId=\"WorkflowStageModelActionPanel\"", StringComparison.Ordinal),
-            "workflow stage summary should expose the post-training model actions as a stable automation target");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageModelActionPanel", "Visibility", "ShellViewModel.IsWorkflowStageModelActionPanelVisible");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageReviewCandidateModelButton", "Command", "ShellViewModel.ReviewCandidateModelCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageReviewCandidateModelButton", "IsEnabled", "ShellViewModel.IsModelCenterReviewCandidateEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageReviewCandidateModelButton", "ToolTip", "ShellViewModel.ModelCenterReviewCandidateButtonToolTip");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageReviewCandidateModelButtonText", "Text", "ShellViewModel.ModelCenterReviewCandidateButtonText");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSaveModelSettingsButton", "Command", "YoloModelSettingsViewModel.SaveSettingsCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSaveModelSettingsButton", "IsEnabled", "ShellViewModel.IsModelCenterConfirmModelEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSaveModelSettingsButton", "ToolTip", "ShellViewModel.ModelCenterConfirmModelButtonToolTip");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageSaveModelSettingsButtonText", "Text", "ShellViewModel.ModelCenterConfirmModelButtonText");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageInspectCurrentImageButton", "Command", "ShellViewModel.DetectCurrentImageCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageInspectCurrentImageButton", "IsEnabled", "ShellViewModel.IsModelCenterInspectCurrentImageEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageInspectCurrentImageButton", "ToolTip", "ShellViewModel.ModelCenterInspectCurrentImageButtonToolTip");
-        AssertNamedXamlBinding(shellXaml, xName, "WorkflowStageInspectCurrentImageButtonText", "Text", "ShellViewModel.ModelCenterInspectCurrentImageButtonText");
-        AssertTrue(shellXamlSource.Contains("x:Name=\"RightWorkflowViewTitleText\"", StringComparison.Ordinal),
-            "right review panel title should follow the selected right-workflow view instead of only the top workflow stage");
-        AssertTrue(shellXamlSource.Contains("x:Name=\"RightWorkflowViewDetailText\"", StringComparison.Ordinal),
-            "right review panel header should explain the active panel role, not only show a short tab label");
-        AssertTrue(shellXamlSource.Contains("Header=\"&#xC800;&#xC7A5; &#xB77C;&#xBCA8;\"", StringComparison.Ordinal),
-            "object review tab should be titled as saved labels");
-        AssertTrue(shellXamlSource.Contains("Header=\"AI &#xD6C4;&#xBCF4;\"", StringComparison.Ordinal),
-            "candidate review tab should be titled as AI candidates");
-        AssertNamedXamlBinding(shellXaml, xName, "CheckYoloButton", "Command", "ShellViewModel.CheckYoloCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "DetectButton", "Command", "ShellViewModel.DetectCurrentImageCommand");
-        XElement currentDatasetContextBar = shellXaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == "Border"
-                && string.Equals((string)candidate.Attribute(xName), "CurrentDatasetContextBar", StringComparison.Ordinal));
-        AssertTrue(currentDatasetContextBar != null, "current dataset context bar should have a stable named root");
-        AssertEqual("34", (string)currentDatasetContextBar.Attribute("Height"));
-        AssertEqual("2", (string)currentDatasetContextBar.Attribute("Grid.ColumnSpan"));
-        AssertTrue(currentDatasetContextBar.Ancestors().Any(candidate => string.Equals((string)candidate.Attribute(xName), "WorkflowContextHeader", StringComparison.Ordinal)),
-            "current dataset context should be grouped inside the compact workflow context header");
-        AssertNamedXamlBinding(shellXaml, xName, "CurrentDatasetNameText", "Text", "ShellViewModel.CurrentDatasetName");
-        AssertNamedXamlBinding(shellXaml, xName, "CurrentDatasetPurposeText", "Text", "ShellViewModel.CurrentDatasetPurposeText");
-        AssertNamedXamlBinding(shellXaml, xName, "CurrentDatasetStoragePathText", "Text", "ShellViewModel.CurrentDatasetStoragePathText");
-        AssertNamedXamlBinding(shellXaml, xName, "CurrentDatasetImageRootText", "Text", "ShellViewModel.CurrentDatasetImageRootText");
-        XElement datasetStoragePathCard = shellXaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == "Border"
-                && string.Equals((string)candidate.Attribute(xName), "DatasetStoragePathCard", StringComparison.Ordinal));
-        XElement datasetImageRootCard = shellXaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == "Border"
-                && string.Equals((string)candidate.Attribute(xName), "DatasetImageRootCard", StringComparison.Ordinal));
-        AssertTrue(datasetStoragePathCard != null, "dataset storage path detail should stay bound for tooltips/details");
-        AssertTrue(datasetImageRootCard != null, "dataset image-root detail should stay bound for tooltips/details");
-        AssertEqual("Collapsed", (string)datasetStoragePathCard.Attribute("Visibility"));
-        AssertEqual("Collapsed", (string)datasetImageRootCard.Attribute("Visibility"));
-        AssertNamedXamlElement(shellXaml, xName, "Border", "DatasetSourceCard");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "CurrentDatasetSourceText");
-        AssertNamedXamlBinding(shellXaml, xName, "CurrentDatasetSourceText", "Text", "ShellViewModel.CurrentDatasetSourceText");
-        AssertNamedXamlBinding(shellXaml, xName, "ChangeDatasetButton", "Command", "ShellViewModel.ChangeDatasetCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "OpenDatasetFolderButton", "Command", "ShellViewModel.OpenDatasetFolderCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "OpenDatasetFolderButton", "IsEnabled", "ShellViewModel.IsOpenDatasetFolderEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "ChangeImageFolderButton", "Command", "ShellViewModel.ChangeImageFolderCommand");
-        AssertNamedXamlAttachedBinding(shellXaml, xName, "ChangeDatasetButton", "MouseClickInputCommand", "ShellViewModel.ChangeDatasetCommand");
-        AssertNamedXamlAttachedBinding(shellXaml, xName, "OpenDatasetFolderButton", "MouseClickInputCommand", "ShellViewModel.OpenDatasetFolderCommand");
-        AssertNamedXamlAttachedBinding(shellXaml, xName, "ChangeImageFolderButton", "MouseClickInputCommand", "ShellViewModel.ChangeImageFolderCommand");
-        AssertNamedXamlAttachedBinding(shellXaml, xName, "ShellWindow", "LoadedCommand", "ShellViewModel.LoadedCommand");
-        AssertNamedXamlAttachedBinding(shellXaml, xName, "ShellWindow", "ClosedCommand", "ShellViewModel.ClosedCommand");
-        AssertNamedXamlAttachedBinding(shellXaml, xName, "ShellWindow", "PreviewKeyInputCommand", "ShellViewModel.PreviewKeyDownCommand");
-        AssertNamedXamlBinding(queueXaml, xName, "OpenSelectedQueueImageButton", "IsEnabled", "IsOpenSelectedImageEnabled");
-        AssertNamedXamlBinding(queueXaml, xName, "OpenSelectedQueueImageButton", "Command", "OpenSelectedQueueImageCommand");
-        AssertNamedXamlBinding(queueXaml, xName, "CurrentImageFolderPathText", "Text", "CurrentImageFolderDisplayText");
-        AssertNamedXamlBinding(queueXaml, xName, "CurrentImageFolderPathText", "ToolTip", "CurrentImageFolderPath");
-        AssertNamedXamlBinding(queueXaml, xName, "OpenCurrentImageFolderButton", "IsEnabled", "IsOpenCurrentImageFolderEnabled");
-        AssertNamedXamlBinding(queueXaml, xName, "OpenCurrentImageFolderButton", "Command", "OpenCurrentImageFolderCommand");
-        AssertNamedXamlElement(queueXaml, xName, "Border", "CurrentImageTaskCard");
-        AssertNamedXamlElement(queueXaml, xName, "TextBlock", "CurrentImageTaskTitleText");
-        AssertNamedXamlElement(queueXaml, xName, "TextBlock", "CurrentImageTaskDetailText");
-        AssertNamedXamlElement(queueXaml, xName, "Border", "CurrentImageTaskBadge");
-        AssertNamedXamlElement(queueXaml, xName, "TextBlock", "CurrentImageTaskBadgeText");
-        AssertNamedXamlBinding(queueXaml, xName, "CurrentImageTaskCard", "Tag", "CurrentImageTaskKey");
-        AssertNamedXamlBinding(queueXaml, xName, "CurrentImageTaskCard", "ToolTip", "CurrentImageTaskToolTip");
-        AssertNamedXamlBinding(queueXaml, xName, "CurrentImageTaskTitleText", "Text", "CurrentImageTaskTitleText");
-        AssertNamedXamlBinding(queueXaml, xName, "CurrentImageTaskDetailText", "Text", "CurrentImageTaskDetailText");
-        AssertNamedXamlBinding(queueXaml, xName, "CurrentImageTaskBadge", "Tag", "CurrentImageTaskKey");
-        AssertNamedXamlBinding(queueXaml, xName, "CurrentImageTaskBadgeText", "Text", "CurrentImageTaskBadgeText");
-        AssertNamedXamlBinding(queueXaml, xName, "DetectSelectedQueueButton", "Command", "DetectSelectedQueueCommand");
-        AssertNamedXamlBinding(queueXaml, xName, "BatchDetectQueueButton", "Command", "BatchDetectQueueCommand");
-        AssertNamedXamlBinding(queueXaml, xName, "RetryFailedQueueButton", "Command", "RetryFailedQueueCommand");
-        AssertNamedXamlBinding(queueXaml, xName, "StopBatchQueueButton", "Command", "StopBatchQueueCommand");
-        AssertNamedXamlAttachedBinding(queueXaml, xName, "ImageQueueFilterBox", "SelectedItemChangedCommand", "FilterSelectionChangedCommand");
-        AssertNamedXamlAttachedBinding(queueXaml, xName, "ImageQueueSearchBox", "TextInputCommand", "SearchTextChangedCommand");
-        AssertNamedXamlBinding(queueXaml, xName, "ImageQueueGrid", "SelectedItem", "SelectedQueueItem");
-        AssertNamedXamlAttachedBinding(queueXaml, xName, "ImageQueueGrid", "SelectedItemChangedCommand", "QueueSelectionChangedCommand");
-        AssertNamedXamlAttachedBinding(queueXaml, xName, "ImageQueueGrid", "MouseDoubleClickInputCommand", "QueueMouseDoubleClickCommand");
-        AssertNamedXamlBinding(queueXaml, xName, "DetectSelectedQueueButton", "IsEnabled", "IsDetectSelectedEnabled");
-        AssertNamedXamlBinding(queueXaml, xName, "BatchDetectQueueButton", "IsEnabled", "IsBatchDetectEnabled");
-        AssertNamedXamlBinding(queueXaml, xName, "RetryFailedQueueButton", "IsEnabled", "IsRetryFailedEnabled");
-        AssertNamedXamlBinding(queueXaml, xName, "StopBatchQueueButton", "IsEnabled", "IsStopBatchEnabled");
-        AssertTrue(!imageQueueViewModelSource.Contains("SelectionChangedEventArgs", StringComparison.Ordinal), "image queue ViewModel should not depend on WPF selection event args");
-        AssertTrue(!imageQueueViewModelSource.Contains("TextChangedEventArgs", StringComparison.Ordinal), "image queue ViewModel should not depend on WPF text event args");
-        AssertTrue(!imageQueueViewModelSource.Contains("MouseButtonEventArgs", StringComparison.Ordinal), "image queue ViewModel should not depend on WPF mouse event args");
-        AssertTrue(imageQueueViewModelSource.Contains("RefreshCurrentImageTaskSummary", StringComparison.Ordinal), "image queue ViewModel should own current-image task summary wording");
-        AssertTrue(imageQueueViewModelSource.Contains("OnSelectedQueueItemPropertyChanged", StringComparison.Ordinal), "image queue current-image task summary should follow selected row status updates");
-        AssertTrue(workflowStagePresentationSource.Contains("후보가 없으면 4 학습/모델, 있으면 확정 또는 숨김", StringComparison.Ordinal), "workflow-stage next action should distinguish the empty route from candidate confirm/hide");
-        AssertTrue(!workflowStagePresentationSource.Contains("AI \uD6C4\uBCF4 \uC800\uC7A5/\uC228\uAE40", StringComparison.Ordinal), "workflow-stage next action should not imply AI candidates are saved separately before confirmation");
-        AssertTrue(inputCommandBehaviorSource.Contains("TextInputCommandProperty", StringComparison.Ordinal), "input behaviors should expose text-value command routing");
-        AssertTrue(inputCommandBehaviorSource.Contains("MouseDoubleClickInputCommandProperty", StringComparison.Ordinal), "input behaviors should expose parameterless double-click command routing");
-        AssertTrue(inputCommandBehaviorSource.Contains("MouseClickInputCommandProperty", StringComparison.Ordinal), "input behaviors should expose parameterless mouse-click command routing");
-        AssertTrue(!shellViewModelSource.Contains("KeyEventArgs", StringComparison.Ordinal), "shell ViewModel should not depend on WPF key event args");
-        AssertTrue(shellViewModelSource.Contains("KeyInputCommandArgs", StringComparison.Ordinal), "shell ViewModel should use the shared key input DTO command contract");
-        AssertTrue(shellViewModelSource.Contains("SetDatasetContext", StringComparison.Ordinal), "shell ViewModel should expose the current dataset identity for the main header");
-        AssertTrue(shellViewModelSource.Contains("WpfDatasetContextPresentationService", StringComparison.Ordinal), "shell ViewModel should delegate dataset context wording to a presentation service");
-        AssertTrue(shellViewModelSource.Contains("CurrentDatasetSourceText", StringComparison.Ordinal), "shell ViewModel should expose class/label source context for the dataset header");
-        AssertTrue(datasetContextPresentationSource.Contains("BuildDatasetName", StringComparison.Ordinal), "dataset context presentation service should own dataset-name fallback");
-        AssertTrue(datasetContextPresentationSource.Contains("FormatPurposeName", StringComparison.Ordinal), "dataset context presentation service should own dataset-purpose display wording");
-        AssertTrue(!shellSource.Contains("FormatShellDatasetPurposeName", StringComparison.Ordinal), "shell code-behind should not own dataset-purpose display wording");
-        AssertTrue(shellSource.Contains("WpfDatasetContextPresentationService.BuildDatasetName", StringComparison.Ordinal), "shell dataset context refresh should delegate dataset-name fallback to the context presentation service");
-        AssertTrue(shellSource.Contains("WpfDatasetContextPresentationService.FormatPurposeName", StringComparison.Ordinal), "shell dataset context refresh should delegate dataset-purpose display wording to the context presentation service");
-        AssertTrue(shellViewModelSource.Contains("ChangeDatasetCommand", StringComparison.Ordinal), "shell ViewModel should expose a main-header dataset change command");
-        AssertTrue(shellViewModelSource.Contains("DatasetHomeCommand", StringComparison.Ordinal), "shell ViewModel should expose a dataset-home workflow stage command");
-        AssertTrue(shellViewModelSource.Contains("LabelingWorkbenchCommand", StringComparison.Ordinal), "shell ViewModel should expose a labeling-workbench workflow stage command");
-        AssertTrue(shellViewModelSource.Contains("InferenceReviewCommand", StringComparison.Ordinal), "shell ViewModel should expose an inference-review workflow stage command");
-        AssertTrue(shellViewModelSource.Contains("TrainingModelCenterCommand", StringComparison.Ordinal), "shell ViewModel should expose a training/model workflow stage command");
-        AssertTrue(shellViewModelSource.Contains("WorkflowStageNextActionText", StringComparison.Ordinal), "shell ViewModel should expose workflow-stage next-action text for the top rail");
-        AssertTrue(shellViewModelSource.Contains("WpfWorkflowStagePresentationService", StringComparison.Ordinal), "shell ViewModel should delegate workflow-stage wording to a presentation service");
-        AssertTrue(shellViewModelSource.Contains("SetModelCenterTrainingState", StringComparison.Ordinal), "shell ViewModel should expose model-center training state updates");
-        AssertTrue(shellViewModelSource.Contains("SetModelCenterModelState", StringComparison.Ordinal), "shell ViewModel should expose current/candidate model summary updates");
-        AssertTrue(shellViewModelSource.Contains("ModelCenterCurrentModelDetailText", StringComparison.Ordinal), "shell ViewModel should expose a separate current-model detail for the model center");
-        AssertTrue(shellViewModelSource.Contains("StripModelCenterPrefix", StringComparison.Ordinal), "shell ViewModel should keep model-center display labels separate from model values");
-        AssertTrue(shellViewModelSource.Contains("ModelCenterConfirmModelButtonText", StringComparison.Ordinal), "shell ViewModel should expose model-center confirm button text");
-        AssertTrue(shellViewModelSource.Contains("IsModelCenterConfirmModelEnabled", StringComparison.Ordinal), "shell ViewModel should own model-center confirm button enablement");
-        AssertTrue(shellViewModelSource.Contains("ModelCenterInspectCurrentImageButtonText", StringComparison.Ordinal), "shell ViewModel should expose model-center current-inspection button text");
-        AssertTrue(shellViewModelSource.Contains("IsModelCenterInspectCurrentImageEnabled", StringComparison.Ordinal), "shell ViewModel should own model-center current-inspection enablement");
-        AssertTrue(shellViewModelSource.Contains("ModelCenterDecisionSummaryText", StringComparison.Ordinal), "shell ViewModel should expose a compact model-adoption decision summary");
-        AssertTrue(shellViewModelSource.Contains("ModelCenterDecisionEvidenceText", StringComparison.Ordinal), "shell ViewModel should expose model-adoption evidence text");
-        AssertTrue(shellViewModelSource.Contains("ModelCenterDecisionActionText", StringComparison.Ordinal), "shell ViewModel should expose the exact model-adoption action text");
-        AssertTrue(shellViewModelSource.Contains("SetModelCenterAnomalyEvaluationState", StringComparison.Ordinal), "shell ViewModel should expose anomaly classification evaluation state for Model Center");
-        AssertTrue(shellViewModelSource.Contains("ClearModelCenterAnomalyEvaluationState", StringComparison.Ordinal), "shell ViewModel should clear anomaly classification evaluation state");
-        AssertTrue(shellViewModelSource.Contains("RunAnomalyEvaluationCommand", StringComparison.Ordinal), "shell ViewModel should expose a command for running anomaly evaluation");
-        AssertTrue(shellViewModelSource.Contains("LoadAnomalyEvaluationSummaryCommand", StringComparison.Ordinal), "shell ViewModel should expose a command for explicitly loading an anomaly evaluation summary");
-        AssertTrue(shellViewModelSource.Contains("SetModelCenterAnomalyEvaluationPickerVisible", StringComparison.Ordinal), "shell ViewModel should own anomaly evaluation summary picker visibility");
-        AssertTrue(shellSource.Contains("RefreshModelCenterAnomalyEvaluationState", StringComparison.Ordinal), "model-center dashboard should refresh anomaly classification evaluation state from the active output root");
-        AssertTrue(shellSource.Contains("ExecuteRunAnomalyEvaluationCommand", StringComparison.Ordinal), "model-center dashboard should route anomaly evaluation execution through a command");
-        AssertTrue(shellSource.Contains("ExecuteLoadAnomalyEvaluationSummaryCommand", StringComparison.Ordinal), "model-center dashboard should route explicit anomaly evaluation summary loading through a command");
-        AssertTrue(shellSource.Contains("manualModelCenterAnomalyEvaluationSummaryPath", StringComparison.Ordinal), "model-center dashboard should keep a manually selected anomaly evaluation summary until the dataset context changes");
-        AssertTrue(shellSource.Contains("FindModelCenterAnomalyEvaluationSummaryPath", StringComparison.Ordinal), "model-center dashboard should own a bounded anomaly evaluation summary lookup");
-        AssertTrue(shellSource.Contains("classification-evaluation-summary.json", StringComparison.Ordinal), "model-center dashboard should look for the stable anomaly evaluation summary artifact name");
-        AssertTrue(shellSource.Contains("WpfAnomalyClassificationEvaluationPresentationService.Build", StringComparison.Ordinal), "model-center dashboard should delegate anomaly evaluation wording to the presentation service");
-        AssertTrue(shellViewModelSource.Contains("SetModelRegistryState", StringComparison.Ordinal), "shell ViewModel should expose model-registry presentation state");
-        AssertTrue(shellViewModelSource.Contains("ModelRegistryProfileText", StringComparison.Ordinal), "shell ViewModel should expose the model profile registry row");
-        AssertTrue(shellViewModelSource.Contains("ModelRegistryTrainingRunText", StringComparison.Ordinal), "shell ViewModel should expose the training-run registry row");
-        AssertTrue(shellViewModelSource.Contains("ModelRegistryCandidateModelText", StringComparison.Ordinal), "shell ViewModel should expose the candidate-model registry row");
-        AssertTrue(shellViewModelSource.Contains("ModelRegistryInspectionModelText", StringComparison.Ordinal), "shell ViewModel should expose the inspection-model registry row");
-        AssertTrue(shellViewModelSource.Contains("ModelRegistryHistoryItems", StringComparison.Ordinal), "shell ViewModel should expose recent model history rows");
-        AssertTrue(shellViewModelSource.Contains("SelectedModelRegistryHistoryItem", StringComparison.Ordinal), "shell ViewModel should expose selected model-history rows");
-        AssertTrue(shellViewModelSource.Contains("SelectedModelHistoryComparisonMetricText", StringComparison.Ordinal), "shell ViewModel should expose selected model-history comparison metrics");
-        AssertTrue(shellViewModelSource.Contains("PromoteSelectedModelHistoryCommand", StringComparison.Ordinal), "shell ViewModel should expose an explicit model-history apply command");
-        AssertTrue(shellViewModelSource.Contains("IsModelRegistryHistoryVisible", StringComparison.Ordinal), "shell ViewModel should expose model-history list visibility");
-        AssertTrue(shellViewModelSource.Contains("ModelRegistrySummaryPrimaryText", StringComparison.Ordinal), "shell ViewModel should expose compact model-registry primary summary text");
-        AssertTrue(shellViewModelSource.Contains("ModelRegistrySummarySecondaryText", StringComparison.Ordinal), "shell ViewModel should expose compact model-registry secondary summary text");
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.AutomationId=\"ModelRegistrySummaryPanel\"", StringComparison.Ordinal),
-            "model center should expose a stable model-registry summary panel");
-        XElement modelRegistryDetailExpander = shellXaml.Descendants()
-            .FirstOrDefault(element => element.Name.LocalName == "Expander"
-                && string.Equals((string)element.Attribute(xName), "ModelRegistryDetailExpander", StringComparison.Ordinal));
-        AssertTrue(modelRegistryDetailExpander != null, "model registry detailed rows should live behind a stable expander");
-        AssertEqual("False", (string)modelRegistryDetailExpander.Attribute("IsExpanded"));
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.AutomationId=\"ModelRegistryHistoryPanel\"", StringComparison.Ordinal),
-            "model center should expose a stable model-registry history panel");
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.AutomationId=\"SelectedModelHistoryComparisonPanel\"", StringComparison.Ordinal),
-            "model center should expose a stable selected-history comparison panel");
-        int historyListStart = shellXamlSource.IndexOf("x:Name=\"ModelRegistryHistoryItems\"", StringComparison.Ordinal);
-        int selectedHistoryPanelStart = shellXamlSource.IndexOf("x:Name=\"ModelRegistrySelectedHistoryPanel\"", StringComparison.Ordinal);
-        AssertTrue(historyListStart >= 0 && selectedHistoryPanelStart > historyListStart, "model center should keep the model-history list before the selected detail panel");
-        string modelHistoryListTemplate = shellXamlSource.Substring(historyListStart, selectedHistoryPanelStart - historyListStart);
-        AssertTrue(modelHistoryListTemplate.Contains("AutomationProperties.AutomationId=\"ModelRegistryHistoryItemSummaryText\"", StringComparison.Ordinal),
-            "model-history rows should expose a compact summary text target");
-        AssertTrue(modelHistoryListTemplate.Contains("AutomationProperties.AutomationId=\"ModelRegistryHistoryItemDecisionText\"", StringComparison.Ordinal),
-            "model-history rows should expose a compact decision text target");
-        AssertTrue(modelHistoryListTemplate.Contains("ItemContainerStyle=\"{StaticResource ModelRegistryHistoryListBoxItemStyle}\"", StringComparison.Ordinal),
-            "model-history rows should use a model-center selection style instead of the global review-list red selection");
-        AssertTrue(modelHistoryListTemplate.Contains("MaxHeight=\"56\"", StringComparison.Ordinal)
-            && modelHistoryListTemplate.Contains("ScrollViewer.VerticalScrollBarVisibility=\"Auto\"", StringComparison.Ordinal),
-            "model-history list should stay tightly bounded so selected comparison details remain visible in the right panel");
-        AssertTrue(!modelHistoryListTemplate.Contains("Text=\"{Binding DetailText}\"", StringComparison.Ordinal)
-            && !modelHistoryListTemplate.Contains("Text=\"{Binding MetricText}\"", StringComparison.Ordinal),
-            "model-history rows should keep detail and metrics in the selected detail panel instead of repeating them in the list");
-        int selectedComparisonStart = shellXamlSource.IndexOf("x:Name=\"SelectedModelHistoryComparisonPanel\"", StringComparison.Ordinal);
-        int selectedHistoryActionStart = shellXamlSource.IndexOf("x:Name=\"PromoteSelectedModelHistoryButton\"", StringComparison.Ordinal);
-        AssertTrue(selectedComparisonStart >= 0 && selectedHistoryActionStart > selectedComparisonStart,
-            "model center should keep the selected-history comparison before the apply action");
-        AssertTrue(selectedComparisonStart < historyListStart,
-            "model center should show the selected-history comparison before the dense history list in short right panels");
-        int selectedHistoryDetailTextStart = shellXamlSource.IndexOf("x:Name=\"SelectedModelHistoryDetailText\"", StringComparison.Ordinal);
-        int selectedHistoryMetricTextStart = shellXamlSource.IndexOf("x:Name=\"SelectedModelHistoryMetricText\"", StringComparison.Ordinal);
-        AssertTrue(selectedHistoryDetailTextStart > selectedComparisonStart && selectedHistoryMetricTextStart > selectedComparisonStart,
-            "selected-history comparison should appear before long detail and metric text so it remains visible in short model-center panels");
-        string selectedComparisonTemplate = shellXamlSource.Substring(selectedComparisonStart, historyListStart - selectedComparisonStart);
-        AssertTrue(!selectedComparisonTemplate.Contains("CanvasBrush", StringComparison.Ordinal)
-            && !selectedComparisonTemplate.Contains("CornerRadius=", StringComparison.Ordinal)
-            && !selectedComparisonTemplate.Contains("BorderThickness=", StringComparison.Ordinal),
-            "selected-history comparison should be a thin summary row, not another nested card");
-        AssertTrue(selectedComparisonTemplate.Contains("TextTrimming=\"CharacterEllipsis\"", StringComparison.Ordinal),
-            "selected-history comparison row should trim long model paths instead of expanding the right panel");
-        AssertTrue(selectedComparisonTemplate.Contains("x:Name=\"SelectedModelHistoryCurrentRoleText\"", StringComparison.Ordinal)
-            && selectedComparisonTemplate.Contains("x:Name=\"SelectedModelHistorySelectedRoleText\"", StringComparison.Ordinal),
-            "selected-history comparison should label the current inspection model and selected history model separately");
-        string selectedHistoryTemplate = shellXamlSource.Substring(selectedHistoryPanelStart, selectedHistoryActionStart - selectedHistoryPanelStart);
-        AssertTrue(selectedHistoryTemplate.Contains("BorderBrush=\"{DynamicResource ModelCenterCandidateBrush}\"", StringComparison.Ordinal)
-            && selectedHistoryTemplate.Contains("Foreground=\"{DynamicResource ModelCenterDecisionBrush}\"", StringComparison.Ordinal),
-            "selected model-history detail should use candidate/decision emphasis instead of global error red");
-        AssertTrue(!selectedHistoryTemplate.Contains("AccentBrush", StringComparison.Ordinal),
-            "selected model-history detail should not make selectable history look like a failure");
-        AssertTrue(shellSource.Contains("WpfModelCenterDashboardPresentationService.Build", StringComparison.Ordinal), "WPF shell should build Model Center state through the dashboard presentation service");
-        AssertTrue(shellSource.Contains("ExecutePromoteSelectedModelHistoryCommand", StringComparison.Ordinal), "WPF shell should route model-history promotion through an adapter command");
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.AutomationId=\"ModelCenterPriorityPanel\"", StringComparison.Ordinal),
-            "model center should expose a first-visible priority panel before dense history details");
-        AssertTrue(shellXamlSource.Contains("x:Key=\"ModelCenterCandidateBrush\"", StringComparison.Ordinal)
-            && shellXamlSource.Contains("x:Key=\"ModelCenterDecisionBrush\"", StringComparison.Ordinal),
-            "model center should keep candidate/decision emphasis separate from the global red accent");
-        int modelHistoryItemStyleStart = shellXamlSource.IndexOf("x:Key=\"ModelRegistryHistoryListBoxItemStyle\"", StringComparison.Ordinal);
-        int imageQueueTextStyleStart = shellXamlSource.IndexOf("x:Key=\"ImageQueueTextStyle\"", StringComparison.Ordinal);
-        AssertTrue(modelHistoryItemStyleStart >= 0 && imageQueueTextStyleStart > modelHistoryItemStyleStart,
-            "model center should define a dedicated model-history item style before generic image queue styles");
-        string modelHistoryItemStyleTemplate = shellXamlSource.Substring(modelHistoryItemStyleStart, imageQueueTextStyleStart - modelHistoryItemStyleStart);
-        AssertTrue(modelHistoryItemStyleTemplate.Contains("BorderBrush\" Value=\"{DynamicResource ModelCenterCandidateBrush}\"", StringComparison.Ordinal),
-            "selected model-history rows should use candidate emphasis instead of error red");
-        AssertTrue(!modelHistoryItemStyleTemplate.Contains("AccentBrush", StringComparison.Ordinal),
-            "model-history item selection style should not use the global red accent");
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.AutomationId=\"ModelCenterPriorityCurrentModelText\"", StringComparison.Ordinal),
-            "model center priority panel should show the active inspection model");
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.AutomationId=\"ModelCenterPriorityCandidateModelText\"", StringComparison.Ordinal),
-            "model center priority panel should show the trained candidate model");
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.AutomationId=\"ModelCenterPriorityNextActionText\"", StringComparison.Ordinal),
-            "model center priority panel should show the next model action");
-        int modelCenterPriorityStart = shellXamlSource.IndexOf("x:Name=\"ModelCenterPriorityPanel\"", StringComparison.Ordinal);
-        int modelRegistrySummaryStart = shellXamlSource.IndexOf("x:Name=\"ModelRegistrySummaryPanel\"", StringComparison.Ordinal);
-        AssertTrue(modelCenterPriorityStart >= 0 && modelRegistrySummaryStart > modelCenterPriorityStart,
-            "model center priority panel should appear before registry details");
-        string modelCenterPriorityTemplate = shellXamlSource.Substring(modelCenterPriorityStart, modelRegistrySummaryStart - modelCenterPriorityStart);
-        AssertTrue(modelCenterPriorityTemplate.Contains("BorderBrush=\"{DynamicResource ModelCenterCandidateBrush}\"", StringComparison.Ordinal)
-            && modelCenterPriorityTemplate.Contains("Foreground=\"{DynamicResource ModelCenterDecisionBrush}\"", StringComparison.Ordinal)
-            && modelCenterPriorityTemplate.Contains("Foreground=\"{DynamicResource ModelCenterCandidateBrush}\"", StringComparison.Ordinal),
-            "model center priority panel should distinguish candidate and decision states without using error red");
-        AssertTrue(!modelCenterPriorityTemplate.Contains("AccentBrush", StringComparison.Ordinal),
-            "model center priority panel should not make normal candidate/decision state look like an error");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelCenterPriorityReviewCandidateButton", "Command", "ShellViewModel.ReviewCandidateModelCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelCenterPriorityReviewCandidateButton", "IsEnabled", "ShellViewModel.IsModelCenterReviewCandidateEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelCenterPrioritySaveModelButton", "Command", "YoloModelSettingsViewModel.SaveSettingsCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelCenterPrioritySaveModelButton", "IsEnabled", "ShellViewModel.IsModelCenterConfirmModelEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelCenterPriorityInspectCurrentButton", "Command", "ShellViewModel.DetectCurrentImageCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelCenterPriorityInspectCurrentButton", "IsEnabled", "ShellViewModel.IsModelCenterInspectCurrentImageEnabled");
-        AssertNamedXamlBinding(shellXaml, xName, "ModelCenterPriorityButtonStateText", "Text", "ShellViewModel.ModelCenterActionStateText");
-        AssertTrue(shellViewModelSource.Contains("ModelCenterActionStateText", StringComparison.Ordinal), "shell ViewModel should expose a visible model-center action state summary");
-        AssertTrue(shellXamlSource.Contains("AutomationProperties.AutomationId=\"YoloModelAdoptionDecisionPanel\"", StringComparison.Ordinal), "model center decision card should expose a stable AutomationId for visual smoke checks");
-        XElement adoptionDecisionDetailExpander = shellXaml.Descendants()
-            .FirstOrDefault(element => element.Name.LocalName == "Expander"
-                && string.Equals((string)element.Attribute(xName), "YoloModelAdoptionDecisionDetailExpander", StringComparison.Ordinal));
-        AssertTrue(adoptionDecisionDetailExpander != null, "model adoption decision evidence should live behind a stable detail expander");
-        AssertEqual("False", (string)adoptionDecisionDetailExpander.Attribute("IsExpanded"));
-        int adoptionDecisionStart = shellXamlSource.IndexOf("x:Name=\"YoloModelAdoptionDecisionPanel\"", StringComparison.Ordinal);
-        int adoptionDecisionEnd = shellXamlSource.IndexOf("x:Name=\"YoloDatasetReadinessQuickPanel\"", StringComparison.Ordinal);
-        AssertTrue(adoptionDecisionStart >= 0 && adoptionDecisionEnd > adoptionDecisionStart, "model adoption decision panel should be before dataset readiness details");
-        string adoptionDecisionTemplate = shellXamlSource.Substring(adoptionDecisionStart, adoptionDecisionEnd - adoptionDecisionStart);
-        AssertTrue(adoptionDecisionTemplate.Contains("x:Name=\"YoloModelAdoptionDecisionDetailExpander\"", StringComparison.Ordinal),
-            "model adoption decision details should be collapsible");
-        AssertTrue(adoptionDecisionTemplate.Contains("x:Name=\"YoloModelAdoptionDecisionSummaryText\"", StringComparison.Ordinal)
-            && adoptionDecisionTemplate.Contains("TextTrimming=\"CharacterEllipsis\"", StringComparison.Ordinal),
-            "model adoption decision summary should stay one-line in the default view");
-        AssertTrue(adoptionDecisionTemplate.Contains("BorderBrush=\"{DynamicResource ModelCenterDecisionBrush}\"", StringComparison.Ordinal)
-            && adoptionDecisionTemplate.Contains("Foreground=\"{DynamicResource ModelCenterDecisionBrush}\"", StringComparison.Ordinal),
-            "model adoption decision panel should use decision emphasis instead of global error red");
-        AssertTrue(!adoptionDecisionTemplate.Contains("AccentBrush", StringComparison.Ordinal),
-            "model adoption decision panel should not read as a recovery/error panel");
-        int anomalyEvaluationStart = shellXamlSource.IndexOf("x:Name=\"YoloAnomalyEvaluationPanel\"", StringComparison.Ordinal);
-        int lifecycleDetailStart = shellXamlSource.IndexOf("x:Name=\"YoloModelLifecycleDetailPanel\"", StringComparison.Ordinal);
-        AssertTrue(anomalyEvaluationStart > adoptionDecisionStart && anomalyEvaluationStart < adoptionDecisionEnd,
-            "anomaly classification evaluation should appear in the model-center decision flow before dataset readiness details");
-        AssertTrue(lifecycleDetailStart > anomalyEvaluationStart,
-            "anomaly classification evaluation should remain above the collapsed lifecycle detail table");
-        string anomalyEvaluationTemplate = shellXamlSource.Substring(anomalyEvaluationStart, lifecycleDetailStart - anomalyEvaluationStart);
-        AssertTrue(anomalyEvaluationTemplate.Contains("Text=\"{Binding ShellViewModel.ModelCenterAnomalyEvaluationRecommendationText}\"", StringComparison.Ordinal)
-            && anomalyEvaluationTemplate.Contains("Text=\"{Binding ShellViewModel.ModelCenterAnomalyEvaluationDetailText}\"", StringComparison.Ordinal),
-            "anomaly evaluation card should expose recommendation and blocker detail text");
-        XElement anomalyEvaluationDetailExpander = shellXaml.Descendants()
-            .FirstOrDefault(element => element.Name.LocalName == "Expander"
-                && string.Equals((string)element.Attribute(xName), "YoloAnomalyEvaluationDetailExpander", StringComparison.Ordinal));
-        AssertTrue(anomalyEvaluationDetailExpander != null, "anomaly evaluation blocker detail should live behind a stable detail expander");
-        AssertEqual("False", (string)anomalyEvaluationDetailExpander.Attribute("IsExpanded"));
-        AssertTrue(anomalyEvaluationTemplate.Contains("x:Name=\"YoloAnomalyEvaluationDetailExpander\"", StringComparison.Ordinal),
-            "anomaly evaluation detail should be collapsible in the default model-center view");
-        AssertTrue(!anomalyEvaluationTemplate.Contains("AccentBrush", StringComparison.Ordinal),
-            "anomaly evaluation hold state should use model-decision emphasis instead of global error red");
-        XElement datasetReadinessExpander = shellXaml.Descendants()
-            .FirstOrDefault(element => element.Name.LocalName == "Expander"
-                && string.Equals((string)element.Attribute(xName), "YoloDatasetReadinessQuickPanel", StringComparison.Ordinal));
-        AssertTrue(datasetReadinessExpander != null, "YOLO dataset readiness details should be an expander in the model-center stack");
-        AssertEqual("False", (string)datasetReadinessExpander.Attribute("IsExpanded"));
-        AssertEqual("\uD3C9\uAC00 \uB370\uC774\uD130 \uADFC\uAC70", (string)datasetReadinessExpander.Attribute("Header"));
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "YoloEvaluationDataPurposeText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloEvaluationDataPurposeText", "Text", "LearningWorkflowViewModel.SelectedDatasetPurposeMode.Text");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloDatasetQuickReadinessText", "Text", "TrainingSettingsViewModel.TrainingReadinessText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloDatasetQuickRefreshButton", "Command", "TrainingSettingsViewModel.RefreshReadinessCommand");
-        AssertNamedXamlElement(shellXaml, xName, "Button", "YoloExternalEvaluationAuditButton");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "YoloExternalEvaluationAuditStatusText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "YoloExternalEvaluationAuditDetailText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "YoloExternalEvaluationAuditLimitText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloExternalEvaluationAuditButton", "Command", "LearningWorkflowViewModel.ExternalEvaluationDataAuditCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloExternalEvaluationAuditStatusText", "Text", "LearningWorkflowViewModel.ExternalEvaluationDataAuditStatusText");
-        AssertNamedXamlElement(shellXaml, xName, "ComboBox", "YoloExternalYoloDatasetPurposeComboBox");
-        AssertNamedXamlElement(shellXaml, xName, "Button", "YoloExternalYoloDatasetSelectButton");
-        AssertNamedXamlElement(shellXaml, xName, "Button", "YoloExternalYoloDatasetActivateButton");
-        AssertNamedXamlElement(shellXaml, xName, "Button", "YoloExternalYoloDatasetClearButton");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "YoloExternalYoloDatasetStatusText");
-        AssertNamedXamlElement(shellXaml, xName, "TextBlock", "YoloExternalYoloDatasetDetailText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloExternalYoloDatasetPurposeComboBox", "ItemsSource", "LearningWorkflowViewModel.ExternalYoloDatasetPurposeModes");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloExternalYoloDatasetPurposeComboBox", "SelectedItem", "LearningWorkflowViewModel.SelectedExternalYoloDatasetPurposeMode");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloExternalYoloDatasetSelectButton", "Command", "LearningWorkflowViewModel.SelectExternalYoloDatasetCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloExternalYoloDatasetActivateButton", "Command", "LearningWorkflowViewModel.ActivateExternalYoloDatasetCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloExternalYoloDatasetClearButton", "Command", "LearningWorkflowViewModel.ClearExternalYoloDatasetCommand");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloExternalYoloDatasetStatusText", "Text", "LearningWorkflowViewModel.ExternalYoloDatasetIntakeStatusText");
-        AssertNamedXamlBinding(shellXaml, xName, "YoloExternalYoloDatasetDetailText", "Text", "LearningWorkflowViewModel.ExternalYoloDatasetIntakeDetailText");
-        int externalYoloDatasetCardStart = shellXamlSource.IndexOf("x:Name=\"YoloExternalYoloDatasetPurposeComboBox\"", StringComparison.Ordinal);
-        int externalYoloDatasetCardEnd = shellXamlSource.IndexOf("<local:WpfYoloStatusPanel", StringComparison.Ordinal);
-        AssertTrue(
-            externalYoloDatasetCardStart > adoptionDecisionEnd
-            && externalYoloDatasetCardStart < externalYoloDatasetCardEnd,
-            "external YOLO data.yaml intake should stay in the model-center data evidence panel");
-        XElement externalEvaluationLimitText = shellXaml.Descendants()
-            .FirstOrDefault(element => string.Equals((string)element.Attribute(xName), "YoloExternalEvaluationAuditLimitText", StringComparison.Ordinal));
-        AssertTrue(
-            ((string)externalEvaluationLimitText?.Attribute("Text") ?? string.Empty).Contains("SHA-256", StringComparison.Ordinal)
-            && ((string)externalEvaluationLimitText?.Attribute("Text") ?? string.Empty).Contains("\uBAA8\uB378 \uCC44\uD0DD", StringComparison.Ordinal),
-            "evaluation data evidence should distinguish image independence from model adoption evidence");
-        AssertTrue(shellSource.Contains("ExecuteExternalEvaluationDataAuditCommand", StringComparison.Ordinal), "external evaluation folder browsing should stay in the shell UI adapter");
-        AssertTrue(shellSource.Contains("ExecuteSelectExternalYoloDatasetCommand", StringComparison.Ordinal), "external YOLO data.yaml selection should stay in the shell UI adapter");
-        AssertTrue(shellSource.Contains("YoloExternalDatasetIntakeService.Build", StringComparison.Ordinal), "external YOLO data.yaml parsing should stay in the intake service");
-        AssertTrue(shellViewModelSource.Contains("ReviewCandidateModelCommand", StringComparison.Ordinal), "shell ViewModel should expose a model-center candidate review command");
-        AssertTrue(shellViewModelSource.Contains("SetModelCenterCandidateReviewState", StringComparison.Ordinal), "shell ViewModel should own model-center candidate review button state");
-        AssertTrue(shellViewModelSource.Contains("IsModelCenterReviewCandidateEnabled", StringComparison.Ordinal), "shell ViewModel should own model-center candidate review enablement");
-        AssertTrue(shellViewModelSource.Contains("SetWorkflowStage", StringComparison.Ordinal), "shell ViewModel should expose active workflow stage state separately from canvas display mode");
-        AssertTrue(shellViewModelSource.Contains("IsSavedLabelsViewVisible", StringComparison.Ordinal), "shell ViewModel should expose saved-label review visibility");
-        AssertTrue(shellViewModelSource.Contains("IsCandidateReviewViewVisible", StringComparison.Ordinal), "shell ViewModel should expose AI-candidate review visibility");
-        AssertTrue(shellViewModelSource.Contains("IsYoloModelCenterViewVisible", StringComparison.Ordinal), "shell ViewModel should expose YOLO/model-center visibility");
-        AssertTrue(shellViewModelSource.Contains("IsWorkflowStageModelActionPanelVisible", StringComparison.Ordinal), "shell ViewModel should own the top model-action panel visibility instead of composing it in XAML triggers");
-        AssertTrue(shellViewModelSource.Contains("IsRightWorkflowSubNavigationVisible", StringComparison.Ordinal), "shell ViewModel should expose whether the right workflow view needs subnavigation");
-        AssertTrue(shellViewModelSource.Contains("IsRightWorkflowShortcutBarVisible", StringComparison.Ordinal), "shell ViewModel should expose whether compact right workflow shortcuts are visible");
-        AssertTrue(shellViewModelSource.Contains("ShowSavedLabelsViewCommand", StringComparison.Ordinal), "shell ViewModel should expose saved-label right workflow shortcut command");
-        AssertTrue(shellViewModelSource.Contains("ShowLabelingGuideViewCommand", StringComparison.Ordinal), "shell ViewModel should expose guide/tool right workflow shortcut command");
-        AssertTrue(shellViewModelSource.Contains("ShowClassCatalogViewCommand", StringComparison.Ordinal), "shell ViewModel should expose class-schema right workflow shortcut command");
-        AssertTrue(shellViewModelSource.Contains("IsSavedLabelsShortcutActive", StringComparison.Ordinal), "shell ViewModel should expose saved-label shortcut active state");
-        AssertTrue(shellViewModelSource.Contains("IsLabelingGuideShortcutActive", StringComparison.Ordinal), "shell ViewModel should expose guide/tool shortcut active state");
-        AssertTrue(shellViewModelSource.Contains("IsClassCatalogShortcutActive", StringComparison.Ordinal), "shell ViewModel should expose class shortcut active state");
-        AssertTrue(shellSource.Contains("ExecuteChangeDatasetCommand", StringComparison.Ordinal), "WPF shell should route the main-header dataset change button to the dataset selection flow");
-        AssertTrue(shellSource.Contains("ExecuteDatasetHomeCommand", StringComparison.Ordinal), "WPF shell should route the dataset-home workflow stage through an adapter command");
-        AssertTrue(shellSource.Contains("ExecuteLabelingWorkbenchCommand", StringComparison.Ordinal), "WPF shell should route the labeling-workbench workflow stage through an adapter command");
-        AssertTrue(shellSource.Contains("ExecuteInferenceReviewCommand", StringComparison.Ordinal), "WPF shell should route the inference-review workflow stage through an adapter command");
-        AssertTrue(shellSource.Contains("ExecuteTrainingModelCenterCommand", StringComparison.Ordinal), "WPF shell should route the training/model workflow stage through an adapter command");
-        AssertTrue(shellSource.Contains("ExecuteReviewCandidateModelCommand", StringComparison.Ordinal), "WPF shell should route the model-center candidate review action through an adapter command");
-        AssertTrue(shellSource.Contains("RefreshModelCenterDashboard", StringComparison.Ordinal), "WPF shell should refresh the training/model dashboard from model comparison state");
-        AssertTrue(shellSource.Contains("ExecuteOpenDatasetRootFolderCommand", StringComparison.Ordinal), "WPF shell should route the main-header dataset folder button through a command method");
-        AssertTrue(shellSource.Contains("RefreshShellDatasetContext", StringComparison.Ordinal), "WPF shell should refresh the main-header dataset context after dataset state changes");
-        string changeDatasetSource = FindMethodSourceBlock(shellSource, "private void ExecuteChangeDatasetCommand()");
-        AssertTrue(changeDatasetSource.Contains("WpfDatasetSelectionWindow", StringComparison.Ordinal), "dataset change should open the existing-dataset selector first");
-        AssertTrue(changeDatasetSource.Contains("createNewRequested", StringComparison.Ordinal), "dataset creation should be a separate branch after an explicit selector request");
-        AssertTrue(changeDatasetSource.Contains("ApplySelectedDatasetRecipe", StringComparison.Ordinal), "dataset change should apply the selected existing dataset");
-        AssertTrue(!changeDatasetSource.Contains("new WpfDatasetSetupWizardWindow", StringComparison.Ordinal), "dataset change should not open the creation wizard directly");
-        AssertTrue(keyInputArgsSource.Contains("OriginalSource", StringComparison.Ordinal), "key input DTO should preserve original source for shell text-edit shortcut suppression");
-        AssertTrue(shellSource.Contains("DataContext = viewModels", StringComparison.Ordinal), "WPF shell should expose ShellViewModel explicitly to XAML bindings");
-        AssertTrue(shellSource.Contains("ConfigureShellCommands", StringComparison.Ordinal), "WPF shell should inject top toolbar commands through the shell ViewModel");
-        AssertTrue(!shellXamlSource.Contains("Click=", StringComparison.Ordinal), "WPF shell XAML should not use direct Click handlers for toolbar commands");
-        AssertTrue(!shellXamlSource.Contains("Loaded=\"Window_Loaded\"", StringComparison.Ordinal), "WPF shell XAML should route Loaded through a lifecycle command behavior");
-        AssertTrue(!shellXamlSource.Contains("Closed=\"Window_Closed\"", StringComparison.Ordinal), "WPF shell XAML should route Closed through a lifecycle command behavior");
-        AssertTrue(!shellSource.Contains("_Click(", StringComparison.Ordinal), "WPF shell partials should not keep legacy button click wrappers after ViewModel command routing");
-        AssertTrue(!shellSource.Contains("RoutedEventArgs", StringComparison.Ordinal), "WPF shell command paths should not depend on routed event args after ViewModel command routing");
-        AssertTrue(!shellSource.Contains("PreviewKeyDown +=", StringComparison.Ordinal), "WPF shell should route global shortcut keys through the shell ViewModel command");
-        AssertTrue(!shellSource.Contains("WpfLabelingShellWindow_PreviewKeyDown", StringComparison.Ordinal), "WPF shell should avoid direct PreviewKeyDown event handler naming after command routing");
-        AssertTrue(shellSource.Contains("ShellViewModel.ApplyWorkflowCommandState", StringComparison.Ordinal), "WPF shell should push current-image detection availability through the shell ViewModel");
-        AssertTrue(shellSource.Contains("ShellViewModel?.SetWorkflowModeState", StringComparison.Ordinal), "WPF shell should push top workflow mode button state through the shell ViewModel");
-        AssertTrue(shellSource.Contains("ImageQueueViewModel.ApplyWorkflowCommandState", StringComparison.Ordinal), "WPF shell should push queue detection availability through the image queue ViewModel");
-        AssertTrue(shellSource.Contains("ConfigureImageQueuePanelCommands", StringComparison.Ordinal), "WPF shell should inject image queue commands through the ViewModel");
-        AssertTrue(shellSource.Contains("ExecuteLoadImageRootQueueCommand", StringComparison.Ordinal), "WPF shell should expose image queue load as an event-agnostic execute method");
-        AssertTrue(shellSource.Contains("ExecuteOpenCurrentImageFolderCommand", StringComparison.Ordinal), "WPF shell should expose current image-folder open as an event-agnostic execute method");
-        AssertTrue(shellSource.Contains("SelectSingleVisibleQueueSearchResult();", StringComparison.Ordinal), "queue search should auto-select an exact single result for stable reopen/review UX");
-        AssertTrue(shellSource.Contains("UpdateSelectedQueueImageButton(item)", StringComparison.Ordinal), "single-result queue search should enable the visible open action without forcing an extra row click");
-        AssertTrue(shellSource.Contains("GetOpenSelectedQueueSelection()", StringComparison.Ordinal), "queue open should resolve selection through a dedicated helper instead of trusting only the DataGrid control state");
-        AssertTrue(shellSource.Contains("ImageQueueViewModel?.SelectedQueueItem", StringComparison.Ordinal), "queue open should fall back to the ViewModel-selected row for UIAutomation and keyboard flows");
-        string openQueueSelectionSource = FindMethodSourceBlock(shellSource, "private WpfImageQueueOpenSelection GetOpenSelectedQueueSelection()");
-        AssertTrue(openQueueSelectionSource.Contains("FindSingleSearchMatchedQueueItem()", StringComparison.Ordinal), "queue open should use unique search text matches when selection state is stale");
-        AssertTrue(!openQueueSelectionSource.Contains("imageQueueView.Refresh", StringComparison.Ordinal), "queue open should use the already-current text/filter view instead of reevaluating every row");
-        AssertTrue(openQueueSelectionSource.Contains("imageQueueSelectionService.ResolveOpenSelection", StringComparison.Ordinal), "queue open should resolve candidate priority and open path through the selection service");
-        string searchMatchSource = FindMethodSourceBlock(shellSource, "private WpfImageQueueItem FindSingleSearchMatchedQueueItem()");
-        AssertTrue(searchMatchSource.Contains("WpfImageQueueFilterService.FindSingleSearchMatch", StringComparison.Ordinal), "queue search fallback should delegate single-match resolution to the filter service");
-        AssertTrue(shellSource.Contains("WpfImageQueueFilterService.CountSearchMatches", StringComparison.Ordinal), "queue failure diagnostics should count search matches through the filter service");
-        AssertTrue(shellSource.Contains("ExecuteDetectSelectedQueueCommand", StringComparison.Ordinal), "WPF shell should expose selected queue detection as an event-agnostic execute method");
-        AssertTrue(shellSource.Contains("ExecuteQueueFilterCandidateCommand", StringComparison.Ordinal), "WPF shell should expose queue quick filters as event-agnostic execute methods");
-        AssertTrue(shellSource.Contains("ExecuteQueueFilterUnfinishedCommand", StringComparison.Ordinal), "WPF shell should expose the work-needed queue quick filter as an event-agnostic execute method");
-        AssertTrue(!shellSource.Contains("() => LoadImageRootButton_Click(ImageQueuePanelControl, new RoutedEventArgs())", StringComparison.Ordinal), "WPF image queue command wiring should not synthesize RoutedEventArgs for load");
-        AssertTrue(!shellSource.Contains("() => DetectSelectedQueueButton_Click(ImageQueuePanelControl, new RoutedEventArgs())", StringComparison.Ordinal), "WPF image queue command wiring should not synthesize RoutedEventArgs for selected detection");
-        AssertTrue(!shellSource.Contains("() => QueueFilterAllButton_Click(ImageQueuePanelControl, new RoutedEventArgs())", StringComparison.Ordinal), "WPF image queue command wiring should not synthesize RoutedEventArgs for quick filters");
-        AssertTrue(!shellSource.Contains("new RoutedEventArgs()", StringComparison.Ordinal), "WPF shell command paths should not synthesize RoutedEventArgs after MVVM command routing");
-        AssertTrue(shellSource.Contains("ExecuteStartTrainingCommand", StringComparison.Ordinal), "WPF training command wiring should target an event-agnostic execute method");
-        AssertTrue(shellSource.Contains("ExecuteSaveYoloSettingsCommand", StringComparison.Ordinal), "WPF YOLO settings command wiring should target an event-agnostic execute method");
-        AssertTrue(shellSource.Contains("WpfFileDialogService", StringComparison.Ordinal), "WPF shell should delegate file/folder pickers to a service");
-        AssertTrue(!shellSource.Contains("new OpenFileDialog", StringComparison.Ordinal), "WPF shell should not construct file dialogs directly");
-        AssertTrue(!shellSource.Contains("new OpenFolderDialog", StringComparison.Ordinal), "WPF shell should not construct folder dialogs directly");
-        AssertTrue(shellSource.Contains("ImageQueueViewModel.SetSelectedImageAvailability", StringComparison.Ordinal), "WPF shell should push selected queue image availability through the image queue ViewModel");
-        AssertTrue(!shellSource.Contains("TeachingModeButton.IsEnabled", StringComparison.Ordinal), "WPF shell should not directly enable the labeling mode button on the normal path");
-        AssertTrue(!shellSource.Contains("InferenceModeButton.IsEnabled", StringComparison.Ordinal), "WPF shell should not directly enable the inference mode button on the normal path");
-        AssertTrue(!shellSource.Contains("ApplyWorkflowModeButtonState", StringComparison.Ordinal), "WPF shell should not keep direct workflow button styling in code-behind");
-        AssertTrue(!shellSource.Contains("OpenSelectedQueueImageButton.IsEnabled", StringComparison.Ordinal), "WPF shell should not directly enable the selected image open button on the normal path");
-        AssertTrue(!shellSource.Contains("DetectButton.IsEnabled", StringComparison.Ordinal), "WPF shell should not directly enable the current-image detect button on the normal path");
-        AssertTrue(!shellSource.Contains("DetectSelectedQueueButton.IsEnabled", StringComparison.Ordinal), "WPF shell should not directly enable the selected queue detect button on the normal path");
-        AssertTrue(!shellSource.Contains("BatchDetectQueueButton.IsEnabled", StringComparison.Ordinal), "WPF shell should not directly enable the batch queue detect button on the normal path");
-        AssertTrue(!shellSource.Contains("RetryFailedQueueButton.IsEnabled", StringComparison.Ordinal), "WPF shell should not directly enable the retry queue detect button on the normal path");
-        AssertTrue(!shellSource.Contains("StopBatchQueueButton.IsEnabled", StringComparison.Ordinal), "WPF shell should not directly enable the stop batch button on the normal path");
-
-        string trainingCommandPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfTrainingCommandPresentationService.cs"));
-        string startTrainingCommandSource = FindMethodSourceBlock(shellSource, "private async void ExecuteStartTrainingCommand()");
-        string stopTrainingCommandSource = FindMethodSourceBlock(shellSource, "private async void ExecuteStopTrainingCommand()");
-        AssertTrue(trainingCommandPresentationSource.Contains("BuildStartCommandResultStatus", StringComparison.Ordinal), "training command presentation service should own start command result wording");
-        AssertTrue(trainingCommandPresentationSource.Contains("BuildStopCommandResultStatus", StringComparison.Ordinal), "training command presentation service should own stop command result wording");
-        string acceptedTrainingText = WpfTrainingCommandPresentationService.BuildStartCommandResultStatus(true);
-        AssertTrue(acceptedTrainingText.Contains("첫 에폭 로그", StringComparison.Ordinal), "training start accepted text should tell the operator what to wait for next");
-        AssertTrue(acceptedTrainingText.Contains("아직 성공 완료가 아니며", StringComparison.Ordinal), "training request transport must not be presented as completed training");
-        AssertTrue(WpfTrainingCommandPresentationService.BuildStopFailureRecovery("실패").Action.Contains("재시작", StringComparison.Ordinal), "training stop failure recovery should give a concrete next action");
-        AssertTrue(startTrainingCommandSource.Contains("WpfTrainingCommandPresentationService", StringComparison.Ordinal), "start training command should delegate status wording to the presentation service");
-        AssertTrue(shellSource.Contains("if (TryAutoConnectAnomalyTrainingRuntime())", StringComparison.Ordinal), "successful anomaly runtime auto-connection should proceed to worker restart instead of being blocked by stale YOLOv5 capabilities");
-        AssertTrue(stopTrainingCommandSource.Contains("WpfTrainingCommandPresentationService", StringComparison.Ordinal), "stop training command should delegate status wording to the presentation service");
-        AssertEqual(1, startTrainingCommandSource.Split(new[] { "SetYoloRecoveryStatus(" }, StringSplitOptions.None).Length - 1);
-        AssertEqual(1, stopTrainingCommandSource.Split(new[] { "SetYoloRecoveryStatus(" }, StringSplitOptions.None).Length - 1);
-        AssertTrue(!startTrainingCommandSource.Contains("pendingRecoveryTitle", StringComparison.Ordinal), "start training command should keep recovery state in a single typed DTO instead of duplicate title/detail/action locals");
-        AssertTrue(!stopTrainingCommandSource.Contains("pendingRecoveryTitle", StringComparison.Ordinal), "stop training command should keep recovery state in a single typed DTO instead of duplicate title/detail/action locals");
-
-        string modelCandidateDecisionPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfModelCandidateDecisionPresentationService.cs"));
-        string modelCandidateDecisionCommandSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.ModelCandidateDecisionCommands.cs"));
-        string yoloEnvironmentBrowseCommandSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.YoloEnvironmentBrowseCommands.cs"));
-        WpfModelCandidateDecisionPresentation pendingModelDecision = WpfModelCandidateDecisionPresentationService.BuildPendingCandidate(
-            Path.Combine("runs", "train", "exp7", "weights", "best.pt"),
-            Path.Combine("models", "baseline.pt"),
-            canReject: true);
-        WpfModelCandidateDecisionPresentation heldModelDecision = WpfModelCandidateDecisionPresentationService.BuildHeldCandidate(
-            Path.Combine("runs", "segment", "exp8", "weights", "best.pt"),
-            canReject: true);
-        WpfModelCandidateDecisionPresentation rejectedModelDecision = WpfModelCandidateDecisionPresentationService.BuildRejectedCandidate("best.pt", string.Empty);
-        AssertTrue(modelCandidateDecisionPresentationSource.Contains("BuildPendingCandidate", StringComparison.Ordinal), "model candidate decision presentation service should own pending decision wording");
-        AssertTrue(modelCandidateDecisionPresentationSource.Contains("BuildRejectCommandStatus", StringComparison.Ordinal), "model candidate decision presentation service should own reject-result wording");
-        AssertTrue(pendingModelDecision.CanSave && pendingModelDecision.CanReject, "pending model candidate decision should allow both save and reject when a baseline exists");
-        AssertTrue(pendingModelDecision.StatusText.Contains("best.pt", StringComparison.Ordinal), "pending model candidate decision should name the trained weights");
-        AssertTrue(pendingModelDecision.DetailText.Contains("baseline.pt", StringComparison.Ordinal), "pending model candidate decision should name the retained baseline model");
-        AssertTrue(!heldModelDecision.CanSave && heldModelDecision.CanReject, "held model candidate decision should block adoption while allowing rejection to keep the baseline");
-        AssertTrue(heldModelDecision.StatusText.Contains("\uAC80\uC99D \uBCF4\uB958", StringComparison.Ordinal), "held model candidate decision should explain that validation blocked adoption");
-        AssertTrue(WpfModelCandidateDecisionPresentationService.BuildHeldCandidateSaveBlockedStatus().Contains("\uC800\uC7A5\uD558\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4", StringComparison.Ordinal), "held candidate direct-command guard should explain that the model was not saved");
-        AssertTrue(rejectedModelDecision.DetailText.Contains("채택하지 않았습니다", StringComparison.Ordinal), "rejected model candidate decision should explain the candidate was not adopted");
-        AssertTrue(modelCandidateDecisionCommandSource.Contains("WpfModelCandidateDecisionPresentationService", StringComparison.Ordinal), "model candidate decision command should delegate operator-facing wording to the presentation service");
-        AssertTrue(modelCandidateDecisionCommandSource.Contains("ApplyModelCandidateDecisionPresentation", StringComparison.Ordinal), "model candidate decision command should only adapt presentation DTOs into the ViewModel");
-        AssertTrue(modelCandidateDecisionCommandSource.Contains("IsModelPromotionHeld", StringComparison.Ordinal), "model candidate save command and panel should fail closed when held-out comparison blocks promotion");
-        AssertTrue(yoloEnvironmentBrowseCommandSource.Contains("pendingWeightsRecipeSave && CandidateReviewViewModel?.IsModelPromotionHeld", StringComparison.Ordinal), "generic model-profile save should not bypass a held candidate adoption guard");
-        AssertTrue(!modelCandidateDecisionCommandSource.Contains("후보 결정: 저장 또는 거절 필요", StringComparison.Ordinal), "model candidate decision command should not inline pending decision wording");
-        AssertTrue(!modelCandidateDecisionCommandSource.Contains("이미 거절된 후보입니다", StringComparison.Ordinal), "model candidate decision command should not inline rejected-candidate tooltips");
-
-        string yoloEnvironmentPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfYoloEnvironmentCommandPresentationService.cs"));
-        string yoloEnvironmentRuntimeCommandSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.YoloEnvironmentRuntimeCommands.cs"));
-        string yoloEnvironmentLifecycleSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.YoloEnvironmentCommandLifecycle.cs"));
-        string modelRuntimeUnavailablePresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfModelRuntimeUnavailablePresentationService.cs"));
-        AssertTrue(yoloEnvironmentPresentationSource.Contains("BuildEnvironmentCheckStartingStatus", StringComparison.Ordinal), "YOLO environment command presentation service should own check-start wording");
-        AssertTrue(yoloEnvironmentPresentationSource.Contains("BuildRequirementsInstallResultStatus", StringComparison.Ordinal), "YOLO environment command presentation service should own requirements install result wording");
-        AssertTrue(WpfYoloEnvironmentCommandPresentationService.BuildEnvironmentCheckStartingStatus().Contains("점검", StringComparison.Ordinal), "environment check start text should be operator-readable");
-        AssertTrue(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsInstallingLog(new[] { "torch", "ultralytics" }).Contains("torch", StringComparison.Ordinal), "requirements install log should name missing packages");
-        AssertTrue(WpfYoloEnvironmentCommandPresentationService.BuildModelTestCompletedStatus().Contains("\uC644\uB8CC", StringComparison.Ordinal), "model test completion wording should be built by the presentation service");
-        AssertTrue(WpfYoloEnvironmentCommandPresentationService.BuildModelTestFailureRecovery("boom").Action.Contains("\uD14C\uC2A4\uD2B8", StringComparison.Ordinal), "model test recovery action should direct the operator back to the test command");
-        AssertTrue(WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartFailureStatus("boom").Contains("\uC7AC\uC2DC\uC791 \uC2E4\uD328", StringComparison.Ordinal), "worker restart failure wording should be built by the presentation service");
-        AssertTrue(WpfYoloEnvironmentCommandPresentationService.BuildWorkerStopCompletedStatus().Contains("\uC911\uC9C0 \uC644\uB8CC", StringComparison.Ordinal), "worker stop completion wording should be built by the presentation service");
-        AssertTrue(yoloEnvironmentRuntimeCommandSource.Contains("WpfYoloEnvironmentCommandPresentationService", StringComparison.Ordinal), "YOLO environment runtime commands should delegate status wording to a presentation service");
-        AssertTrue(yoloEnvironmentRuntimeCommandSource.Contains("BuildModelTestFailureRecovery", StringComparison.Ordinal), "model test recovery wording should be delegated to the presentation service");
-        AssertTrue(yoloEnvironmentRuntimeCommandSource.Contains("BuildWorkerRestartFailureRecovery", StringComparison.Ordinal), "worker restart recovery wording should be delegated to the presentation service");
-        AssertTrue(yoloEnvironmentRuntimeCommandSource.Contains("BuildWorkerStopFailureStatus", StringComparison.Ordinal), "worker stop failure wording should be delegated to the presentation service");
-        AssertTrue(!yoloEnvironmentRuntimeCommandSource.Contains("\\uBAA8\\uB378 \\uD14C\\uC2A4\\uD2B8 \\uCD94\\uB860 \\uC2E4\\uD328", StringComparison.Ordinal), "YOLO environment runtime command should not inline model-test failure wording");
-        AssertTrue(!yoloEnvironmentRuntimeCommandSource.Contains("\\uCD94\\uB860 \\uC2E4\\uD589\\uAE30 \\uC7AC\\uC2DC\\uC791 \\uC2E4\\uD328", StringComparison.Ordinal), "YOLO environment runtime command should not inline restart failure wording");
-        AssertTrue(!yoloEnvironmentRuntimeCommandSource.Contains("\\uCD94\\uB860 \\uC2E4\\uD589\\uAE30 \\uC911\\uC9C0 \\uC644\\uB8CC", StringComparison.Ordinal), "YOLO environment runtime command should not inline worker-stop completion wording");
-        AssertTrue(yoloEnvironmentLifecycleSource.Contains("WpfYoloEnvironmentCommandPresentationService.BuildBusyCommandLog", StringComparison.Ordinal), "YOLO environment command lifecycle should delegate busy command text to a presentation service");
-        AssertTrue(!yoloEnvironmentRuntimeCommandSource.Contains("모델 실행 환경 준비 완료", StringComparison.Ordinal), "YOLO environment runtime command should not inline check-ready wording");
-        AssertTrue(!yoloEnvironmentRuntimeCommandSource.Contains("추론 실행 환경 정상", StringComparison.Ordinal), "YOLO environment runtime command should not inline requirements-ready wording");
-        AssertTrue(!yoloEnvironmentRuntimeCommandSource.Contains("누락 실행 환경 패키지", StringComparison.Ordinal), "YOLO environment runtime command should not inline missing-package install wording");
-        var unavailablePresentation = WpfModelRuntimeUnavailablePresentationService.Build(
-            new PythonModelRuntimeState(
-                PythonModelRuntimeStateKind.NotInstalled,
-                canRunTraining: false,
-                canRunInference: false,
-                "summary",
-                "detail",
-                "next"),
-            "blocked");
-        AssertEqual("blocked", unavailablePresentation.CommandStatusText);
-        AssertTrue(unavailablePresentation.CurrentModelText.Contains("\uBBF8\uC124\uCE58", StringComparison.Ordinal), "model runtime unavailable presentation should show missing-runtime current-model text");
-        AssertTrue(unavailablePresentation.InspectionStatusText.Contains("\uBBF8\uC124\uCE58", StringComparison.Ordinal), "model runtime unavailable presentation should show missing-runtime inspection status text");
-        AssertTrue(unavailablePresentation.ModelStatusText.Contains("\uBBF8\uC124\uCE58", StringComparison.Ordinal), "model runtime unavailable presentation should show missing-runtime top model status text");
-        AssertTrue(unavailablePresentation.DecisionEvidenceText.Contains("\uB77C\uBCA8\uB9C1", StringComparison.Ordinal), "model runtime unavailable presentation should explain labeling remains possible");
-        AssertTrue(modelRuntimeUnavailablePresentationSource.Contains("WpfModelRuntimeUnavailablePresentation", StringComparison.Ordinal), "model runtime unavailable service should expose a presentation DTO");
-        AssertTrue(yoloRuntimeStatusSource.Contains("WpfModelRuntimeUnavailablePresentationService.Build", StringComparison.Ordinal), "YOLO runtime status should delegate unavailable presentation wording to the service");
-        AssertTrue(!yoloRuntimeStatusSource.Contains("\\uD604\\uC7AC \\uAC80\\uC0AC \\uBAA8\\uB378: \\uBAA8\\uB378 \\uC2E4\\uD589\\uAE30 \\uBBF8\\uC124\\uCE58", StringComparison.Ordinal), "YOLO runtime status should not inline unavailable current-model text");
-        AssertTrue(!yoloRuntimeStatusSource.Contains("\\uBAA8\\uB378 \\uAE30\\uB2A5: \\uBBF8\\uC124\\uCE58", StringComparison.Ordinal), "YOLO runtime status should not inline unavailable inspection status text");
-        AssertTrue(!yoloRuntimeStatusSource.Contains("\\uBAA8\\uB378: \\uBBF8\\uC124\\uCE58", StringComparison.Ordinal), "YOLO runtime status should not inline unavailable top model status text");
-        AssertTrue(!ContainsVisibleMojibakeArtifact(modelRuntimeUnavailablePresentationSource), "model runtime unavailable presentation service should not contain visible mojibake artifacts");
-
-        if (System.Windows.Application.Current == null)
-        {
-            _ = new System.Windows.Application
-            {
-                ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
-            };
-        }
-
-        WpfLabelingShellWindow window = new WpfLabelingShellWindow();
-        try
-        {
-            AssertEqual("OpenVisionLab Labeling Studio", window.Title);
-            AssertTrue(window.GetType().BaseType?.FullName == "Wpf.Ui.Controls.FluentWindow", "WPF shell should inherit WPF-UI FluentWindow");
-            AssertTrue(window.MainCanvasViewModel != null, "WPF shell canvas view model was not created");
-            AssertTrue(window.ShellViewModel != null, "WPF shell view model was not created");
-            AssertEqual("WpfLabelingShellWindow", window.ShellViewModel.ViewName);
-            AssertTrue(window.FindName("ShellTitleBar") != null, "WPF-UI title bar was not created");
-            AssertTrue(window.FindName("ShellTitleBar").GetType().FullName == "Wpf.Ui.Controls.TitleBar", "WPF shell title bar should use WPF-UI TitleBar");
-            var shellTitleBarElement = (System.Windows.FrameworkElement)window.FindName("ShellTitleBar");
-            AssertEqual(28D, shellTitleBarElement.Height);
-            var shellHeaderBarElement = (System.Windows.FrameworkElement)window.FindName("ShellHeaderBar");
-            AssertTrue(shellHeaderBarElement != null, "WPF compact command header was not created");
-            AssertEqual(44D, shellHeaderBarElement.Height);
-            AssertTrue(window.FindName("FirstCheckYoloButton") != null, "WPF YOLO first-check button was not created");
-            AssertTrue(window.FindName("InstallRequirementsButton") != null, "WPF YOLO install button was not created");
-            AssertTrue(window.FindName("RunYoloSmokeButton") != null, "WPF YOLO test button was not created");
-            AssertTrue(window.FindName("RestartPythonWorkerButton") != null, "WPF YOLO restart button was not created");
-            AssertTrue(window.FindName("StopPythonWorkerButton") != null, "WPF YOLO stop button was not created");
-            AssertTrue(window.FindName("YoloStatusPanelControl") != null, "WPF YOLO status user control was not created");
-            AssertTrue(window.FindName("YoloStatusPanelControl").GetType().FullName == "MvcVisionSystem.WpfYoloStatusPanel", "WPF YOLO status should be hosted by a UserControl");
-            AssertTrue(((WpfYoloStatusPanel)window.FindName("YoloStatusPanelControl")).ViewModel != null, "WPF YOLO status view model was not created");
-            AssertTrue(window.FindName("YoloRuntimeDetailsExpander") != null, "WPF YOLO runtime details expander was not created");
-            AssertTrue(window.FindName("ProjectConfigPanelControl") != null, "WPF project config user control was not created");
-            AssertTrue(window.FindName("ProjectConfigPanelControl").GetType().FullName == "MvcVisionSystem.WpfProjectConfigPanel", "WPF project config should be hosted by a UserControl");
-            AssertTrue(((WpfProjectConfigPanel)window.FindName("ProjectConfigPanelControl")).ViewModel != null, "WPF project config view model was not created");
-            AssertTrue(window.FindName("ProjectRecipeNameBox") != null, "WPF project recipe name box was not created");
-            AssertTrue(window.FindName("ProjectRecipeListBox") != null, "WPF project recipe list was not created");
-            AssertTrue(window.FindName("ProjectConfigPathBox") != null, "WPF project config path box was not created");
-            AssertTrue(window.FindName("ApplyProjectRecipeButton") != null, "WPF project recipe apply button was not created");
-            AssertTrue(window.FindName("RefreshProjectRecipeListButton") != null, "WPF project recipe refresh button was not created");
-            AssertTrue(window.FindName("SaveProjectConfigButton") != null, "WPF project config save button was not created");
-            AssertTrue(window.FindName("OpenProjectConfigFolderButton") != null, "WPF project config folder button was not created");
-            AssertTrue(window.FindName("ThemeToggleButton") != null, "WPF theme toggle button was not created");
-            AssertTrue(window.FindName("ThemeToggleText") != null, "WPF theme toggle text was not created");
-            AssertTrue(window.FindName("ThemeToggleButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF theme toggle should use WPF-UI button");
-            AssertTrue(window.FindName("YoloCommandStatusText") != null, "WPF YOLO command status text was not created");
-            AssertTrue(window.FindName("YoloSettingsScrollViewer") != null, "WPF YOLO settings scroll viewer was not created");
-            var modelCenterTaskTabs = window.FindName("YoloModelCenterTaskTabs") as System.Windows.Controls.TabControl;
-            var modelCenterOverviewTaskTab = window.FindName("YoloModelCenterOverviewTaskTab") as System.Windows.Controls.TabItem;
-            var modelCenterDataTaskTab = window.FindName("YoloModelCenterDataTaskTab") as System.Windows.Controls.TabItem;
-            var modelCenterTrainingTaskTab = window.FindName("YoloModelCenterTrainingTaskTab") as System.Windows.Controls.TabItem;
-            var modelCenterRuntimeTaskTab = window.FindName("YoloModelCenterRuntimeTaskTab") as System.Windows.Controls.TabItem;
-            var modelBenchmarkEntryPanel = window.FindName("ModelBenchmarkEntryPanel") as System.Windows.FrameworkElement;
-            var openModelBenchmarkWindowButton = window.FindName("OpenModelBenchmarkWindowButton") as Wpf.Ui.Controls.Button;
-            AssertTrue(modelCenterTaskTabs != null, "WPF model center should expose a task selector");
-            AssertEqual(4, modelCenterTaskTabs.Items.Count);
-            AssertTrue(modelCenterOverviewTaskTab != null && modelCenterDataTaskTab != null && modelCenterTrainingTaskTab != null && modelCenterRuntimeTaskTab != null,
-                "WPF model center should declare overview, data, training/comparison, and runtime task tabs");
-            AssertTrue(ReferenceEquals(modelCenterOverviewTaskTab, modelCenterTaskTabs.SelectedItem), "WPF model center should open on the compact overview task");
-            AssertTrue(modelBenchmarkEntryPanel != null, "WPF model center should expose the separate model-benchmark window entry");
-            AssertTrue(openModelBenchmarkWindowButton?.Command != null, "WPF model benchmark entry should bind a shell ViewModel command");
-            AssertEqual(System.Windows.Visibility.Collapsed, modelBenchmarkEntryPanel.Visibility);
-            AssertTrue(!shellXamlSource.Contains("YoloModelComparisonBenchmarkText", StringComparison.Ordinal), "WPF model center should not keep dense benchmark metrics in the left panel");
-            AssertTrue(window.FindName("YoloModelSettingsPanelControl") != null, "WPF YOLO model settings user control was not created");
-            AssertTrue(window.FindName("YoloModelSettingsPanelControl").GetType().FullName == "MvcVisionSystem.WpfYoloModelSettingsPanel", "WPF YOLO model settings should be hosted by a UserControl");
-            AssertTrue(((WpfYoloModelSettingsPanel)window.FindName("YoloModelSettingsPanelControl")).ViewModel != null, "WPF YOLO model settings view model was not created");
-            AssertTrue(window.FindName("YoloModelEngineBox") != null, "WPF YOLO model engine selector was not created");
-            AssertTrue(window.FindName("YoloProjectRootBox") != null, "WPF YOLO model settings editor was not created");
-            AssertTrue(window.FindName("BrowseYoloPythonButton") != null, "WPF YOLO python browse button was not created");
-            AssertTrue(window.FindName("BrowseYoloProjectRootButton") != null, "WPF YOLO project browse button was not created");
-            AssertTrue(window.FindName("BrowseYoloClientScriptButton") != null, "WPF YOLO client browse button was not created");
-            AssertTrue(window.FindName("BrowseYoloWeightsButton") != null, "WPF YOLO weights browse button was not created");
-            AssertTrue(window.FindName("BrowseYoloImageRootButton") != null, "WPF YOLO image root browse button was not created");
-            AssertTrue(window.FindName("SaveYoloSettingsButton") != null, "WPF YOLO settings save button was not created");
-            AssertTrue(window.FindName("TrainingImageSizeBox") != null, "WPF training settings editor was not created");
-            AssertTrue(window.FindName("TrainingProgressText") != null, "WPF training progress text was not created");
-            AssertTrue(window.FindName("TrainingEpochText") != null, "WPF training epoch text was not created");
-            AssertTrue(window.FindName("TrainingSettingsExpander") != null, "WPF training settings expander was not created");
-            AssertTrue(window.FindName("TrainingSettingsPanelControl") != null, "WPF training settings user control was not created");
-            AssertTrue(window.FindName("TrainingSettingsPanelControl").GetType().FullName == "MvcVisionSystem.WpfTrainingSettingsPanel", "WPF training settings should be hosted by a UserControl");
-            AssertTrue(((WpfTrainingSettingsPanel)window.FindName("TrainingSettingsPanelControl")).ViewModel != null, "WPF training settings view model was not created");
-            AssertTrue(window.FindName("StartTrainingButton") != null, "WPF training start button was not created");
-            AssertTrue(window.FindName("CandidateReviewPanelControl") != null, "WPF candidate review user control was not created");
-            AssertTrue(window.FindName("CandidateReviewPanelControl").GetType().FullName == "MvcVisionSystem.WpfCandidateReviewPanel", "WPF candidate review should be hosted by a UserControl");
-            var candidateReviewPanel = (WpfCandidateReviewPanel)window.FindName("CandidateReviewPanelControl");
-            AssertTrue(candidateReviewPanel.ViewModel != null, "WPF candidate review view model was not created");
-            AssertTrue(candidateReviewPanel.FindName("CandidateReviewModePanel") != null, "WPF candidate review mode panel was not created");
-            AssertTrue(window.FindName("CandidateReviewRoleSplitPanel") != null, "WPF candidate/model role split panel was not registered");
-            AssertTrue(window.FindName("CurrentImageCandidateRoleCard") != null, "WPF current-image candidate role card was not registered");
-            AssertTrue(window.FindName("ModelValidationRoleCard") != null, "WPF model-validation role card was not registered");
-            AssertEqual("AI \uD6C4\uBCF4", ((System.Windows.Controls.TabItem)window.FindName("CandidatesReviewTab")).Header?.ToString());
-            AssertTrue(window.FindName("CandidateConfidenceSlider") != null, "WPF candidate confidence filter was not created");
-            AssertTrue(window.FindName("TeachingModeButton") != null, "WPF labeling mode button was not created");
-            AssertTrue(window.FindName("InferenceModeButton") != null, "WPF inference mode button was not created");
-            var workflowStageRailElement = (System.Windows.FrameworkElement)window.FindName("WorkflowStageRail");
-            AssertTrue(workflowStageRailElement != null, "WPF workflow stage rail was not created");
-            AssertEqual(48D, workflowStageRailElement.Height);
-            var workflowContextHeaderElement = (System.Windows.FrameworkElement)window.FindName("WorkflowContextHeader");
-            AssertTrue(workflowContextHeaderElement != null, "WPF workflow context header was not created");
-            AssertEqual(82D, workflowContextHeaderElement.Height);
-            AssertTrue(window.FindName("DatasetHomeStageButton") != null, "WPF dataset-home workflow stage button was not created");
-            AssertTrue(window.FindName("LabelingWorkbenchStageButton") != null, "WPF labeling-workbench workflow stage button was not created");
-            AssertTrue(window.FindName("InferenceReviewStageButton") != null, "WPF inference-review workflow stage button was not created");
-            AssertTrue(window.FindName("TrainingModelStageButton") != null, "WPF training/model workflow stage button was not created");
-            AssertTrue(window.FindName("WorkflowStageSummaryPanel") != null, "WPF workflow stage summary panel was not created");
-            AssertTrue(window.FindName("WorkflowStageSummaryProgressText") != null, "WPF workflow stage progress text was not created");
-            AssertTrue(window.FindName("WorkflowStageSummaryTitleText") != null, "WPF workflow stage title text was not created");
-            AssertTrue(window.FindName("WorkflowStageSummaryDetailText") != null, "WPF workflow stage detail text was not created");
-            AssertTrue(window.FindName("WorkflowStageSummaryNextActionText") != null, "WPF workflow stage next-action text was not created");
-            var workflowStageModelActionPanel = (System.Windows.FrameworkElement)window.FindName("WorkflowStageModelActionPanel");
-            AssertTrue(workflowStageModelActionPanel != null, "WPF workflow stage post-training action panel was not created");
-            AssertTrue(window.FindName("WorkflowStageReviewCandidateModelButton") != null, "WPF workflow stage candidate-review button was not created");
-            AssertTrue(window.FindName("WorkflowStageSaveModelSettingsButton") != null, "WPF workflow stage save-model button was not created");
-            AssertTrue(window.FindName("WorkflowStageInspectCurrentImageButton") != null, "WPF workflow stage current-inspection button was not created");
-            AssertTrue(window.FindName("RightWorkflowViewTitleText") != null, "WPF right workflow title text was not created");
-            var workflowStageSubNavigationRail = (System.Windows.FrameworkElement)window.FindName("WorkflowStageSubNavigationRail");
-            AssertTrue(workflowStageSubNavigationRail != null, "WPF workflow stage subnavigation rail was not created");
-            AssertEqual(34D, workflowStageSubNavigationRail.Height);
-            var rightWorkflowShortcutBar = (System.Windows.FrameworkElement)window.FindName("RightWorkflowShortcutBar");
-            AssertTrue(rightWorkflowShortcutBar != null, "WPF right workflow shortcut bar was not created");
-            AssertTrue(window.FindName("RightWorkflowDatasetHomeButton") != null, "WPF dataset-home shortcut button was not created");
-            AssertTrue(window.FindName("RightWorkflowSavedLabelsButton") != null, "WPF saved-label shortcut button was not created");
-            AssertTrue(window.FindName("RightWorkflowGuideToolsButton") != null, "WPF guide/tools shortcut button was not created");
-            AssertTrue(window.FindName("RightWorkflowClassCatalogButton") != null, "WPF class shortcut button was not created");
-            AssertTrue(window.FindName("RightWorkflowInferenceCandidatesButton") != null, "WPF inference-candidates shortcut button was not created");
-            AssertTrue(window.FindName("RightWorkflowInferenceInspectButton") != null, "WPF inference-inspect shortcut button was not created");
-            AssertTrue(window.FindName("RightWorkflowTrainingModelButton") != null, "WPF training/model shortcut button was not created");
-            AssertTrue(window.FindName("RightWorkflowTrainingReviewCandidateButton") != null, "WPF training candidate-review shortcut button was not created");
-            AssertTrue(window.FindName("RightWorkflowTrainingInspectButton") != null, "WPF training inspect shortcut button was not created");
-            var rightWorkflowColumn = (System.Windows.Controls.ColumnDefinition)window.FindName("RightWorkflowColumn");
-            var rightWorkflowExpandedContent = (System.Windows.FrameworkElement)window.FindName("RightWorkflowExpandedContent");
-            var rightWorkflowCollapsedRail = (System.Windows.FrameworkElement)window.FindName("RightWorkflowCollapsedRail");
-            var rightWorkflowDockToggleButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowDockToggleButton");
-            var rightWorkflowRailOpenButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowRailOpenButton");
-            var modelWorkspaceCanvasPanel = (System.Windows.FrameworkElement)window.FindName("CanvasPanelControl");
-            var modelWorkspaceImageQueuePanel = (System.Windows.FrameworkElement)window.FindName("ImageQueuePanelControl");
-            var modelWorkspaceImageQueueColumn = (System.Windows.Controls.ColumnDefinition)window.FindName("ImageQueueColumn");
-            AssertTrue(rightWorkflowColumn != null, "WPF right workflow column should be named for responsive layout checks");
-            AssertTrue(rightWorkflowExpandedContent != null, "WPF right workflow expanded content was not created");
-            AssertTrue(rightWorkflowCollapsedRail != null, "WPF right workflow collapsed rail was not created");
-            AssertTrue(rightWorkflowDockToggleButton != null, "WPF right workflow dock toggle was not created");
-            AssertTrue(rightWorkflowRailOpenButton != null, "WPF right workflow rail open button was not created");
-            AssertTrue(modelWorkspaceCanvasPanel != null, "WPF model workspace canvas panel was not created");
-            AssertTrue(modelWorkspaceImageQueuePanel != null, "WPF model workspace image queue panel was not created");
-            AssertTrue(modelWorkspaceImageQueueColumn != null, "WPF model workspace image queue column was not created");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(rightWorkflowDockToggleButton), window.ShellViewModel.ToggleRightWorkflowDockCommand), "WPF right workflow dock toggle should bind to the shell dock command");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(rightWorkflowRailOpenButton), window.ShellViewModel.ToggleRightWorkflowDockCommand), "WPF right workflow rail open button should bind to the shell dock command");
-            var datasetHomeShortcutButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowDatasetHomeButton");
-            var savedLabelsShortcutButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowSavedLabelsButton");
-            var guideToolsShortcutButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowGuideToolsButton");
-            var classCatalogShortcutButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowClassCatalogButton");
-            var inferenceCandidatesShortcutButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowInferenceCandidatesButton");
-            var inferenceInspectShortcutButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowInferenceInspectButton");
-            var trainingModelShortcutButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowTrainingModelButton");
-            var trainingReviewCandidateShortcutButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowTrainingReviewCandidateButton");
-            var trainingInspectShortcutButton = (System.Windows.Controls.Button)window.FindName("RightWorkflowTrainingInspectButton");
-            var savedLabelsReviewTab = (System.Windows.Controls.TabItem)window.FindName("ObjectsReviewTab");
-            var aiCandidatesReviewTab = (System.Windows.Controls.TabItem)window.FindName("CandidatesReviewTab");
-            var guideToolsReviewTab = (System.Windows.Controls.TabItem)window.FindName("LearningReviewTab");
-            var classCatalogReviewTab = (System.Windows.Controls.TabItem)window.FindName("ClassesReviewTab");
-            var yoloModelCenterReviewTab = (System.Windows.Controls.TabItem)window.FindName("YoloSettingsReviewTab");
-            AssertEqual(System.Windows.Visibility.Visible, workflowStageSubNavigationRail.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowShortcutBar.Visibility);
-            AssertTrue(window.ShellViewModel.IsRightWorkflowDockExpanded, "dataset stage should keep the right workflow panel expanded for onboarding");
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowExpandedContent.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, rightWorkflowCollapsedRail.Visibility);
-            AssertEqual(340D, rightWorkflowColumn.Width.Value);
-            AssertEqual(System.Windows.Visibility.Visible, datasetHomeShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, savedLabelsShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, guideToolsShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, classCatalogShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, inferenceCandidatesShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, inferenceInspectShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, trainingModelShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, trainingReviewCandidateShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, trainingInspectShortcutButton.Visibility);
-            AssertTrue(object.Equals(datasetHomeShortcutButton.Tag, true), "dataset-home shortcut should be active by default in dataset stage");
-            AssertTrue(!object.Equals(classCatalogShortcutButton.Tag, true), "class shortcut should start inactive in dataset stage");
-            AssertEqual(System.Windows.Visibility.Collapsed, savedLabelsReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, aiCandidatesReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, guideToolsReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, classCatalogReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, yoloModelCenterReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, workflowStageModelActionPanel.Visibility);
-            window.ShellViewModel.SetWorkflowStage(WpfShellWorkflowStage.Labeling);
-            window.UpdateLayout();
-            AssertTrue(!window.ShellViewModel.IsRightWorkflowDockExpanded, "labeling stage should collapse the right workflow panel by default");
-            AssertEqual(System.Windows.Visibility.Collapsed, rightWorkflowExpandedContent.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowCollapsedRail.Visibility);
-            AssertEqual(72D, rightWorkflowColumn.Width.Value);
-            window.ShellViewModel.ToggleRightWorkflowDockCommand.Execute(null);
-            window.UpdateLayout();
-            AssertTrue(window.ShellViewModel.IsRightWorkflowDockExpanded, "right workflow toggle should expand the collapsed labeling rail");
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowExpandedContent.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, rightWorkflowCollapsedRail.Visibility);
-            AssertEqual(340D, rightWorkflowColumn.Width.Value);
-            AssertEqual(System.Windows.Visibility.Visible, workflowStageSubNavigationRail.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowShortcutBar.Visibility);
-            AssertTrue(object.Equals(savedLabelsShortcutButton.Tag, true), "saved-label shortcut should be active by default in labeling stage");
-            AssertTrue(!object.Equals(guideToolsShortcutButton.Tag, true), "guide/tools shortcut should start inactive in labeling stage");
-            AssertTrue(!object.Equals(classCatalogShortcutButton.Tag, true), "class shortcut should start inactive in labeling stage");
-            AssertEqual(System.Windows.Visibility.Collapsed, datasetHomeShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, savedLabelsShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, guideToolsShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, classCatalogShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, inferenceCandidatesShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, inferenceInspectShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, trainingModelShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, trainingReviewCandidateShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, trainingInspectShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, savedLabelsReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, aiCandidatesReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, guideToolsReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, classCatalogReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, yoloModelCenterReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, workflowStageModelActionPanel.Visibility);
-            InvokePrivate(window, "EnterLabelingWorkbenchStartView");
-            window.UpdateLayout();
-            AssertTrue(window.ShellViewModel.IsLabelingStageActive, "dataset setup completion should land on the labeling stage");
-            AssertTrue(!window.ShellViewModel.IsRightWorkflowDockExpanded, "dataset setup completion should keep the beginner side workflow collapsed");
-            AssertTrue(window.ShellViewModel.IsRightWorkflowDockRailVisible, "dataset setup completion should leave only the compact side rail visible");
-            AssertTrue(window.ShellViewModel.IsSavedLabelsShortcutActive, "dataset setup completion should select the saved-label view, not class management");
-            AssertTrue(!window.ShellViewModel.IsClassCatalogShortcutActive, "dataset setup completion should not force class management active");
-            AssertTrue(ReferenceEquals(savedLabelsReviewTab, ((System.Windows.Controls.TabControl)window.FindName("ReviewTabControl")).SelectedItem), "dataset setup completion should keep the saved-label tab selected for the collapsed rail");
-            window.ShellViewModel.SetWorkflowStage(WpfShellWorkflowStage.Inference);
-            window.UpdateLayout();
-            AssertTrue(window.ShellViewModel.IsRightWorkflowDockExpanded, "inference review should keep the right workflow panel expanded");
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowExpandedContent.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, rightWorkflowCollapsedRail.Visibility);
-            AssertEqual(340D, rightWorkflowColumn.Width.Value);
-            AssertEqual(System.Windows.Visibility.Visible, workflowStageSubNavigationRail.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowShortcutBar.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, datasetHomeShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, savedLabelsShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, guideToolsShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, classCatalogShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, inferenceCandidatesShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, inferenceInspectShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, trainingModelShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, trainingReviewCandidateShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, trainingInspectShortcutButton.Visibility);
-            AssertTrue(object.Equals(inferenceCandidatesShortcutButton.Tag, true), "inference candidates shortcut should be active in inference stage");
-            AssertTrue(!object.Equals(savedLabelsShortcutButton.Tag, true), "saved-label shortcut should be inactive outside labeling stage");
-            AssertTrue(!object.Equals(guideToolsShortcutButton.Tag, true), "guide/tools shortcut should be inactive outside labeling stage");
-            AssertTrue(!object.Equals(classCatalogShortcutButton.Tag, true), "class shortcut should be inactive outside labeling stage");
-            AssertEqual(System.Windows.Visibility.Collapsed, savedLabelsReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, aiCandidatesReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, guideToolsReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, classCatalogReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, yoloModelCenterReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, workflowStageModelActionPanel.Visibility);
-            window.ShellViewModel.SetImageQueueExpandedPaneWidth(420D);
-            window.UpdateLayout();
-            AssertEqual(420D, modelWorkspaceImageQueueColumn.Width.Value);
-            window.ShellViewModel.SetWorkflowStage(WpfShellWorkflowStage.TrainingModel);
-            window.UpdateLayout();
-            AssertTrue(window.ShellViewModel.IsRightWorkflowDockExpanded, "training/model stage should keep the model center expanded");
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowExpandedContent.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, rightWorkflowCollapsedRail.Visibility);
-            AssertTrue(window.ShellViewModel.IsModelWorkspaceActive, "training/model stage should activate the dedicated model workspace");
-            AssertEqual(System.Windows.GridUnitType.Star, rightWorkflowColumn.Width.GridUnitType);
-            AssertEqual(System.Windows.Visibility.Collapsed, modelWorkspaceCanvasPanel.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, modelWorkspaceImageQueuePanel.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, rightWorkflowDockToggleButton.Visibility);
-            AssertEqual(0D, modelWorkspaceImageQueueColumn.Width.Value);
-            AssertEqual(System.Windows.Visibility.Visible, workflowStageSubNavigationRail.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowShortcutBar.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, datasetHomeShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, savedLabelsShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, guideToolsShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, classCatalogShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, inferenceCandidatesShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, inferenceInspectShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, trainingModelShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, trainingReviewCandidateShortcutButton.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, trainingInspectShortcutButton.Visibility);
-            AssertTrue(object.Equals(trainingModelShortcutButton.Tag, true), "training/model shortcut should be active in training/model stage");
-            AssertEqual(System.Windows.Visibility.Collapsed, savedLabelsReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, aiCandidatesReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, guideToolsReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, classCatalogReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, yoloModelCenterReviewTab.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, workflowStageModelActionPanel.Visibility);
-            window.ShellViewModel.SetWorkflowStage(WpfShellWorkflowStage.Dataset);
-            window.UpdateLayout();
-            AssertTrue(!window.ShellViewModel.IsModelWorkspaceActive, "leaving the model center should restore the labeling workspace");
-            AssertEqual(System.Windows.Visibility.Visible, modelWorkspaceCanvasPanel.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, modelWorkspaceImageQueuePanel.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, rightWorkflowDockToggleButton.Visibility);
-            AssertEqual(420D, modelWorkspaceImageQueueColumn.Width.Value);
-            var currentDatasetContextBarElement = (System.Windows.FrameworkElement)window.FindName("CurrentDatasetContextBar");
-            AssertTrue(currentDatasetContextBarElement != null, "WPF current dataset context bar was not created");
-            AssertEqual(34D, currentDatasetContextBarElement.Height);
-            AssertTrue(window.FindName("CurrentDatasetNameText") != null, "WPF current dataset name text was not created");
-            AssertTrue(window.FindName("CurrentDatasetPurposeText") != null, "WPF current dataset purpose text was not created");
-            var datasetStoragePathCardElement = (System.Windows.FrameworkElement)window.FindName("DatasetStoragePathCard");
-            var datasetImageRootCardElement = (System.Windows.FrameworkElement)window.FindName("DatasetImageRootCard");
-            var datasetSourceCardElement = (System.Windows.FrameworkElement)window.FindName("DatasetSourceCard");
-            AssertTrue(datasetStoragePathCardElement != null, "WPF dataset storage path card was not created");
-            AssertTrue(datasetImageRootCardElement != null, "WPF dataset image-root card was not created");
-            AssertTrue(datasetSourceCardElement != null, "WPF dataset class/label source card was not created");
-            AssertEqual(System.Windows.Visibility.Collapsed, datasetStoragePathCardElement.Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, datasetImageRootCardElement.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, datasetSourceCardElement.Visibility);
-            AssertTrue(window.FindName("CurrentDatasetStoragePathText") != null, "WPF dataset storage path text was not created");
-            AssertTrue(window.FindName("CurrentDatasetImageRootText") != null, "WPF dataset image-root text was not created");
-            AssertTrue(window.FindName("CurrentDatasetSourceText") != null, "WPF dataset class/label source text was not created");
-            AssertTrue(window.FindName("ChangeDatasetButton").GetType().FullName == "System.Windows.Controls.Button", "WPF change dataset button should use the standard command Button");
-            AssertTrue(window.FindName("OpenDatasetFolderButton").GetType().FullName == "System.Windows.Controls.Button", "WPF open dataset folder button should use the standard command Button");
-            AssertTrue(window.FindName("ChangeImageFolderButton").GetType().FullName == "System.Windows.Controls.Button", "WPF change image folder button should use the standard command Button");
-            AssertTrue(ReferenceEquals(((System.Windows.Controls.Primitives.ButtonBase)window.FindName("ChangeDatasetButton")).Command, window.ShellViewModel.ChangeDatasetCommand), "WPF change dataset button should bind to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(OpenVisionLab.Mvvm.Behaviors.InputCommandBehaviors.GetMouseClickInputCommand((System.Windows.DependencyObject)window.FindName("ChangeDatasetButton")), window.ShellViewModel.ChangeDatasetCommand), "WPF change dataset button should bind mouse-click input to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("DatasetHomeStageButton")), window.ShellViewModel.DatasetHomeCommand), "WPF dataset-home stage should bind to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("LabelingWorkbenchStageButton")), window.ShellViewModel.LabelingWorkbenchCommand), "WPF labeling-workbench stage should bind to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("InferenceReviewStageButton")), window.ShellViewModel.InferenceReviewCommand), "WPF inference-review stage should bind to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("TrainingModelStageButton")), window.ShellViewModel.TrainingModelCenterCommand), "WPF training/model stage should bind to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("RightWorkflowInferenceCandidatesButton")), window.ShellViewModel.InferenceReviewCommand), "WPF inference-candidates shortcut should bind to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("RightWorkflowInferenceInspectButton")), window.ShellViewModel.DetectCurrentImageCommand), "WPF inference-inspect shortcut should bind to the injected detection command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("RightWorkflowTrainingModelButton")), window.ShellViewModel.TrainingModelCenterCommand), "WPF training/model shortcut should bind to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("RightWorkflowTrainingReviewCandidateButton")), window.ShellViewModel.ReviewCandidateModelCommand), "WPF training candidate-review shortcut should bind to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("RightWorkflowTrainingInspectButton")), window.ShellViewModel.DetectCurrentImageCommand), "WPF training inspect shortcut should bind to the injected detection command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("WorkflowStageReviewCandidateModelButton")), window.ShellViewModel.ReviewCandidateModelCommand), "WPF workflow-stage model-review button should bind to the injected shell command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("WorkflowStageSaveModelSettingsButton")), window.YoloModelSettingsViewModel.SaveSettingsCommand), "WPF workflow-stage save-model button should bind to the injected YOLO settings command at runtime");
-            AssertTrue(ReferenceEquals(GetRuntimeButtonCommand(window.FindName("WorkflowStageInspectCurrentImageButton")), window.ShellViewModel.DetectCurrentImageCommand), "WPF workflow-stage current-inspection button should bind to the injected detection command at runtime");
-            AssertTrue(window.FindName("ImageQueuePanelControl") != null, "WPF image queue user control was not created");
-            AssertTrue(window.FindName("ImageQueuePanelControl").GetType().FullName == "MvcVisionSystem.WpfImageQueuePanel", "WPF image queue should be hosted by a UserControl");
-            AssertTrue(((WpfImageQueuePanel)window.FindName("ImageQueuePanelControl")).ViewModel != null, "WPF image queue view model was not created");
-            AssertTrue(window.FindName("DetectSelectedQueueButton") != null, "WPF queue selected detect button was not created");
-            AssertTrue(window.FindName("BatchDetectQueueButton") != null, "WPF queue batch detect button was not created");
-            AssertTrue(window.FindName("TemplateBatchQueueButton") != null, "WPF queue template-batch button was not created");
-            AssertTrue(window.FindName("RetryFailedQueueButton") != null, "WPF queue retry button was not created");
-            AssertTrue(window.FindName("StopBatchQueueButton") != null, "WPF queue stop button was not created");
-            var imageQueueGrid = window.FindName("ImageQueueGrid") as System.Windows.Controls.DataGrid;
-            AssertTrue(imageQueueGrid != null, "WPF image queue grid was not created");
-            AssertTrue(imageQueueGrid.Columns[0] is System.Windows.Controls.DataGridTemplateColumn, "WPF image queue file column should use icon/detail template");
-            string imageQueueXaml = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfImageQueuePanel.xaml"));
-            AssertTrue(imageQueueXaml.Contains("EnableRowVirtualization=\"True\"", StringComparison.Ordinal), "WPF image queue should keep row virtualization enabled for large folders");
-            AssertTrue(imageQueueXaml.Contains("VirtualizingPanel.VirtualizationMode=\"Recycling\"", StringComparison.Ordinal), "WPF image queue should recycle row containers for large folders");
-            AssertTrue(imageQueueXaml.Contains("x:Name=\"TemplateBatchQueueText\"", StringComparison.Ordinal), "WPF image queue should show visible text for template batch instead of icon-only discovery");
-            AssertTrue(imageQueueXaml.Contains("전체 자동 저장", StringComparison.Ordinal), "WPF image queue template batch action should expose its batch auto-save meaning");
-            AssertTrue(window.FindName("StatusBarPanelControl") != null, "WPF status bar user control was not created");
-            AssertTrue(window.FindName("StatusBarPanelControl").GetType().FullName == "MvcVisionSystem.WpfStatusBarPanel", "WPF status bar should be hosted by a UserControl");
-            AssertTrue(((WpfStatusBarPanel)window.FindName("StatusBarPanelControl")).ViewModel != null, "WPF status bar view model was not created");
-            AssertTrue(window.FindName("DatasetStatusText") != null, "WPF dataset status text was not created");
-            AssertTrue(window.FindName("PythonStatusText") != null, "WPF python status text was not created");
-            AssertTrue(window.FindName("AnnotationSaveStatusText") != null, "WPF annotation save status text was not created");
-            AssertTrue(window.FindName("ModelStatusText") != null, "WPF model status text was not created");
-            AssertTrue(window.FindName("ShellLogPanelControl") != null, "WPF log user control was not created");
-            AssertTrue(window.FindName("ShellLogPanelControl").GetType().FullName == "MvcVisionSystem.WpfShellLogPanel", "WPF log should be hosted by a UserControl");
-            AssertTrue(((WpfShellLogPanel)window.FindName("ShellLogPanelControl")).ViewModel != null, "WPF log view model was not created");
-            AssertTrue(window.FindName("ShellLogPanel") != null, "WPF log panel was not created");
-            AssertTrue(window.FindName("ShellLogPanel").GetType().FullName == "OpenVisionLab.Logging.Controls.View.LogPanelView", "WPF shell should use the OpenVisionLab logging WPF panel");
-            AssertTrue(window.FindName("ObjectReviewSummaryText") != null, "WPF object review summary was not created");
-            AssertTrue(window.FindName("ObjectReviewPanelControl") != null, "WPF object review user control was not created");
-            AssertTrue(window.FindName("ObjectReviewPanelControl").GetType().FullName == "MvcVisionSystem.WpfObjectReviewPanel", "WPF object review should be hosted by a UserControl");
-            var objectReviewPanel = (WpfObjectReviewPanel)window.FindName("ObjectReviewPanelControl");
-            AssertTrue(objectReviewPanel.ViewModel != null, "WPF object review view model was not created");
-            AssertTrue(objectReviewPanel.FindName("ObjectReviewModePanel") != null, "WPF object review mode panel was not created");
-            AssertEqual("\uC800\uC7A5 \uB77C\uBCA8", ((System.Windows.Controls.TabItem)window.FindName("ObjectsReviewTab")).Header?.ToString());
-            AssertTrue(window.FindName("DeleteObjectButton") != null, "WPF object delete button was not created");
-            AssertTrue(window.FindName("DeleteObjectButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF object delete button should use WPF-UI button");
-            AssertTrue(window.FindName("ObjectClassBox") != null, "WPF object class selector was not created");
-            AssertTrue(window.FindName("ApplyObjectClassButton") != null, "WPF object class apply button was not created");
-            AssertTrue(window.FindName("ApplyObjectClassButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF object class apply button should use WPF-UI button");
-            AssertTrue(window.FindName("DetectionResultOverlay") != null, "WPF detection result overlay was not created");
-            AssertTrue(window.FindName("CanvasPanelControl") != null, "WPF canvas user control was not created");
-            AssertTrue(window.FindName("CanvasPanelControl").GetType().FullName == "MvcVisionSystem.WpfCanvasPanel", "WPF canvas should be hosted by a UserControl");
-            AssertTrue(((WpfCanvasPanel)window.FindName("CanvasPanelControl")).ViewModel != null, "WPF canvas panel view model was not created");
-            AssertTrue(window.FindName("CanvasSaveAnnotationButton") != null, "WPF canvas local annotation save button was not created");
-            AssertTrue(window.FindName("CanvasSaveAnnotationButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF canvas local save button should use WPF-UI button");
-            AssertTrue(window.FindName("DetectionOverlaySummaryText") != null, "WPF detection summary text was not created");
-            AssertTrue(window.FindName("QueuePreviewImage") == null, "WPF queue preview image should be removed from the one-click canvas workflow");
-            AssertTrue(window.FindName("QueuePreviewText") == null, "WPF queue preview text should be removed from the one-click canvas workflow");
-            AssertTrue(window.FindName("ClassCatalogPanelControl") != null, "WPF class catalog user control was not created");
-            AssertTrue(window.FindName("ClassCatalogPanelControl").GetType().FullName == "MvcVisionSystem.WpfClassCatalogPanel", "WPF class catalog should be hosted by a UserControl");
-            AssertTrue(((WpfClassCatalogPanel)window.FindName("ClassCatalogPanelControl")).ViewModel != null, "WPF class catalog view model was not created");
-            AssertTrue(window.FindName("ClassNameBox") != null, "WPF class name editor was not created");
-            AssertTrue(window.FindName("AddClassButton") != null, "WPF class add button was not created");
-            AssertTrue(window.FindName("RenameClassButton") != null, "WPF class rename button was not created");
-            AssertTrue(window.FindName("RemoveClassButton") != null, "WPF class remove button was not created");
-            AssertTrue(window.FindName("ClassColorBox") != null, "WPF class color selector was not created");
-            AssertTrue(window.FindName("ApplyClassColorButton") != null, "WPF class color apply button was not created");
-            AssertTrue(window.FindName("OutputRootPathBox") == null, "WPF class catalog should not create an output root path editor");
-            AssertTrue(window.FindName("BrowseOutputRootButton") == null, "WPF class catalog should not create an output root browse button");
-            AssertTrue(window.FindName("SaveOutputRootButton") == null, "WPF class catalog should not create an output root save button");
-            AssertTrue(window.FindName("SaveAnnotationsButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF save annotations button should use WPF-UI button");
-            AssertTrue(window.FindName("DetectButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF detect button should use WPF-UI button");
-            AssertTrue(window.FindName("ConfirmSelectedCandidateButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF selected confirm button should use WPF-UI button");
-            AssertTrue(window.FindName("DetectSelectedQueueButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF queue selected detect button should use WPF-UI button");
-            AssertTrue(window.FindName("BatchDetectQueueButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF queue batch detect button should use WPF-UI button");
-            AssertTrue(window.FindName("RetryFailedQueueButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF queue retry button should use WPF-UI button");
-            AssertTrue(window.FindName("StopBatchQueueButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF queue stop button should use WPF-UI button");
-            AssertTrue(window.FindName("FirstCheckYoloButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO first-check button should use WPF-UI button");
-            AssertTrue(window.FindName("InstallRequirementsButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO install button should use WPF-UI button");
-            AssertTrue(window.FindName("RunYoloSmokeButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO test button should use WPF-UI button");
-            AssertTrue(window.FindName("RestartPythonWorkerButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO restart button should use WPF-UI button");
-            AssertTrue(window.FindName("StopPythonWorkerButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO stop button should use WPF-UI button");
-            AssertTrue(window.FindName("SaveYoloSettingsButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO settings save button should use WPF-UI button");
-            AssertTrue(window.FindName("ResetYoloSettingsButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO settings reset button should use WPF-UI button");
-            AssertTrue(window.FindName("RefreshTrainingReadinessButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF training readiness button should use WPF-UI button");
-            AssertTrue(window.FindName("StartTrainingButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF training start button should use WPF-UI button");
-            AssertTrue(window.FindName("StopTrainingButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF training stop button should use WPF-UI button");
-            AssertTrue(!string.IsNullOrWhiteSpace(((System.Windows.Controls.ContentControl)window.FindName("RefreshTrainingReadinessButton")).Content?.ToString()), "WPF training refresh button should have visible text");
-            AssertTrue(!string.IsNullOrWhiteSpace(((System.Windows.Controls.ContentControl)window.FindName("StartTrainingButton")).Content?.ToString()), "WPF training start button should have visible text");
-            AssertTrue(!string.IsNullOrWhiteSpace(((System.Windows.Controls.ContentControl)window.FindName("StopTrainingButton")).Content?.ToString()), "WPF training stop button should have visible text");
-            AssertTrue(window.FindName("AddClassButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF class add button should use WPF-UI button");
-            AssertTrue(window.FindName("RenameClassButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF class rename button should use WPF-UI button");
-            AssertTrue(window.FindName("RemoveClassButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF class remove button should use WPF-UI button");
-            AssertTrue(window.FindName("ApplyClassColorButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF class color apply button should use WPF-UI button");
-            AssertTrue(window.FindName("BrowseOutputRootButton") == null, "WPF class catalog should keep dataset-storage browse out of the class schema panel");
-            AssertTrue(window.FindName("SaveOutputRootButton") == null, "WPF class catalog should keep dataset-storage save out of the class schema panel");
-            AssertTrue(window.FindName("BrowseYoloPythonButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO python browse button should use WPF-UI button");
-            AssertTrue(window.FindName("BrowseYoloProjectRootButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO project browse button should use WPF-UI button");
-            AssertTrue(window.FindName("BrowseYoloClientScriptButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO client browse button should use WPF-UI button");
-            AssertTrue(window.FindName("BrowseYoloWeightsButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO weights browse button should use WPF-UI button");
-            AssertTrue(window.FindName("BrowseYoloImageRootButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF YOLO image root browse button should use WPF-UI button");
-
-            window.FocusYoloSettingsTab();
-            AssertTrue(window.FindName("YoloSettingsReviewTab") is System.Windows.Controls.TabItem yoloSettingsTab && yoloSettingsTab.IsSelected, "WPF shell should focus the model settings tab");
-            AssertTrue(ReferenceEquals(modelCenterOverviewTaskTab, modelCenterTaskTabs.SelectedItem), "WPF model center focus should return to the overview task");
-            AssertEqual(System.Windows.Visibility.Visible, ((System.Windows.FrameworkElement)window.FindName("YoloModelLifecycleDashboardPanel")).Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, ((System.Windows.FrameworkElement)window.FindName("YoloDatasetReadinessQuickPanel")).Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, ((System.Windows.FrameworkElement)window.FindName("TrainingSettingsPanelControl")).Visibility);
-            AssertEqual(System.Windows.Visibility.Collapsed, ((System.Windows.FrameworkElement)window.FindName("YoloModelSettingsPanelControl")).Visibility);
-            AssertTrue(!((WpfYoloStatusPanel)window.FindName("YoloStatusPanelControl")).RuntimeDetailsExpander.IsExpanded, "WPF model overview should keep runtime details collapsed by default");
-            AssertTrue(!((WpfProjectConfigPanel)window.FindName("ProjectConfigPanelControl")).SettingsExpander.IsExpanded, "WPF model overview should keep project settings collapsed by default");
-            AssertTrue(!((WpfYoloModelSettingsPanel)window.FindName("YoloModelSettingsPanelControl")).SettingsExpander.IsExpanded, "WPF model overview should keep model settings collapsed by default");
-            AssertTrue(!((WpfTrainingSettingsPanel)window.FindName("TrainingSettingsPanelControl")).SettingsExpander.IsExpanded, "WPF model overview should keep training settings collapsed by default");
-
-            modelCenterTaskTabs.SelectedItem = modelCenterDataTaskTab;
-            window.UpdateLayout();
-            AssertEqual(System.Windows.Visibility.Visible, ((System.Windows.FrameworkElement)window.FindName("YoloDatasetReadinessQuickPanel")).Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, ((System.Windows.FrameworkElement)window.FindName("ProjectConfigPanelControl")).Visibility);
-            AssertTrue(((System.Windows.Controls.Expander)window.FindName("YoloDatasetReadinessQuickPanel")).IsExpanded,
-                "selecting the data task should reveal its readiness controls without another click");
-            var evaluationPurposeText = window.FindName("YoloEvaluationDataPurposeText") as System.Windows.Controls.TextBlock;
-            var evaluationReadinessText = window.FindName("YoloDatasetQuickReadinessText") as System.Windows.Controls.TextBlock;
-            var evaluationLimitText = window.FindName("YoloExternalEvaluationAuditLimitText") as System.Windows.Controls.TextBlock;
-            var externalYoloDatasetStatusText = window.FindName("YoloExternalYoloDatasetStatusText") as System.Windows.Controls.TextBlock;
-            AssertTrue(evaluationPurposeText != null && !string.IsNullOrWhiteSpace(evaluationPurposeText.Text),
-                "data task should show the active dataset purpose next to its evidence");
-            AssertTrue(evaluationReadinessText != null
-                && System.Windows.Data.BindingOperations.GetBindingExpressionBase(
-                    evaluationReadinessText,
-                    System.Windows.Controls.TextBlock.TextProperty) != null,
-                "data task should bind the saved dataset readiness evidence");
-            AssertTrue(evaluationLimitText != null
-                && evaluationLimitText.Text.Contains("SHA-256", StringComparison.Ordinal)
-                && evaluationLimitText.Text.Contains("\uBAA8\uB378 \uCC44\uD0DD", StringComparison.Ordinal),
-                "data task should state that an independent image folder is not model-adoption evidence");
-            AssertTrue(externalYoloDatasetStatusText != null
-                && externalYoloDatasetStatusText.Text.Contains("data.yaml", StringComparison.Ordinal),
-                "data task should state the separate native YOLO data.yaml intake state");
-            AssertTrue(window.LearningWorkflowViewModel.ExternalEvaluationDataAuditCommand != null,
-                "external evaluation audit should be configured on the learning workflow ViewModel");
-            AssertTrue(ReferenceEquals(
-                    GetRuntimeButtonCommand(window.FindName("YoloExternalEvaluationAuditButton")),
-                    window.LearningWorkflowViewModel.ExternalEvaluationDataAuditCommand),
-                "data task should expose the learning-workflow external evaluation audit command");
-            AssertEqual(2, window.LearningWorkflowViewModel.ExternalYoloDatasetPurposeModes.Count);
-            AssertTrue(window.LearningWorkflowViewModel.SelectExternalYoloDatasetCommand != null
-                && window.LearningWorkflowViewModel.ActivateExternalYoloDatasetCommand != null
-                && window.LearningWorkflowViewModel.ClearExternalYoloDatasetCommand != null,
-                "external YOLO data.yaml actions should be configured on the learning workflow ViewModel");
-            AssertTrue(ReferenceEquals(
-                    GetRuntimeButtonCommand(window.FindName("YoloExternalYoloDatasetSelectButton")),
-                    window.LearningWorkflowViewModel.SelectExternalYoloDatasetCommand),
-                "data task should expose the external YOLO data.yaml selection command");
-            AssertTrue(ReferenceEquals(
-                    GetRuntimeButtonCommand(window.FindName("YoloExternalYoloDatasetActivateButton")),
-                    window.LearningWorkflowViewModel.ActivateExternalYoloDatasetCommand),
-                "data task should expose the explicit external YOLO next-training command");
-
-            InvokePrivate(window, "FocusYoloTrainingSettingsTab");
-            window.UpdateLayout();
-            AssertTrue(ReferenceEquals(modelCenterTrainingTaskTab, modelCenterTaskTabs.SelectedItem), "training navigation should select the training/comparison task");
-            AssertEqual(System.Windows.Visibility.Visible, ((System.Windows.FrameworkElement)window.FindName("TrainingSettingsPanelControl")).Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, modelBenchmarkEntryPanel.Visibility);
-            AssertTrue(((WpfTrainingSettingsPanel)window.FindName("TrainingSettingsPanelControl")).SettingsExpander.IsExpanded,
-                "selecting the training task should reveal training controls without another click");
-
-            InvokePrivate(window, "FocusYoloModelSettingsTab");
-            window.UpdateLayout();
-            AssertTrue(ReferenceEquals(modelCenterRuntimeTaskTab, modelCenterTaskTabs.SelectedItem), "model settings navigation should select the runtime task");
-            AssertEqual(System.Windows.Visibility.Collapsed, modelBenchmarkEntryPanel.Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, ((System.Windows.FrameworkElement)window.FindName("YoloStatusPanelControl")).Visibility);
-            AssertEqual(System.Windows.Visibility.Visible, ((System.Windows.FrameworkElement)window.FindName("YoloModelSettingsPanelControl")).Visibility);
-            AssertTrue(((WpfYoloModelSettingsPanel)window.FindName("YoloModelSettingsPanelControl")).SettingsExpander.IsExpanded,
-                "selecting the runtime task should reveal model controls without another click");
-
-            window.FocusYoloSettingsTab();
-
-            window.FocusClassCatalogTab();
-            AssertTrue(window.FindName("ClassesReviewTab") is System.Windows.Controls.TabItem classesReviewTab && classesReviewTab.IsSelected, "WPF shell should focus the class catalog tab");
-            AssertTrue(window.FindName("ClassCatalogPanelControl") is WpfClassCatalogPanel, "WPF class catalog should be visible through the shell focus method");
-        }
-        finally
-        {
-            window.Close();
-        }
-    }
-
     private static void TestLegacySettingsButtonsRouteToWpfShell()
     {
         string root = FindRepositoryRoot();
@@ -32431,13 +23630,13 @@ internal static partial class Program
         }
 
         string shellSource = ReadWpfLabelingShellWindowSources();
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
+        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
         string yoloEnvironmentRuntimeCommandsSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.YoloEnvironmentRuntimeCommands.cs"));
-        string yoloEnvironmentCommandPresentationSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfYoloEnvironmentCommandPresentationService.cs"));
+        string yoloEnvironmentCommandPresentationSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Runtime", "WpfYoloEnvironmentCommandPresentationService.cs"));
         string yoloSettingsPanelStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.YoloSettingsPanelStatus.cs"));
-        string yoloSettingsPanelStatusPresentationSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfYoloSettingsPanelStatusPresentationService.cs"));
+        string yoloSettingsPanelStatusPresentationSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Runtime", "WpfYoloSettingsPanelStatusPresentationService.cs"));
         AssertTrue(shellSource.Contains("YoloModelSettingsViewModel.ApplyWorkflowCommandState", StringComparison.Ordinal), "WPF shell should push YOLO model settings command availability through the ViewModel");
         AssertTrue(shellSource.Contains("ExecuteRuntimeProfileActionCommand", StringComparison.Ordinal), "WPF shell should inject the runtime-profile action adapter into the YOLO model settings ViewModel");
         AssertTrue(shellSource.Contains("AdvancedSettingsExpander.IsExpanded = true", StringComparison.Ordinal), "runtime-profile action adapter should open advanced runtime settings instead of leaving the operator searching for fields");
@@ -32456,7 +23655,10 @@ internal static partial class Program
         AssertTrue(shellSource.Contains("YoloModelSettingsViewModel?.ApplyTo(global.Data.ProjectSettings.AnomalyClassification)", StringComparison.Ordinal), "WPF shell should save anomaly mapping settings through the YOLO model settings ViewModel");
         AssertTrue(yoloEnvironmentCommandPresentationSource.Contains("BuildUltralyticsConfirmation", StringComparison.Ordinal), "YOLO environment command presentation service should own Ultralytics confirmation dialog text");
         AssertTrue(yoloEnvironmentCommandPresentationSource.Contains("BuildUltralyticsPackageOperationDetail", StringComparison.Ordinal), "YOLO environment command presentation service should build visible package-result detail text");
+        AssertTrue(yoloEnvironmentCommandPresentationSource.Contains("BuildUltralyticsPackageOperationLogLines", StringComparison.Ordinal), "YOLO environment command presentation service should build package-operation log rows");
         AssertTrue(yoloEnvironmentRuntimeCommandsSource.Contains("WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsPackageOperationDetail", StringComparison.Ordinal), "WPF shell should delegate package-result detail text to the presentation service");
+        AssertTrue(yoloEnvironmentRuntimeCommandsSource.Contains("WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsPackageOperationLogLines", StringComparison.Ordinal), "WPF shell should delegate package-operation log rows to the presentation service");
+        AssertTrue(!yoloEnvironmentRuntimeCommandsSource.Contains("SplitPackageCommandLogTail", StringComparison.Ordinal), "WPF shell should not own package-operation log splitting");
         AssertTrue(!yoloEnvironmentRuntimeCommandsSource.Contains("테스트를 반복하기 위해", StringComparison.Ordinal), "WPF shell should not inline Ultralytics uninstall confirmation wording");
         AssertTrue(!yoloEnvironmentRuntimeCommandsSource.Contains("결과:", StringComparison.Ordinal), "WPF shell should not inline Ultralytics package-result detail labels");
         AssertTrue(shellSource.Contains("PythonEnvironmentService.InstallPackageAsync", StringComparison.Ordinal), "WPF shell install adapter should delegate package installation to the core Python environment service");
@@ -32501,6 +23703,20 @@ internal static partial class Program
         AssertTrue(packageResultDetail.Contains("\uB85C\uADF8 \uC694\uC57D:", StringComparison.Ordinal), "package result detail should label command output as a log summary");
         AssertTrue(!packageResultDetail.Contains("ExitCode:", StringComparison.Ordinal), "package result detail should not expose the raw ExitCode label");
         AssertTrue(!ContainsVisibleMojibakeArtifact(packageResultDetail), "package result detail should not expose mojibake artifacts");
+        string[] packageLogLines = WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsPackageOperationLogLines("Ultralytics 설치", new PythonPackageInstallResult
+        {
+            CommandLine = "python -m pip install ultralytics",
+            Output = "first output\r\nsecond output",
+            Error = "first error\r\nsecond error"
+        });
+        AssertTrue(packageLogLines.SequenceEqual(new[]
+        {
+            "Ultralytics 설치 명령: python -m pip install ultralytics",
+            "[stdout] first output",
+            "[stdout] second output",
+            "[stderr] first error",
+            "[stderr] second error"
+        }), "package-operation log rows should retain the command, stdout, then stderr order");
         var statusDetailSettings = new PythonModelSettings
         {
             PythonExecutablePath = @"C:\Python\python.exe",
@@ -32918,9 +24134,9 @@ internal static partial class Program
         AssertTrue(engineComparisonRequested, "training settings YOLOv5/YOLOv8 command should invoke the injected shell adapter");
 
         string shellSource = ReadWpfLabelingShellWindowSources();
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
+        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
         AssertTrue(shellSource.Contains("TrainingSettingsViewModel.ApplyWorkflowCommandState", StringComparison.Ordinal), "WPF shell should push training command availability through the training settings ViewModel");
         AssertTrue(shellSource.Contains("TrainingSettingsViewModel?.SetPostTrainingModelActionState", StringComparison.Ordinal), "WPF shell should push post-training model actions through the training settings ViewModel");
         AssertTrue(shellSource.Contains("ExecuteReviewCandidateModelCommand", StringComparison.Ordinal), "WPF shell should inject the candidate-review adapter command into the training settings ViewModel");
@@ -32986,9 +24202,9 @@ internal static partial class Program
         XDocument shellXaml = XDocument.Load(shellXamlPath);
         string shellXamlSource = File.ReadAllText(shellXamlPath);
         string shellSource = ReadWpfLabelingShellWindowSources();
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
+        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
         string logXamlPath = Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfShellLogPanel.xaml");
         XDocument logXaml = XDocument.Load(logXamlPath);
         XName xName = XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml");
@@ -33217,9 +24433,9 @@ internal static partial class Program
         AssertNamedXamlBinding(xaml, xName, "StopPythonWorkerButton", "IsEnabled", "IsStopWorkerEnabled");
 
         string shellSource = ReadWpfLabelingShellWindowSources();
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
+        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
         AssertTrue(shellSource.Contains("YoloStatusViewModel.ApplyWorkflowCommandState", StringComparison.Ordinal), "WPF shell should push YOLO status command availability through the ViewModel");
         AssertTrue(!shellSource.Contains("FirstCheckYoloButton.IsEnabled", StringComparison.Ordinal), "WPF shell should not directly enable the YOLO first-check button on the normal path");
 
@@ -33331,12 +24547,12 @@ internal static partial class Program
             AssertTrue(InvokePrivateStaticResult<string>(typeof(WpfLabelingShellWindow), "GetRecipeRootDirectory").EndsWith("RECIPE", StringComparison.OrdinalIgnoreCase), "WPF project config should expose the recipe root path");
 
             string shellSource = ReadWpfLabelingShellWindowSources();
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-            string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
+            string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
             string viewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "WpfProjectConfigPanelViewModel.cs"));
-            string serviceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfProjectRecipeService.cs"));
-            string sessionServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfProjectRecipeSessionService.cs"));
+            string serviceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Project", "WpfProjectRecipeService.cs"));
+            string sessionServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Project", "WpfProjectRecipeSessionService.cs"));
             string persistenceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.ProjectConfigPersistence.cs"));
             AssertTrue(shellSource.Contains("PopulateProjectRecipeList", StringComparison.Ordinal), "WPF project config should list existing recipe folders");
             AssertTrue(!shellSource.Contains("ProjectRecipeNameBox.Text =", StringComparison.Ordinal), "WPF project config should not push recipe text directly into the TextBox");
@@ -33455,7 +24671,7 @@ internal static partial class Program
 
         string root = FindRepositoryRoot();
         string dashboardSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.ModelCenterDashboard.cs"));
-        string presentationServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfModelCenterDashboardPresentationService.cs"));
+        string presentationServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Model", "WpfModelCenterDashboardPresentationService.cs"));
         string refreshSource = FindMethodSourceBlock(dashboardSource, "private void RefreshModelCenterDashboard(");
         AssertTrue(refreshSource.Contains("WpfModelCenterDashboardPresentationService.Build", StringComparison.Ordinal), "dashboard refresh should delegate display state composition to the presentation service");
         AssertTrue(!dashboardSource.Contains("private static string BuildModelCenterCurrentModelText", StringComparison.Ordinal), "View should not compose current-model display text directly");
@@ -33492,7 +24708,7 @@ internal static partial class Program
 
         string root = FindRepositoryRoot();
         string trainingGuideSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.TrainingGuideStatus.cs"));
-        string serviceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfDatasetDashboardPresentationService.cs"));
+        string serviceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Dataset", "WpfDatasetDashboardPresentationService.cs"));
         string dashboardUpdateSource = FindMethodSourceBlock(trainingGuideSource, "private void UpdateDatasetStatusDashboard(");
         AssertTrue(dashboardUpdateSource.Contains("WpfDatasetDashboardPresentationService.BuildMetrics", StringComparison.Ordinal), "training dashboard update should delegate metric-card state to the presentation service");
         AssertTrue(!trainingGuideSource.Contains("private static IReadOnlyList<WpfDatasetDashboardMetricItem> BuildDatasetDashboardMetrics", StringComparison.Ordinal), "View should not compose dataset dashboard metric cards directly");
@@ -33514,24 +24730,12 @@ internal static partial class Program
 
     private static void AssertNamedXamlAttachedBinding(XDocument xaml, XName xName, string controlName, string attachedPropertySuffix, string expectedBindingProperty)
     {
-        XElement element = xaml.Descendants()
-            .FirstOrDefault(candidate => string.Equals((string)candidate.Attribute(xName), controlName, StringComparison.Ordinal));
-
-        AssertTrue(element != null, $"WPF bound control was not found: {controlName}");
-        string binding = (string)element.Attributes()
-            .FirstOrDefault(attribute => attribute.Name.LocalName.EndsWith(attachedPropertySuffix, StringComparison.Ordinal)) ?? string.Empty;
-        AssertTrue(
-            binding.Contains($"Binding {expectedBindingProperty}", StringComparison.Ordinal),
-            $"WPF control {controlName}.{attachedPropertySuffix} was not bound to {expectedBindingProperty}");
+        TestSupport.AssertNamedXamlAttachedBinding(xaml, xName, controlName, attachedPropertySuffix, expectedBindingProperty);
     }
 
     private static void AssertNamedXamlElement(XDocument xaml, XName xName, string localName, string controlName)
     {
-        XElement element = xaml.Descendants()
-            .FirstOrDefault(candidate => candidate.Name.LocalName == localName
-                && string.Equals((string)candidate.Attribute(xName), controlName, StringComparison.Ordinal));
-
-        AssertTrue(element != null, $"WPF {localName} was not found: {controlName}");
+        TestSupport.AssertNamedXamlElement(xaml, xName, localName, controlName);
     }
 
     private static void TestWpfCanvasDetectionOverlayUsesThemeResources()
@@ -33704,7 +24908,7 @@ internal static partial class Program
 
         string root = FindRepositoryRoot();
         string trainingProgressShellSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.TrainingProgressStatus.cs"));
-        string trainingProgressPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfTrainingProgressPresentationService.cs"));
+        string trainingProgressPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Training", "WpfTrainingProgressPresentationService.cs"));
         AssertTrue(trainingProgressShellSource.Contains("WpfTrainingProgressPresentationService.BuildStatusNoResponseText", StringComparison.Ordinal), "training progress shell should delegate no-response wording to the presentation service");
         AssertTrue(trainingProgressShellSource.Contains("WpfTrainingProgressPresentationService.BuildFailedRecovery", StringComparison.Ordinal), "training progress shell should delegate failed-training recovery wording to the presentation service");
         AssertTrue(trainingProgressShellSource.Contains("BuildFailureDetail(status)", StringComparison.Ordinal), "training progress shell should pass the full training status into failure-detail presentation");
@@ -33968,7 +25172,7 @@ internal static partial class Program
     {
         string source = ReadWpfLabelingShellWindowSources();
         string repositoryRoot = FindRepositoryRoot();
-        string inferencePresentationSource = File.ReadAllText(Path.Combine(repositoryRoot, "0. UI", "9) WPF", "Services", "WpfInferenceStatusPresentationService.cs"));
+        string inferencePresentationSource = File.ReadAllText(Path.Combine(repositoryRoot, "0. UI", "9) WPF", "Services", "Detection", "WpfInferenceStatusPresentationService.cs"));
 
         AssertTrue(!source.Contains("WarmupPythonWorkerAsync", StringComparison.Ordinal), "WPF shell should not keep startup worker warm-up code");
         AssertTrue(!source.Contains("GetWorkerWarmupTimeoutMilliseconds", StringComparison.Ordinal), "WPF shell should not keep a separate startup warm-up timeout");
@@ -34434,9 +25638,9 @@ internal static partial class Program
         AssertTrue(!candidateXamlSource.Contains("MouseLeftButton", StringComparison.Ordinal), "WPF candidate review should avoid mouse event handlers for model comparison examples");
 
         string shellSource = ReadWpfLabelingShellWindowSources();
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
+        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
         AssertTrue(shellSource.Contains("CandidateReviewViewModel.ApplySelectionReview", StringComparison.Ordinal), "WPF shell should apply candidate detail and comparison together through the candidate review ViewModel");
         AssertTrue(!shellSource.Contains("SetCandidateDetailText", StringComparison.Ordinal), "WPF shell should not keep a separate candidate detail TextBlock update helper");
         AssertTrue(!shellSource.Contains("UpdateCandidateComparisonPanel", StringComparison.Ordinal), "WPF shell should not update the candidate comparison panel separately from candidate detail");
@@ -34893,13 +26097,13 @@ internal static partial class Program
 
         string panelCode = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfCandidateReviewPanel.xaml.cs"));
         string shellSource = ReadWpfLabelingShellWindowSources();
-        string selectionServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfCandidateReviewSelectionService.cs"));
+        string selectionServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "CandidateReview", "WpfCandidateReviewSelectionService.cs"));
         string candidateReviewViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfCandidateReviewPanelViewModel.cs"));
         string inputCommandBehaviorSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab", "Library", "OpenVisionLab.Mvvm", "Behaviors", "InputCommandBehaviors.cs"));
-        string stateServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfCandidateReviewStateService.cs"));
-        string presentationServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfCandidateReviewPresentationService.cs"));
-        string confirmationServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfCandidateConfirmationService.cs"));
-        string completionServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfCandidateReviewCompletionPresentationService.cs"));
+        string stateServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "CandidateReview", "WpfCandidateReviewStateService.cs"));
+        string presentationServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "CandidateReview", "WpfCandidateReviewPresentationService.cs"));
+        string confirmationServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "CandidateReview", "WpfCandidateConfirmationService.cs"));
+        string completionServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "CandidateReview", "WpfCandidateReviewCompletionPresentationService.cs"));
 
         AssertTrue(!panelCode.Contains("Requested", StringComparison.Ordinal), "candidate panel code-behind should not expose event relays");
         AssertTrue(panelCode.Contains("CompleteImageAndNextButton", StringComparison.Ordinal), "candidate panel should expose the finish-and-next button only as a named element");
@@ -35236,9 +26440,9 @@ internal static partial class Program
         AssertNamedXamlBinding(xaml, xName, "ClassListBox", "SelectedItem", "SelectedClass");
 
         string shellSource = ReadWpfLabelingShellWindowSources();
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
+        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
         string classViewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "WpfClassCatalogPanelViewModel.cs"));
         AssertTrue(shellSource.Contains("ClassCatalogViewModel?.SetClasses", StringComparison.Ordinal)
             || shellSource.Contains("ClassCatalogViewModel.SetClasses", StringComparison.Ordinal),
@@ -35482,10 +26686,10 @@ internal static partial class Program
         AssertTrue(!manualSummary.Contains("\uC218\uB3D9", StringComparison.Ordinal), "WPF object review rows should avoid redundant manual prefixes that crowd the side panel");
 
         string shellSource = ReadWpfLabelingShellWindowSources();
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
-        string objectPresentationSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfObjectReviewPresentationService.cs"));
+        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
+        string objectPresentationSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "ObjectReview", "WpfObjectReviewPresentationService.cs"));
         string objectReviewViewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "WpfObjectReviewPanelViewModel.cs"));
         string inputCommandBehaviorSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "OpenVisionLab", "Library", "OpenVisionLab.Mvvm", "Behaviors", "InputCommandBehaviors.cs"));
         AssertTrue(new WpfObjectReviewPanelViewModel().PanelModeTitleText.Contains("\uC800\uC7A5 \uB77C\uBCA8", StringComparison.Ordinal), "object review should identify the panel as saved labels");
@@ -35658,1301 +26862,12 @@ internal static partial class Program
 
     private static void AssertNamedXamlBinding(XDocument xaml, XName xName, string controlName, string targetPropertyName, string expectedBindingProperty)
     {
-        XElement element = xaml.Descendants()
-            .FirstOrDefault(candidate => string.Equals((string)candidate.Attribute(xName), controlName, StringComparison.Ordinal));
-
-        AssertTrue(element != null, $"WPF bound control was not found: {controlName}");
-        string binding = (string)element.Attribute(targetPropertyName) ?? string.Empty;
-        AssertTrue(
-            binding.Contains($"Binding {expectedBindingProperty}", StringComparison.Ordinal),
-            $"WPF control {controlName}.{targetPropertyName} was not bound to {expectedBindingProperty}");
+        TestSupport.AssertNamedXamlBinding(xaml, xName, controlName, targetPropertyName, expectedBindingProperty);
     }
 
     private static void AssertNamedXamlValue(XDocument xaml, XName xName, string controlName, string propertyName, string expectedValue)
     {
-        XElement element = xaml.Descendants()
-            .FirstOrDefault(candidate => string.Equals((string)candidate.Attribute(xName), controlName, StringComparison.Ordinal));
-
-        AssertTrue(element != null, $"WPF control was not found: {controlName}");
-        XAttribute attribute = element.Attributes()
-            .FirstOrDefault(candidate => string.Equals(candidate.Name.LocalName, propertyName, StringComparison.Ordinal)
-                || string.Equals(candidate.Name.ToString(), propertyName, StringComparison.Ordinal)
-                || candidate.Name.LocalName.EndsWith("." + propertyName, StringComparison.Ordinal)
-                || candidate.Name.ToString().EndsWith("." + propertyName, StringComparison.Ordinal));
-        AssertTrue(attribute != null, $"WPF control {controlName}.{propertyName} was not found");
-        AssertEqual(expectedValue, (string)attribute);
-    }
-
-    private static void TestWpfSettingsViewModelsRoundTrip()
-    {
-        var yoloSettings = new PythonModelSettings
-        {
-            PythonExecutablePath = @"C:\Python311\python.exe",
-            ModelEngine = PythonModelSettings.EngineYoloV5,
-            ProjectRootPath = @"C:\Git\yolov5",
-            ClientScriptPath = @"C:\Git\yolov5\labelling_tcp_client.py",
-            WeightsPath = @"C:\Git\yolov5\best.pt",
-            ImageRootPath = @"C:\Git\yolov5\data\train\images",
-            MinimumDetectionConfidence = 0.25F,
-            MaximumDetectionCandidates = 20,
-            InferenceImageSize = 320,
-            DetectionTimeoutSeconds = 30,
-            AutoStartClient = true
-        };
-        var yoloViewModel = new WpfYoloModelSettingsPanelViewModel();
-        yoloViewModel.LoadFrom(yoloSettings);
-        AssertEqual(@"C:\Git\yolov5", yoloViewModel.ProjectRootPath);
-        AssertEqual(PythonModelSettings.EngineYoloV5, yoloViewModel.SelectedModelEngine);
-        AssertTrue(yoloViewModel.ModelEngineOptions.Contains(PythonModelSettings.EngineYoloV8), "YOLOv8 should be selectable without changing the current default engine");
-        AssertTrue(yoloViewModel.ModelEngineOptions.Contains(PythonModelSettings.EngineYolo11), "YOLO11 should be selectable before the runtime adapter is installed");
-
-        yoloViewModel.MinimumConfidenceText = "0.85";
-        yoloViewModel.SelectedModelEngine = PythonModelSettings.EngineYolo11;
-        yoloViewModel.MaximumCandidatesText = "12";
-        yoloViewModel.InferenceImageSizeText = "416";
-        yoloViewModel.TimeoutSecondsText = "42";
-        yoloViewModel.AutoStartClient = false;
-        yoloViewModel.WeightsPath = @"C:\model\custom.pt";
-        yoloViewModel.ApplyTo(yoloSettings);
-
-        AssertEqual(0.85F, yoloSettings.MinimumDetectionConfidence);
-        AssertEqual(PythonModelSettings.EngineYolo11, yoloSettings.ModelEngine);
-        AssertEqual("yolo11", yoloSettings.GetProtocolModelName());
-        AssertEqual(12, yoloSettings.MaximumDetectionCandidates);
-        AssertEqual(416, yoloSettings.InferenceImageSize);
-        AssertEqual(42, yoloSettings.DetectionTimeoutSeconds);
-        AssertTrue(!yoloSettings.AutoStartClient, "YOLO auto-start value was not applied from the view model");
-        AssertEqual(@"C:\model\custom.pt", yoloSettings.WeightsPath);
-
-        var anomalySettings = new AnomalyClassificationSettings
-        {
-            NormalClassNames = new List<string> { "OK" },
-            AbnormalClassNames = new List<string> { "NG" },
-            MinimumConfidence = 0.66D
-        };
-        yoloViewModel.LoadFrom(yoloSettings, anomalySettings);
-        AssertEqual("OK", yoloViewModel.AnomalyNormalClassNamesText);
-        AssertEqual("NG", yoloViewModel.AnomalyAbnormalClassNamesText);
-        AssertEqual("0.66", yoloViewModel.AnomalyMinimumConfidenceText);
-        AssertTrue(yoloViewModel.AnomalyMappingSummaryText.Contains("\uC815\uC0C1 1\uAC1C", StringComparison.Ordinal), "YOLO model settings should summarize configured normal anomaly classes");
-        AssertTrue(yoloViewModel.AnomalyMappingSummaryText.Contains("\uC774\uC0C1 1\uAC1C", StringComparison.Ordinal), "YOLO model settings should summarize configured abnormal anomaly classes");
-        yoloViewModel.AnomalyNormalClassNamesText = "OK, Good, OK";
-        yoloViewModel.AnomalyAbnormalClassNamesText = "NG;Defect";
-        yoloViewModel.AnomalyMinimumConfidenceText = "0.72";
-        yoloViewModel.ApplyTo(anomalySettings);
-        AssertEqual(2, anomalySettings.NormalClassNames.Count);
-        AssertEqual("OK", anomalySettings.NormalClassNames[0]);
-        AssertEqual("Good", anomalySettings.NormalClassNames[1]);
-        AssertEqual(2, anomalySettings.AbnormalClassNames.Count);
-        AssertEqual("NG", anomalySettings.AbnormalClassNames[0]);
-        AssertEqual("Defect", anomalySettings.AbnormalClassNames[1]);
-        AssertEqual(0.72D, anomalySettings.MinimumConfidence);
-
-        yoloViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(yoloViewModel.IsBrowsePythonEnabled, "YOLO python browse should be enabled while idle");
-        AssertTrue(yoloViewModel.IsBrowseProjectRootEnabled, "YOLO project browse should be enabled while idle");
-        AssertTrue(yoloViewModel.IsBrowseClientScriptEnabled, "YOLO client browse should be enabled while idle");
-        AssertTrue(yoloViewModel.IsBrowseWeightsEnabled, "YOLO weights browse should be enabled while idle");
-        AssertTrue(yoloViewModel.IsBrowseImageRootEnabled, "YOLO image-root browse should be enabled while idle");
-        AssertTrue(yoloViewModel.IsSaveSettingsEnabled, "YOLO settings save should be enabled while idle");
-        AssertTrue(yoloViewModel.IsResetSettingsEnabled, "YOLO settings reset should be enabled while idle");
-        AssertTrue(yoloViewModel.IsRuntimeProfileActionEnabled, "YOLO runtime profile actions should be enabled while idle");
-        yoloViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: true,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(!yoloViewModel.IsBrowsePythonEnabled, "YOLO python browse should disable while busy");
-        AssertTrue(!yoloViewModel.IsBrowseProjectRootEnabled, "YOLO project browse should disable while busy");
-        AssertTrue(!yoloViewModel.IsBrowseClientScriptEnabled, "YOLO client browse should disable while busy");
-        AssertTrue(!yoloViewModel.IsBrowseWeightsEnabled, "YOLO weights browse should disable while busy");
-        AssertTrue(!yoloViewModel.IsBrowseImageRootEnabled, "YOLO image-root browse should disable while busy");
-        AssertTrue(!yoloViewModel.IsSaveSettingsEnabled, "YOLO settings save should disable while busy");
-        AssertTrue(!yoloViewModel.IsResetSettingsEnabled, "YOLO settings reset should disable while busy");
-        AssertTrue(!yoloViewModel.IsRuntimeProfileActionEnabled, "YOLO runtime profile actions should disable while busy");
-
-        var trainingSettings = new TrainingSettings();
-        var datasetSettings = new YoloDatasetSettings();
-        var trainingParam = new CYolov5TrainingParam();
-        var trainingViewModel = new WpfTrainingSettingsPanelViewModel();
-        trainingViewModel.LoadFrom(trainingSettings, datasetSettings);
-        AssertTrue(trainingViewModel.TrainingRecommendationText.Contains("이미지 320", StringComparison.Ordinal), "training recommendation should explain the fast image-size preset");
-        AssertTrue(trainingViewModel.ImageSizeGuideText.Contains("추천 320", StringComparison.Ordinal), "training image-size guide should include a concrete recommendation");
-        AssertTrue(trainingViewModel.BatchGuideText.Contains("추천 4", StringComparison.Ordinal), "training batch guide should include a concrete recommendation");
-        AssertTrue(trainingViewModel.ApplyFastRecommendationCommand.CanExecute(null), "training fast recommendation command should be executable while idle");
-        trainingViewModel.ApplyFastRecommendationCommand.Execute(null);
-        AssertEqual("320", trainingViewModel.ImageSizeText);
-        AssertEqual("4", trainingViewModel.BatchText);
-        AssertEqual("50", trainingViewModel.EpochText);
-        AssertEqual(CYolov5TrainingParam.Cfg.yolov5s.ToString(), trainingViewModel.Cfg);
-        AssertEqual(CYolov5TrainingParam.Weight.yolov5s.ToString(), trainingViewModel.Weight);
-        AssertEqual("20", trainingViewModel.ValidationPercentText);
-        AssertEqual("0", trainingViewModel.TestPercentText);
-        AssertEqual("17", trainingViewModel.SplitSeedText);
-        trainingViewModel.ImageSizeText = "640";
-        trainingViewModel.BatchText = "8";
-        trainingViewModel.EpochText = "12";
-        trainingViewModel.Cfg = CYolov5TrainingParam.Cfg.yolov5m.ToString();
-        trainingViewModel.Weight = CYolov5TrainingParam.Weight.yolov5m.ToString();
-        trainingViewModel.ValidationPercentText = "25";
-        trainingViewModel.TestPercentText = "10";
-        trainingViewModel.SplitSeedText = "99";
-        trainingViewModel.ApplyTo(trainingSettings, datasetSettings, trainingParam);
-
-        AssertEqual(640, trainingSettings.ImageSize);
-        AssertEqual(8, trainingSettings.Batch);
-        AssertEqual(12, trainingSettings.Epoch);
-        AssertEqual(CYolov5TrainingParam.Cfg.yolov5m.ToString(), trainingSettings.Cfg);
-        AssertEqual(CYolov5TrainingParam.Weight.yolov5m.ToString(), trainingSettings.Weight);
-        AssertEqual(25, datasetSettings.ValidationPercent);
-        AssertEqual(10, datasetSettings.TestPercent);
-        AssertEqual(99, datasetSettings.SplitSeed);
-        AssertTrue(trainingViewModel.SplitPolicyHintText.Contains("\uAC80\uC99D", StringComparison.Ordinal), "training split policy hint should mention validation");
-        AssertTrue(trainingViewModel.SplitPolicyHintText.Contains("\uCD5C\uC885 \uAC80\uC99D", StringComparison.Ordinal), "training split policy hint should mention final verification");
-        AssertEqual(CYolov5TrainingParam.Cfg.yolov5m, trainingParam.cfg);
-        AssertEqual(CYolov5TrainingParam.Weight.yolov5m, trainingParam.weight);
-        trainingViewModel.SetTrainingReadinessText("Ready");
-        trainingViewModel.SetTrainingProgress("Running", "Epoch 1/2", 42, isIndeterminate: true);
-        trainingViewModel.SetTrainingStatusBrushes(System.Windows.Media.Brushes.LimeGreen, System.Windows.Media.Brushes.DodgerBlue);
-        AssertEqual("Ready", trainingViewModel.TrainingReadinessText);
-        AssertEqual("Running", trainingViewModel.TrainingProgressText);
-        AssertEqual("Epoch 1/2", trainingViewModel.TrainingEpochStatusText);
-        AssertEqual(42D, trainingViewModel.TrainingProgressValue);
-        AssertEqual(true, trainingViewModel.TrainingProgressIsIndeterminate);
-        AssertEqual(System.Windows.Media.Brushes.LimeGreen, trainingViewModel.TrainingReadinessForeground);
-        AssertEqual(System.Windows.Media.Brushes.DodgerBlue, trainingViewModel.TrainingProgressForeground);
-        trainingViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(trainingViewModel.IsApplyFastRecommendationEnabled, "training fast recommendation should be enabled while idle");
-        AssertTrue(trainingViewModel.IsApplyFinalVerificationPresetEnabled, "training final-verification preset should be enabled while idle");
-        AssertTrue(trainingViewModel.IsRefreshReadinessEnabled, "training refresh should be enabled while idle");
-        AssertTrue(trainingViewModel.IsStartTrainingEnabled, "training start should be enabled while idle");
-        AssertTrue(!trainingViewModel.IsStopTrainingEnabled, "training stop should be disabled while idle");
-        trainingViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: true,
-            isTrainingStopAvailable: true,
-            hasCurrentRecipeName: true));
-        AssertTrue(!trainingViewModel.IsApplyFastRecommendationEnabled, "training fast recommendation should disable while training is running");
-        AssertTrue(!trainingViewModel.IsApplyFinalVerificationPresetEnabled, "training final-verification preset should disable while training is running");
-        AssertTrue(!trainingViewModel.IsRefreshReadinessEnabled, "training refresh should disable while training is running");
-        AssertTrue(!trainingViewModel.IsStartTrainingEnabled, "training start should disable while training is running");
-        AssertTrue(trainingViewModel.IsStopTrainingEnabled, "training stop should enable while training is running");
-        trainingViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: true,
-            hasCurrentRecipeName: true));
-        AssertTrue(!trainingViewModel.IsStartTrainingEnabled, "training start should stay disabled while worker status reports live training");
-        AssertTrue(trainingViewModel.IsStopTrainingEnabled, "training stop should stay enabled while worker status reports live training");
-        trainingViewModel.SetPostTrainingModelActionState(
-            "\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378: best.pt",
-            "\uC0C8 \uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4: exp7/best.pt",
-            "\uBAA8\uB378 \uC801\uC6A9: \uC0C8 \uD6C4\uBCF4 \uAC80\uD1A0 \uD544\uC694",
-            "\uB2E4\uC74C: \uBAA8\uB378 \uBE44\uAD50 \uD6C4 \uC800\uC7A5",
-            "\uD6C4\uBCF4 \uAC80\uC99D",
-            "\uD6C4\uBCF4 \uBAA8\uB378\uC758 \uCD5C\uC885 \uAC80\uC99D\uC744 \uC5FD\uB2C8\uB2E4.",
-            canReview: true,
-            "\uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5",
-            "\uC120\uD0DD\uD55C \uBAA8\uB378\uC744 recipe\uC5D0 \uC800\uC7A5\uD569\uB2C8\uB2E4.",
-            canConfirm: true);
-        trainingViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: false,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(trainingViewModel.IsReviewTrainedModelEnabled, "training settings candidate-review action should enable when commands are idle");
-        AssertTrue(trainingViewModel.IsConfirmTrainedModelEnabled, "training settings save-model action should enable when a recipe can be saved");
-        trainingViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: false,
-            isYoloEnvironmentCommandRunning: true,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(!trainingViewModel.IsReviewTrainedModelEnabled, "training settings candidate-review action should disable while another command is running");
-        AssertTrue(!trainingViewModel.IsConfirmTrainedModelEnabled, "training settings save-model action should disable while another command is running");
-        trainingViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: false,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: false));
-        AssertTrue(trainingViewModel.IsReviewTrainedModelEnabled, "training settings candidate-review action should stay enabled without recipe save permission");
-        AssertTrue(!trainingViewModel.IsConfirmTrainedModelEnabled, "training settings save-model action should require recipe save permission");
-
-        var shellViewModel = new WpfLabelingShellViewModel();
-        AssertTrue(shellViewModel.LoadedCommand.CanExecute(null), "shell loaded command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.ClosedCommand.CanExecute(null), "shell closed command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.PreviewKeyDownCommand.CanExecute(null), "shell preview-key command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.ToggleThemeCommand.CanExecute(null), "shell theme command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.LoadSampleCommand.CanExecute(null), "shell load-sample command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.AddSampleRoiCommand.CanExecute(null), "shell add-ROI command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.SaveAnnotationsCommand.CanExecute(null), "shell save command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.LabelingModeCommand.CanExecute(null), "shell labeling-mode command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.InferenceModeCommand.CanExecute(null), "shell inference-mode command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.DatasetHomeCommand.CanExecute(null), "shell dataset-home stage command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.LabelingWorkbenchCommand.CanExecute(null), "shell labeling-workbench stage command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.InferenceReviewCommand.CanExecute(null), "shell inference-review stage command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.TrainingModelCenterCommand.CanExecute(null), "shell training/model stage command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.ReviewCandidateModelCommand.CanExecute(null), "shell candidate-model review command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.CheckYoloCommand.CanExecute(null), "shell YOLO check command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.DetectCurrentImageCommand.CanExecute(null), "shell current-image detect command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.ChangeDatasetCommand.CanExecute(null), "shell dataset-change command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.OpenDatasetFolderCommand.CanExecute(null), "shell dataset-folder command should be exposed from the ViewModel");
-        AssertTrue(shellViewModel.ChangeImageFolderCommand.CanExecute(null), "shell image-folder command should be exposed from the ViewModel");
-        string modelRegistryTempRoot = CreateTempRoot();
-        try
-        {
-            string currentWeightsPath = Path.Combine(modelRegistryTempRoot, "current.pt");
-            string candidateWeightsPath = Path.Combine(modelRegistryTempRoot, "runs", "train", "exp7", "weights", "best.pt");
-            string rejectedWeightsPath = Path.Combine(modelRegistryTempRoot, "runs", "train", "exp6", "weights", "best.pt");
-            string pendingWeightsPath = Path.Combine(modelRegistryTempRoot, "runs", "train", "exp8", "weights", "best.pt");
-            Directory.CreateDirectory(Path.GetDirectoryName(candidateWeightsPath));
-            Directory.CreateDirectory(Path.GetDirectoryName(rejectedWeightsPath));
-            Directory.CreateDirectory(Path.GetDirectoryName(pendingWeightsPath));
-            File.WriteAllText(currentWeightsPath, "current");
-            File.WriteAllText(candidateWeightsPath, "candidate");
-            File.WriteAllText(rejectedWeightsPath, "rejected");
-            File.WriteAllText(pendingWeightsPath, "pending");
-
-            var modelRegistryPresentation = WpfModelRegistryPresentationService.Build(
-                new PythonModelSettings
-                {
-                    ModelEngine = PythonModelSettings.EngineYoloV5,
-                    WeightsPath = currentWeightsPath
-                },
-                new WpfTrainingWeightsComparison
-                {
-                    LatestWeightsPath = candidateWeightsPath,
-                    CurrentWeightsPath = currentWeightsPath,
-                    MetricsStatusText = "mAP50-95 +7.0%p, mAP50 +5.0%p, precision +3.0%p, recall +2.0%p, box loss -0.0123"
-                },
-                new YoloTrainingGuideHistory
-                {
-                    LastTrainingState = "completed",
-                    LastTrainingProgressPercent = 100,
-                    LastTrainingUpdateUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)
-                },
-                hasPendingInspectionModelSelection: false);
-
-            AssertTrue(modelRegistryPresentation.ProfileText.Contains("\uBAA8\uB378 \uD504\uB85C\uD544", StringComparison.Ordinal), "model registry should name the model profile row");
-            AssertTrue(modelRegistryPresentation.TrainingRunText.Contains("\uCD5C\uADFC \uD559\uC2B5 \uC2E4\uD589", StringComparison.Ordinal), "model registry should name the training-run row");
-            AssertTrue(modelRegistryPresentation.CandidateModelText.Contains("\uBAA8\uB378 \uD6C4\uBCF4", StringComparison.Ordinal), "model registry should name the candidate-model row");
-            string candidateDisplayName = $"exp7{Path.DirectorySeparatorChar}best.pt";
-            AssertTrue(modelRegistryPresentation.CandidateModelText.Contains(candidateDisplayName, StringComparison.Ordinal), "model registry candidate row should keep the training run folder, not only best.pt");
-            AssertTrue(modelRegistryPresentation.CandidateModelText.Contains("mAP50-95", StringComparison.Ordinal), "model registry should keep metric context with the candidate model");
-            AssertTrue(modelRegistryPresentation.CandidateModelText.Contains("P/R", StringComparison.Ordinal), "model registry should compact precision/recall in the candidate-model row");
-            AssertTrue(!modelRegistryPresentation.CandidateModelText.Contains("box loss", StringComparison.OrdinalIgnoreCase), "model registry candidate row should keep detailed loss metrics out of the first-visible row");
-            AssertEqual("YOLOv5 / " + candidateDisplayName, WpfInferenceStatusPresentationService.BuildRuntimeModelLabel(new PythonModelSettings
-            {
-                ModelEngine = PythonModelSettings.EngineYoloV5,
-                WeightsPath = candidateWeightsPath
-            }));
-            AssertTrue(modelRegistryPresentation.InspectionModelText.Contains("\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378", StringComparison.Ordinal), "model registry should name the current inspection model row");
-            AssertTrue(modelRegistryPresentation.InspectionModelText.Contains("\uC2E4\uD589\uAE30", StringComparison.Ordinal)
-                && modelRegistryPresentation.InspectionModelText.Contains("YOLOv5 repo", StringComparison.Ordinal),
-                "model registry current inspection row should show the runtime used for inspection");
-            AssertTrue(modelRegistryPresentation.SummaryPrimaryText.Contains("current.pt", StringComparison.Ordinal)
-                && modelRegistryPresentation.SummaryPrimaryText.Contains(candidateDisplayName, StringComparison.Ordinal),
-                "model registry compact summary should keep current and candidate models visible with the training run folder");
-            AssertTrue(modelRegistryPresentation.SummarySecondaryText.Contains("YOLOv5", StringComparison.Ordinal)
-                && modelRegistryPresentation.SummarySecondaryText.Contains("\uCD5C\uADFC \uD559\uC2B5", StringComparison.Ordinal),
-                "model registry compact summary should keep profile and latest training context visible");
-            AssertTrue(modelRegistryPresentation.SummarySecondaryText.Contains("YOLOv5 repo", StringComparison.Ordinal), "model registry compact summary should include the selected runtime family");
-            string yolo11RuntimeSummary = WpfModelRegistryPresentationService.BuildSelectedRuntimeSummaryText(new PythonModelSettings
-            {
-                ModelEngine = PythonModelSettings.EngineYolo11
-            });
-            AssertTrue(yolo11RuntimeSummary.Contains("YOLO11", StringComparison.Ordinal)
-                && yolo11RuntimeSummary.Contains("Ultralytics", StringComparison.Ordinal),
-                "model registry runtime summary should identify YOLO11 as an Ultralytics runtime");
-            string ultralyticsPythonPath = Path.Combine(modelRegistryTempRoot, "ultralytics-venv", "Scripts", "python.exe");
-            Directory.CreateDirectory(Path.GetDirectoryName(ultralyticsPythonPath));
-            Directory.CreateDirectory(Path.Combine(modelRegistryTempRoot, "ultralytics-venv", "Lib", "site-packages", "ultralytics"));
-            File.WriteAllText(ultralyticsPythonPath, "python");
-            string yolo11WeightsPath = Path.Combine(modelRegistryTempRoot, "yolo11n.pt");
-            File.WriteAllText(yolo11WeightsPath, "weights");
-            string yolo11PartialReadySummary = WpfModelRegistryPresentationService.BuildSelectedRuntimeSummaryText(new PythonModelSettings
-            {
-                PythonExecutablePath = ultralyticsPythonPath,
-                ModelEngine = PythonModelSettings.EngineYolo11,
-                ProjectRootPath = PythonModelRuntimeBundledWorkerService.ResolveUltralyticsWorkerRootPath(),
-                ClientScriptPath = PythonModelRuntimeBundledWorkerService.ResolveUltralyticsWorkerScriptPath(),
-                WeightsPath = yolo11WeightsPath
-            });
-            AssertTrue(yolo11PartialReadySummary.Contains("\uD604\uC7AC \uAC80\uC0AC \uAC00\uB2A5", StringComparison.Ordinal)
-                && yolo11PartialReadySummary.Contains("\uD559\uC2B5 \uBBF8\uC9C0\uC6D0", StringComparison.Ordinal),
-                "model registry runtime summary should distinguish YOLO11 current-inspection readiness from unsupported training");
-            shellViewModel.SetModelRegistryState(modelRegistryPresentation);
-            AssertTrue(shellViewModel.ModelRegistrySummaryPrimaryText.Contains("current.pt", StringComparison.Ordinal)
-                && shellViewModel.ModelRegistrySummaryPrimaryText.Contains("best.pt", StringComparison.Ordinal),
-                "shell model-registry compact summary should include current and candidate model files");
-            AssertTrue(shellViewModel.ModelRegistrySummarySecondaryText.Contains("YOLOv5", StringComparison.Ordinal), "shell model-registry compact summary should include the model adapter family");
-            AssertTrue(shellViewModel.ModelRegistrySummarySecondaryText.Contains("YOLOv5 repo", StringComparison.Ordinal), "shell model-registry compact summary should include the runtime family");
-            AssertTrue(shellViewModel.ModelRegistryProfileText.Contains("YOLOv5", StringComparison.Ordinal), "shell model-registry profile row should include the selected adapter profile");
-            AssertTrue(shellViewModel.ModelRegistryTrainingRunText.Contains("100", StringComparison.Ordinal), "shell model-registry training row should include completed run progress");
-            AssertTrue(shellViewModel.ModelRegistryCandidateModelText.Contains("mAP50-95", StringComparison.Ordinal), "shell model-registry candidate row should include metric context");
-            AssertTrue(!shellViewModel.ModelRegistryCandidateModelText.Contains("box loss", StringComparison.OrdinalIgnoreCase), "shell model-registry candidate row should stay compact for first-visible review");
-            AssertTrue(shellViewModel.ModelRegistryInspectionModelText.Contains("current.pt", StringComparison.Ordinal), "shell model-registry inspection row should include the current model file");
-            AssertTrue(shellViewModel.ModelRegistryInspectionModelText.Contains("YOLOv5 repo", StringComparison.Ordinal), "shell model-registry inspection row should include the runtime family");
-
-            var pendingRegistrySettings = new ModelRegistrySettings();
-            var pendingRegistryPythonSettings = new PythonModelSettings
-            {
-                ModelEngine = PythonModelSettings.EngineYoloV5,
-                ProjectRootPath = modelRegistryTempRoot,
-                WeightsPath = candidateWeightsPath
-            };
-            ModelRegistryService.RecordTrainingCandidate(
-                pendingRegistrySettings,
-                pendingRegistryPythonSettings,
-                LabelingDatasetPurpose.ObjectDetection,
-                modelRegistryTempRoot,
-                candidateWeightsPath,
-                currentWeightsPath,
-                "mAP50-95 +7.0%p",
-                "completed",
-                100,
-                "training completed",
-                savedToRecipe: false);
-            WpfModelRegistryPresentation pendingModelSelectionPresentation = WpfModelRegistryPresentationService.Build(
-                pendingRegistryPythonSettings,
-                new WpfTrainingWeightsComparison
-                {
-                    LatestWeightsPath = candidateWeightsPath,
-                    CurrentWeightsPath = currentWeightsPath,
-                    MetricsStatusText = "mAP50-95 +7.0%p"
-                },
-                new YoloTrainingGuideHistory
-                {
-                    LastTrainingState = "completed",
-                    LastTrainingProgressPercent = 100,
-                    LastTrainingUpdateUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)
-                },
-                pendingRegistrySettings,
-                hasPendingInspectionModelSelection: true);
-            AssertTrue(pendingModelSelectionPresentation.InspectionModelText.Contains("current.pt", StringComparison.Ordinal),
-                "pending model selection should keep the saved current inspection model visible");
-            AssertTrue(!pendingModelSelectionPresentation.InspectionModelText.Contains("best.pt", StringComparison.Ordinal),
-                "pending model selection should not rename the candidate as the current inspection model before recipe save");
-            AssertTrue(pendingModelSelectionPresentation.CandidateModelText.Contains("best.pt", StringComparison.Ordinal),
-                "pending model selection should keep the selected trained model in the candidate row");
-
-            var registrySettings = new ModelRegistrySettings();
-            var registryPythonSettings = new PythonModelSettings
-            {
-                ModelEngine = PythonModelSettings.EngineYoloV5,
-                ProjectRootPath = modelRegistryTempRoot,
-                WeightsPath = candidateWeightsPath
-            };
-            ModelRegistryService.RecordCandidateDecision(
-                registrySettings,
-                registryPythonSettings,
-                LabelingDatasetPurpose.ObjectDetection,
-                modelRegistryTempRoot,
-                rejectedWeightsPath,
-                currentWeightsPath,
-                "mAP50-95 -2.0%p",
-                ModelRegistryService.CandidateDecisionRejected,
-                "operator rejected",
-                savedToRecipe: false);
-            ModelRegistryService.RecordCandidateDecision(
-                registrySettings,
-                registryPythonSettings,
-                LabelingDatasetPurpose.ObjectDetection,
-                modelRegistryTempRoot,
-                candidateWeightsPath,
-                currentWeightsPath,
-                "mAP50-95 +7.0%p",
-                ModelRegistryService.CandidateDecisionAdopted,
-                "operator saved",
-                savedToRecipe: true);
-            ModelRegistryService.RecordTrainingCandidate(
-                registrySettings,
-                registryPythonSettings,
-                LabelingDatasetPurpose.ObjectDetection,
-                modelRegistryTempRoot,
-                pendingWeightsPath,
-                candidateWeightsPath,
-                "mAP50-95 +1.0%p",
-                "completed",
-                100,
-                "training completed",
-                savedToRecipe: false);
-            WpfModelRegistryPresentation registryHistoryPresentation = WpfModelRegistryPresentationService.Build(
-                registryPythonSettings,
-                new WpfTrainingWeightsComparison
-                {
-                    LatestWeightsPath = candidateWeightsPath,
-                    CurrentWeightsPath = candidateWeightsPath,
-                    MetricsStatusText = "mAP50-95 +7.0%p"
-                },
-                new YoloTrainingGuideHistory
-                {
-                    LastTrainingState = "completed",
-                    LastTrainingProgressPercent = 100,
-                    LastTrainingUpdateUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)
-                },
-                registrySettings,
-                hasPendingInspectionModelSelection: false);
-            AssertTrue(registryHistoryPresentation.HistoryItems.Count >= 2, "model registry presentation should expose multiple recent model-history rows");
-            AssertTrue(registryHistoryPresentation.HistoryItems.Any(item => item.DecisionText.Contains("\uAC70\uC808", StringComparison.Ordinal)), "model history should include rejected candidates");
-            AssertTrue(registryHistoryPresentation.HistoryItems.Any(item => item.DecisionText.Contains("\uD604\uC7AC \uC0AC\uC6A9", StringComparison.Ordinal)), "model history should identify the current inspection model");
-            WpfModelRegistryHistoryItem rejectedHistoryItem = registryHistoryPresentation.HistoryItems.FirstOrDefault(item => item.WeightsPath == rejectedWeightsPath);
-            AssertTrue(rejectedHistoryItem != null, "model history should keep rejected candidates visible for traceability");
-            AssertTrue(!rejectedHistoryItem.CanPromoteToInspectionModel, "rejected model-history rows should not be directly promotable to inspection model");
-            AssertTrue(rejectedHistoryItem.ActionText.Contains("\uAC70\uC808", StringComparison.Ordinal), "rejected model-history rows should expose a rejected action state");
-            shellViewModel.SetModelRegistryState(registryHistoryPresentation);
-            AssertTrue(shellViewModel.IsModelRegistryHistoryVisible, "shell model-registry history should become visible when rows exist");
-            AssertTrue(shellViewModel.ModelRegistryHistoryItems.Count >= 2, "shell ViewModel should keep recent model-history rows for the model center");
-            AssertTrue(shellViewModel.ModelRegistryHistoryHeaderText.Contains(shellViewModel.ModelRegistryHistoryItems.Count.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal),
-                "model-history header should include the visible row count");
-            AssertTrue(shellViewModel.SelectedModelRegistryHistoryItem != null, "shell model-registry history should select a row for detail review");
-            AssertTrue(shellViewModel.IsSelectedModelHistoryVisible, "selected model-history detail should be visible when a history row exists");
-            AssertEqual(shellViewModel.SelectedModelRegistryHistoryItem.TitleText, shellViewModel.SelectedModelHistoryTitleText);
-            AssertTrue(shellViewModel.SelectedModelHistoryComparisonTitleText.Contains("\uD604\uC7AC \uAC80\uC0AC", StringComparison.Ordinal), "selected model-history comparison should name the current inspection model");
-            AssertTrue(shellViewModel.SelectedModelHistoryCurrentModelText.Contains("\uD604\uC7AC \uAC80\uC0AC", StringComparison.Ordinal), "selected model-history comparison should include the current model column");
-            AssertTrue(shellViewModel.SelectedModelHistorySelectedModelText.Contains("\uD604\uC7AC \uAC80\uC0AC", StringComparison.Ordinal), "the initially selected current model should compare as the current model");
-
-            WpfModelRegistryHistoryItem promotableHistoryItem = shellViewModel.ModelRegistryHistoryItems.FirstOrDefault(item => item.CanPromoteToInspectionModel && item.WeightsPath == pendingWeightsPath);
-            AssertTrue(promotableHistoryItem != null, "model history should expose a non-current candidate that can be applied intentionally");
-            shellViewModel.SelectedModelRegistryHistoryItem = promotableHistoryItem;
-            AssertEqual(promotableHistoryItem.TitleText, shellViewModel.SelectedModelHistoryTitleText);
-            AssertTrue(shellViewModel.SelectedModelHistoryDecisionText.Contains("\uACB0\uC815", StringComparison.Ordinal), "selected model-history detail should keep adoption/rejection decision context");
-            AssertTrue(shellViewModel.SelectedModelHistoryCurrentModelText.Contains("\uD604\uC7AC \uAC80\uC0AC", StringComparison.Ordinal), "selected model-history comparison should keep the current model visible after selecting another row");
-            AssertTrue(shellViewModel.SelectedModelHistorySelectedModelText.Contains("\uC120\uD0DD \uC774\uB825", StringComparison.Ordinal), "selected model-history comparison should identify the selected history column");
-            AssertTrue(shellViewModel.SelectedModelHistoryComparisonMetricText.Contains("mAP50-95", StringComparison.Ordinal), "selected model-history comparison should include current and selected metric context");
-            AssertTrue(shellViewModel.IsSelectedModelHistoryActionEnabled, "selected model-history apply action should enable for an existing non-current candidate");
-            shellViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-                isInferenceMode: false,
-                isYoloEnvironmentCommandRunning: false,
-                isDetecting: false,
-                isBatchDetectionRunning: false,
-                isTrainingCommandRunning: false,
-                isTrainingStopAvailable: false,
-                hasCurrentRecipeName: false));
-            AssertTrue(!shellViewModel.IsSelectedModelHistoryActionEnabled, "selected model-history apply action should require recipe save permission");
-            shellViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-                isInferenceMode: false,
-                isYoloEnvironmentCommandRunning: false,
-                isDetecting: false,
-                isBatchDetectionRunning: false,
-                isTrainingCommandRunning: false,
-                isTrainingStopAvailable: false,
-                hasCurrentRecipeName: true));
-        }
-        finally
-        {
-            DeleteDirectoryIfExists(modelRegistryTempRoot);
-        }
-        shellViewModel.SetModelCenterTrainingState("Training completed", "Epoch 5/5");
-        AssertEqual("Training completed", shellViewModel.ModelCenterTrainingStatusText);
-        AssertEqual("Epoch 5/5", shellViewModel.ModelCenterTrainingDetailText);
-        shellViewModel.SetModelCenterRecoveryState("Training failed", "Worker disconnected", "Restart YOLO then retry");
-        AssertTrue(shellViewModel.IsModelCenterRecoveryVisible, "model-center recovery card should become visible when failure guidance is set");
-        AssertEqual("Training failed", shellViewModel.ModelCenterRecoveryTitleText);
-        AssertEqual("Worker disconnected", shellViewModel.ModelCenterRecoveryDetailText);
-        AssertEqual("Restart YOLO then retry", shellViewModel.ModelCenterRecoveryActionText);
-        shellViewModel.ClearModelCenterRecoveryState();
-        AssertTrue(!shellViewModel.IsModelCenterRecoveryVisible, "model-center recovery card should hide after the recovery state is cleared");
-        AssertTrue(!shellViewModel.IsModelCenterAnomalyEvaluationVisible, "model-center anomaly evaluation should start hidden until a summary is loaded");
-        AssertTrue(!shellViewModel.IsModelCenterAnomalyEvaluationPickerVisible, "anomaly evaluation summary picker should start hidden");
-        shellViewModel.SetModelCenterAnomalyEvaluationPickerVisible(true);
-        AssertTrue(shellViewModel.IsModelCenterAnomalyEvaluationPickerVisible, "anomaly evaluation summary picker should become visible for anomaly datasets");
-        AssertTrue(shellViewModel.IsModelCenterAnomalyEvaluationPickerEnabled, "anomaly evaluation summary picker should be enabled while model-center review commands can run");
-        shellViewModel.SetModelCenterAnomalyEvaluationPickerVisible(false);
-        AssertTrue(!shellViewModel.IsModelCenterAnomalyEvaluationPickerEnabled, "hidden anomaly evaluation summary picker should not stay enabled");
-        shellViewModel.SetModelCenterAnomalyEvaluationState(new WpfAnomalyClassificationEvaluationPresentation
-        {
-            RecommendationText = "\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00: \uBCF4\uB958",
-            MetricsText = "\uD3C9\uAC00 4\uC7A5 / \uC815\uC0C1 1/2, \uC774\uC0C1 0/2 / \uC804\uCCB4 25%",
-            DetailText = "\uBCF4\uB958 \uC0AC\uC720: \uAC80\uC99D \uC774\uBBF8\uC9C0 4/10\uC7A5",
-            ActionText = "\uC815\uC0C1/\uC774\uC0C1 held-out \uC774\uBBF8\uC9C0\uB97C \uB354 \uBAA8\uC73C\uACE0 \uB2E4\uC2DC \uD3C9\uAC00"
-        });
-        AssertTrue(shellViewModel.IsModelCenterAnomalyEvaluationVisible, "model-center anomaly evaluation should become visible after a presentation is set");
-        AssertTrue(shellViewModel.ModelCenterAnomalyEvaluationRecommendationText.Contains("\uBCF4\uB958", StringComparison.Ordinal), "model-center anomaly evaluation should expose the recommendation");
-        AssertTrue(shellViewModel.ModelCenterAnomalyEvaluationDetailText.Contains("\uAC80\uC99D \uC774\uBBF8\uC9C0", StringComparison.Ordinal), "model-center anomaly evaluation should expose blocker detail");
-        shellViewModel.ClearModelCenterAnomalyEvaluationState();
-        AssertTrue(!shellViewModel.IsModelCenterAnomalyEvaluationVisible, "model-center anomaly evaluation should hide after it is cleared");
-        AssertEqual(string.Empty, shellViewModel.ModelCenterAnomalyEvaluationMetricsText);
-        shellViewModel.SetModelCenterModelState("Current best.pt", "New candidate.pt", "Save required", "Compare then save");
-        AssertEqual("Current best.pt", shellViewModel.ModelCenterCurrentModelText);
-        AssertEqual("New candidate.pt", shellViewModel.ModelCenterCandidateModelText);
-        AssertEqual("Save required", shellViewModel.ModelCenterAdoptionText);
-        AssertEqual("Compare then save", shellViewModel.ModelCenterNextActionText);
-        AssertEqual("Current best.pt", shellViewModel.ModelCenterCurrentModelDetailText);
-        AssertEqual("New candidate.pt", shellViewModel.ModelCenterCandidateModelDetailText);
-        AssertEqual("Save required", shellViewModel.ModelCenterAdoptionDetailText);
-        AssertEqual("Compare then save", shellViewModel.ModelCenterNextActionDetailText);
-        AssertTrue(shellViewModel.ModelCenterDecisionSummaryText.Contains("Save required", StringComparison.Ordinal), "model-center decision summary should default from adoption status");
-        AssertTrue(shellViewModel.ModelCenterDecisionEvidenceText.Contains("Current best.pt", StringComparison.Ordinal), "model-center decision evidence should include the current inspection model");
-        AssertTrue(shellViewModel.ModelCenterDecisionEvidenceText.Contains("New candidate.pt", StringComparison.Ordinal), "model-center decision evidence should include the training candidate");
-        AssertTrue(shellViewModel.ModelCenterDecisionActionText.Contains("Compare then save", StringComparison.Ordinal), "model-center decision action should default from next action status");
-        AssertEqual("\uD604\uC7AC \uAC80\uC0AC", shellViewModel.ModelCenterInspectCurrentImageButtonText);
-        AssertTrue(shellViewModel.ModelCenterInspectCurrentImageButtonToolTip.Contains("Current best.pt", StringComparison.Ordinal), "model-center current-inspection tooltip should include the active inspection model");
-        AssertTrue(!shellViewModel.IsModelCenterInspectCurrentImageEnabled, "model-center current-inspection button should wait for inference-ready state");
-        AssertEqual("\uD6C4\uBCF4 \uC5C6\uC74C", shellViewModel.ModelCenterConfirmModelButtonText);
-        AssertTrue(!shellViewModel.IsModelCenterConfirmModelEnabled, "model-center confirm button should stay disabled without a selected candidate");
-        AssertEqual("\uD6C4\uBCF4 \uC5C6\uC74C", shellViewModel.ModelCenterReviewCandidateButtonText);
-        AssertTrue(!shellViewModel.IsModelCenterReviewCandidateEnabled, "model-center candidate review button should stay disabled without a candidate");
-        shellViewModel.SetModelCenterCandidateReviewState(
-            "\uD6C4\uBCF4 \uAC80\uC99D",
-            "\uD6C4\uBCF4 \uBAA8\uB378\uC758 \uCD5C\uC885 \uAC80\uC99D \uBE44\uAD50 \uD654\uBA74\uC73C\uB85C \uC774\uB3D9\uD569\uB2C8\uB2E4.",
-            canReviewCandidate: true);
-        AssertEqual("\uD6C4\uBCF4 \uAC80\uC99D", shellViewModel.ModelCenterReviewCandidateButtonText);
-        AssertTrue(shellViewModel.IsModelCenterReviewCandidateEnabled, "model-center candidate review button should enable when a candidate can be reviewed");
-        shellViewModel.SetModelCenterModelState(
-            "\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378: best.pt",
-            "\uC0C8 \uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4: exp7/best.pt",
-            "\uBAA8\uB378 \uC801\uC6A9: \uC0C8 \uD6C4\uBCF4 \uAC80\uD1A0 \uD544\uC694",
-            "\uB2E4\uC74C: \uBAA8\uB378 \uBE44\uAD50 \uD6C4 \uC800\uC7A5",
-            "\uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5",
-            "\uC120\uD0DD\uD55C \uBAA8\uB378\uC744 recipe\uC5D0 \uC800\uC7A5\uD558\uACE0 \uB2E4\uC74C \uCD94\uB860\uBD80\uD130 \uAC80\uC0AC \uBAA8\uB378\uB85C \uC0AC\uC6A9\uD569\uB2C8\uB2E4.",
-            canConfirmModel: true,
-            decisionSummaryText: "\uD310\uB2E8: \uC0C8 \uBAA8\uB378 \uD6C4\uBCF4 \uAC80\uC99D \uD6C4 \uC801\uC6A9 \uAC00\uB2A5",
-            decisionEvidenceText: "\uADFC\uAC70: mAP50-95 +7.0%p / \uCD5C\uC885 \uAC80\uC99D \uC608\uC2DC \uD655\uC778",
-            decisionActionText: "\uC800\uC7A5: \uD6C4\uBCF4 \uAC80\uC99D \uD6C4 \uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5; recipe \uC800\uC7A5 \uD6C4 \uB2E4\uC74C \uCD94\uB860\uBD80\uD130 \uC0AC\uC6A9",
-            runtimeActionText: "YOLO11 Ultralytics / \uD604\uC7AC \uAC80\uC0AC \uAC00\uB2A5 / \uD559\uC2B5 \uBBF8\uC9C0\uC6D0");
-        AssertEqual("best.pt", shellViewModel.ModelCenterCurrentModelDetailText);
-        AssertEqual("exp7/best.pt", shellViewModel.ModelCenterCandidateModelDetailText);
-        AssertEqual("\uC0C8 \uD6C4\uBCF4 \uAC80\uD1A0 \uD544\uC694", shellViewModel.ModelCenterAdoptionDetailText);
-        AssertEqual("\uBAA8\uB378 \uBE44\uAD50 \uD6C4 \uC800\uC7A5", shellViewModel.ModelCenterNextActionDetailText);
-        AssertEqual("\uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5", shellViewModel.ModelCenterConfirmModelButtonText);
-        AssertTrue(shellViewModel.ModelCenterRuntimeActionText.Contains("YOLO11", StringComparison.Ordinal), "model-center should keep selected runtime readiness as ViewModel state");
-        AssertTrue(shellViewModel.ModelCenterActionStateText.Contains("\uC2E4\uD589\uAE30", StringComparison.Ordinal)
-            && shellViewModel.ModelCenterActionStateText.Contains("\uD604\uC7AC \uAC80\uC0AC \uAC00\uB2A5", StringComparison.Ordinal)
-            && shellViewModel.ModelCenterActionStateText.Contains("\uD559\uC2B5 \uBBF8\uC9C0\uC6D0", StringComparison.Ordinal),
-            "model-center action state should expose runtime readiness next to current-inspection actions");
-        AssertTrue(shellViewModel.ModelCenterConfirmModelButtonToolTip.Contains("recipe", StringComparison.Ordinal), "model-center confirm tooltip should explain recipe persistence");
-        AssertTrue(shellViewModel.ModelCenterConfirmModelButtonToolTip.Contains("\uB2E4\uC74C \uCD94\uB860", StringComparison.Ordinal), "model-center confirm tooltip should explain when the selected model is used");
-        AssertTrue(shellViewModel.ModelCenterDecisionSummaryText.Contains("\uC801\uC6A9 \uAC00\uB2A5", StringComparison.Ordinal), "model-center decision summary should accept an explicit recommendation");
-        AssertTrue(shellViewModel.ModelCenterDecisionEvidenceText.Contains("mAP50-95", StringComparison.Ordinal), "model-center decision evidence should expose metric context");
-        AssertTrue(shellViewModel.ModelCenterDecisionActionText.Contains("\uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5", StringComparison.Ordinal), "model-center decision action should expose the save step");
-        AssertTrue(shellViewModel.IsModelCenterConfirmModelEnabled, "model-center confirm button should enable when a model candidate is selected");
-        shellViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(shellViewModel.IsModelCenterInspectCurrentImageEnabled, "model-center current-inspection button should enable when inference is ready");
-        shellViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: true,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(!shellViewModel.IsModelCenterConfirmModelEnabled, "model-center confirm button should disable while another command is running");
-        AssertTrue(!shellViewModel.IsModelCenterReviewCandidateEnabled, "model-center candidate review button should disable while another command is running");
-        AssertTrue(!shellViewModel.IsModelCenterInspectCurrentImageEnabled, "model-center current-inspection button should disable while another command is running");
-        shellViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(shellViewModel.IsModelCenterConfirmModelEnabled, "model-center confirm button should re-enable after commands are idle");
-        AssertTrue(shellViewModel.IsModelCenterReviewCandidateEnabled, "model-center candidate review button should re-enable after commands are idle");
-        AssertTrue(shellViewModel.IsModelCenterInspectCurrentImageEnabled, "model-center current-inspection button should re-enable after commands are idle");
-        shellViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: false,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: false));
-        AssertTrue(!shellViewModel.IsModelCenterConfirmModelEnabled, "model-center confirm button should stay disabled when no recipe can be saved");
-        AssertTrue(shellViewModel.ModelCenterConfirmModelButtonToolTip.Contains("recipe", StringComparison.Ordinal), "disabled model-center save button should explain missing recipe persistence");
-        AssertTrue(shellViewModel.IsModelCenterReviewCandidateEnabled, "model-center candidate review button should stay enabled for review navigation when commands are idle");
-        AssertEqual("LineA_Defect", WpfDatasetContextPresentationService.BuildDatasetName("LineA_Defect", @"C:\Dataset\Other"));
-        AssertEqual("FallbackDataset", WpfDatasetContextPresentationService.BuildDatasetName(" ", @"C:\Dataset\FallbackDataset\"));
-        AssertEqual("\uB370\uC774\uD130\uC14B \uBBF8\uC120\uD0DD", WpfDatasetContextPresentationService.BuildDatasetName(" ", " "));
-        AssertEqual("\uAC1D\uCCB4 \uD0D0\uC9C0", WpfDatasetContextPresentationService.FormatPurposeName(LabelingDatasetPurpose.ObjectDetection));
-        AssertEqual("\uC138\uADF8\uBA58\uD14C\uC774\uC158", WpfDatasetContextPresentationService.FormatPurposeName(LabelingDatasetPurpose.Segmentation));
-        AssertEqual("\uC774\uC0C1 \uD0D0\uC9C0", WpfDatasetContextPresentationService.FormatPurposeName(LabelingDatasetPurpose.AnomalyDetection));
-        shellViewModel.SetDatasetContext(
-            "LineA_Defect",
-            "\uAC1D\uCCB4 \uD0D0\uC9C0",
-            @"C:\Dataset\LineA_Defect",
-            @"C:\Dataset\LineA_Defect\data\train\images",
-            canOpenDatasetFolder: true,
-            classCount: 2);
-        AssertEqual("LineA_Defect", shellViewModel.CurrentDatasetName);
-        AssertEqual("\uAC1D\uCCB4 \uD0D0\uC9C0", shellViewModel.CurrentDatasetPurposeText);
-        AssertTrue(shellViewModel.CurrentDatasetPathText.Contains("\uB77C\uBCA8/\uB808\uC2DC\uD53C \uC800\uC7A5:", StringComparison.Ordinal), "shell dataset context should show the dataset output root");
-        AssertTrue(shellViewModel.CurrentDatasetPathText.Contains("\uC6D0\uBCF8 \uC774\uBBF8\uC9C0 \uD3F4\uB354:", StringComparison.Ordinal), "shell dataset context should show the image folder");
-        AssertTrue(shellViewModel.CurrentDatasetStoragePathText.Contains("\uB77C\uBCA8/\uB808\uC2DC\uD53C \uC800\uC7A5:", StringComparison.Ordinal), "shell dataset context should expose the storage path separately");
-        AssertTrue(shellViewModel.CurrentDatasetImageRootText.Contains("\uC6D0\uBCF8 \uC774\uBBF8\uC9C0 \uD3F4\uB354:", StringComparison.Ordinal), "shell dataset context should expose the image root separately");
-        AssertTrue(shellViewModel.CurrentDatasetSourceText.Contains("\uD074\uB798\uC2A4: \uB808\uC2DC\uD53C 2\uAC1C", StringComparison.Ordinal), "shell dataset context should show that classes come from the recipe");
-        AssertTrue(shellViewModel.CurrentDatasetSourceText.Contains("\uB77C\uBCA8: \uC800\uC7A5 \uD3F4\uB354 \uAE30\uC900", StringComparison.Ordinal), "shell dataset context should show that labels come from the storage folder");
-        AssertTrue(shellViewModel.CurrentDatasetToolTip.Contains(@"C:\Dataset\LineA_Defect", StringComparison.Ordinal), "shell dataset context tooltip should keep full paths");
-        AssertTrue(shellViewModel.CurrentDatasetToolTip.Contains("\uB77C\uBCA8/\uB808\uC2DC\uD53C \uC800\uC7A5 \uD3F4\uB354", StringComparison.Ordinal), "shell dataset context tooltip should name the storage folder role");
-        AssertTrue(shellViewModel.CurrentDatasetToolTip.Contains("\uC6D0\uBCF8 \uC774\uBBF8\uC9C0 \uD3F4\uB354", StringComparison.Ordinal), "shell dataset context tooltip should name the image folder role");
-        AssertTrue(shellViewModel.CurrentDatasetToolTip.Contains("\uC774\uBBF8\uC9C0 \uD3F4\uB354 \uBCC0\uACBD", StringComparison.Ordinal), "shell dataset context tooltip should explain that image-folder changes do not move label storage");
-        AssertTrue(shellViewModel.IsOpenDatasetFolderEnabled, "shell dataset folder should be openable when an output root exists");
-        var candidateReviewViewModel = new WpfCandidateReviewPanelViewModel();
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ComparisonVisibility);
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ModelComparisonVisibility);
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ModelComparisonExampleListVisibility);
-        AssertTrue(!candidateReviewViewModel.IsModelComparisonExamplesExpanded, "model-comparison examples should start collapsed");
-        AssertTrue(candidateReviewViewModel.ModelComparisonExampleHeaderText.Contains("0", StringComparison.Ordinal), "model-comparison example disclosure should start with a zero-count header");
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ReviewHistoryVisibility);
-        AssertTrue(!candidateReviewViewModel.IsReviewHistoryExpanded, "candidate review history should start collapsed");
-        AssertTrue(candidateReviewViewModel.ReviewHistoryHeaderText.Contains("0", StringComparison.Ordinal), "candidate review history disclosure should start with a zero-count header");
-        AssertTrue(candidateReviewViewModel.ModelComparisonStatusText.Contains("\uB300\uAE30", StringComparison.Ordinal), "candidate review should show pending model-comparison state before results exist");
-        AssertTrue(candidateReviewViewModel.ModelComparisonSourceText.Contains("\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378", StringComparison.Ordinal), "candidate review should start with a visible model-comparison source placeholder");
-        AssertTrue(candidateReviewViewModel.ModelComparisonActionText.Contains("\uD6C4\uBCF4 \uAC80\uC99D", StringComparison.Ordinal), "pending model-comparison state should point to the candidate validation action");
-        AssertTrue(!candidateReviewViewModel.IsSaveModelCandidateEnabled, "model candidate save should be disabled until a candidate is staged");
-        AssertTrue(!candidateReviewViewModel.IsRejectModelCandidateEnabled, "model candidate reject should be disabled until a candidate is staged");
-        WpfModelComparisonReviewExample openedModelComparisonExample = null;
-        bool savedModelCandidate = false;
-        bool rejectedModelCandidate = false;
-        candidateReviewViewModel.ConfigureCommands(
-            _ => { },
-            () => { },
-            () => { },
-            () => { },
-            () => { },
-            () => { },
-            () => { },
-            () => { },
-            _ => { },
-            _ => { },
-            () => { },
-            example => openedModelComparisonExample = example,
-            saveModelCandidate: () => savedModelCandidate = true,
-            rejectModelCandidate: () => rejectedModelCandidate = true);
-        candidateReviewViewModel.SetModelCandidateDecisionState(
-            canSave: true,
-            canReject: true,
-            statusText: "\uD6C4\uBCF4 \uACB0\uC815: \uC800\uC7A5 \uB610\uB294 \uAC70\uC808 \uD544\uC694",
-            detailText: "\uBE44\uAD50 \uD6C4 \uACB0\uC815",
-            saveToolTip: "\uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5",
-            rejectToolTip: "\uD6C4\uBCF4 \uAC70\uC808");
-        AssertTrue(candidateReviewViewModel.IsSaveModelCandidateEnabled, "model candidate save should become available when a candidate is staged");
-        AssertTrue(candidateReviewViewModel.IsRejectModelCandidateEnabled, "model candidate reject should become available when a baseline can be restored");
-        AssertTrue(candidateReviewViewModel.ModelCandidateDecisionStatusText.Contains("\uAC70\uC808", StringComparison.Ordinal), "model candidate decision status should name both possible decisions");
-        candidateReviewViewModel.SaveModelCandidateCommand.Execute(null);
-        candidateReviewViewModel.RejectModelCandidateCommand.Execute(null);
-        AssertTrue(savedModelCandidate, "candidate review should route model-candidate save through the configured command");
-        AssertTrue(rejectedModelCandidate, "candidate review should route model-candidate reject through the configured command");
-        candidateReviewViewModel.SetComparison(new WpfCandidateComparisonPresentation("AI OK\n10x10 @ 1,2", "\uD604\uC7AC \uB77C\uBCA8 OK\n10x10 @ 1,2", "\uC911\uBCF5\n100%", true));
-        AssertEqual(System.Windows.Visibility.Visible, candidateReviewViewModel.ComparisonVisibility);
-        AssertTrue(candidateReviewViewModel.IsComparisonHighOverlap, "candidate comparison should expose duplicate/high-overlap state");
-        AssertTrue(candidateReviewViewModel.ComparisonCandidateText.Contains("AI OK", StringComparison.Ordinal), "candidate comparison should keep AI text");
-        AssertTrue(candidateReviewViewModel.ComparisonCurrentText.Contains("\uD604\uC7AC \uB77C\uBCA8 OK", StringComparison.Ordinal), "candidate comparison should keep current-label text");
-        AssertTrue(candidateReviewViewModel.ComparisonOverlapText.Contains("100", StringComparison.Ordinal), "candidate comparison should keep overlap text");
-        candidateReviewViewModel.ClearComparison();
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ComparisonVisibility);
-        AssertTrue(!candidateReviewViewModel.IsComparisonHighOverlap, "candidate comparison clear should reset high-overlap state");
-        candidateReviewViewModel.ApplySelectionReview(
-            "Selected detail",
-            new WpfCandidateComparisonPresentation("AI NG", "Manual NG", "IoU\n25%", false),
-            showComparison: true);
-        AssertEqual("Selected detail", candidateReviewViewModel.DetailText);
-        AssertEqual(System.Windows.Visibility.Visible, candidateReviewViewModel.ComparisonVisibility);
-        AssertTrue(candidateReviewViewModel.ComparisonCandidateText.Contains("AI NG", StringComparison.Ordinal), "candidate selection review should update comparison text with detail");
-        candidateReviewViewModel.ApplySelectionReview("No selection", default, showComparison: false);
-        AssertEqual("No selection", candidateReviewViewModel.DetailText);
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ComparisonVisibility);
-        candidateReviewViewModel.SetModelComparisonReview(WpfModelComparisonReviewReport.Empty);
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ModelComparisonVisibility);
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ModelComparisonExampleListVisibility);
-        AssertTrue(candidateReviewViewModel.ModelComparisonStatusText.Contains("\uC544\uC9C1 \uC2E4\uD589", StringComparison.Ordinal), "missing model-comparison result should stay visible as a not-run state");
-        AssertTrue(candidateReviewViewModel.ModelComparisonActionText.Contains("\uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5", StringComparison.Ordinal), "missing model-comparison result should still explain where model adoption happens");
-        candidateReviewViewModel.SetModelComparisonReview(new WpfModelComparisonReviewReport(
-            hasComparison: true,
-            summaryText: "\uBAA8\uB378 \uCC28\uC774 \uC608\uC2DC: \uC900\uBE44",
-            detailText: "\uAE30\uC874 \uBAA8\uB378 1\uAC1C, \uC0C8 \uBAA8\uB378 2\uAC1C",
-            sourcePath: string.Empty,
-            examples: new[]
-            {
-                new WpfModelComparisonReviewExample(
-                    "img-a",
-                    "CandidateOnly",
-                    "\uC0C8 \uBAA8\uB378\uB9CC \uAC80\uCD9C",
-                    "\uC0C8 \uBAA8\uB378 NG 94%",
-                        MahApps.Metro.IconPacks.PackIconMaterialKind.PlusCircleOutline,
-                        priority: 3,
-                    actionText: "\uD655\uC778: \uC2E4\uC81C \uAC1D\uCCB4\uBA74 \uC0C8 \uBAA8\uB378 \uAC1C\uC120",
-                    locationText: "\uC704\uCE58: \uC911\uC2EC 50%, 50% / \uD06C\uAE30 10% x 10%")
-            }));
-        candidateReviewViewModel.SetModelComparisonSourceText("\uBE44\uAD50 \uB300\uC0C1: \uD604\uC7AC \uAC80\uC0AC YOLOv5 / baseline.pt -> \uD559\uC2B5 \uD6C4\uBCF4 YOLOv5 / candidate.pt");
-        AssertEqual(System.Windows.Visibility.Visible, candidateReviewViewModel.ModelComparisonVisibility);
-        AssertEqual(System.Windows.Visibility.Visible, candidateReviewViewModel.ModelComparisonExampleListVisibility);
-        AssertTrue(candidateReviewViewModel.ModelComparisonSourceText.Contains("baseline.pt", StringComparison.Ordinal), "candidate review should show the current inspection model used as the comparison baseline");
-        AssertTrue(candidateReviewViewModel.ModelComparisonSourceText.Contains("candidate.pt", StringComparison.Ordinal), "candidate review should show the trained candidate model being evaluated");
-        AssertTrue(!candidateReviewViewModel.IsModelComparisonExamplesExpanded, "model-comparison examples should be available but collapsed by default");
-        AssertTrue(candidateReviewViewModel.ModelComparisonExampleHeaderText.Contains("1", StringComparison.Ordinal), "model-comparison example disclosure should show the available example count");
-        AssertTrue(candidateReviewViewModel.ModelComparisonExampleSummaryText.Contains("\uD3BC\uCCD0", StringComparison.Ordinal), "model-comparison example disclosure should tell the operator to expand only when needed");
-        AssertEqual(1, candidateReviewViewModel.ModelComparisonExamples.Count);
-        AssertTrue(candidateReviewViewModel.ModelComparisonStatusText.Contains("\uBAA8\uB378 \uCC28\uC774 \uC608\uC2DC", StringComparison.Ordinal), "candidate review should expose model comparison status text");
-        AssertTrue(candidateReviewViewModel.ModelComparisonExamples[0].ActionText.Contains("\uD655\uC778", StringComparison.Ordinal), "candidate review model comparison examples should expose action text");
-        AssertTrue(candidateReviewViewModel.ModelComparisonExamples[0].LocationText.Contains("\uC704\uCE58", StringComparison.Ordinal), "candidate review model comparison examples should expose visible location text");
-        AssertTrue(candidateReviewViewModel.ModelComparisonActionText.Contains("\uB2E4\uC74C", StringComparison.Ordinal), "candidate review model comparison should tell the operator the next action");
-        AssertTrue(candidateReviewViewModel.ModelComparisonActionText.Contains("Guide", StringComparison.Ordinal), "candidate review model comparison should point back to the Guide decision after examples are reviewed");
-        AssertTrue(candidateReviewViewModel.ModelComparisonActionText.Contains("\uBAA8\uB378\uC13C\uD130", StringComparison.Ordinal), "candidate review model comparison should tell the operator where to confirm the model");
-        candidateReviewViewModel.ModelComparisonExampleCommand.Execute(candidateReviewViewModel.ModelComparisonExamples[0]);
-        AssertTrue(ReferenceEquals(candidateReviewViewModel.ModelComparisonExamples[0], openedModelComparisonExample), "candidate review should route clicked model-comparison examples through the configured command");
-        candidateReviewViewModel.IsModelComparisonExamplesExpanded = true;
-        candidateReviewViewModel.SetModelComparisonFocus(candidateReviewViewModel.ModelComparisonExamples[0], "\uD06C\uAE30 10x10 / \uC704\uCE58 x=1, y=2");
-        AssertTrue(candidateReviewViewModel.IsModelComparisonExamplesExpanded, "focusing an example should not collapse an already-expanded model-comparison list");
-        AssertTrue(candidateReviewViewModel.ModelComparisonActionText.Contains("\uAD50\uCCB4 \uD310\uB2E8", StringComparison.Ordinal), "focused model comparison example should keep the replacement-decision step visible");
-        AssertTrue(candidateReviewViewModel.ModelComparisonActionText.Contains("\uBAA8\uB378\uC13C\uD130", StringComparison.Ordinal), "focused model comparison example should keep the model-center confirmation step visible");
-        candidateReviewViewModel.ClearModelComparisonReview();
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ModelComparisonVisibility);
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ModelComparisonExampleListVisibility);
-        AssertTrue(!candidateReviewViewModel.IsModelComparisonExamplesExpanded, "clearing model-comparison review should collapse the disclosure");
-        AssertTrue(candidateReviewViewModel.ModelComparisonStatusText.Contains("\uB300\uAE30", StringComparison.Ordinal), "clearing model-comparison review should reset the pending state without occupying current-image candidate review space");
-        AssertTrue(candidateReviewViewModel.ModelComparisonSourceText.Contains("\uD655\uC778 \uD544\uC694", StringComparison.Ordinal), "clearing model-comparison review should reset the comparison source text");
-        AssertEqual(0, candidateReviewViewModel.ModelComparisonExamples.Count);
-        candidateReviewViewModel.AddReviewHistory("\uB77C\uBCA8 \uD655\uC815 1\uAC74");
-        AssertEqual(System.Windows.Visibility.Visible, candidateReviewViewModel.ReviewHistoryVisibility);
-        AssertTrue(!candidateReviewViewModel.IsReviewHistoryExpanded, "candidate review history should appear collapsed after the first action");
-        AssertTrue(candidateReviewViewModel.ReviewHistoryHeaderText.Contains("1", StringComparison.Ordinal), "candidate review history disclosure should show the action count");
-        candidateReviewViewModel.IsReviewHistoryExpanded = true;
-        candidateReviewViewModel.AddReviewHistory("\uD6C4\uBCF4 \uC228\uAE40 1\uAC74");
-        AssertTrue(candidateReviewViewModel.IsReviewHistoryExpanded, "new review history should not collapse an already-expanded history disclosure");
-        AssertTrue(candidateReviewViewModel.ReviewHistoryHeaderText.Contains("2", StringComparison.Ordinal), "candidate review history disclosure should update the action count");
-        candidateReviewViewModel.ClearReviewHistory();
-        AssertEqual(System.Windows.Visibility.Collapsed, candidateReviewViewModel.ReviewHistoryVisibility);
-        AssertTrue(!candidateReviewViewModel.IsReviewHistoryExpanded, "clearing review history should collapse the disclosure");
-        candidateReviewViewModel.SetNavigationState(previousEnabled: true, nextEnabled: true, focusEnabled: true);
-        AssertTrue(candidateReviewViewModel.IsPreviousCandidateEnabled, "candidate previous navigation should be exposed independently from skip");
-        AssertTrue(candidateReviewViewModel.IsNextCandidateEnabled, "candidate next navigation should be exposed independently from skip");
-        AssertTrue(candidateReviewViewModel.IsFocusCandidateEnabled, "candidate focus should be exposed independently from skip");
-        candidateReviewViewModel.SetNavigationState(previousEnabled: false, nextEnabled: false, focusEnabled: true);
-        AssertTrue(!candidateReviewViewModel.IsPreviousCandidateEnabled, "candidate previous navigation should disable when there is only one visible candidate");
-        AssertTrue(!candidateReviewViewModel.IsNextCandidateEnabled, "candidate next navigation should disable when there is only one visible candidate");
-        AssertTrue(candidateReviewViewModel.IsFocusCandidateEnabled, "candidate focus can remain enabled for a single selected candidate");
-        int candidateCollectionChangedCount = 0;
-        NotifyCollectionChangedAction candidateCollectionAction = NotifyCollectionChangedAction.Add;
-        candidateReviewViewModel.Candidates.CollectionChanged += (_, e) =>
-        {
-            candidateCollectionChangedCount++;
-            candidateCollectionAction = e.Action;
-        };
-        candidateReviewViewModel.SetCandidates(
-            Enumerable.Range(0, 10000).Select(index => WpfCandidateReviewListItem.Empty($"candidate {index}", string.Empty)),
-            "10000 candidates");
-        AssertEqual(1, candidateCollectionChangedCount);
-        AssertEqual(NotifyCollectionChangedAction.Reset, candidateCollectionAction);
-        AssertEqual(10000, candidateReviewViewModel.Candidates.Count);
-        var objectReviewViewModel = new WpfObjectReviewPanelViewModel();
-        objectReviewViewModel.SetObjects(new[]
-        {
-            new WpfObjectReviewListItem("1. manual", "class", WpfObjectReviewSource.ManualRoi.ToString(), 0, WpfObjectReviewItemRef.Manual(0))
-        }, "1 object");
-        objectReviewViewModel.SetSelectedObjectClass(new[] { "Defect", "Scratch" }, "scratch");
-        AssertEqual("Scratch", objectReviewViewModel.SelectedClassName);
-        AssertTrue(objectReviewViewModel.IsApplyClassEnabled, "object review class apply should enable through the view model after selecting an object and class");
-        objectReviewViewModel.SetSelectedObjectClass(new[] { "Defect", "Scratch" }, "");
-        AssertEqual("Defect", objectReviewViewModel.SelectedClassName);
-        int objectCollectionChangedCount = 0;
-        NotifyCollectionChangedAction objectCollectionAction = NotifyCollectionChangedAction.Add;
-        objectReviewViewModel.Objects.CollectionChanged += (_, e) =>
-        {
-            objectCollectionChangedCount++;
-            objectCollectionAction = e.Action;
-        };
-        objectReviewViewModel.SetObjects(
-            Enumerable.Range(0, 100000).Select(index => new WpfObjectReviewListItem(
-                $"{index + 1}. manual",
-                "class",
-                WpfObjectReviewSource.ManualRoi.ToString(),
-                index,
-                WpfObjectReviewItemRef.Manual(index))),
-            "100000 objects");
-        AssertEqual(1, objectCollectionChangedCount);
-        AssertEqual(NotifyCollectionChangedAction.Reset, objectCollectionAction);
-        AssertEqual(100000, objectReviewViewModel.Objects.Count);
-        AssertEqual(0, objectReviewViewModel.GetSelectedRowIndex());
-        AssertTrue(objectReviewViewModel.IsSelectedSource(WpfObjectReviewSource.ManualRoi), "object review ViewModel should own selected-source checks for shell workflows");
-        AssertTrue(objectReviewViewModel.TryResolveSelectedItem(new[] { string.Empty }, 100000, out WpfObjectReviewItemRef selectedObjectRef), "object review ViewModel should resolve the selected review item");
-        AssertEqual(0, selectedObjectRef.Index);
-        using (objectReviewViewModel.SuppressSelectionNotifications())
-        {
-            AssertTrue(objectReviewViewModel.IsSelectionNotificationSuppressed, "object review ViewModel should suppress transient programmatic selection events");
-            using (objectReviewViewModel.SuppressSelectionNotifications())
-            {
-                AssertTrue(objectReviewViewModel.IsSelectionNotificationSuppressed, "object review selection suppression should be nestable");
-            }
-
-            AssertTrue(objectReviewViewModel.IsSelectionNotificationSuppressed, "outer object review selection suppression should remain active after inner dispose");
-        }
-
-        AssertTrue(!objectReviewViewModel.IsSelectionNotificationSuppressed, "object review selection suppression should clear after dispose");
-        objectCollectionChangedCount = 0;
-        objectCollectionAction = NotifyCollectionChangedAction.Reset;
-        var replacementObject = new WpfObjectReviewListItem(
-            "50001. manual / moved",
-            "class",
-            WpfObjectReviewSource.ManualRoi.ToString(),
-            50000,
-            WpfObjectReviewItemRef.Manual(50000));
-        Stopwatch objectReplaceStopwatch = Stopwatch.StartNew();
-        AssertTrue(objectReviewViewModel.TryReplaceObject(50000, replacementObject, select: true), "object review single-row replacement should succeed in a large list");
-        objectReplaceStopwatch.Stop();
-        AssertEqual(1, objectCollectionChangedCount);
-        AssertEqual(NotifyCollectionChangedAction.Replace, objectCollectionAction);
-        AssertTrue(ReferenceEquals(replacementObject, objectReviewViewModel.SelectedObject), "single-row replacement should keep the edited ROI selected");
-        AssertTrue(objectReplaceStopwatch.Elapsed.TotalMilliseconds < 20.0, "single ROI edit should replace one object-review row without rebuilding the full side list");
-        objectCollectionChangedCount = 0;
-        objectCollectionAction = NotifyCollectionChangedAction.Reset;
-        Stopwatch objectRemoveStopwatch = Stopwatch.StartNew();
-        AssertTrue(objectReviewViewModel.TryRemoveObject(50000, "99999 objects", 50000), "object review single-row removal should succeed in a large list");
-        objectRemoveStopwatch.Stop();
-        AssertEqual(1, objectCollectionChangedCount);
-        AssertEqual(NotifyCollectionChangedAction.Remove, objectCollectionAction);
-        AssertEqual(99999, objectReviewViewModel.Objects.Count);
-        AssertTrue(objectReviewViewModel.SelectedObject?.IsEnabled == true, "single-row removal should keep a neighboring object selected");
-        AssertTrue(objectRemoveStopwatch.Elapsed.TotalMilliseconds < 20.0, "single ROI delete should remove one object-review row without resetting the full side list");
-        var queueViewModel = new WpfImageQueuePanelViewModel();
-        AssertTrue(shellViewModel.IsLabelingModeActive, "shell should start in labeling mode");
-        AssertTrue(!shellViewModel.IsInferenceModeActive, "shell inference mode should start inactive");
-        AssertTrue(shellViewModel.IsDatasetStageActive, "shell workflow stage should start at the dataset home");
-        AssertTrue(!shellViewModel.IsLabelingStageActive, "labeling workflow stage should start inactive until selected");
-        AssertTrue(!shellViewModel.IsSavedLabelsViewVisible, "dataset stage should hide saved-label review");
-        AssertTrue(!shellViewModel.IsCandidateReviewViewVisible, "dataset stage should hide AI-candidate review");
-        AssertTrue(shellViewModel.IsGuideToolsViewVisible, "dataset stage should show guide/tools");
-        AssertTrue(shellViewModel.IsClassCatalogViewVisible, "dataset stage should show class catalog");
-        AssertTrue(!shellViewModel.IsYoloModelCenterViewVisible, "dataset stage should hide model center");
-        AssertTrue(!shellViewModel.IsWorkflowStageModelActionPanelVisible, "dataset stage should hide the top model-action panel");
-        AssertTrue(!shellViewModel.IsRightWorkflowSubNavigationVisible, "dataset stage should hide tab headers because compact workflow shortcuts replace them");
-        AssertTrue(shellViewModel.IsRightWorkflowShortcutBarVisible, "dataset stage should show compact right workflow shortcuts");
-        AssertTrue(shellViewModel.IsRightWorkflowDockExpanded, "dataset stage should keep the right workflow panel expanded for onboarding");
-        AssertTrue(!shellViewModel.IsRightWorkflowDockRailVisible, "dataset stage should not show the collapsed right workflow rail");
-        AssertEqual(340D, shellViewModel.RightWorkflowPaneGridLength.Value);
-        shellViewModel.SetRightWorkflowExpandedPaneWidth(500D);
-        AssertEqual(500D, shellViewModel.RightWorkflowPaneGridLength.Value);
-        shellViewModel.SetRightWorkflowDockExpanded(false);
-        AssertEqual(72D, shellViewModel.RightWorkflowPaneGridLength.Value);
-        shellViewModel.SetRightWorkflowDockExpanded(true);
-        AssertEqual(500D, shellViewModel.RightWorkflowPaneGridLength.Value);
-        shellViewModel.SetRightWorkflowExpandedPaneWidth(340D);
-        AssertTrue(shellViewModel.ToggleRightWorkflowDockCommand != null, "shell ViewModel should expose a right workflow dock toggle command");
-        AssertTrue(!shellViewModel.IsSavedLabelsShortcutActive, "dataset stage should not keep saved-label shortcut active");
-        AssertTrue(shellViewModel.IsLabelingGuideShortcutActive, "dataset stage should default to dataset guide shortcut active");
-        AssertTrue(!shellViewModel.IsClassCatalogShortcutActive, "dataset stage should not keep class shortcut active");
-        AssertEqual("1/4 데이터셋", shellViewModel.WorkflowStageProgressText);
-        AssertTrue(shellViewModel.WorkflowStageTitleText.Contains("데이터셋", StringComparison.Ordinal), "dataset workflow stage should expose a visible summary title");
-        AssertEqual("\uB370\uC774\uD130\uC14B \uD648", shellViewModel.RightWorkflowViewTitleText);
-        AssertTrue(shellViewModel.RightWorkflowViewDetailText.Contains("\uB370\uC774\uD130\uC14B", StringComparison.Ordinal), "dataset right workflow detail should explain dataset preparation");
-        AssertEqual("\uD648", shellViewModel.RightWorkflowRailCurrentViewText);
-        shellViewModel.SetRightWorkflowShortcut(WpfRightWorkflowShortcut.ClassCatalog);
-        AssertTrue(!shellViewModel.IsSavedLabelsShortcutActive, "dataset class shortcut should keep saved-label shortcut inactive");
-        AssertTrue(!shellViewModel.IsLabelingGuideShortcutActive, "dataset class shortcut should deactivate guide shortcut");
-        AssertTrue(shellViewModel.IsClassCatalogShortcutActive, "dataset class shortcut should become active");
-        AssertEqual("\uD074\uB798\uC2A4", shellViewModel.RightWorkflowViewTitleText);
-        AssertTrue(shellViewModel.RightWorkflowViewDetailText.Contains("\uC0C9\uC0C1", StringComparison.Ordinal), "dataset class detail should identify class color management");
-        AssertEqual("\uD074\uB798\uC2A4", shellViewModel.RightWorkflowRailCurrentViewText);
-        shellViewModel.SetRightWorkflowShortcut(WpfRightWorkflowShortcut.LabelingGuide);
-        AssertTrue(shellViewModel.WorkflowStageNextActionText.Contains("라벨링", StringComparison.Ordinal), "dataset workflow stage should point to the next labeling action");
-        AssertTrue(shellViewModel.ToggleThemeCommand != null, "shell ViewModel should expose a theme command");
-        AssertTrue(shellViewModel.LoadSampleCommand != null, "shell ViewModel should expose a sample-load command");
-        AssertTrue(shellViewModel.AddSampleRoiCommand != null, "shell ViewModel should expose an ROI-add command");
-        AssertTrue(shellViewModel.SaveAnnotationsCommand != null, "shell ViewModel should expose a save command");
-        AssertTrue(shellViewModel.LabelingModeCommand != null, "shell ViewModel should expose a labeling mode command");
-        AssertTrue(shellViewModel.InferenceModeCommand != null, "shell ViewModel should expose an inference mode command");
-        AssertTrue(shellViewModel.CheckYoloCommand != null, "shell ViewModel should expose a YOLO check command");
-        AssertTrue(shellViewModel.DetectCurrentImageCommand != null, "shell ViewModel should expose a current-image detection command");
-        AssertTrue(shellViewModel.IsLabelingModeButtonEnabled, "active labeling mode button should start enabled");
-        AssertTrue(shellViewModel.IsInferenceModeButtonEnabled, "inactive inference mode should be switchable when idle");
-        shellViewModel.SetWorkflowStage(WpfShellWorkflowStage.Labeling);
-        AssertTrue(shellViewModel.IsLabelingStageActive, "labeling workflow stage should become active");
-        AssertTrue(!shellViewModel.IsDatasetStageActive, "dataset workflow stage should become inactive");
-        AssertTrue(shellViewModel.IsSavedLabelsViewVisible, "labeling stage should show saved-label review");
-        AssertTrue(!shellViewModel.IsCandidateReviewViewVisible, "labeling stage should hide AI-candidate review");
-        AssertTrue(shellViewModel.IsGuideToolsViewVisible, "labeling stage should show guide/tools");
-        AssertTrue(shellViewModel.IsClassCatalogViewVisible, "labeling stage should show class catalog");
-        AssertTrue(!shellViewModel.IsYoloModelCenterViewVisible, "labeling stage should hide model center");
-        AssertTrue(!shellViewModel.IsWorkflowStageModelActionPanelVisible, "labeling stage should hide the top model-action panel");
-        AssertTrue(!shellViewModel.IsRightWorkflowSubNavigationVisible, "labeling stage should hide tab subnavigation because compact shortcuts replace it");
-        AssertTrue(shellViewModel.IsRightWorkflowShortcutBarVisible, "labeling stage should show compact right workflow shortcuts");
-        AssertTrue(!shellViewModel.IsRightWorkflowDockExpanded, "labeling stage should collapse the right workflow panel by default");
-        AssertTrue(shellViewModel.IsRightWorkflowDockRailVisible, "labeling stage should keep the collapsed right workflow rail visible");
-        AssertEqual(72D, shellViewModel.RightWorkflowPaneGridLength.Value);
-        shellViewModel.ToggleRightWorkflowDockCommand.Execute(null);
-        AssertTrue(shellViewModel.IsRightWorkflowDockExpanded, "right workflow dock toggle should expand the labeling rail");
-        AssertTrue(!shellViewModel.IsRightWorkflowDockRailVisible, "expanded right workflow dock should hide the rail");
-        AssertEqual(340D, shellViewModel.RightWorkflowPaneGridLength.Value);
-        AssertTrue(shellViewModel.IsSavedLabelsShortcutActive, "labeling stage should default to saved-label shortcut active");
-        AssertTrue(!shellViewModel.IsLabelingGuideShortcutActive, "labeling stage should not default to guide shortcut active");
-        AssertTrue(!shellViewModel.IsClassCatalogShortcutActive, "labeling stage should not default to class shortcut active");
-        AssertEqual("\uC800\uC7A5 \uB77C\uBCA8", shellViewModel.RightWorkflowViewTitleText);
-        AssertTrue(shellViewModel.RightWorkflowViewDetailText.Contains("\uC800\uC7A5 \uB77C\uBCA8", StringComparison.Ordinal), "saved-label right workflow detail should identify current-image label work");
-        AssertEqual("\uB77C\uBCA8", shellViewModel.RightWorkflowRailCurrentViewText);
-        shellViewModel.SetRightWorkflowShortcut(WpfRightWorkflowShortcut.LabelingGuide);
-        AssertTrue(!shellViewModel.IsSavedLabelsShortcutActive, "guide shortcut should deactivate saved-label shortcut");
-        AssertTrue(shellViewModel.IsLabelingGuideShortcutActive, "guide shortcut should become active");
-        AssertTrue(!shellViewModel.IsClassCatalogShortcutActive, "guide shortcut should deactivate class shortcut");
-        AssertEqual("\uD604\uC7AC \uC791\uC5C5", shellViewModel.RightWorkflowViewTitleText);
-        AssertTrue(shellViewModel.RightWorkflowViewDetailText.Contains("\uD604\uC7AC \uC774\uBBF8\uC9C0", StringComparison.Ordinal), "current-task right workflow detail should focus on the current image action");
-        AssertEqual("\uC791\uC5C5", shellViewModel.RightWorkflowRailCurrentViewText);
-        shellViewModel.SetRightWorkflowShortcut(WpfRightWorkflowShortcut.ClassCatalog);
-        AssertTrue(!shellViewModel.IsSavedLabelsShortcutActive, "class shortcut should deactivate saved-label shortcut");
-        AssertTrue(!shellViewModel.IsLabelingGuideShortcutActive, "class shortcut should deactivate guide shortcut");
-        AssertTrue(shellViewModel.IsClassCatalogShortcutActive, "class shortcut should become active");
-        AssertEqual("\uD074\uB798\uC2A4", shellViewModel.RightWorkflowViewTitleText);
-        AssertTrue(shellViewModel.RightWorkflowViewDetailText.Contains("\uC0C9\uC0C1", StringComparison.Ordinal), "class right workflow detail should identify class name/color management");
-        AssertEqual("\uD074\uB798\uC2A4", shellViewModel.RightWorkflowRailCurrentViewText);
-        AssertEqual("2/4 라벨링", shellViewModel.WorkflowStageProgressText);
-        AssertTrue(shellViewModel.WorkflowStageNextActionText.Contains("AI", StringComparison.Ordinal), "labeling workflow stage should point to the next AI review action");
-        shellViewModel.SetWorkflowStage(WpfShellWorkflowStage.Inference);
-        AssertTrue(shellViewModel.IsInferenceStageActive, "inference workflow stage should become active");
-        AssertTrue(!shellViewModel.IsLabelingStageActive, "labeling workflow stage should become inactive");
-        AssertTrue(!shellViewModel.IsSavedLabelsViewVisible, "inference stage should hide saved-label review");
-        AssertTrue(shellViewModel.IsCandidateReviewViewVisible, "inference stage should show AI-candidate review");
-        AssertTrue(!shellViewModel.IsGuideToolsViewVisible, "inference stage should hide guide/tools");
-        AssertTrue(!shellViewModel.IsClassCatalogViewVisible, "inference stage should hide class catalog");
-        AssertTrue(!shellViewModel.IsYoloModelCenterViewVisible, "inference stage should hide model center");
-        AssertTrue(!shellViewModel.IsWorkflowStageModelActionPanelVisible, "inference stage should hide the top model-action panel");
-        AssertTrue(!shellViewModel.IsRightWorkflowSubNavigationVisible, "inference stage should hide subnavigation because AI candidates are the only right-side view");
-        AssertTrue(shellViewModel.IsRightWorkflowShortcutBarVisible, "inference stage should show the top workflow subnavigation");
-        AssertTrue(shellViewModel.IsRightWorkflowDockExpanded, "inference stage should expand the right workflow panel for candidate review");
-        AssertTrue(!shellViewModel.IsRightWorkflowDockRailVisible, "inference stage should hide the collapsed right workflow rail");
-        AssertEqual(340D, shellViewModel.RightWorkflowPaneGridLength.Value);
-        AssertTrue(!shellViewModel.IsSavedLabelsShortcutActive, "inference stage should clear saved-label shortcut active state");
-        AssertTrue(!shellViewModel.IsLabelingGuideShortcutActive, "inference stage should clear guide shortcut active state");
-        AssertTrue(!shellViewModel.IsClassCatalogShortcutActive, "inference stage should clear class shortcut active state");
-        AssertEqual("3/4 AI 후보(선택)", shellViewModel.WorkflowStageProgressText);
-        AssertEqual("AI 후보 검토", shellViewModel.RightWorkflowViewTitleText);
-        AssertTrue(shellViewModel.RightWorkflowViewDetailText.Contains("모델 후보 검토용", StringComparison.Ordinal), "inference right workflow detail should explain when the candidate panel is used");
-        AssertTrue(shellViewModel.RightWorkflowViewDetailText.Contains("건너", StringComparison.Ordinal), "inference right workflow detail should identify manual-label-only use as skippable");
-        AssertEqual("AI 후보", shellViewModel.RightWorkflowRailCurrentViewText);
-        AssertTrue(shellViewModel.WorkflowStageDetailText.Contains("자동 라벨", StringComparison.Ordinal), "inference workflow stage should explain the automatic-label candidate role");
-        AssertTrue(shellViewModel.WorkflowStageDetailText.Contains("건너", StringComparison.Ordinal), "inference workflow stage should identify manual-label-only use as skippable");
-        AssertTrue(shellViewModel.WorkflowStageNextActionText.Contains("후보가 없으면", StringComparison.Ordinal), "inference workflow next action should explain the empty-candidate route");
-        AssertTrue(shellViewModel.WorkflowStageNextActionText.Contains("학습/모델", StringComparison.Ordinal), "inference workflow next action should explain the route after all images are complete");
-        shellViewModel.SetWorkflowStage(WpfShellWorkflowStage.TrainingModel);
-        AssertTrue(shellViewModel.IsTrainingModelStageActive, "training/model workflow stage should become active");
-        AssertTrue(!shellViewModel.IsInferenceStageActive, "inference workflow stage should become inactive");
-        AssertTrue(!shellViewModel.IsSavedLabelsViewVisible, "training/model stage should hide saved-label review");
-        AssertTrue(!shellViewModel.IsCandidateReviewViewVisible, "training/model stage should hide AI-candidate review");
-        AssertTrue(!shellViewModel.IsGuideToolsViewVisible, "training/model stage should hide guide/tools");
-        AssertTrue(!shellViewModel.IsClassCatalogViewVisible, "training/model stage should hide class catalog");
-        AssertTrue(shellViewModel.IsYoloModelCenterViewVisible, "training/model stage should show model center");
-        AssertTrue(!shellViewModel.IsWorkflowStageModelActionPanelVisible, "training/model stage should hide the top model-action panel while the model center is open");
-        AssertTrue(!shellViewModel.IsRightWorkflowSubNavigationVisible, "training/model stage should hide subnavigation because the model center is the only right-side view");
-        AssertTrue(shellViewModel.IsRightWorkflowShortcutBarVisible, "training/model stage should show the top workflow subnavigation");
-        AssertTrue(shellViewModel.IsRightWorkflowDockExpanded, "training/model stage should expand the right workflow panel for model center");
-        AssertTrue(!shellViewModel.IsRightWorkflowDockRailVisible, "training/model stage should hide the collapsed right workflow rail");
-        AssertTrue(shellViewModel.IsModelWorkspaceActive, "training/model stage should activate the dedicated model workspace");
-        AssertEqual(System.Windows.GridUnitType.Star, shellViewModel.RightWorkflowPaneGridLength.GridUnitType);
-        AssertTrue(!shellViewModel.IsCanvasWorkspaceVisible, "training/model stage should hide the annotation canvas");
-        AssertTrue(!shellViewModel.IsImageQueueWorkspaceVisible, "training/model stage should hide the image queue");
-        AssertTrue(!shellViewModel.IsWorkspaceSplitterVisible, "training/model stage should hide unused workspace splitters");
-        AssertTrue(!shellViewModel.IsRightWorkflowDockToggleVisible, "training/model stage should not offer a dock toggle that cannot apply");
-        AssertEqual(0D, shellViewModel.ImageQueuePaneGridLength.Value);
-        AssertEqual("4/4 학습/모델", shellViewModel.WorkflowStageProgressText);
-        AssertEqual("\uBAA8\uB378", shellViewModel.RightWorkflowRailCurrentViewText);
-        AssertTrue(shellViewModel.WorkflowStageDetailText.Contains("best.pt", StringComparison.Ordinal), "training/model workflow stage should mention model candidate checking");
-        shellViewModel.SetWorkflowModeState(isInferenceMode: true, canSwitchMode: false);
-        AssertTrue(!shellViewModel.IsLabelingModeActive, "labeling mode should become inactive after switching to inference");
-        AssertTrue(shellViewModel.IsInferenceModeActive, "inference mode should become active");
-        AssertTrue(!shellViewModel.IsLabelingModeButtonEnabled, "inactive labeling button should lock while detection is busy");
-        AssertTrue(shellViewModel.IsInferenceModeButtonEnabled, "active inference button should stay enabled while detection is busy");
-        shellViewModel.SetWorkflowModeState(isInferenceMode: false, canSwitchMode: false);
-        AssertTrue(shellViewModel.IsLabelingModeActive, "labeling mode should become active again");
-        AssertTrue(shellViewModel.IsLabelingModeButtonEnabled, "active labeling button should stay enabled while busy");
-        AssertTrue(!shellViewModel.IsInferenceModeButtonEnabled, "inactive inference button should lock while labeling-side work is busy");
-        shellViewModel.SetWorkflowModeState(isInferenceMode: false, canSwitchMode: true);
-        AssertTrue(shellViewModel.IsInferenceModeButtonEnabled, "inactive inference button should be switchable when idle");
-        AssertTrue(!queueViewModel.IsOpenSelectedImageEnabled, "queue selected image open should start disabled");
-        queueViewModel.SetSelectedImageAvailability(true);
-        AssertTrue(queueViewModel.IsOpenSelectedImageEnabled, "queue selected image open should enable when a valid image row is selected");
-        queueViewModel.SetSelectedImageAvailability(false);
-        AssertTrue(!queueViewModel.IsOpenSelectedImageEnabled, "queue selected image open should disable when selection is cleared or invalid");
-        AssertEqual("\uC774\uBBF8\uC9C0 \uC120\uD0DD", queueViewModel.CurrentImageTaskTitleText);
-        AssertEqual("\uB300\uAE30", queueViewModel.CurrentImageTaskBadgeText);
-        var currentTaskItem = WpfImageQueueItem.CreateShell(Path.Combine(Path.GetTempPath(), "current-task-image.jpg"));
-        currentTaskItem.LabelStatus = "\uC5C6\uC74C";
-        currentTaskItem.DetectStatus = "\uB300\uAE30";
-        currentTaskItem.QueueStatusSummary = "\uC800\uC7A5 \uC5C6\uC74C / AI \uB300\uAE30";
-        queueViewModel.SelectedQueueItem = currentTaskItem;
-        AssertEqual("\uB77C\uBCA8 \uC791\uC5C5 \uD544\uC694", queueViewModel.CurrentImageTaskTitleText);
-        AssertEqual("\uC791\uC5C5", queueViewModel.CurrentImageTaskBadgeText);
-        AssertEqual("NeedsLabel", queueViewModel.CurrentImageTaskKey);
-        AssertTrue(queueViewModel.CurrentImageTaskDetailText.Contains("\uB77C\uBCA8\uC744 \uB9CC\uB4E0 \uB4A4", StringComparison.Ordinal), "queue current-task guidance should fit box, polygon, and brush labeling");
-        AssertTrue(!queueViewModel.CurrentImageTaskDetailText.Contains("\uBC15\uC2A4", StringComparison.Ordinal), "queue current-task guidance should not force box wording for segmentation datasets");
-        currentTaskItem.QueueBadgeText = "AI 2";
-        currentTaskItem.QueueStatusSummary = "AI \uD6C4\uBCF4 2\uAC1C \uAC80\uD1A0 \uD544\uC694";
-        currentTaskItem.ReviewState = YoloImageReviewState.Candidate;
-        AssertEqual("AI \uD6C4\uBCF4 \uAC80\uD1A0", queueViewModel.CurrentImageTaskTitleText);
-        AssertEqual("AI 2", queueViewModel.CurrentImageTaskBadgeText);
-        AssertEqual("Candidate", queueViewModel.CurrentImageTaskKey);
-        AssertTrue(queueViewModel.CurrentImageTaskToolTip.Contains(currentTaskItem.FileName, StringComparison.Ordinal), "current-image task tooltip should keep the full filename");
-        AssertTrue(queueViewModel.CurrentImageTaskToolTip.Contains("\uD6C4\uBCF4\uB97C \uD655\uC815", StringComparison.Ordinal), "current-image task tooltip should include the full operator action, not only the clipped status line");
-        AssertTrue(queueViewModel.CurrentImageTaskDetailText.Contains("\uC790\uB3D9 \uBC18\uC601", StringComparison.Ordinal), "candidate current-image task should explain that confirmed candidates are applied to saved labels automatically");
-        AssertTrue(!queueViewModel.CurrentImageTaskDetailText.Contains("\uB77C\uBCA8\uC744 \uC800\uC7A5", StringComparison.Ordinal), "candidate current-image task should not imply a manual save after candidate confirmation");
-        AssertTrue(queueViewModel.CurrentImageTaskToolTip.Contains("AI \uD6C4\uBCF4 2\uAC1C", StringComparison.Ordinal), "current-image task tooltip should include the queue status summary");
-        currentTaskItem.QueueBadgeText = "\uC800\uC7A5 \uD544\uC694";
-        currentTaskItem.QueueStatusSummary = "\uB77C\uBCA8 \uC800\uC7A5 \uD544\uC694: \uD074\uB798\uC2A4 \uBCC0\uACBD";
-        currentTaskItem.IsSaveRequired = true;
-        AssertEqual("\uB77C\uBCA8 \uC800\uC7A5 \uD544\uC694", queueViewModel.CurrentImageTaskTitleText);
-        AssertEqual("\uC800\uC7A5 \uD544\uC694", queueViewModel.CurrentImageTaskBadgeText);
-        AssertEqual("SaveRequired", queueViewModel.CurrentImageTaskKey);
-        currentTaskItem.IsSaveRequired = false;
-        currentTaskItem.QueueBadgeText = "\uC800\uC7A5";
-        currentTaskItem.ReviewState = YoloImageReviewState.Confirmed;
-        AssertEqual("\uB77C\uBCA8 \uC800\uC7A5 \uC644\uB8CC", queueViewModel.CurrentImageTaskTitleText);
-        AssertTrue(queueViewModel.CurrentImageTaskDetailText.Contains("\uBBF8\uC644\uB8CC", StringComparison.Ordinal), "saved current-image card should send the operator toward next unfinished work");
-        AssertEqual("\uC800\uC7A5", queueViewModel.CurrentImageTaskBadgeText);
-        AssertEqual("Saved", queueViewModel.CurrentImageTaskKey);
-        currentTaskItem.ReviewState = YoloImageReviewState.NoCandidate;
-        AssertEqual("\uAC1D\uCCB4 \uC5C6\uC74C \uC644\uB8CC", queueViewModel.CurrentImageTaskTitleText);
-        AssertTrue(queueViewModel.CurrentImageTaskDetailText.Contains("\uBBF8\uC644\uB8CC", StringComparison.Ordinal), "no-object current-image card should send the operator toward next unfinished work");
-        AssertEqual("\uAC1D\uCCB4\uC5C6\uC74C", queueViewModel.CurrentImageTaskBadgeText);
-        AssertEqual("Saved", queueViewModel.CurrentImageTaskKey);
-        queueViewModel.SelectedQueueItem = null;
-        AssertEqual("\uC774\uBBF8\uC9C0 \uC120\uD0DD", queueViewModel.CurrentImageTaskTitleText);
-        AssertEqual("\uB2E4\uC74C \uBBF8\uC644\uB8CC", queueViewModel.NextUnlabeledActionText);
-        AssertTrue(queueViewModel.NextUnlabeledToolTip.Contains("\uC800\uC7A5\uB428", StringComparison.Ordinal)
-            && queueViewModel.NextUnlabeledToolTip.Contains("\uAC1D\uCCB4\uC5C6\uC74C", StringComparison.Ordinal),
-            "queue next action should explain that saved and no-object images are skipped");
-        queueViewModel.SetQuickFilterState(WpfImageQueueFilter.Candidate, 2, 1, 3, 4, 5, 6);
-        AssertEqual("\uC791\uC5C5 \uD544\uC694 6", queueViewModel.QueueFilterUnfinishedText);
-        AssertEqual("\uC804\uCCB4", queueViewModel.QueueFilterAllText);
-        AssertEqual("AI \uD6C4\uBCF4 2", queueViewModel.QueueFilterCandidateText);
-        AssertEqual("\uC2E4\uD328 1", queueViewModel.QueueFilterFailedText);
-        AssertEqual("\uC800\uC7A5\uB428 3", queueViewModel.QueueFilterConfirmedText);
-        AssertEqual("\uC228\uAE40 4", queueViewModel.QueueFilterSkippedText);
-        AssertEqual("\uAC1D\uCCB4\uC5C6\uC74C 5", queueViewModel.QueueFilterNoCandidateText);
-        AssertTrue(!queueViewModel.IsQueueFilterUnfinishedActive, "queue unfinished quick filter should stay inactive when candidate filter is selected");
-        AssertTrue(!queueViewModel.IsQueueFilterAllActive, "queue all quick filter should become inactive when candidate filter is selected");
-        AssertTrue(queueViewModel.IsQueueFilterCandidateActive, "queue candidate quick filter should become active when selected");
-        AssertTrue(!queueViewModel.IsQueueFilterFailedActive, "queue failed quick filter should stay inactive when candidate filter is selected");
-        shellViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: false,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        queueViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: false,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(!shellViewModel.IsCurrentImageDetectionEnabled, "shell detect should stay disabled in labeling mode");
-        AssertTrue(!queueViewModel.IsDetectSelectedEnabled, "queue selected detect should stay disabled in labeling mode");
-        AssertTrue(!queueViewModel.IsBatchDetectEnabled, "queue batch detect should stay disabled in labeling mode");
-        AssertTrue(!queueViewModel.IsRetryFailedEnabled, "queue retry should stay disabled in labeling mode");
-        AssertTrue(!queueViewModel.IsStopBatchEnabled, "queue stop should stay disabled while batch detection is idle");
-
-        shellViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        queueViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(shellViewModel.IsCurrentImageDetectionEnabled, "shell detect should enable in idle inference mode");
-        AssertTrue(queueViewModel.IsDetectSelectedEnabled, "queue selected detect should enable in idle inference mode");
-        AssertTrue(queueViewModel.IsBatchDetectEnabled, "queue batch detect should enable in idle inference mode");
-        AssertTrue(queueViewModel.IsRetryFailedEnabled, "queue retry should enable in idle inference mode");
-
-        queueViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: true,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(!queueViewModel.IsBatchDetectEnabled, "queue batch detect should disable while batch detection is running");
-        AssertTrue(queueViewModel.IsStopBatchEnabled, "queue stop should enable while batch detection is running");
-
-        var canvasViewModel = new WpfCanvasPanelViewModel();
-        canvasViewModel.SetCommandAvailability(hasImage: false, hasSelectedCandidate: false, hasPendingCandidates: false);
-        AssertTrue(!canvasViewModel.IsFitEnabled, "canvas fit should stay disabled without an image");
-        AssertTrue(!canvasViewModel.IsActualSizeEnabled, "canvas actual-size should stay disabled without an image");
-        AssertTrue(!canvasViewModel.IsPanEnabled, "canvas pan should stay disabled without an image");
-        AssertTrue(!canvasViewModel.IsFocusCandidateEnabled, "canvas candidate focus should stay disabled without an image");
-        AssertTrue(!canvasViewModel.IsResetAiOverlayEnabled, "canvas AI reset should stay disabled without an image");
-        canvasViewModel.SetCommandAvailability(hasImage: true, hasSelectedCandidate: false, hasPendingCandidates: true);
-        AssertTrue(canvasViewModel.IsFitEnabled, "canvas fit should enable when an image is loaded");
-        AssertTrue(canvasViewModel.IsActualSizeEnabled, "canvas actual-size should enable when an image is loaded");
-        AssertTrue(canvasViewModel.IsPanEnabled, "canvas pan should enable when an image is loaded");
-        AssertTrue(!canvasViewModel.IsFocusCandidateEnabled, "canvas candidate focus should require a selected candidate");
-        AssertTrue(canvasViewModel.IsResetAiOverlayEnabled, "canvas AI reset should enable when pending candidates exist");
-        canvasViewModel.SetCommandAvailability(hasImage: true, hasSelectedCandidate: true, hasPendingCandidates: false);
-        AssertTrue(canvasViewModel.IsFocusCandidateEnabled, "canvas candidate focus should enable for a selected candidate");
-        AssertTrue(!canvasViewModel.IsResetAiOverlayEnabled, "canvas AI reset should disable when no pending candidates exist");
-        int canvasCandidateCommandCount = 0;
-        canvasViewModel.ConfigureCandidateReviewCommands(
-            () => canvasCandidateCommandCount++,
-            () => canvasCandidateCommandCount++,
-            () => canvasCandidateCommandCount++,
-            () => canvasCandidateCommandCount++,
-            () => canvasCandidateCommandCount++);
-        canvasViewModel.SetCandidateReviewState(
-            canNavigatePrevious: true,
-            canNavigateNext: true,
-            canFocusCurrentLabel: true,
-            canConfirmSelected: true,
-            canSkipSelected: true);
-        AssertTrue(canvasViewModel.IsPreviousCandidateEnabled, "canvas detection result card should expose previous candidate state");
-        AssertTrue(canvasViewModel.IsNextCandidateEnabled, "canvas detection result card should expose next candidate state");
-        AssertTrue(canvasViewModel.IsFocusCurrentLabelEnabled, "canvas detection result card should expose current-label focus state");
-        AssertTrue(canvasViewModel.IsConfirmSelectedEnabled, "canvas detection result card should expose confirm state");
-        AssertTrue(canvasViewModel.IsSkipSelectedEnabled, "canvas detection result card should expose skip state");
-        canvasViewModel.NextCandidateCommand.Execute(null);
-        canvasViewModel.ConfirmSelectedCommand.Execute(null);
-        AssertEqual(2, canvasCandidateCommandCount);
-
-        var projectViewModel = new WpfProjectConfigPanelViewModel();
-        projectViewModel.LoadFrom("MainRecipe", @"C:\App\RECIPE");
-        AssertEqual("MainRecipe", projectViewModel.RecipeName);
-        AssertEqual(@"C:\App\RECIPE\MainRecipe\VISION.xml", projectViewModel.ConfigPath);
-        AssertEqual(@"C:\App\RECIPE\MainRecipe\dataset.manifest.json", projectViewModel.ManifestPath);
-        projectViewModel.SetRecipeList(new[] { "Beta", "Alpha" }, "Beta");
-        AssertEqual(2, projectViewModel.RecipeNames.Count);
-        AssertEqual("Beta", projectViewModel.SelectedRecipeName);
-        projectViewModel.SelectRecipeFromList("Alpha");
-        AssertEqual("Alpha", projectViewModel.RecipeName);
-        AssertEqual(@"C:\App\RECIPE\Alpha\VISION.xml", projectViewModel.ConfigPath);
-        AssertEqual(@"C:\App\RECIPE\Alpha\dataset.manifest.json", projectViewModel.ManifestPath);
-        projectViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(projectViewModel.IsApplyRecipeEnabled, "project apply should be enabled while idle");
-        AssertTrue(projectViewModel.IsRefreshRecipeListEnabled, "project recipe refresh should be enabled while idle");
-        AssertTrue(projectViewModel.IsSaveProjectConfigEnabled, "project config save should be enabled when a recipe is active");
-        AssertTrue(projectViewModel.IsOpenProjectConfigFolderEnabled, "project config folder should be enabled while idle");
-        projectViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: true,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(!projectViewModel.IsApplyRecipeEnabled, "project apply should disable while busy");
-        AssertTrue(!projectViewModel.IsRefreshRecipeListEnabled, "project recipe refresh should disable while busy");
-        AssertTrue(!projectViewModel.IsSaveProjectConfigEnabled, "project config save should disable while busy");
-        AssertTrue(!projectViewModel.IsOpenProjectConfigFolderEnabled, "project config folder should disable while busy");
-
-        var classViewModel = new WpfClassCatalogPanelViewModel();
-        classViewModel.LoadOutputRoot(@"C:\Dataset\Output");
-        classViewModel.SetClasses(new[]
-        {
-            new CClassItem { Text = "OK", DrawColor = Color.Green },
-            new CClassItem { Text = "NG", DrawColor = Color.Red }
-        }, "NG");
-        AssertEqual(@"C:\Dataset\Output", classViewModel.OutputRootPath);
-        AssertTrue(classViewModel.ColorPresets.Count >= 4, "class catalog should expose practical color presets");
-        AssertEqual(2, classViewModel.Classes.Count);
-        AssertEqual("NG", classViewModel.SelectedClass.Text);
-        AssertEqual("NG", classViewModel.ClassName);
-        AssertTrue(classViewModel.SelectedColorPreset != null, "class catalog should select a color preset for a matching selected class");
-        classViewModel.SelectClass("OK");
-        AssertEqual("OK", classViewModel.SelectedClass.Text);
-        AssertEqual("OK", classViewModel.ClassName);
-        classViewModel.ClearClassName();
-        AssertEqual(string.Empty, classViewModel.ClassName);
-        classViewModel.StatusText = "Ready";
-        AssertEqual("Ready", classViewModel.StatusText);
-
-        var yoloStatusViewModel = new WpfYoloStatusPanelViewModel();
-        yoloStatusViewModel.SetSettingsStatus("Ready", "Python: OK");
-        AssertEqual("Ready", yoloStatusViewModel.SummaryText);
-        AssertEqual("Python: OK", yoloStatusViewModel.DetailText);
-        yoloStatusViewModel.SetCommandStatus("Running", isBusy: true);
-        AssertEqual("Running", yoloStatusViewModel.CommandStatusText);
-        AssertEqual(System.Windows.Visibility.Visible, yoloStatusViewModel.CommandProgressVisibility);
-        AssertTrue(yoloStatusViewModel.CommandProgressIsIndeterminate, "YOLO command progress should be indeterminate while busy");
-        yoloStatusViewModel.SetCommandStatus("", isBusy: false);
-        AssertEqual("\uBAA8\uB378 \uC2E4\uD589\uAE30 \uB300\uAE30", yoloStatusViewModel.CommandStatusText);
-        AssertEqual(System.Windows.Visibility.Collapsed, yoloStatusViewModel.CommandProgressVisibility);
-        AssertTrue(!yoloStatusViewModel.CommandProgressIsIndeterminate, "model runtime command progress should stop when idle");
-        AssertEqual(0D, yoloStatusViewModel.CommandProgressValue);
-        yoloStatusViewModel.SetRecoveryState("Worker failed", "No heartbeat", "\uBAA8\uB378 \uC2E4\uD589\uAE30 \uC7AC\uC2DC\uC791");
-        AssertTrue(yoloStatusViewModel.IsRecoveryVisible, "model runtime status recovery card should become visible when recovery guidance is set");
-        AssertEqual("Worker failed", yoloStatusViewModel.RecoveryTitleText);
-        AssertEqual("No heartbeat", yoloStatusViewModel.RecoveryDetailText);
-        AssertEqual("\uBAA8\uB378 \uC2E4\uD589\uAE30 \uC7AC\uC2DC\uC791", yoloStatusViewModel.RecoveryActionText);
-        yoloStatusViewModel.ClearRecoveryState();
-        AssertTrue(!yoloStatusViewModel.IsRecoveryVisible, "YOLO status recovery card should hide after recovery guidance is cleared");
-        yoloStatusViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: true,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(!yoloStatusViewModel.IsFirstCheckEnabled, "YOLO first-check should disable through the status ViewModel while busy");
-        AssertTrue(!yoloStatusViewModel.IsInstallRequirementsEnabled, "YOLO install should disable through the status ViewModel while busy");
-        AssertTrue(!yoloStatusViewModel.IsRunSmokeEnabled, "YOLO smoke should disable through the status ViewModel while busy");
-        AssertTrue(!yoloStatusViewModel.IsRestartWorkerEnabled, "YOLO restart should disable through the status ViewModel while busy");
-        AssertTrue(!yoloStatusViewModel.IsStopWorkerEnabled, "YOLO stop-worker should disable through the status ViewModel while busy");
-        yoloStatusViewModel.ApplyWorkflowCommandState(WpfWorkflowCommandStateService.Build(
-            isInferenceMode: true,
-            isYoloEnvironmentCommandRunning: false,
-            isDetecting: false,
-            isBatchDetectionRunning: false,
-            isTrainingCommandRunning: false,
-            isTrainingStopAvailable: false,
-            hasCurrentRecipeName: true));
-        AssertTrue(yoloStatusViewModel.IsFirstCheckEnabled, "YOLO first-check should re-enable through the status ViewModel when idle");
-        AssertTrue(!string.IsNullOrWhiteSpace(projectViewModel.StatusText), "recipe selection should guide the operator to apply explicitly");
-        AssertTrue(WpfProjectRecipeService.BuildManifestPreviewPath(@"C:\App\RECIPE", string.Empty).EndsWith(@"\dataset.manifest.json", StringComparison.Ordinal), "project recipe service should preview the dataset manifest path");
-        AssertEqual(@"C:\App\RECIPE\(recipe 선택 필요)\VISION.xml", WpfProjectRecipeService.BuildConfigPreviewPath(@"C:\App\RECIPE", string.Empty));
+        TestSupport.AssertNamedXamlValue(xaml, xName, controlName, propertyName, expectedValue);
     }
 
     private static void TestWpfStartupRestoresLastOpenedDataset()
@@ -37117,31 +27032,12 @@ internal static partial class Program
 
     private static void InvokePrivate(object instance, string methodName)
     {
-        MethodInfo method = instance.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
-        AssertTrue(method != null, $"private method was not found: {methodName}");
-        try
-        {
-            method.Invoke(instance, null);
-        }
-        catch (TargetInvocationException ex) when (ex.InnerException != null)
-        {
-            throw ex.InnerException;
-        }
+        TestSupport.InvokePrivate(instance, methodName);
     }
 
     private static T InvokePrivateResult<T>(object instance, string methodName, params object[] args)
     {
-        MethodInfo method = instance.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
-        AssertTrue(method != null, $"private method was not found: {methodName}");
-        try
-        {
-            object result = method.Invoke(instance, args);
-            return result is T typed ? typed : default;
-        }
-        catch (TargetInvocationException ex) when (ex.InnerException != null)
-        {
-            throw ex.InnerException;
-        }
+        return TestSupport.InvokePrivateResult<T>(instance, methodName, args);
     }
 
     private static bool InvokeDetectionOverlayHitTest(object viewModel, object[] args)
@@ -37161,17 +27057,7 @@ internal static partial class Program
 
     private static T InvokePrivateStaticResult<T>(Type type, string methodName, params object[] args)
     {
-        MethodInfo method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic);
-        AssertTrue(method != null, $"private static method was not found: {methodName}");
-        try
-        {
-            object result = method.Invoke(null, args);
-            return result is T typed ? typed : default;
-        }
-        catch (TargetInvocationException ex) when (ex.InnerException != null)
-        {
-            throw ex.InnerException;
-        }
+        return TestSupport.InvokePrivateStaticResult<T>(type, methodName, args);
     }
 
     private static object GetNestedEnumValue<TDeclaringType>(string enumName, string valueName)
@@ -37183,37 +27069,17 @@ internal static partial class Program
 
     private static T GetPrivateField<T>(object instance, string fieldName)
     {
-        FieldInfo field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-        AssertTrue(field != null, $"private field was not found: {fieldName}");
-        object value = field.GetValue(instance);
-        if (value == null)
-        {
-            return default;
-        }
-
-        AssertTrue(value is T, $"private field had unexpected type: {fieldName}");
-        return (T)value;
+        return TestSupport.GetPrivateField<T>(instance, fieldName);
     }
 
     private static object GetRuntimeButtonCommand(object button)
     {
-        if (button is System.Windows.Controls.Primitives.ButtonBase buttonBase)
-        {
-            object command = buttonBase.Command;
-            if (command != null)
-            {
-                return command;
-            }
-        }
-
-        return button?.GetType().GetProperty("Command")?.GetValue(button);
+        return TestSupport.GetRuntimeButtonCommand(button);
     }
 
     private static void SetPrivateField(object instance, string fieldName, object value)
     {
-        FieldInfo field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-        AssertTrue(field != null, $"private field was not found: {fieldName}");
-        field.SetValue(instance, value);
+        TestSupport.SetPrivateField(instance, fieldName, value);
     }
 
     private static bool ContainsControlText(Control root, string text)
@@ -38142,10 +28008,10 @@ internal static partial class Program
         string source = ReadWpfLabelingShellWindowSources();
 
         string root = FindRepositoryRoot();
-        string selectionServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfImageQueueSelectionService.cs"));
-        string datasetImageRootResolverSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfDatasetImageRootResolver.cs"));
-        string imageLoadPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfImageLoadPresentationService.cs"));
-        string queuePresenterSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfImageQueuePresenter.cs"));
+        string selectionServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "ImageQueue", "WpfImageQueueSelectionService.cs"));
+        string datasetImageRootResolverSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Dataset", "WpfDatasetImageRootResolver.cs"));
+        string imageLoadPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "ImageQueue", "WpfImageLoadPresentationService.cs"));
+        string queuePresenterSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "ImageQueue", "WpfImageQueuePresenter.cs"));
         string queueDetailRefreshSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.ImageQueueDetailRefresh.cs"));
         AssertTrue(source.Contains("WpfImageQueueSelectionService", StringComparison.Ordinal), "WPF shell should delegate queue selection decisions to a service");
         AssertTrue(source.Contains("WpfDatasetImageRootResolver", StringComparison.Ordinal), "WPF shell should delegate dataset image-root resolution to a service");
@@ -38197,9 +28063,9 @@ internal static partial class Program
         string source = ReadWpfLabelingShellWindowSources();
 
         string root = FindRepositoryRoot();
-        string decodeCacheSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfImageDecodeCacheService.cs"));
-        string decodeServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfImageDecodeService.cs"));
-        string preloadSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "WpfImageDecodePreloadService.cs"));
+        string decodeCacheSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "ImageQueue", "WpfImageDecodeCacheService.cs"));
+        string decodeServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "ImageQueue", "WpfImageDecodeService.cs"));
+        string preloadSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "ImageQueue", "WpfImageDecodePreloadService.cs"));
         AssertTrue(source.Contains("WpfImageDecodeCacheService", StringComparison.Ordinal), "WPF shell should delegate decode cache storage to a service");
         AssertTrue(source.Contains("GetImageDecodeCacheDiagnostics", StringComparison.Ordinal), "WPF image decode cache should expose diagnostics for performance smoke checks");
         AssertTrue(source.Contains("imageDecodeCacheService.TryTake", StringComparison.Ordinal), "image load should use prepared adjacent decodes through the cache service");
@@ -38470,9 +28336,9 @@ internal static partial class Program
                 AssertTrue(window.MainCanvasViewModel.DetectionOverlays[0].Label.Contains("AI 1 OK", StringComparison.Ordinal), "canvas detection overlay should use OpenGL-safe ASCII label text");
                 AssertTrue(window.MainCanvasViewModel.DetectionOverlays[0].IsSelected, "Selected candidate should be highlighted on the detection overlay");
                 string shellSource = ReadWpfLabelingShellWindowSources();
-        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfMaskAnnotationService.cs"));
+        string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
-        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "WpfAnnotationHistoryService.cs"));
+        string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
                 AssertTrue(shellSource.Contains("MainCanvasViewModel.ImageViewer.ZoomToFit();", StringComparison.Ordinal), "WPF inference should center the image after applying detection candidates");
                 AssertTrue(shellSource.Contains("CenterCanvasAfterInferenceResult", StringComparison.Ordinal), "WPF inference should centralize the post-result centering logic");
                 AssertTrue(shellSource.Contains("DispatcherPriority.Render", StringComparison.Ordinal), "WPF inference centering should run after the result overlay renders");
@@ -41023,16 +30889,7 @@ internal static partial class Program
 
     private static int GetAvailableTcpPort()
     {
-        TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        try
-        {
-            return ((IPEndPoint)listener.LocalEndpoint).Port;
-        }
-        finally
-        {
-            listener.Stop();
-        }
+        return TestSupport.GetAvailableTcpPort();
     }
 
     private static void RunMockDetectionClient(int port, ManualResetEventSlim receivedRequest)
@@ -41280,26 +31137,8 @@ internal static partial class Program
         }
     }
 
-    private static void StopRealYoloClient(Process process)
-    {
-        if (process == null)
-        {
-            return;
-        }
-
-        try
-        {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-                process.WaitForExit(5000);
-            }
-        }
-        finally
-        {
-            process.Dispose();
-        }
-    }
+    internal static void StopRealYoloClient(Process process)
+        => TestSupport.StopRealYoloClient(process);
 
     private static string CreateRealYoloSmokeArtifactRoot()
     {
@@ -41390,71 +31229,18 @@ internal static partial class Program
         return reviewStatusPath;
     }
 
-    private static void WriteRealYoloProcessLog(string artifactRoot, StringBuilder stdout, StringBuilder stderr)
-    {
-        if (string.IsNullOrWhiteSpace(artifactRoot))
-        {
-            return;
-        }
+    internal static void WriteRealYoloProcessLog(string artifactRoot, StringBuilder stdout, StringBuilder stderr)
+        => TestSupport.WriteRealYoloProcessLog(artifactRoot, stdout, stderr);
 
-        Directory.CreateDirectory(artifactRoot);
-        File.WriteAllText(Path.Combine(artifactRoot, "python-stdout.txt"), Snapshot(stdout));
-        File.WriteAllText(Path.Combine(artifactRoot, "python-stderr.txt"), Snapshot(stderr));
-    }
-
-    private static string BuildRealYoloSmokeFailure(string message, StringBuilder stdout, StringBuilder stderr)
-    {
-        string stderrText = TrimForMessage(Snapshot(stderr), 1600);
-        string stdoutText = TrimForMessage(Snapshot(stdout), 1600);
-        return $"{message}. stderr: {stderrText} stdout: {stdoutText}";
-    }
+    internal static string BuildRealYoloSmokeFailure(string message, StringBuilder stdout, StringBuilder stderr)
+        => TestSupport.BuildRealYoloSmokeFailure(message, stdout, stderr);
 
     private static void AppendProcessLine(StringBuilder builder, string line)
-    {
-        if (builder == null || line == null)
-        {
-            return;
-        }
-
-        lock (builder)
-        {
-            builder.AppendLine(line);
-        }
-    }
-
-    private static string Snapshot(StringBuilder builder)
-    {
-        if (builder == null)
-        {
-            return string.Empty;
-        }
-
-        lock (builder)
-        {
-            return builder.ToString();
-        }
-    }
-
-    private static string TrimForMessage(string text, int maximumLength)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return "(empty)";
-        }
-
-        text = text.Trim();
-        if (text.Length <= maximumLength)
-        {
-            return text;
-        }
-
-        return text.Substring(text.Length - maximumLength);
-    }
+        => TestSupport.AppendProcessLine(builder, line);
 
     private static string GetEnvironmentValue(string name, string fallback)
     {
-        string value = Environment.GetEnvironmentVariable(name);
-        return string.IsNullOrWhiteSpace(value) ? fallback : value;
+        return TestSupport.GetEnvironmentValue(name, fallback);
     }
 
     private static int GetEnvironmentInt(string name, int fallback)
@@ -41481,36 +31267,12 @@ internal static partial class Program
 
     private static bool WaitUntil(Func<bool> condition, TimeSpan timeout)
     {
-        DateTime deadline = DateTime.UtcNow.Add(timeout);
-        while (DateTime.UtcNow <= deadline)
-        {
-            if (condition())
-            {
-                return true;
-            }
-
-            Thread.Sleep(50);
-        }
-
-        return condition();
+        return TestSupport.WaitUntil(condition, timeout);
     }
 
     private static bool WaitUntilWpf(Func<bool> condition, TimeSpan timeout)
     {
-        DateTime deadline = DateTime.UtcNow.Add(timeout);
-        while (DateTime.UtcNow <= deadline)
-        {
-            PumpWpfDispatcher(TimeSpan.FromMilliseconds(50));
-            if (condition())
-            {
-                return true;
-            }
-
-            Thread.Sleep(10);
-        }
-
-        PumpWpfDispatcher(TimeSpan.FromMilliseconds(50));
-        return condition();
+        return TestSupport.WaitUntilWpf(condition, timeout);
     }
 
     private static bool PumpUntil(Func<bool> condition, TimeSpan timeout)
@@ -41531,45 +31293,21 @@ internal static partial class Program
         return condition();
     }
 
-    private static string CreateTempRoot()
-    {
-        string root = Path.Combine(Path.GetTempPath(), "LabelingApplication.Tests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
-        return root;
-    }
+    private static string CreateTempRoot() => TestSupport.CreateTempRoot();
 
     private static Bitmap CreateSolidBitmap(int width, int height, Color color)
     {
-        var bitmap = new Bitmap(width, height);
-        using Graphics graphics = Graphics.FromImage(bitmap);
-        graphics.Clear(color);
-        return bitmap;
+        return TestSupport.CreateSolidBitmap(width, height, color);
     }
 
     private static string FindRepositoryRoot()
     {
-        DirectoryInfo directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory != null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "OpenVisionLab.LabelingStudio.csproj")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new InvalidOperationException("Repository root was not found.");
+        return TestSupport.FindRepositoryRoot();
     }
 
     private static string ReadWpfLabelingShellWindowSources()
     {
-        string viewsRoot = Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views");
-        return string.Join(
-            Environment.NewLine,
-            Directory.GetFiles(viewsRoot, "WpfLabelingShellWindow*.cs")
-                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-                .Select(File.ReadAllText));
+        return TestSupport.ReadWpfLabelingShellWindowSources();
     }
 
     private static int FindNextSourceMarker(string source, int startIndex, params string[] markers)
@@ -41599,56 +31337,12 @@ internal static partial class Program
 
     private static string FindMethodSourceBlock(string source, string signature)
     {
-        int signatureIndex = source?.IndexOf(signature, StringComparison.Ordinal) ?? -1;
-        if (signatureIndex < 0)
-        {
-            return string.Empty;
-        }
-
-        int bodyStart = source.IndexOf('{', signatureIndex);
-        if (bodyStart < 0)
-        {
-            return string.Empty;
-        }
-
-        // Partial files are concatenated for static checks, so marker-based ranges can
-        // accidentally cross file boundaries after refactors. Brace matching keeps the
-        // assertion scoped to the method that owns the interaction path.
-        int depth = 0;
-        for (int i = bodyStart; i < source.Length; i++)
-        {
-            if (source[i] == '{')
-            {
-                depth++;
-            }
-            else if (source[i] == '}')
-            {
-                depth--;
-                if (depth == 0)
-                {
-                    return source.Substring(signatureIndex, i - signatureIndex + 1);
-                }
-            }
-        }
-
-        return string.Empty;
+        return TestSupport.FindMethodSourceBlock(source, signature);
     }
 
-    private static void DeleteTempRoot(string root)
-    {
-        if (Directory.Exists(root))
-        {
-            Directory.Delete(root, recursive: true);
-        }
-    }
+    private static void DeleteTempRoot(string root) => TestSupport.DeleteTempRoot(root);
 
-    private static void DeleteDirectoryIfExists(string path)
-    {
-        if (!string.IsNullOrWhiteSpace(path) && Directory.Exists(path))
-        {
-            Directory.Delete(path, recursive: true);
-        }
-    }
+    private static void DeleteDirectoryIfExists(string path) => TestSupport.DeleteDirectoryIfExists(path);
 
     private static void TestMvvmInfrastructure()
     {
@@ -41711,25 +31405,12 @@ internal static partial class Program
 
     private static bool ContainsVisibleMojibakeArtifact(string text)
     {
-        return !string.IsNullOrEmpty(text)
-            && text.Any(ch => ch == '\uFFFD' || (ch >= '\u4E00' && ch <= '\u9FFF') || (ch >= '\uF900' && ch <= '\uFAFF'));
+        return TestSupport.ContainsVisibleMojibakeArtifact(text);
     }
 
-    private static void AssertTrue(bool condition, string message)
-    {
-        if (!condition)
-        {
-            throw new InvalidOperationException(message);
-        }
-    }
+    private static void AssertTrue(bool condition, string message) => TestSupport.AssertTrue(condition, message);
 
-    private static void AssertEqual<T>(T expected, T actual)
-    {
-        if (!EqualityComparer<T>.Default.Equals(expected, actual))
-        {
-            throw new InvalidOperationException($"Expected '{expected}', got '{actual}'.");
-        }
-    }
+    private static void AssertEqual<T>(T expected, T actual) => TestSupport.AssertEqual(expected, actual);
 
     private static void AssertRectangleNearlyEqual(RectangleF expected, RectangleF actual, float tolerance)
     {

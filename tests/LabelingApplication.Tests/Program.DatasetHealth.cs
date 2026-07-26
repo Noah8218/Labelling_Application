@@ -8,14 +8,16 @@ using System.Linq;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class DatasetHealthTests
 {
-    private static void TestYoloDatasetHealthReport()
+    internal static void TestYoloDatasetHealthReport()
     {
         string root = CreateTempRoot();
         try
         {
-            CData detectionData = CreatePurposeReadinessData(
+            CData detectionData = DatasetReadinessTestFixtures.CreatePurposeReadinessData(
                 Path.Combine(root, "detection"),
                 LabelingDatasetPurpose.ObjectDetection,
                 includeBoxes: true,
@@ -30,7 +32,7 @@ internal static partial class Program
                 "detection health should use YOLO box-object counts for the class distribution");
             AssertEqual(0, detection.QualityProblemCount);
 
-            CData segmentationData = CreatePurposeReadinessData(
+            CData segmentationData = DatasetReadinessTestFixtures.CreatePurposeReadinessData(
                 Path.Combine(root, "segmentation"),
                 LabelingDatasetPurpose.Segmentation,
                 includeBoxes: false,
@@ -49,7 +51,7 @@ internal static partial class Program
             AssertTrue(segmentation.Classes.Single(item => item.ClassName == "Defect").Count == 2,
                 "segmentation health should use segment-object counts for the class distribution");
 
-            CData missingSegmentationData = CreatePurposeReadinessData(
+            CData missingSegmentationData = DatasetReadinessTestFixtures.CreatePurposeReadinessData(
                 Path.Combine(root, "segmentation-missing"),
                 LabelingDatasetPurpose.Segmentation,
                 includeBoxes: false,
@@ -70,7 +72,7 @@ internal static partial class Program
             AssertEqual("1", missingQualityMetric.Value);
             AssertTrue(missingQualityMetric.IsProblem, "missing SEG annotation must not be presented as healthy");
 
-            CData corruptSegmentationData = CreatePurposeReadinessData(
+            CData corruptSegmentationData = DatasetReadinessTestFixtures.CreatePurposeReadinessData(
                 Path.Combine(root, "segmentation-corrupt"),
                 LabelingDatasetPurpose.Segmentation,
                 includeBoxes: false,
@@ -139,7 +141,7 @@ internal static partial class Program
         }
     }
 
-    private static void TestWpfDatasetHealthWindow()
+    internal static void TestWpfDatasetHealthWindow()
     {
         if (System.Windows.Application.Current == null)
         {
@@ -153,7 +155,7 @@ internal static partial class Program
         string root = CreateTempRoot();
         try
         {
-            CData data = CreatePurposeReadinessData(
+            CData data = DatasetReadinessTestFixtures.CreatePurposeReadinessData(
                 Path.Combine(root, "dataset"),
                 LabelingDatasetPurpose.ObjectDetection,
                 includeBoxes: true,

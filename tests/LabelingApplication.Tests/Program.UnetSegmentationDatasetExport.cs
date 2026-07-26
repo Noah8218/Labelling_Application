@@ -10,9 +10,11 @@ using System.Linq;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class UnetSegmentationDatasetExportTests
 {
-    private static void TestUnetSegmentationDatasetExport()
+    internal static void TestUnetSegmentationDatasetExport()
     {
         string root = CreateTempRoot();
         try
@@ -81,7 +83,7 @@ internal static partial class Program
         }
     }
 
-    private static CData CreateUnetSegmentationFixture(string root, bool overlapTrainClasses = false)
+    internal static CData CreateUnetSegmentationFixture(string root, bool overlapTrainClasses = false)
     {
         var data = new CData();
         data.ConfigureOutputRoot(root);

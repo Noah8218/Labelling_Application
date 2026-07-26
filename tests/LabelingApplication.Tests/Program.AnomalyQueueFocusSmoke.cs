@@ -11,9 +11,12 @@ using WpfButtonBase = System.Windows.Controls.Primitives.ButtonBase;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static Program;
+using static TestSupport;
+
+internal static class AnomalyQueueFocusSmokeTests
 {
-    private static void TestWpfAnomalyQueueFocusFollowsActiveImage()
+    internal static void TestWpfAnomalyQueueFocusFollowsActiveImage()
     {
         if (System.Windows.Application.Current == null)
         {

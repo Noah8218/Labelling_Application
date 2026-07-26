@@ -11,9 +11,11 @@ using System.Text;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class RealYoloAnomalyFolderTrainingSmokeTests
 {
-    private static int RunRealYoloV8AnomalyFolderTraining(string[] args)
+    internal static int RunRealYoloV8AnomalyFolderTraining(string[] args)
     {
         string artifactRoot = string.Empty;
         Process pythonProcess = null;
@@ -110,7 +112,7 @@ internal static partial class Program
             int port = GetAvailableTcpPort();
             communication = new CCommunicationLearning(startListen: false, port: port);
             AssertTrue(communication.Start(), modelDisplayName + " anomaly training TCP listener did not start");
-            pythonProcess = StartRealYoloV8TrainingClient(
+            pythonProcess = StartRealYoloTrainingClient(
                 pythonPath,
                 clientScriptPath,
                 yoloRoot,
@@ -215,72 +217,6 @@ internal static partial class Program
         }
     }
 
-    private static Process StartRealYoloV8TrainingClient(
-        string pythonPath,
-        string clientScriptPath,
-        string yoloRoot,
-        string imageRoot,
-        string weightsPath,
-        int port,
-        int imageSize,
-        StringBuilder stdout,
-        StringBuilder stderr,
-        string modelName = "",
-        string device = "cpu")
-    {
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = pythonPath,
-            WorkingDirectory = yoloRoot,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            WindowStyle = ProcessWindowStyle.Hidden
-        };
-
-        startInfo.ArgumentList.Add(clientScriptPath);
-        startInfo.ArgumentList.Add("--host");
-        startInfo.ArgumentList.Add("127.0.0.1");
-        startInfo.ArgumentList.Add("--port");
-        startInfo.ArgumentList.Add(port.ToString(CultureInfo.InvariantCulture));
-        startInfo.ArgumentList.Add("--timeout");
-        startInfo.ArgumentList.Add("60");
-        startInfo.ArgumentList.Add("--retry");
-        startInfo.ArgumentList.Add("--retry-delay");
-        startInfo.ArgumentList.Add("1");
-        startInfo.ArgumentList.Add("--weights");
-        startInfo.ArgumentList.Add(weightsPath);
-        startInfo.ArgumentList.Add("--model-root");
-        startInfo.ArgumentList.Add(yoloRoot);
-        startInfo.ArgumentList.Add("--image-root");
-        startInfo.ArgumentList.Add(imageRoot);
-        startInfo.ArgumentList.Add("--device");
-        startInfo.ArgumentList.Add(string.IsNullOrWhiteSpace(device) ? "cpu" : device);
-        startInfo.ArgumentList.Add("--img-size");
-        startInfo.ArgumentList.Add(imageSize.ToString(CultureInfo.InvariantCulture));
-        startInfo.ArgumentList.Add("--conf");
-        startInfo.ArgumentList.Add("0");
-        if (!string.IsNullOrWhiteSpace(modelName))
-        {
-            startInfo.ArgumentList.Add("--model");
-            startInfo.ArgumentList.Add(modelName);
-        }
-
-        var process = new Process
-        {
-            StartInfo = startInfo,
-            EnableRaisingEvents = true
-        };
-        process.OutputDataReceived += (_, e) => AppendProcessLine(stdout, e.Data);
-        process.ErrorDataReceived += (_, e) => AppendProcessLine(stderr, e.Data);
-
-        AssertTrue(process.Start(), "YOLOv8 anomaly training Python client did not start");
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        return process;
-    }
-
     private static bool IsAnomalyTrainingTerminal(string state)
     {
         return string.Equals(state, "completed", StringComparison.OrdinalIgnoreCase)
@@ -305,11 +241,4 @@ internal static partial class Program
         return Directory.Exists(directory) && Directory.EnumerateFiles(directory).Any(IsAnomalyTrainingImage);
     }
 
-    private static int GetPositiveArgument(string[] args, string name, int fallback)
-    {
-        string text = GetArgumentValue(args, name, fallback.ToString(CultureInfo.InvariantCulture));
-        return int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) && value > 0
-            ? value
-            : fallback;
-    }
 }

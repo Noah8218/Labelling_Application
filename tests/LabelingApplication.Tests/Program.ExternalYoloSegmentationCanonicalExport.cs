@@ -12,9 +12,11 @@ using System.Threading.Tasks;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class ExternalYoloSegmentationCanonicalExportTests
 {
-    private static void TestExternalYoloSegmentationCanonicalExport()
+    internal static void TestExternalYoloSegmentationCanonicalExport()
     {
         string root = CreateTempRoot();
         try

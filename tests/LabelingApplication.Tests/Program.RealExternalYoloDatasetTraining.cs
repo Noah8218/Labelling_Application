@@ -13,10 +13,12 @@ using System.Text;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class RealExternalYoloDatasetTrainingSmokeTests
 {
     // Opt-in runtime evidence only: it never runs in the default test suite or registers a candidate.
-    private static int RunRealExternalYoloDatasetTraining(string[] args)
+    internal static int RunRealExternalYoloDatasetTraining(string[] args)
     {
         string artifactRoot = string.Empty;
         Process pythonProcess = null;
@@ -138,7 +140,7 @@ internal static partial class Program
             communication = new CCommunicationLearning(startListen: false, port: port);
             AssertTrue(communication.Start(), "external YOLO training TCP listener did not start");
             AppendExternalTrainingProgress(artifactRoot, "TCP listener started on port " + port.ToString(CultureInfo.InvariantCulture));
-            pythonProcess = StartRealYoloV8TrainingClient(
+            pythonProcess = StartRealYoloTrainingClient(
                 pythonPath,
                 clientScriptPath,
                 modelRoot,
@@ -302,45 +304,6 @@ internal static partial class Program
         throw new ArgumentException("external YOLO training purpose must be detection or segmentation: " + value);
     }
 
-    private static ExternalYoloSourceTreeSnapshot CaptureExternalYoloSourceTree(string sourceRoot)
-    {
-        string root = Path.GetFullPath(sourceRoot);
-        string[] filePaths = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-        var manifestLines = new List<string>(filePaths.Length);
-        var cacheRelativePaths = new List<string>();
-        using SHA256 treeHash = SHA256.Create();
-        foreach (string filePath in filePaths)
-        {
-            string relativePath = Path.GetRelativePath(root, filePath).Replace('\\', '/');
-            string fileHash = ComputeFileSha256(filePath);
-            string manifestLine = relativePath + "\t" + fileHash;
-            manifestLines.Add(manifestLine);
-            if (relativePath.EndsWith(".cache", StringComparison.OrdinalIgnoreCase))
-            {
-                cacheRelativePaths.Add(relativePath);
-            }
-
-            byte[] entry = Encoding.UTF8.GetBytes(manifestLine + "\n");
-            treeHash.TransformBlock(entry, 0, entry.Length, entry, 0);
-        }
-
-        treeHash.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-        string[] temporaryDirectoryRelativePaths = Directory.EnumerateDirectories(root, "openvisionlab-*", SearchOption.AllDirectories)
-            .Where(path => Path.GetFileName(path).StartsWith("openvisionlab-yolov5-training-", StringComparison.OrdinalIgnoreCase)
-                || Path.GetFileName(path).StartsWith("openvisionlab-ultralytics-label-cache-", StringComparison.OrdinalIgnoreCase))
-            .Select(path => Path.GetRelativePath(root, path).Replace('\\', '/'))
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-        return new ExternalYoloSourceTreeSnapshot(
-            filePaths.Length,
-            BitConverter.ToString(treeHash.Hash ?? Array.Empty<byte>()).Replace("-", string.Empty),
-            manifestLines,
-            cacheRelativePaths,
-            temporaryDirectoryRelativePaths);
-    }
-
     private static bool IsPathWithinRoot(string path, string root)
     {
         string relativePath = Path.GetRelativePath(Path.GetFullPath(root), Path.GetFullPath(path));
@@ -360,30 +323,4 @@ internal static partial class Program
         }
     }
 
-    private sealed class ExternalYoloSourceTreeSnapshot
-    {
-        public ExternalYoloSourceTreeSnapshot(
-            int fileCount,
-            string treeSha256,
-            IReadOnlyList<string> manifestLines,
-            IReadOnlyList<string> cacheRelativePaths,
-            IReadOnlyList<string> temporaryDirectoryRelativePaths)
-        {
-            FileCount = fileCount;
-            TreeSha256 = treeSha256 ?? string.Empty;
-            ManifestLines = manifestLines ?? Array.Empty<string>();
-            CacheRelativePaths = cacheRelativePaths ?? Array.Empty<string>();
-            TemporaryDirectoryRelativePaths = temporaryDirectoryRelativePaths ?? Array.Empty<string>();
-        }
-
-        public int FileCount { get; }
-
-        public string TreeSha256 { get; }
-
-        public IReadOnlyList<string> ManifestLines { get; }
-
-        public IReadOnlyList<string> CacheRelativePaths { get; }
-
-        public IReadOnlyList<string> TemporaryDirectoryRelativePaths { get; }
-    }
 }

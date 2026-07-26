@@ -11,9 +11,11 @@ using System.Text;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class RealUnetSegmentationRuntimeSmokeTests
 {
-    private static int RunRealUnetSegmentationRuntimeSmoke(string[] args)
+    internal static int RunRealUnetSegmentationRuntimeSmoke(string[] args)
     {
         string artifactRoot = string.Empty;
         Process pythonProcess = null;
@@ -74,7 +76,7 @@ internal static partial class Program
             }
             else
             {
-                data = CreateUnetSegmentationFixture(outputRoot);
+                data = UnetSegmentationDatasetExportTests.CreateUnetSegmentationFixture(outputRoot);
                 sourceBefore = UnetSegmentationDatasetExportService.ComputeSourceDataTreeSha256(data);
             }
             data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineUnet;
@@ -93,7 +95,7 @@ internal static partial class Program
             int firstPort = GetAvailableTcpPort();
             communication = new CCommunicationLearning(startListen: false, port: firstPort);
             AssertTrue(communication.Start(), "U-Net TCP listener did not start");
-            pythonProcess = StartRealYoloV8TrainingClient(
+            pythonProcess = StartRealYoloTrainingClient(
                 connection.Settings.PythonExecutablePath,
                 connection.Settings.ClientScriptPath,
                 unetRoot,
@@ -165,7 +167,7 @@ internal static partial class Program
             int secondPort = GetAvailableTcpPort();
             communication = new CCommunicationLearning(startListen: false, port: secondPort);
             AssertTrue(communication.Start(), "U-Net restart TCP listener did not start");
-            pythonProcess = StartRealYoloV8TrainingClient(
+            pythonProcess = StartRealYoloTrainingClient(
                 connection.Settings.PythonExecutablePath,
                 connection.Settings.ClientScriptPath,
                 unetRoot,
@@ -217,7 +219,7 @@ internal static partial class Program
                 "batch=" + batchSize.ToString(CultureInfo.InvariantCulture),
                 "requestedDevice=" + device,
                 "bestWeights=" + bestWeightsPath,
-                "bestWeightsSha256=" + ComputeFileSha256(bestWeightsPath),
+                "bestWeightsSha256=" + TestSupport.ComputeFileSha256(bestWeightsPath),
                 "unetPredictionManifest=" + predictionExport.PredictionManifestPath,
                 "restartModelState=" + inferenceStatus.LastModelState,
                 "restartDetectionState=" + inferenceStatus.LastDetectionState,

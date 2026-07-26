@@ -10,9 +10,12 @@ using System.Windows.Forms;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static Program;
+using static TestSupport;
+
+internal static class ExeExternalEvaluationDataAuditSmokeTests
 {
-    private static int RunExeExternalEvaluationDataAuditSmoke(string[] args)
+    internal static int RunExeExternalEvaluationDataAuditSmoke(string[] args)
     {
         string recipeName = "external_evaluation_audit_" + DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
         Process process = null;
@@ -86,7 +89,7 @@ internal static partial class Program
             AssertTrue(OpenYoloModelCenterThroughExe(process, stableHandle), "model center was not selectable for external evaluation audit");
             AssertTrue(OpenExternalEvaluationAuditSectionThroughExe(process, stableHandle), "external evaluation audit section was not reachable");
             CaptureWorkflowStep(RefreshAutomationRoot(process, stableHandle), screenshotDirectory, "02_audit_ready");
-            string visionHashBeforeAudit = ComputeFileSha256(visionPath);
+            string visionHashBeforeAudit = TestSupport.ComputeFileSha256(visionPath);
 
             var rootElement = RefreshAutomationRoot(process, stableHandle);
             AssertTrue(
@@ -108,7 +111,7 @@ internal static partial class Program
                     },
                     TimeSpan.FromSeconds(12)),
                 "external evaluation audit did not surface duplicate content: " + statusText + " / " + detailText);
-            AssertEqual(visionHashBeforeAudit, ComputeFileSha256(visionPath));
+            AssertEqual(visionHashBeforeAudit, TestSupport.ComputeFileSha256(visionPath));
             CaptureWorkflowStep(RefreshAutomationRoot(process, stableHandle), screenshotDirectory, "03_duplicate_content_blocked");
 
             string duplicateStatusText = statusText;
@@ -133,7 +136,7 @@ internal static partial class Program
                     },
                     TimeSpan.FromSeconds(12)),
                 "external evaluation audit did not clear independent content: " + statusText + " / " + detailText);
-            AssertEqual(visionHashBeforeAudit, ComputeFileSha256(visionPath));
+            AssertEqual(visionHashBeforeAudit, TestSupport.ComputeFileSha256(visionPath));
             CaptureWorkflowStep(RefreshAutomationRoot(process, stableHandle), screenshotDirectory, "04_independent_content_clear");
 
             string summaryPath = Path.Combine(artifactRoot, "summary.txt");

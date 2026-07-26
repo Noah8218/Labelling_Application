@@ -11,9 +11,11 @@ using System.Windows;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class ImageQueueWorklistTests
 {
-    private static void TestWpfImageQueueWorklistTenThousand()
+    internal static void TestWpfImageQueueWorklistTenThousand()
     {
         if (System.Windows.Application.Current == null)
         {

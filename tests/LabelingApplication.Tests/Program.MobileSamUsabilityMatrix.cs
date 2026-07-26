@@ -14,12 +14,14 @@ using System.Text;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class MobileSamUsabilityMatrixTests
 {
     private const double MobileSamUsableIou = 0.50D;
     private const double MobileSamEditableIou = 0.25D;
 
-    private static int RunRealMobileSamUsabilityMatrix(string[] args)
+    internal static int RunRealMobileSamUsabilityMatrix(string[] args)
     {
         try
         {
@@ -564,7 +566,7 @@ internal static partial class Program
     private static string ComputeTextSha256(string value)
         => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value ?? string.Empty)));
 
-    private static void TestMobileSamUsabilityMetric()
+    internal static void TestMobileSamUsabilityMetric()
     {
         string root = CreateTempRoot();
         try

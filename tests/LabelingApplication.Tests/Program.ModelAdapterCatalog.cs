@@ -8,9 +8,11 @@ using MvcVisionSystem.Yolo;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class ModelAdapterCatalogTests
 {
-    private static void TestModelAdapterCatalog()
+    internal static void TestModelAdapterCatalog()
     {
         var catalog = ModelAdapterCatalogService.BuildCatalog();
 

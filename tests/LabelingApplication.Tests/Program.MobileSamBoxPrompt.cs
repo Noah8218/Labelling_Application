@@ -11,9 +11,11 @@ using System.Linq;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class MobileSamBoxPromptTests
 {
-    private static int RunRealMobileSamBoxPrompt(string[] args)
+    internal static int RunRealMobileSamBoxPrompt(string[] args)
     {
         try
         {
@@ -85,7 +87,7 @@ internal static partial class Program
                 AssertEqual(1, candidateState.ConfirmedCount);
                 string segmentPath = Directory.EnumerateFiles(Path.Combine(runRoot, "data", "train", "segments"), "*.json").Single();
                 string maskPath = Directory.EnumerateFiles(Path.Combine(runRoot, "data", "train", "masks"), "*.png").Single();
-                AssertTrue(CountExeSmokeSavedMaskPixels(maskPath) > 0, "confirmed real MobileSAM mask should contain foreground pixels");
+                AssertTrue(CountSavedMaskPixels(maskPath) > 0, "confirmed real MobileSAM mask should contain foreground pixels");
 
                 string sourceHashAfter = ComputeFileSha256(imagePath);
                 AssertEqual(sourceHashBefore, sourceHashAfter);
@@ -133,7 +135,7 @@ internal static partial class Program
         }
     }
 
-    private static void TestMobileSamBoxPromptContract()
+    internal static void TestMobileSamBoxPromptContract()
     {
         string root = FindRepositoryRoot();
         string workerPath = Path.Combine(root, "Runtime", "Python", "openvisionlab_mobile_sam_box_prompt.py");
@@ -203,10 +205,10 @@ internal static partial class Program
         AssertTrue(shellSource.Contains("clearConfirmed: false", StringComparison.Ordinal), "smart-mask assist should preserve already confirmed candidates");
         AssertTrue(shellSource.Contains("manualRois[currentPromptIndex] != promptBounds", StringComparison.Ordinal), "smart-mask result should compare the current rectangle with the requested prompt bounds");
         AssertTrue(shellSource.Contains("프롬프트 박스가 변경되어 후보를 적용하지 않았습니다", StringComparison.Ordinal), "smart-mask result should fail closed when its prompt changes");
-        TestMobileSamUsabilityMetric();
+        MobileSamUsabilityMatrixTests.TestMobileSamUsabilityMetric();
     }
 
-    private static void ApplyVisualSmokeSmartMaskCandidate(
+    internal static void ApplyVisualSmokeSmartMaskCandidate(
         WpfLabelingShellWindow window,
         Size imageSize,
         string promptBoxText)
@@ -234,7 +236,7 @@ internal static partial class Program
         throw new InvalidOperationException("smart-mask visual smoke did not produce a candidate within 50 seconds");
     }
 
-    private static void ApplyVisualSmokeSmartMaskPrompt(
+    internal static void ApplyVisualSmokeSmartMaskPrompt(
         WpfLabelingShellWindow window,
         Size imageSize,
         string promptBoxText)

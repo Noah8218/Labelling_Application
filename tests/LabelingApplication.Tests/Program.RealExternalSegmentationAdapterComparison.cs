@@ -7,11 +7,13 @@ using System.IO;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class RealExternalSegmentationAdapterComparisonSmokeTests
 {
     // Opt-in evidence only: executes the same Model Center orchestration against two
     // checkpoints trained from one native segmentation source. It never adopts either.
-    private static int RunRealExternalSegmentationAdapterComparison(string[] args)
+    internal static int RunRealExternalSegmentationAdapterComparison(string[] args)
     {
         string artifactRoot = string.Empty;
         try
@@ -132,7 +134,7 @@ internal static partial class Program
         }
     }
 
-    private static string GetSegmentationComparisonYoloEngineArgument(string[] args)
+    internal static string GetSegmentationComparisonYoloEngineArgument(string[] args)
     {
         string engine = PythonModelSettings.NormalizeModelEngine(
             GetArgumentValue(args, "--yolo-engine", PythonModelSettings.EngineYoloV8));

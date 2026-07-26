@@ -10,12 +10,15 @@ using System.Text;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static Program;
+using static TestSupport;
+
+internal static class ExeYoloV8AnomalyRestartSmokeTests
 {
     private const string YoloV8AnomalyDefaultImage = @"C:\Git\Labelling_Application\artifacts\yolov8-cls-training-smoke\circular-defect-real-20260711\dataset-balanced\test\abnormal\033_NG.png";
     private const string YoloV8AnomalyDefaultWeights = @"C:\Git\Labelling_Application\artifacts\yolov8-cls-training-smoke\circular-defect-real-20260711\runs\yolov8n-cls-circular-defect-balanced-e20-img128-20260711\weights\best.pt";
 
-    private static int RunExeYoloV8AnomalyRestartSmoke(string[] args)
+    internal static int RunExeYoloV8AnomalyRestartSmoke(string[] args)
     {
         string modelEngine = PythonModelSettings.NormalizeModelEngine(GetArgumentValue(args, "--engine", PythonModelSettings.EngineYoloV8));
         AssertTrue(
@@ -160,7 +163,7 @@ internal static partial class Program
 
             CData savedData = ReadRecipeData(visionPath);
             AssertYoloV8AnomalyRecipeSettings(savedData, modelEngine, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, parsedAnomalyMinimumConfidence);
-            string savedVisionHash = ComputeFileSha256(visionPath);
+            string savedVisionHash = TestSupport.ComputeFileSha256(visionPath);
             File.Copy(visionPath, Path.Combine(artifactRoot, "saved-before-restart-VISION.xml"), overwrite: true);
             CaptureWorkflowStep(RefreshAutomationRoot(firstProcess, firstHandle), screenshotDirectory, "02_saved_yolov8_anomaly_profile");
 
@@ -187,7 +190,7 @@ internal static partial class Program
                 "restart marker did not preserve the anomaly smoke recipe");
             CData reopenedData = ReadRecipeData(visionPath);
             AssertYoloV8AnomalyRecipeSettings(reopenedData, modelEngine, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, parsedAnomalyMinimumConfidence);
-            string reopenedVisionHash = ComputeFileSha256(visionPath);
+            string reopenedVisionHash = TestSupport.ComputeFileSha256(visionPath);
             File.Copy(visionPath, Path.Combine(artifactRoot, "reopened-before-inference-VISION.xml"), overwrite: true);
             VerifyYoloV8SettingsVisibleAfterRestart(restartedProcess, restartedHandle, weightsPath, modelEngine);
             VerifyAnomalyMappingVisibleAfterRestart(restartedProcess, restartedHandle, parsedAnomalyMinimumConfidence);
@@ -241,7 +244,7 @@ internal static partial class Program
 
             CData inferredData = ReadRecipeData(visionPath);
             AssertYoloV8AnomalyRecipeSettings(inferredData, modelEngine, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, parsedAnomalyMinimumConfidence);
-            string inferredVisionHash = ComputeFileSha256(visionPath);
+            string inferredVisionHash = TestSupport.ComputeFileSha256(visionPath);
             string summaryPath = Path.Combine(artifactRoot, "summary.txt");
             File.WriteAllLines(summaryPath, new[]
             {
@@ -250,7 +253,7 @@ internal static partial class Program
                 "sourceImage=" + sourceImagePath,
                 "smokeImage=" + smokeImagePath,
                 "weights=" + weightsPath,
-                "weightsSha256=" + ComputeFileSha256(weightsPath),
+                "weightsSha256=" + TestSupport.ComputeFileSha256(weightsPath),
                 "savedVisionSha256=" + savedVisionHash,
                 "reopenedVisionSha256=" + reopenedVisionHash,
                 "inferredVisionSha256=" + inferredVisionHash,

@@ -11,9 +11,11 @@ using System.Threading.Tasks;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static TestSupport;
+
+internal static class ExternalYoloDatasetIntakeTests
 {
-    private static void TestExternalYoloDatasetIntake()
+    internal static void TestExternalYoloDatasetIntake()
     {
         string root = CreateTempRoot();
         string recipeName = "codex_external_yolo_" + Guid.NewGuid().ToString("N");
@@ -185,7 +187,7 @@ internal static partial class Program
         }
     }
 
-    private static void TestExternalYoloListSplitIntake()
+    internal static void TestExternalYoloListSplitIntake()
     {
         string root = CreateTempRoot();
         string recipeName = "codex_external_yolo_list_" + Guid.NewGuid().ToString("N");
@@ -325,15 +327,6 @@ internal static partial class Program
             yamlPath,
             "path: .\ntrain: splits/detection/train.txt\nval: splits/detection/val.txt\ntest: splits/detection/test.txt\nnc: 2\nnames:\n  0: scratch\n  1: crack\n");
         return yamlPath;
-    }
-
-    private static string CaptureExternalSourceSnapshot(string sourceRoot)
-    {
-        return string.Join(
-            "\n",
-            Directory.EnumerateFiles(sourceRoot, "*", SearchOption.AllDirectories)
-                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-                .Select(path => Path.GetRelativePath(sourceRoot, path).Replace('\\', '/') + ":" + ComputeFileSha256(path)));
     }
 
     private static string CreateExternalNativeYoloDataset(string root, string name, bool segmentation, bool mappingNames)

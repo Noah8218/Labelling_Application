@@ -4,18 +4,20 @@ using MvcVisionSystem.Yolo;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Security.Cryptography;
+using System.Linq;
 using System.Text;
-using System.Xml.Serialization;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static Program;
+using static TestSupport;
+
+internal static class ExeYoloV8DetectRestartSmokeTests
 {
     private const string YoloV8DetectDefaultImage = @"D:\LabelingData\Test01\Images\Teaching_0.jpeg";
     private const string YoloV8DetectDefaultRoot = @"C:\Git\yolov8";
 
-    private static int RunExeYoloV8DetectRestartSmoke(string[] args)
+    internal static int RunExeYoloV8DetectRestartSmoke(string[] args)
     {
         string recipeName = "codex_yolov8_detect_restart_" + DateTime.Now.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture);
         Process firstProcess = null;
@@ -51,7 +53,7 @@ internal static partial class Program
                 defaultWeightsPath));
             string sourceImagePath = Path.GetFullPath(GetArgumentValue(args, "--image", YoloV8DetectDefaultImage));
             string externalDataYamlPath = GetArgumentValue(args, "--external-data-yaml", string.Empty);
-            bool allowEmptyCandidates = HasArgument(args, "--allow-empty-candidates");
+            bool allowEmptyCandidates = args.Any(arg => string.Equals(arg, "--allow-empty-candidates", StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrWhiteSpace(externalDataYamlPath))
             {
                 externalDataYamlPath = Path.GetFullPath(externalDataYamlPath);
@@ -154,7 +156,7 @@ internal static partial class Program
             CData savedData = ReadRecipeData(visionPath);
             AssertYoloV8DetectRecipeSettings(savedData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine);
             AssertExternalYoloDatasetSettings(savedData, externalDataYamlPath);
-            string savedVisionHash = ComputeFileSha256(visionPath);
+            string savedVisionHash = TestSupport.ComputeFileSha256(visionPath);
             CaptureWorkflowStep(RefreshAutomationRoot(firstProcess, firstHandle), screenshotDirectory, "02_saved_yolov8_detect_profile");
 
             CloseExeSmokeProcess(firstProcess);
@@ -182,7 +184,7 @@ internal static partial class Program
             CData reopenedData = ReadRecipeData(visionPath);
             AssertYoloV8DetectRecipeSettings(reopenedData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine);
             AssertExternalYoloDatasetSettings(reopenedData, externalDataYamlPath);
-            string reopenedVisionHash = ComputeFileSha256(visionPath);
+            string reopenedVisionHash = TestSupport.ComputeFileSha256(visionPath);
             PythonModelRuntimeState persistedRuntimeState = PythonModelSettingsValidator.GetRuntimeState(
                 reopenedData.ProjectSettings.PythonModel);
             AssertTrue(
@@ -276,7 +278,7 @@ internal static partial class Program
             File.Copy(visionPath, Path.Combine(artifactRoot, "reopened-after-inference-VISION.xml"), overwrite: true);
             CData inferredData = ReadRecipeData(visionPath);
             AssertYoloV8DetectRecipeSettings(inferredData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine);
-            string inferredVisionHash = ComputeFileSha256(visionPath);
+            string inferredVisionHash = TestSupport.ComputeFileSha256(visionPath);
 
             string summaryPath = Path.Combine(artifactRoot, "summary.txt");
             File.WriteAllLines(summaryPath, new[]
@@ -286,7 +288,7 @@ internal static partial class Program
                 "sourceImage=" + sourceImagePath,
                 "smokeImage=" + smokeImagePath,
                 "weights=" + weightsPath,
-                "weightsSha256=" + ComputeFileSha256(weightsPath),
+                "weightsSha256=" + TestSupport.ComputeFileSha256(weightsPath),
                 "savedVisionSha256=" + savedVisionHash,
                 "reopenedVisionSha256=" + reopenedVisionHash,
                 "inferredVisionSha256=" + inferredVisionHash,
@@ -320,22 +322,6 @@ internal static partial class Program
             RestoreLastOpenedRecipe(lastOpenedRecipePath, hadLastOpenedRecipe, previousLastOpenedRecipe);
             DeleteDirectoryIfExists(recipeDirectory);
         }
-    }
-
-    private static Process StartYoloV8RuntimeSmokeExe(string exePath, out IntPtr handle)
-    {
-        Process process = Process.Start(new ProcessStartInfo
-        {
-            FileName = exePath,
-            WorkingDirectory = Path.GetDirectoryName(exePath),
-            UseShellExecute = true
-        });
-        AssertTrue(process != null, "failed to start YOLOv8 runtime restart smoke EXE");
-        handle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(25));
-        AssertTrue(handle != IntPtr.Zero, "YOLOv8 runtime restart smoke window did not appear");
-        SetWindowPos(handle, HwndTopMost, 0, 0, VisualSmokeDefaultWindowWidth, VisualSmokeDefaultWindowHeight, SwpShowWindow);
-        BringNativeWindowToFront(handle);
-        return process;
     }
 
     private static void AssertDatasetPurposeVisibleThroughExe(
@@ -472,91 +458,6 @@ internal static partial class Program
         AssertTrue(!string.IsNullOrWhiteSpace(settings.LastValidationClassNames), "validated external data.yaml class list should persist");
     }
 
-    private static void CreateDatasetRecipeThroughExe(
-        Process process,
-        IntPtr stableHandle,
-        string recipeName,
-        string outputRoot,
-        string recipeDirectory,
-        string screenshotDirectory,
-        string purposeDisplayText,
-        LabelingDatasetPurpose expectedPurpose,
-        string classNames)
-    {
-        var wizardRoot = OpenDatasetSetupWizardThroughExe(process, stableHandle);
-        AssertTrue(wizardRoot != null, "dataset wizard did not open for YOLOv8 Detect restart smoke");
-        CaptureWorkflowStep(wizardRoot, screenshotDirectory, "01a_dataset_wizard_before_purpose_change");
-        AssertTrue(
-            ClickDatasetPurposeByText(wizardRoot, purposeDisplayText),
-            expectedPurpose + " purpose was not clickable in the dataset wizard");
-        wizardRoot = WaitForProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131", TimeSpan.FromSeconds(8));
-        AssertTrue(
-            WaitUntil(
-                () => ContainsAutomationText(wizardRoot, "\uBAA9\uC801: " + purposeDisplayText)
-                    || ContainsAutomationText(wizardRoot, "Purpose: " + expectedPurpose),
-                TimeSpan.FromSeconds(3)),
-            "dataset wizard did not select " + expectedPurpose);
-        CaptureWorkflowStep(wizardRoot, screenshotDirectory, "01b_dataset_purpose_selected");
-        string automaticRecipeName = GetAutomationValueByAutomationId(wizardRoot, "WizardRecipeNameBox");
-        string automaticOutputRoot = GetAutomationValueByAutomationId(wizardRoot, "WizardOutputRootPathBox");
-        AssertTrue(
-            automaticRecipeName.Contains(expectedPurpose.ToString(), StringComparison.Ordinal),
-            "dataset wizard automatic recipe name did not follow the selected purpose: " + automaticRecipeName);
-        AssertTrue(
-            Path.GetFileName(automaticOutputRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
-                .Contains(expectedPurpose.ToString(), StringComparison.Ordinal),
-            "dataset wizard automatic output root did not follow the selected purpose: " + automaticOutputRoot);
-        AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardRecipeNameBox", recipeName), "dataset recipe name was not editable");
-        AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardOutputRootPathBox", outputRoot), "dataset output root was not editable");
-        AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardClassNamesBox", classNames), "dataset classes were not editable");
-        CaptureWorkflowStep(wizardRoot, screenshotDirectory, "01c_dataset_recipe_wizard");
-
-        var createButton = FindAutomationElementByAutomationId(wizardRoot, "WizardCreateButton");
-        AssertTrue(createButton != null && createButton.Current.IsEnabled, "dataset recipe create button was not clickable");
-        AssertTrue(TryInvokeAutomationButtonByAutomationId(wizardRoot, "WizardCreateButton"), "dataset recipe create button was not invokable");
-        Thread.Sleep(500);
-        CaptureWorkflowStep(
-            RefreshAutomationRoot(process, stableHandle),
-            screenshotDirectory,
-            "01c_after_dataset_recipe_create");
-
-        string manifestPath = Path.Combine(recipeDirectory, LabelingDatasetManifestService.FileName);
-        LabelingDatasetManifest manifest = null;
-        bool finalManifestReady = WaitUntil(
-                    () => TryReadDatasetManifest(manifestPath, out manifest)
-                    && string.Equals(manifest.RecipeName, recipeName, StringComparison.Ordinal)
-                    && string.Equals(manifest.DatasetPurpose, expectedPurpose.ToString(), StringComparison.Ordinal)
-                    && classNames.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                        .All(className => manifest.Classes?.Contains(className) == true),
-                TimeSpan.FromSeconds(10));
-        File.WriteAllText(
-            Path.Combine(screenshotDirectory, "01c_dataset_manifest_after_create.json"),
-            File.Exists(manifestPath) ? File.ReadAllText(manifestPath) : "<manifest-missing>",
-            new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-        AssertTrue(finalManifestReady, "dataset recipe manifest did not reach final content");
-        string visionPath = Path.Combine(recipeDirectory, "VISION.xml");
-        AssertTrue(
-            WaitUntil(
-                () => File.Exists(visionPath)
-                    && File.ReadAllText(visionPath).Contains(
-                        "<DatasetPurpose>" + expectedPurpose + "</DatasetPurpose>",
-                        StringComparison.Ordinal),
-                TimeSpan.FromSeconds(10)),
-            "dataset recipe VISION.xml did not reach final " + expectedPurpose + " purpose");
-        AssertTrue(File.Exists(manifestPath), "dataset recipe manifest was not created");
-    }
-
-    private static CData ReadRecipeData(string visionPath)
-    {
-        var serializer = new XmlSerializer(typeof(CData));
-        using FileStream stream = File.OpenRead(visionPath);
-        var data = serializer.Deserialize(stream) as CData;
-        AssertTrue(data != null, "recipe VISION.xml did not deserialize: " + visionPath);
-        data.ProjectSettings ??= new LabelingProjectSettings();
-        data.ProjectSettings.EnsureDefaults();
-        return data;
-    }
-
     private static void AssertYoloV8DetectRecipeSettings(
         CData data,
         string yoloRoot,
@@ -589,57 +490,4 @@ internal static partial class Program
         AssertEqual(0, registry.TrainingRuns.Count);
     }
 
-    private static void VerifyYoloV8SettingsVisibleAfterRestart(
-        Process process,
-        IntPtr stableHandle,
-        string weightsPath,
-        string expectedEngine = PythonModelSettings.EngineYoloV8)
-    {
-        AssertTrue(OpenYoloModelCenterThroughExe(process, stableHandle), "model center was not selectable after restart");
-        AssertTrue(
-            TryExpandYoloSettingsSection(process, stableHandle, "YoloModelSettingsExpander", "YoloInspectionModelQuickPanel"),
-            "YOLO model settings were not expandable after restart");
-        AssertTrue(TryExpandYoloAdvancedModelSettingsThroughExe(process, stableHandle), "advanced YOLO settings were not expandable after restart");
-        AssertTrue(TryBringYoloSettingsElementIntoView(process, stableHandle, "YoloWeightsPathBox"), "saved YOLOv8 weights field was not reachable after restart");
-        var root = RefreshAutomationRoot(process, stableHandle);
-        string selectedEngine = FirstNonEmpty(
-            GetSelectedComboBoxItemNameByAutomationId(root, "YoloModelEngineBox"),
-            GetAutomationValueByAutomationId(root, "YoloModelEngineBox"));
-        string visibleWeightsPath = GetAutomationValueByAutomationId(root, "YoloWeightsPathBox");
-        string displayEngine = string.Equals(expectedEngine, PythonModelSettings.EngineYolo11, StringComparison.Ordinal)
-            ? "YOLO11"
-            : "YOLOv8";
-        AssertTrue(selectedEngine.Contains(displayEngine, StringComparison.OrdinalIgnoreCase), "reopened UI did not show " + displayEngine + ": " + selectedEngine);
-        AssertPathEqual(weightsPath, visibleWeightsPath, "reopened UI showed the wrong Detect weights");
-    }
-
-    private static void AssertPathEqual(string expected, string actual, string message)
-    {
-        AssertTrue(
-            string.Equals(Path.GetFullPath(expected), Path.GetFullPath(actual), StringComparison.OrdinalIgnoreCase),
-            message + $"; expected={expected}, actual={actual}");
-    }
-
-    private static string ComputeFileSha256(string path)
-        => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
-
-    private static void RestoreLastOpenedRecipe(string path, bool existed, byte[] content)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-
-        if (existed)
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(path) ?? AppContext.BaseDirectory);
-            File.WriteAllBytes(path, content ?? Array.Empty<byte>());
-            return;
-        }
-
-        if (File.Exists(path))
-        {
-            File.Delete(path);
-        }
-    }
 }

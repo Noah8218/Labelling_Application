@@ -12,9 +12,12 @@ using System.Windows.Automation;
 
 namespace LabelingApplication.Tests;
 
-internal static partial class Program
+using static Program;
+using static TestSupport;
+
+internal static class ExeImageQueueWorklistSmokeTests
 {
-    private static int RunExeImageQueueWorklistSmoke(string[] args)
+    internal static int RunExeImageQueueWorklistSmoke(string[] args)
     {
         const int imageCount = 125;
         const int initiallyCompletedCount = 5;
