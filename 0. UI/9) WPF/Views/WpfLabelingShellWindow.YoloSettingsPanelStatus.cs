@@ -53,14 +53,7 @@ namespace MvcVisionSystem
                 environment,
                 environmentCheckError);
 
-            if (YoloStatusViewModel != null)
-            {
-                YoloStatusViewModel.SetSettingsStatus(runtimeState.SummaryText, detail);
-                return;
-            }
-
-            YoloSettingsSummaryText.Text = runtimeState.SummaryText;
-            YoloSettingsDetailText.Text = detail;
+            YoloStatusViewModel.SetSettingsStatus(runtimeState.SummaryText, detail);
         }
     }
 }

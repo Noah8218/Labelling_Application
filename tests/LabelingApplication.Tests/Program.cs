@@ -17580,7 +17580,7 @@ internal static partial class Program
         AssertTrue(shapeDrawingSource.Contains("DrawReadableLabelRectangle", StringComparison.Ordinal), "labeled rectangle ROI drawing should use the high-contrast viewer path");
         AssertTrue(shapeDrawingSource.Contains("green boxes remain readable on real images", StringComparison.Ordinal), "labeled rectangle visibility should document why class color gets contrast support");
         AssertTrue(shapeDrawingSource.Contains("haloLineWidth", StringComparison.Ordinal) && shapeDrawingSource.Contains("DrawFilledPointFPolygon", StringComparison.Ordinal), "labeled rectangles should keep class color while adding halo and light fill tint");
-        string objectReviewViewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "WpfObjectReviewPanelViewModel.cs"));
+        string objectReviewViewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "Labeling", "WpfObjectReviewPanelViewModel.cs"));
         AssertTrue(objectReviewViewModelSource.Contains("TryReplaceObject", StringComparison.Ordinal), "object review ViewModel should expose a single-row replacement path for ROI edits");
         AssertTrue(objectReviewViewModelSource.Contains("TryRemoveObject", StringComparison.Ordinal), "object review ViewModel should expose a single-row removal path for ROI deletes");
         AssertTrue(objectReviewViewModelSource.Contains("SuppressSelectionNotifications", StringComparison.Ordinal), "object review ViewModel should own programmatic selection suppression");
@@ -20417,8 +20417,10 @@ internal static partial class Program
         AssertTrue(classSelectorToolTip.Contains("\uC800\uC7A5\uB41C \uB77C\uBCA8", StringComparison.Ordinal), "canvas class selector tooltip should explain this is not the current saved-label list");
 
         string panelCode = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfCanvasPanel.xaml.cs"));
-        string viewModelCode = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfCanvasPanelViewModel.cs"));
-        string learningWorkflowViewModelCode = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfLearningWorkflowPanelViewModel.cs"));
+        string viewModelCode = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Labeling", "WpfCanvasPanelViewModel.cs"));
+        string learningWorkflowViewModelCode =
+            File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Shell", "WpfLearningWorkflowPanelViewModel.cs"))
+            + File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Shell", "WpfLearningWorkflowItems.cs"));
         string shellSource = ReadWpfLabelingShellWindowSources();
 
         AssertTrue(viewModelCode.Contains("ICommand FitCommand", StringComparison.Ordinal), "canvas ViewModel should expose WPF commands");
@@ -21007,7 +21009,9 @@ internal static partial class Program
         string annotationWorkflowServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationWorkflowService.cs"));
         string annotationCapabilityServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationToolCapabilityService.cs"));
         string trainingWeightsServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Training", "WpfTrainingWeightsService.cs"));
-        string learningWorkflowViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfLearningWorkflowPanelViewModel.cs"));
+        string learningWorkflowViewModelSource =
+            File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Shell", "WpfLearningWorkflowPanelViewModel.cs"))
+            + File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Shell", "WpfLearningWorkflowItems.cs"));
         string testProgramSource = File.ReadAllText(Path.Combine(root, "tests", "LabelingApplication.Tests", "Program.cs"));
         AssertTrue(panelSource.Contains("ModeDetailText", StringComparison.Ordinal), "WPF education panel should explain the selected lesson mode");
         AssertTrue(panelSource.Contains("StepDetailText", StringComparison.Ordinal), "WPF education panel should explain the selected lesson step");
@@ -21844,9 +21848,9 @@ internal static partial class Program
     {
         string root = FindRepositoryRoot();
         string wizardPath = Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfDatasetSetupWizardWindow.xaml");
-        string wizardViewModelPath = Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfDatasetSetupWizardViewModel.cs");
+        string wizardViewModelPath = Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Dataset", "WpfDatasetSetupWizardViewModel.cs");
         string selectionPath = Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfDatasetSelectionWindow.xaml");
-        string selectionViewModelPath = Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfDatasetSelectionWindowViewModel.cs");
+        string selectionViewModelPath = Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Dataset", "WpfDatasetSelectionWindowViewModel.cs");
         XDocument xaml = XDocument.Load(wizardPath);
         XDocument selectionXaml = XDocument.Load(selectionPath);
         XName xName = XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml");
@@ -24550,7 +24554,7 @@ internal static partial class Program
         string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
             string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
-            string viewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "WpfProjectConfigPanelViewModel.cs"));
+            string viewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "Dataset", "WpfProjectConfigPanelViewModel.cs"));
             string serviceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Project", "WpfProjectRecipeService.cs"));
             string sessionServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Project", "WpfProjectRecipeSessionService.cs"));
             string persistenceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.ProjectConfigPersistence.cs"));
@@ -26098,7 +26102,7 @@ internal static partial class Program
         string panelCode = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfCandidateReviewPanel.xaml.cs"));
         string shellSource = ReadWpfLabelingShellWindowSources();
         string selectionServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "CandidateReview", "WpfCandidateReviewSelectionService.cs"));
-        string candidateReviewViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfCandidateReviewPanelViewModel.cs"));
+        string candidateReviewViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Labeling", "WpfCandidateReviewPanelViewModel.cs"));
         string inputCommandBehaviorSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab", "Library", "OpenVisionLab.Mvvm", "Behaviors", "InputCommandBehaviors.cs"));
         string stateServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "CandidateReview", "WpfCandidateReviewStateService.cs"));
         string presentationServiceSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "CandidateReview", "WpfCandidateReviewPresentationService.cs"));
@@ -26443,7 +26447,7 @@ internal static partial class Program
         string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
         string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
-        string classViewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "WpfClassCatalogPanelViewModel.cs"));
+        string classViewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "Labeling", "WpfClassCatalogPanelViewModel.cs"));
         AssertTrue(shellSource.Contains("ClassCatalogViewModel?.SetClasses", StringComparison.Ordinal)
             || shellSource.Contains("ClassCatalogViewModel.SetClasses", StringComparison.Ordinal),
             "WPF class catalog should populate the view model collection");
@@ -26690,7 +26694,7 @@ internal static partial class Program
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
         string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
         string objectPresentationSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "ObjectReview", "WpfObjectReviewPresentationService.cs"));
-        string objectReviewViewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "WpfObjectReviewPanelViewModel.cs"));
+        string objectReviewViewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "Labeling", "WpfObjectReviewPanelViewModel.cs"));
         string inputCommandBehaviorSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "OpenVisionLab", "Library", "OpenVisionLab.Mvvm", "Behaviors", "InputCommandBehaviors.cs"));
         AssertTrue(new WpfObjectReviewPanelViewModel().PanelModeTitleText.Contains("\uC800\uC7A5 \uB77C\uBCA8", StringComparison.Ordinal), "object review should identify the panel as saved labels");
         AssertTrue(new WpfObjectReviewPanelViewModel().PanelModeBadgeText.Contains("\uC800\uC7A5 \uB77C\uBCA8", StringComparison.Ordinal), "object review mode badge should identify saved labels");

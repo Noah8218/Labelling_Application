@@ -42,15 +42,34 @@ internal static class WpfShellStructureTests
         XDocument queueXaml = XDocument.Load(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfImageQueuePanel.xaml"));
         string shellSource = ReadWpfLabelingShellWindowSources();
         string shellXamlSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.xaml"));
-        string imageQueueViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfImageQueuePanelViewModel.cs"));
+        string imageQueueViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Labeling", "WpfImageQueuePanelViewModel.cs"));
         string datasetContextPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Dataset", "WpfDatasetContextPresentationService.cs"));
         string workflowStagePresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Training", "WpfWorkflowStagePresentationService.cs"));
         string inputCommandBehaviorSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab", "Library", "OpenVisionLab.Mvvm", "Behaviors", "InputCommandBehaviors.cs"));
-        string shellViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfLabelingShellViewModel.cs"));
+        string shellViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Shell", "WpfLabelingShellViewModel.cs"));
         string yoloRuntimeStatusSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.YoloRuntimeStatus.cs"));
         string inferenceStatusPresentationSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Services", "Detection", "WpfInferenceStatusPresentationService.cs"));
         string keyInputArgsSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab", "Library", "OpenVisionLab.Mvvm", "InputCommandArgs.cs"));
         string testProgramSource = File.ReadAllText(Path.Combine(root, "tests", "LabelingApplication.Tests", "Program.cs"));
+
+        foreach (string directStatusWrite in new[]
+        {
+            "DatasetStatusText.Text =",
+            "PythonStatusText.Text =",
+            "ModelStatusText.Text =",
+            "InspectionModelStatusText.Text =",
+            "ProjectConfigStatusText.Text =",
+            "YoloSettingsSummaryText.Text =",
+            "YoloSettingsDetailText.Text =",
+            "YoloCommandStatusText.Text =",
+            "YoloCommandProgressBar.Visibility =",
+            "YoloCommandProgressBar.IsIndeterminate ="
+        })
+        {
+            AssertTrue(
+                !shellSource.Contains(directStatusWrite, StringComparison.Ordinal),
+                $"bound status state should be written through its ViewModel: {directStatusWrite}");
+        }
 
         AssertEqual("1920", (string)shellXaml.Root?.Attribute("Width"));
         AssertEqual("1080", (string)shellXaml.Root?.Attribute("Height"));

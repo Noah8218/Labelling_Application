@@ -122,7 +122,7 @@ internal static class WpfSegmentationAdapterComparisonTests
 
             string rootPath = FindRepositoryRoot();
             string xaml = File.ReadAllText(Path.Combine(rootPath, "0. UI", "9) WPF", "Views", "WpfTrainingSettingsPanel.xaml"));
-            string viewModelSource = File.ReadAllText(Path.Combine(rootPath, "0. UI", "9) WPF", "ViewModels", "WpfTrainingSettingsPanelViewModel.cs"));
+            string viewModelSource = File.ReadAllText(Path.Combine(rootPath, "0. UI", "9) WPF", "ViewModels", "Model", "WpfTrainingSettingsPanelViewModel.cs"));
             string shellSource = File.ReadAllText(Path.Combine(rootPath, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.SegmentationAdapterComparison.cs"));
             AssertTrue(xaml.Contains("SegmentationAdapterComparisonPanel", StringComparison.Ordinal), "Model Center should render a dedicated segmentation adapter comparison panel");
             AssertTrue(xaml.Contains("SegmentationUnetWeightsPath", StringComparison.Ordinal), "Model Center should bind the selected U-Net checkpoint through the ViewModel");

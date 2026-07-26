@@ -21,34 +21,15 @@ namespace MvcVisionSystem
         private void SetDatasetStatus(string text)
         {
             string normalized = text ?? string.Empty;
-            if (StatusBarViewModel != null)
-            {
-                StatusBarViewModel.SetDatasetStatus(normalized);
-                RefreshShellDatasetContext();
-                UpdateWorkflowProgressStatus();
-                return;
-            }
-
-            if (DatasetStatusText != null)
-            {
-                DatasetStatusText.Text = normalized;
-            }
+            StatusBarViewModel.SetDatasetStatus(normalized);
             RefreshShellDatasetContext();
+            UpdateWorkflowProgressStatus();
         }
 
         private void SetPythonStatus(string text)
         {
             string normalized = text ?? string.Empty;
-            if (StatusBarViewModel != null)
-            {
-                StatusBarViewModel.SetPythonStatus(normalized);
-                return;
-            }
-
-            if (PythonStatusText != null)
-            {
-                PythonStatusText.Text = normalized;
-            }
+            StatusBarViewModel.SetPythonStatus(normalized);
         }
 
         private void UpdateWorkflowProgressStatus()
@@ -137,16 +118,7 @@ namespace MvcVisionSystem
         private void SetModelStatus(string text)
         {
             string normalized = text ?? string.Empty;
-            if (StatusBarViewModel != null)
-            {
-                StatusBarViewModel.SetModelStatus(normalized);
-                return;
-            }
-
-            if (ModelStatusText != null)
-            {
-                ModelStatusText.Text = normalized;
-            }
+            StatusBarViewModel.SetModelStatus(normalized);
         }
 
         private void SetInspectionModelStatus(string text, string toolTip = null)
@@ -157,17 +129,7 @@ namespace MvcVisionSystem
             string normalizedToolTip = string.IsNullOrWhiteSpace(toolTip)
                 ? normalized
                 : toolTip.Trim();
-            if (StatusBarViewModel != null)
-            {
-                StatusBarViewModel.SetInspectionModelStatus(normalized, normalizedToolTip);
-                return;
-            }
-
-            if (InspectionModelStatusText != null)
-            {
-                InspectionModelStatusText.Text = normalized;
-                InspectionModelStatusText.ToolTip = normalizedToolTip;
-            }
+            StatusBarViewModel.SetInspectionModelStatus(normalized, normalizedToolTip);
         }
 
         private void ExecuteToggleThemeCommand()

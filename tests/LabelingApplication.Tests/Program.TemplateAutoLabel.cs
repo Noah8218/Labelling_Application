@@ -591,7 +591,7 @@ internal static class TemplateAutoLabelTests
         string projectSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab.LabelingStudio.csproj"));
         string solutionSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab.LabelingStudio.sln"));
         string templateCommandsSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.TemplateMatchingCommands.cs"));
-        string templateViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "WpfTemplateMatchingAutoLabelViewModel.cs"));
+        string templateViewModelSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "ViewModels", "Labeling", "WpfTemplateMatchingAutoLabelViewModel.cs"));
         string templatePresentationPath = Path.Combine(root, "0. UI", "9) WPF", "Services", "Detection", "WpfTemplateMatchingAutoLabelPresentationService.cs");
         string dialogControlPath = Path.Combine(root, "OpenVisionLab", "Library", "OpenVisionLab.Wpf.MessageDialogs", "WpfMessageDialogControl.xaml");
         AssertTrue(File.Exists(templatePresentationPath), "template auto-label wording should live in a WPF presentation service");

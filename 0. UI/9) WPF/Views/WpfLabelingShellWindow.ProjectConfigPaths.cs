@@ -13,14 +13,7 @@ namespace MvcVisionSystem
         // Path and dialog helpers are shared by project, YOLO, and training settings flows.
         private void SetProjectConfigStatus(string message)
         {
-            if (ProjectConfigViewModel != null)
-            {
-                ProjectConfigViewModel.StatusText = message ?? string.Empty;
-            }
-            else if (ProjectConfigStatusText != null)
-            {
-                ProjectConfigStatusText.Text = message ?? string.Empty;
-            }
+            ProjectConfigViewModel.StatusText = message ?? string.Empty;
         }
 
         private string GetCurrentRecipeName()

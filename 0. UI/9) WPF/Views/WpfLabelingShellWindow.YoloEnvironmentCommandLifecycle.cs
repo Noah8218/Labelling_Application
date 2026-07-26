@@ -1,5 +1,3 @@
-using System.Windows;
-
 namespace MvcVisionSystem
 {
     public partial class WpfLabelingShellWindow
@@ -22,15 +20,7 @@ namespace MvcVisionSystem
         private void EndYoloEnvironmentCommand()
         {
             isYoloEnvironmentCommandRunning = false;
-            if (YoloStatusViewModel != null)
-            {
-                YoloStatusViewModel.SetCommandBusy(false);
-            }
-            else
-            {
-                YoloCommandProgressBar.IsIndeterminate = false;
-                YoloCommandProgressBar.Visibility = Visibility.Collapsed;
-            }
+            YoloStatusViewModel.SetCommandBusy(false);
 
             UpdateYoloCommandButtons();
             RefreshYoloStatus();
@@ -38,19 +28,7 @@ namespace MvcVisionSystem
 
         private void SetYoloCommandStatus(string text, bool isBusy)
         {
-            if (YoloStatusViewModel != null)
-            {
-                YoloStatusViewModel.SetCommandStatus(text, isBusy);
-                return;
-            }
-
-            YoloCommandStatusText.Text = string.IsNullOrWhiteSpace(text) ? "\uBAA8\uB378 \uC2E4\uD589\uAE30 \uB300\uAE30" : text;
-            YoloCommandProgressBar.Visibility = isBusy ? Visibility.Visible : Visibility.Collapsed;
-            YoloCommandProgressBar.IsIndeterminate = isBusy;
-            if (!isBusy)
-            {
-                YoloCommandProgressBar.Value = 0;
-            }
+            YoloStatusViewModel.SetCommandStatus(text, isBusy);
         }
 
         private void SetYoloRecoveryStatus(string titleText, string detailText, string actionText)
