@@ -82,7 +82,20 @@ namespace MvcVisionSystem
 
         private void ApplyDatasetPurposeToCurrentProject(LabelingDatasetPurpose purpose)
         {
+            ApplyDatasetPurposeToCurrentProjectCore(purpose, persistAfterBindingsSettle: false);
+        }
+
+        private void ApplyPersistedDatasetPurposeToCurrentProject(LabelingDatasetPurpose purpose)
+        {
+            ApplyDatasetPurposeToCurrentProjectCore(purpose, persistAfterBindingsSettle: true);
+        }
+
+        private void ApplyDatasetPurposeToCurrentProjectCore(
+            LabelingDatasetPurpose purpose,
+            bool persistAfterBindingsSettle)
+        {
             SynchronizeDatasetPurposeToCurrentProject(purpose);
+            string recipeName = global.Recipe.Name;
 
             // CRecipe.Name replaces Data synchronously, but the previous
             // ListBox selection can still raise a queued WPF SelectionChanged
@@ -91,7 +104,20 @@ namespace MvcVisionSystem
             // recipe as segmentation/anomaly by mistake.
             Dispatcher.BeginInvoke(
                 System.Windows.Threading.DispatcherPriority.ContextIdle,
-                new Action(() => SynchronizeDatasetPurposeToCurrentProject(purpose)));
+                new Action(() =>
+                {
+                    if (GetCurrentDatasetPurpose() != purpose)
+                    {
+                        SynchronizeDatasetPurposeToCurrentProject(purpose);
+                    }
+
+                    if (persistAfterBindingsSettle
+                        && string.Equals(global.Recipe.Name, recipeName, StringComparison.Ordinal)
+                        && !string.IsNullOrWhiteSpace(recipeName))
+                    {
+                        global.Data.SaveConfig(recipeName);
+                    }
+                }));
         }
 
         private void SynchronizeDatasetPurposeToCurrentProject(LabelingDatasetPurpose purpose)

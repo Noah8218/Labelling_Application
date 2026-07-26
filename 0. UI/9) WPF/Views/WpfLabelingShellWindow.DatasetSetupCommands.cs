@@ -289,7 +289,7 @@ namespace MvcVisionSystem
             // load that contract without the view constructing files or labels.
             global.Data = result.Data;
             global.Recipe.Name = result.RecipeName;
-            ApplyDatasetPurposeToCurrentProject(request.Purpose);
+            ApplyPersistedDatasetPurposeToCurrentProject(request.Purpose);
             RememberLastOpenedDatasetRecipe(result.RecipeName);
 
             PopulateProjectConfigPanelFields();
