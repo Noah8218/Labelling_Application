@@ -94,24 +94,18 @@ namespace MvcVisionSystem
                     .CheckRequirementsAsync(settings)
                     .ConfigureAwait(true);
 
-                if (check.Errors.Count > 0)
+                WpfRequirementsCheckPresentation checkPresentation =
+                    WpfYoloEnvironmentCommandPresentationService.BuildRequirementsCheckPresentation(check);
+                SetYoloCommandStatus(checkPresentation.StatusText, checkPresentation.IsBusy);
+
+                if (!checkPresentation.ShouldInstallRequirements)
                 {
-                    SetYoloCommandStatus(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsSkippedStatus(check.Summary), isBusy: false);
                     await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
-                    AppendLog(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsSkippedLog(check.Summary));
+                    AppendLog(checkPresentation.LogText);
                     return;
                 }
 
-                if (check.MissingPackages.Count == 0)
-                {
-                    SetYoloCommandStatus(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsReadyStatus(), isBusy: false);
-                    await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
-                    AppendLog(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsNoMissingPackageLog());
-                    return;
-                }
-
-                SetYoloCommandStatus(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsInstallingStatus(check.MissingPackages.Count), isBusy: true);
-                AppendLog(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsInstallingLog(check.MissingPackages));
+                AppendLog(checkPresentation.LogText);
                 PythonPackageInstallResult install = await PythonEnvironmentService
                     .InstallRequirementsAsync(settings)
                     .ConfigureAwait(true);
@@ -180,7 +174,10 @@ namespace MvcVisionSystem
                     ? await PythonEnvironmentService.UninstallPackageAsync(settings, "ultralytics").ConfigureAwait(true)
                     : await PythonEnvironmentService.InstallPackageAsync(settings, "ultralytics").ConfigureAwait(true);
 
-                AppendPythonPackageOperationLog(operationName, result);
+                foreach (string line in WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsPackageOperationLogLines(operationName, result))
+                {
+                    AppendLog(line);
+                }
                 YoloModelSettingsViewModel?.LoadFrom(settings);
                 RefreshYoloStatus();
 
@@ -224,41 +221,6 @@ namespace MvcVisionSystem
         private void SetUltralyticsPackageOperationResult(string summaryText, string detailText)
         {
             YoloModelSettingsViewModel?.SetRuntimePackageOperationResult(summaryText, detailText);
-        }
-
-        private void AppendPythonPackageOperationLog(string operationName, PythonPackageInstallResult result)
-        {
-            if (result == null)
-            {
-                AppendLog($"{operationName} \uACB0\uACFC\uB97C \uC77D\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.");
-                return;
-            }
-
-            AppendLog($"{operationName} \uBA85\uB839: {result.CommandLine}");
-            foreach (string line in SplitPackageCommandLogTail(result.Output, maxLines: 8))
-            {
-                AppendLog($"[stdout] {line}");
-            }
-
-            foreach (string line in SplitPackageCommandLogTail(result.Error, maxLines: 8))
-            {
-                AppendLog($"[stderr] {line}");
-            }
-        }
-
-        private static string[] SplitPackageCommandLogTail(string text, int maxLines)
-        {
-            if (string.IsNullOrWhiteSpace(text) || maxLines <= 0)
-            {
-                return Array.Empty<string>();
-            }
-
-            return text
-                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(line => line.Trim())
-                .Where(line => !string.IsNullOrWhiteSpace(line))
-                .TakeLast(maxLines)
-                .ToArray();
         }
 
         private async void ExecuteRunYoloSmokeCommand()
@@ -327,25 +289,15 @@ namespace MvcVisionSystem
                 }
 
                 await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
-                string restartText = connected
-                    ? WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartConnectedStatus()
-                    : BuildPythonWorkerFailureText();
-                SetYoloCommandStatus(restartText, isBusy: false);
-                if (!connected)
-                {
-                    WpfYoloEnvironmentRecoveryPresentation recovery = WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartConnectionFailureRecovery(restartText);
-                    SetYoloRecoveryStatus(recovery.Title, recovery.Detail, recovery.Action);
-                }
-
-                AppendLog(restartText);
+                ApplyYoloWorkerCommandPresentation(
+                    WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartResult(
+                        connected,
+                        BuildPythonWorkerFailureText()));
             }
             catch (Exception ex)
             {
-                string errorText = WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartFailureStatus(ex.Message);
-                WpfYoloEnvironmentRecoveryPresentation recovery = WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartFailureRecovery(errorText);
-                SetYoloCommandStatus(errorText, isBusy: false);
-                SetYoloRecoveryStatus(recovery.Title, recovery.Detail, recovery.Action);
-                AppendLog(errorText);
+                ApplyYoloWorkerCommandPresentation(
+                    WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartFailure(ex.Message));
             }
             finally
             {
@@ -364,20 +316,32 @@ namespace MvcVisionSystem
             {
                 await global.StopPythonModelClientConnectionAsync().ConfigureAwait(true);
                 await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
-                string stopText = WpfYoloEnvironmentCommandPresentationService.BuildWorkerStopCompletedStatus();
-                SetYoloCommandStatus(stopText, isBusy: false);
-                AppendLog(stopText);
+                ApplyYoloWorkerCommandPresentation(
+                    WpfYoloEnvironmentCommandPresentationService.BuildWorkerStopCompleted());
             }
             catch (Exception ex)
             {
-                string errorText = WpfYoloEnvironmentCommandPresentationService.BuildWorkerStopFailureStatus(ex.Message);
-                SetYoloCommandStatus(errorText, isBusy: false);
-                AppendLog(errorText);
+                ApplyYoloWorkerCommandPresentation(
+                    WpfYoloEnvironmentCommandPresentationService.BuildWorkerStopFailure(ex.Message));
             }
             finally
             {
                 EndYoloEnvironmentCommand();
             }
+        }
+
+        private void ApplyYoloWorkerCommandPresentation(WpfYoloWorkerCommandPresentation presentation)
+        {
+            SetYoloCommandStatus(presentation.StatusText, isBusy: false);
+            if (presentation.Recovery != null)
+            {
+                SetYoloRecoveryStatus(
+                    presentation.Recovery.Title,
+                    presentation.Recovery.Detail,
+                    presentation.Recovery.Action);
+            }
+
+            AppendLog(presentation.LogText);
         }
     }
 }

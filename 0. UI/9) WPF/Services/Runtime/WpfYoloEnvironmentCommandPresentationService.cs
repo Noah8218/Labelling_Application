@@ -26,6 +26,26 @@ namespace MvcVisionSystem
         public string Action { get; set; } = string.Empty;
     }
 
+    public sealed class WpfRequirementsCheckPresentation
+    {
+        public string StatusText { get; set; } = string.Empty;
+
+        public string LogText { get; set; } = string.Empty;
+
+        public bool IsBusy { get; set; }
+
+        public bool ShouldInstallRequirements { get; set; }
+    }
+
+    public sealed class WpfYoloWorkerCommandPresentation
+    {
+        public string StatusText { get; set; } = string.Empty;
+
+        public string LogText { get; set; } = string.Empty;
+
+        public WpfYoloEnvironmentRecoveryPresentation Recovery { get; set; }
+    }
+
     public static class WpfYoloEnvironmentCommandPresentationService
     {
         public static string BuildBusyCommandLog()
@@ -61,6 +81,35 @@ namespace MvcVisionSystem
         public static string BuildRequirementsCheckStartingStatus()
         {
             return "추론 실행 환경 점검 중...";
+        }
+
+        public static WpfRequirementsCheckPresentation BuildRequirementsCheckPresentation(PythonEnvironmentCheckResult check)
+        {
+            if (check.Errors.Count > 0)
+            {
+                return new WpfRequirementsCheckPresentation
+                {
+                    StatusText = BuildRequirementsSkippedStatus(check.Summary),
+                    LogText = BuildRequirementsSkippedLog(check.Summary)
+                };
+            }
+
+            if (check.MissingPackages.Count == 0)
+            {
+                return new WpfRequirementsCheckPresentation
+                {
+                    StatusText = BuildRequirementsReadyStatus(),
+                    LogText = BuildRequirementsNoMissingPackageLog()
+                };
+            }
+
+            return new WpfRequirementsCheckPresentation
+            {
+                StatusText = BuildRequirementsInstallingStatus(check.MissingPackages.Count),
+                LogText = BuildRequirementsInstallingLog(check.MissingPackages),
+                IsBusy = true,
+                ShouldInstallRequirements = true
+            };
         }
 
         public static string BuildRequirementsSkippedStatus(string summary)
@@ -236,6 +285,25 @@ namespace MvcVisionSystem
                 }.Where(line => !string.IsNullOrWhiteSpace(line)));
         }
 
+        public static string[] BuildUltralyticsPackageOperationLogLines(
+            string operationName,
+            PythonPackageInstallResult result)
+        {
+            if (result == null)
+            {
+                return new[] { $"{operationName} 결과를 읽지 못했습니다." };
+            }
+
+            var lines = new List<string>
+            {
+                $"{operationName} 명령: {result.CommandLine}"
+            };
+
+            lines.AddRange(BuildPackageCommandLogTail(result.Output, "[stdout] ", maxLines: 8));
+            lines.AddRange(BuildPackageCommandLogTail(result.Error, "[stderr] ", maxLines: 8));
+            return lines.ToArray();
+        }
+
         public static string BuildModelTestModeSwitchLog()
         {
             return "\uBAA8\uB378 \uD14C\uC2A4\uD2B8\uB97C \uC704\uD574 \uCD94\uB860 \uAC80\uD1A0 \uBAA8\uB4DC\uB85C \uC804\uD658\uD588\uC2B5\uB2C8\uB2E4.";
@@ -276,6 +344,22 @@ namespace MvcVisionSystem
             return "\uCD94\uB860 \uC2E4\uD589\uAE30 \uC7AC\uC2DC\uC791 \uBC0F \uC5F0\uACB0 \uC644\uB8CC.";
         }
 
+        public static WpfYoloWorkerCommandPresentation BuildWorkerRestartResult(bool connected, string disconnectedText)
+        {
+            string statusText = connected
+                ? BuildWorkerRestartConnectedStatus()
+                : disconnectedText;
+
+            return new WpfYoloWorkerCommandPresentation
+            {
+                StatusText = statusText,
+                LogText = statusText,
+                Recovery = connected
+                    ? null
+                    : BuildWorkerRestartConnectionFailureRecovery(statusText)
+            };
+        }
+
         public static WpfYoloEnvironmentRecoveryPresentation BuildWorkerRestartConnectionFailureRecovery(string detail)
         {
             return new WpfYoloEnvironmentRecoveryPresentation
@@ -289,6 +373,17 @@ namespace MvcVisionSystem
         public static string BuildWorkerRestartFailureStatus(string message)
         {
             return $"\uCD94\uB860 \uC2E4\uD589\uAE30 \uC7AC\uC2DC\uC791 \uC2E4\uD328: {NormalizeMessage(message)}";
+        }
+
+        public static WpfYoloWorkerCommandPresentation BuildWorkerRestartFailure(string message)
+        {
+            string statusText = BuildWorkerRestartFailureStatus(message);
+            return new WpfYoloWorkerCommandPresentation
+            {
+                StatusText = statusText,
+                LogText = statusText,
+                Recovery = BuildWorkerRestartFailureRecovery(statusText)
+            };
         }
 
         public static WpfYoloEnvironmentRecoveryPresentation BuildWorkerRestartFailureRecovery(string detail)
@@ -311,9 +406,29 @@ namespace MvcVisionSystem
             return "\uCD94\uB860 \uC2E4\uD589\uAE30 \uC911\uC9C0 \uC644\uB8CC.";
         }
 
+        public static WpfYoloWorkerCommandPresentation BuildWorkerStopCompleted()
+        {
+            string statusText = BuildWorkerStopCompletedStatus();
+            return new WpfYoloWorkerCommandPresentation
+            {
+                StatusText = statusText,
+                LogText = statusText
+            };
+        }
+
         public static string BuildWorkerStopFailureStatus(string message)
         {
             return $"\uCD94\uB860 \uC2E4\uD589\uAE30 \uC911\uC9C0 \uC2E4\uD328: {NormalizeMessage(message)}";
+        }
+
+        public static WpfYoloWorkerCommandPresentation BuildWorkerStopFailure(string message)
+        {
+            string statusText = BuildWorkerStopFailureStatus(message);
+            return new WpfYoloWorkerCommandPresentation
+            {
+                StatusText = statusText,
+                LogText = statusText
+            };
         }
 
         private static string FirstPackageCommandLogLine(string text)
@@ -327,6 +442,21 @@ namespace MvcVisionSystem
                 .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(line => line.Trim())
                 .FirstOrDefault(line => !string.IsNullOrWhiteSpace(line)) ?? string.Empty;
+        }
+
+        private static IEnumerable<string> BuildPackageCommandLogTail(string text, string prefix, int maxLines)
+        {
+            if (string.IsNullOrWhiteSpace(text) || maxLines <= 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            return text
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Trim())
+                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .TakeLast(maxLines)
+                .Select(line => $"{prefix}{line}");
         }
 
         private static string NormalizeMessage(string message)
