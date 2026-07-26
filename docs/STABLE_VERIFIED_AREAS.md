@@ -1983,8 +1983,11 @@ Protected behavior:
 Do not change these paths casually:
 
 - `Yolo/CYolov5.cs`
+- `Yolo/YoloDatasetValidationContracts.cs`
 - `Yolo/YoloDatasetValidator.cs`
 - `Yolo/YoloDatasetReadinessService.cs`
+- `Yolo/YoloExternalDatasetIntakeContracts.cs`
+- `1. Core/Model/YoloTrainingDatasetPreparationService.cs`
 - `1. Core/Model/YoloTrainingWorkflowService.cs`
 - `3. Communication/TCP/LearningProtocol.cs`
 - `3. Communication/TCP/PythonModelStatusProtocol.cs`

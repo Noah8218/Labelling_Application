@@ -195,12 +195,47 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | `YoloAnnotationService.cs` | box 라벨 저장/로드, YOLO txt line 변환. |
 | `YoloSegmentationAnnotationService.cs` | polygon/mask segmentation 저장/로드. |
 | `YoloDatasetSplitService.cs` | train/valid/test deterministic split. |
+| `YoloDatasetValidationContracts.cs` | dataset validation 오류와 split/class/annotation 통계 계약. |
 | `YoloDatasetValidator.cs` | dataset config/files/statistics 검증. |
 | `YoloDatasetReadinessService.cs` | 학습 readiness report 구성. |
 | `YoloDatasetDiagnosticsService.cs` | operator-facing 문제/경고 report. |
 | `YoloImageReviewStatusService.cs` | 이미지별 후보/확정/실패/스킵/검출없음 상태 저장. |
 | `YoloImageLabelStatusService.cs` | 이미지 라벨 개수/status 계산. |
+| `YoloExternalDatasetIntakeContracts.cs` | 외부 native YOLO 검증·source packet·runtime materialization 결과 계약. |
+| `YoloExternalDatasetIntakeService.cs` | 외부 data.yaml 검증, source identity, app-owned runtime copy 정책. |
+| `UnetSegmentationDatasetExportContracts.cs` | canonical U-Net export 결과, class contract, dataset manifest DTO. |
+| `UnetSegmentationDatasetExportService.cs` | recipe segmentation을 app-owned image/mask artifact로 export. |
+| `SegmentationPredictionExportService.cs` | U-Net/Ultralytics adapter의 canonical raster prediction export 요청·실행. |
+| `SegmentationMaskComparisonService.cs` | 호환되는 prediction manifest와 canonical mask의 Dice/IoU/component 비교. |
 | `CYolov5.cs` | data.yaml 생성과 YOLO path normalization. |
+
+segmentation adapter 비교는 두 독립 실행 경계를 파일명과 일치시킵니다.
+`SegmentationPredictionExportService.cs`는 Python exporter process와 그
+request/result 계약을 소유하고, `SegmentationMaskComparisonService.cs`는
+manifest/run/metric 계약과 mask 호환성 검증·채점·report 저장을 소유합니다.
+두 서비스는 공개 namespace를 공유하지만 private 상태나 실행 정책은 공유하지
+않습니다.
+
+외부 native YOLO intake의 report, split summary, read-only source entry/packet,
+runtime dataset result는 `YoloExternalDatasetIntakeContracts.cs`에서 찾습니다.
+YAML 해석, class/label 검증, source fingerprint, 명시적 reactivation,
+app-owned runtime materialization은 `YoloExternalDatasetIntakeService.cs`가
+계속 소유합니다. private scan/package 타입은 서비스 구현 세부사항으로
+이동하지 않습니다.
+
+U-Net canonical export 결과와 split summary, class contract, dataset
+manifest/split/image DTO는 `UnetSegmentationDatasetExportContracts.cs`에서
+찾습니다. recipe data tree 검증, polygon/mask rasterization, source tree hash,
+artifact 재사용과 materialization은
+`UnetSegmentationDatasetExportService.cs`가 소유합니다. 이 계약은 내부
+recipe export, 외부 YOLO canonical export, prediction comparison이 함께
+소비합니다.
+
+dataset validation 오류와 통계는 `YoloDatasetValidationContracts.cs`에서
+찾습니다. configuration, data.yaml, split separation, label/segment content
+검증과 통계 누적 정책은 `YoloDatasetValidator.cs`가 소유합니다. 이 계약은
+manifest, readiness, diagnostics, Dataset Health와 WPF presentation이 함께
+소비합니다.
 
 `1. Core`의 `Labeling/LabelingWorkflowService`, `Detection/DetectionResultApplicationService`, `Dataset/LabelingDatasetManifestService`, `ApplicationState/CData`, `ApplicationState/LabelingProjectSettings`는 UI와 YOLO/file system 사이의 application state를 묶습니다.
 
@@ -216,7 +251,7 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | `Detection` | 검출 실행 orchestration, 결과 적용, WPF가 소비하는 후보 계약 | `YoloDetectionWorkflowService.cs`, `DetectionResultApplicationService.cs`, `DetectionCandidateContracts.cs` |
 | `Display` | display layer 저장·선택·문서 상태 | `CDisplayManager.cs`, `DisplayLayerStore.cs` |
 | `Labeling` | 수동/템플릿 라벨링 workflow와 자동 라벨링 입력·결과 계약 | `LabelingWorkflowService.cs`, `TemplateMatchingAutoLabelContracts.cs`, `TemplateMatchingAutoLabelService.cs` |
-| `Model` | model registry와 학습 workflow | `ModelRegistryService.cs`, `YoloTrainingWorkflowService.cs` |
+| `Model` | model registry, 학습 dataset 준비 정책, 학습 command workflow | `ModelRegistryService.cs`, `YoloTrainingDatasetPreparationService.cs`, `YoloTrainingWorkflowService.cs` |
 | `Runtime` | Python/YOLO 공개 실행 계약, process, 환경 검증, runtime 연결과 self-test | `PythonEnvironmentContracts.cs`, `PythonModelRuntimeContracts.cs`, `YoloWorkerSmokeContracts.cs`, `YoloPythonClientProcessService.cs` |
 
 `ApplicationState/LabelingProjectSettings.cs`는 프로젝트 설정 aggregate와
@@ -248,6 +283,14 @@ manifest 구성·저장과 dataset content hash/history 계산·검증은 각각
 profile, self-test, runtime 상태와 validation 결과를 소유합니다.
 `YoloWorkerSmokeContracts.cs`는 smoke candidate/result를 소유합니다. process 실행,
 환경 확인, 연결·설치·self-test 정책은 각각 기존 `*Service.cs`가 계속 소유합니다.
+
+`Model/YoloTrainingDatasetPreparationService.cs`는 내부 recipe, 외부 native YOLO,
+anomaly classification, U-Net segmentation 학습 dataset의 검증·내보내기와
+training request metadata 구성을 소유합니다. `YoloTrainingWorkflowService.cs`는
+기존 공개 준비 API를 호환용으로 위임하고 학습 시작·중지, dataset snapshot,
+통신 packet 전송과 provenance 기록을 소유합니다. `ModelRegistryService.cs`는
+profile, training run, candidate, decision, adoption이 공유하는 registry
+불변조건 때문에 하나의 응집된 서비스로 유지합니다.
 
 ## Python/YOLO Worker 통신
 

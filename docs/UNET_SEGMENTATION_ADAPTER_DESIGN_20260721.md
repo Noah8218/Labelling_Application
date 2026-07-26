@@ -148,7 +148,7 @@ run-summary.json
 
 Status: Complete
 
-- Added `Yolo/UnetSegmentationDatasetExportService.cs`. It reads only the recipe `data/train|valid|test` tree and writes `images`, `masks`, `classes.json`, and `dataset-manifest.json` below `artifacts/unet-dataset/<fingerprint>`.
+- Added `Yolo/UnetSegmentationDatasetExportService.cs`. It reads only the recipe `data/train|valid|test` tree and writes `images`, `masks`, `classes.json`, and `dataset-manifest.json` below `artifacts/unet-dataset/<fingerprint>`. Shared canonical export result and manifest DTOs are in `Yolo/UnetSegmentationDatasetExportContracts.cs`.
 - The source fingerprint is calculated before and after export. The export is rejected for a non-segmentation recipe, missing split/image, missing positive mask, out-of-contract mask value, missing annotation without an explicit empty label, duplicate image content across splits, invalid segment class contract, or pixels claimed by different classes.
 - A matching source/class fingerprint reuses the existing artifact. A mismatching existing artifact is never overwritten.
 - Focused test `--unet-segmentation-export` creates train/valid/test recipe data, verifies mask index values, checks before/after source SHA-256 equality, verifies reuse, and proves leakage/class-overlap rejection.
