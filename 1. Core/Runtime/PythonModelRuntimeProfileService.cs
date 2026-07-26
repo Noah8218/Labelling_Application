@@ -3,50 +3,6 @@ using System.Collections.Generic;
 
 namespace MvcVisionSystem._1._Core
 {
-    public sealed class PythonModelRuntimeProfile
-    {
-        public PythonModelRuntimeProfile(
-            string engine,
-            string displayName,
-            string runtimeFamilyText,
-            string statusText,
-            string capabilityText,
-            string detailText,
-            string nextActionText,
-            string primaryActionText,
-            bool isSelected,
-            bool isRuntimeConnected,
-            bool canTrain,
-            bool canInspect)
-        {
-            Engine = engine ?? string.Empty;
-            DisplayName = displayName ?? string.Empty;
-            RuntimeFamilyText = runtimeFamilyText ?? string.Empty;
-            StatusText = statusText ?? string.Empty;
-            CapabilityText = capabilityText ?? string.Empty;
-            DetailText = detailText ?? string.Empty;
-            NextActionText = nextActionText ?? string.Empty;
-            PrimaryActionText = primaryActionText ?? string.Empty;
-            IsSelected = isSelected;
-            IsRuntimeConnected = isRuntimeConnected;
-            CanTrain = canTrain;
-            CanInspect = canInspect;
-        }
-
-        public string Engine { get; }
-        public string DisplayName { get; }
-        public string RuntimeFamilyText { get; }
-        public string StatusText { get; }
-        public string CapabilityText { get; }
-        public string DetailText { get; }
-        public string NextActionText { get; }
-        public string PrimaryActionText { get; }
-        public bool IsSelected { get; }
-        public bool IsRuntimeConnected { get; }
-        public bool CanTrain { get; }
-        public bool CanInspect { get; }
-    }
-
     public static class PythonModelRuntimeProfileService
     {
         public static IReadOnlyList<PythonModelRuntimeProfile> BuildProfiles(PythonModelSettings settings)

@@ -5,32 +5,6 @@ using System.Linq;
 
 namespace MvcVisionSystem._1._Core
 {
-    public sealed class PythonModelRuntimeAdapterSupport
-    {
-        public PythonModelRuntimeAdapterSupport(
-            bool isExecutionSupported,
-            bool canTrain,
-            bool canInspect,
-            string summaryText,
-            string detailText,
-            string nextActionText)
-        {
-            IsExecutionSupported = isExecutionSupported;
-            CanTrain = canTrain;
-            CanInspect = canInspect;
-            SummaryText = summaryText ?? string.Empty;
-            DetailText = detailText ?? string.Empty;
-            NextActionText = nextActionText ?? string.Empty;
-        }
-
-        public bool IsExecutionSupported { get; }
-        public bool CanTrain { get; }
-        public bool CanInspect { get; }
-        public string SummaryText { get; }
-        public string DetailText { get; }
-        public string NextActionText { get; }
-    }
-
     public static class PythonModelRuntimeAdapterSupportService
     {
         public static PythonModelRuntimeAdapterSupport Build(

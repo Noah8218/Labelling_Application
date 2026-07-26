@@ -10,57 +10,6 @@ using System.Threading;
 
 namespace MvcVisionSystem._1._Core
 {
-    public sealed class TemplateMatchingBatchAutoLabelItemResult
-    {
-        public string ImagePath { get; set; } = string.Empty;
-        public bool Saved { get; set; }
-        public bool NoCandidate { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public int CandidateCount { get; set; }
-        public Size ImageSize { get; set; } = Size.Empty;
-        public TimeSpan Elapsed { get; set; }
-
-        public static TemplateMatchingBatchAutoLabelItemResult CreateSaved(string imagePath, int candidateCount, TimeSpan elapsed, Size imageSize)
-        {
-            return new TemplateMatchingBatchAutoLabelItemResult
-            {
-                ImagePath = imagePath ?? string.Empty,
-                Saved = true,
-                CandidateCount = Math.Max(0, candidateCount),
-                ImageSize = imageSize,
-                Elapsed = elapsed
-            };
-        }
-
-        public static TemplateMatchingBatchAutoLabelItemResult NoCandidates(string imagePath, TimeSpan elapsed, Size imageSize)
-        {
-            return new TemplateMatchingBatchAutoLabelItemResult
-            {
-                ImagePath = imagePath ?? string.Empty,
-                NoCandidate = true,
-                Message = "no candidate",
-                ImageSize = imageSize,
-                Elapsed = elapsed
-            };
-        }
-
-        public static TemplateMatchingBatchAutoLabelItemResult Failed(string imagePath, string message, TimeSpan elapsed, Size imageSize = default)
-        {
-            return new TemplateMatchingBatchAutoLabelItemResult
-            {
-                ImagePath = imagePath ?? string.Empty,
-                Message = string.IsNullOrWhiteSpace(message) ? "failed" : message,
-                ImageSize = imageSize,
-                Elapsed = elapsed
-            };
-        }
-
-        public static TemplateMatchingBatchAutoLabelItemResult Canceled(string imagePath, TimeSpan elapsed)
-        {
-            return Failed(imagePath, "canceled", elapsed);
-        }
-    }
-
     public sealed class TemplateMatchingBatchAutoLabelService
     {
         private readonly TemplateMatchingAutoLabelService templateMatchingAutoLabelService;

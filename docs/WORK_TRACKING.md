@@ -16001,3 +16001,213 @@ Evidence: `1. Core`, `docs\CODE_STRUCTURE.md`,
 Boundary / next dependency: 이번 변경은 탐색성을 위한 물리 폴더 이동입니다.
 namespace 재편이나 대형 클래스 분해는 포함하지 않았습니다. 이후 클래스
 분리는 파일 길이가 아니라 독립 책임과 테스트 경계가 확인될 때만 진행합니다.
+
+## 2026-07-26 Core 설정 모델과 검출 계약 소유권 분리
+
+Status: Complete
+
+Scope: `LabelingProjectSettings.cs`가 함께 소유하던 독립 top-level 설정
+타입을 이름과 책임에 맞는 7개 파일로 분리했습니다. 프로젝트 설정 aggregate는
+동일 파일에 남겨 설정 진입점만 소유합니다. `DetectionResultApplicationService.cs`
+상단의 공개 후보 enum/event args/review item은
+`DetectionCandidateContracts.cs`로 이동했습니다. 검출 상태, timeout, 결과
+적용과 확정 workflow는 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 설정 aggregate와 14개 설정 관련 공개 타입의 소유 파일이 이름으로
+  탐색 가능함: `ApplicationState` 타입/파일 검색으로 통과.
+- WPF와 테스트가 소비하는 3개 검출 후보 계약이 서비스 구현 파일에서
+  제거되고 계약 파일에만 존재함: 선언 중복/이전 소유자 검색으로 통과.
+- namespace, 공개 타입 본문, 기본값, 직렬화 구조, 검출 상태 흐름이
+  변경되지 않음: 이전 커밋과 추출된 18개 타입 본문 비교에서 불일치 0건,
+  전체 기본 테스트 묶음 통과.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 경고 0, 오류 0.
+- `--python-model-settings-validator`, `--python-model-runtime-connection`,
+  `--model-registry`, `--wpf-training-guide-history`,
+  `--wpf-settings-viewmodels`, `--detection-result-segmentation-confirm`,
+  `--yolo-detection-workflow-validation`, `--runtime-command-failure-messages`,
+  `--priority-workflow-docs` : 모두 통과.
+- 인수 없는 `LabelingApplication.Tests.dll` 전체 기본 테스트 묶음 : 통과.
+
+Evidence: `1. Core\ApplicationState`, `1. Core\Detection`,
+`docs\CODE_STRUCTURE.md`, 추출 타입 본문 비교 결과
+`EXTRACTED_TYPE_COUNT=18`, `TYPE_BODY_MISMATCHES=0`.
+
+Boundary / next dependency: `DetectionResultApplicationService`의 1,010줄은
+후보 상태와 pending request/timeout/response identity가 하나의 동기화 경계를
+공유하므로 이번에 억지로 분해하지 않았습니다. 향후 별도 상태 소유자를 만들려면
+lock/timer/event 흐름을 독립 테스트로 먼저 고정해야 합니다. Viewer/OpenGL/ROI/
+brush/eraser 경로는 변경하지 않았습니다.
+
+## 2026-07-26 Anomaly 검토 계약 소유권 분리
+
+Status: Complete
+
+Scope: `AnomalyImageReviewStatusService.cs`가 함께 선언하던
+`AnomalyImageReviewState`, `AnomalyImageReviewStatus`,
+`AnomalyImageReviewSummary`, `AnomalyImageReviewFolderImportResult`를
+`AnomalyImageReviewContracts.cs`로 이동했습니다. 저장, parent-folder import,
+summary 계산과 persisted cache는 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 공개 anomaly 검토 계약 4개가 계약 파일에만 존재하고 서비스 파일에는
+  서비스 공개 타입만 남음: 선언 소유자 검색으로 통과.
+- 공개 타입 본문, internal setter/constructor, namespace가 변경되지 않음:
+  이전 커밋과 타입 본문 비교에서 불일치 0건.
+- WPF queue, dataset health, 분류 결정/학습, persisted review 상태가 기존처럼
+  동작함: focused gate 6개와 전체 기본 테스트 묶음으로 통과.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 경고 0, 오류 0.
+- `--anomaly-folder-auto-review`, `--anomaly-classification-decision`,
+  `--anomaly-classification-training-workflow`, `--wpf-anomaly-purpose-flow`,
+  `--wpf-anomaly-queue-focus`, `--dataset-health` : 모두 통과.
+- 인수 없는 `LabelingApplication.Tests.dll` 전체 기본 테스트 묶음 : 통과.
+
+Evidence: `1. Core\Anomaly\AnomalyImageReviewContracts.cs`,
+`1. Core\Anomaly\AnomalyImageReviewStatusService.cs`,
+`docs\CODE_STRUCTURE.md`, 타입 비교 결과
+`ANOMALY_CONTRACT_TYPE_COUNT=4`, `ANOMALY_CONTRACT_BODY_MISMATCHES=0`.
+
+Boundary / next dependency: persistence DTO와 JSON schema는 서비스 내부 구현으로
+유지했습니다. 외부 소비자가 없으므로 별도 공개 계약으로 만들지 않았습니다.
+Viewer/OpenGL/ROI/brush/eraser 경로는 변경하지 않았습니다.
+
+## 2026-07-26 Dataset manifest/version 계약 소유권 분리
+
+Status: Complete
+
+Scope: `LabelingDatasetManifestService.cs`의 공개 JSON manifest DTO 4개를
+`LabelingDatasetManifestContracts.cs`로, `RecipeDatasetVersionService.cs`의
+snapshot/file DTO 2개를 `RecipeDatasetVersionContracts.cs`로 이동했습니다.
+manifest 저장·artifact summary 구성과 dataset content identity/history
+계산·검증은 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- manifest/version 공개 계약 6개가 계약 파일에만 존재하고 기존 구현
+  파일에는 서비스 공개 타입만 남음: 선언 소유자 검색으로 통과.
+- `JsonProperty`, 기본값, namespace, 공개 타입 본문이 변경되지 않음:
+  이전 커밋과 타입 본문 비교에서 불일치 0건.
+- manifest JSON, immutable dataset identity/history, 학습 provenance와
+  anomaly dataset 연계가 유지됨: focused gate 4개와 전체 기본 테스트
+  묶음으로 통과.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 경고 0, 오류 0.
+- `--recipe-dataset-version-v2`, `--dataset-readiness-purpose`,
+  `--anomaly-classification-training-workflow`, `--priority-workflow-docs` :
+  모두 통과.
+- 인수 없는 `LabelingApplication.Tests.dll` 전체 기본 테스트 묶음 : 통과.
+
+Evidence: `1. Core\Dataset\LabelingDatasetManifestContracts.cs`,
+`1. Core\Dataset\RecipeDatasetVersionContracts.cs`,
+`1. Core\Dataset\LabelingDatasetManifestService.cs`,
+`1. Core\Dataset\RecipeDatasetVersionService.cs`, `docs\CODE_STRUCTURE.md`,
+타입 비교 결과 `DATASET_CONTRACT_TYPE_COUNT=6`,
+`DATASET_CONTRACT_BODY_MISMATCHES=0`.
+
+Boundary / next dependency: manifest와 version은 서로의 상수/DTO를 참조하는
+기존 dependency를 유지했습니다. 별도 assembly나 interface는 추가하지
+않았습니다. Viewer/OpenGL/ROI/brush/eraser 경로는 변경하지 않았습니다.
+
+## 2026-07-26 Template 자동 라벨링 계약 소유권 분리
+
+Status: Complete
+
+Scope: `TemplateMatchingAutoLabelService.cs`의 options/result와
+`TemplateMatchingBatchAutoLabelService.cs`의 item result를 단일
+`TemplateMatchingAutoLabelContracts.cs`로 이동했습니다. matching 계산,
+batch queue, segmentation artifact 저장과 cancellation은 기존 두 서비스가
+계속 소유합니다.
+
+Acceptance criteria:
+
+- 단일·batch 공개 계약 3개가 계약 파일에만 존재하고 기존 구현 파일에는
+  각 서비스 공개 타입만 남음: 선언 소유자 검색으로 통과.
+- 공개 타입 본문, 기본값, namespace가 변경되지 않음: 이전 커밋과 타입
+  본문 비교에서 불일치 0건.
+- 단일 template guide, batch detection/segmentation 저장, raster mask shape
+  전달과 WPF no-candidate 상태가 유지됨: focused gate와 전체 기본 테스트
+  묶음으로 통과.
+
+Verification:
+
+- 최초 격리 빌드는 새 파일의 `TemplateMatchModes` import가 없어 실패했고,
+  `OpenCvSharp` import 추가 후 `Size` 충돌이 확인됐습니다. `Size`를 기존
+  `System.Drawing.Size` alias로 고정한 최종 격리 빌드는 경고 0, 오류 0.
+- `--template-batch-autolabel-storage`, `--template-guide-ux`,
+  `--wpf-template-current-image-no-candidate`, `--priority-workflow-docs` :
+  모두 통과.
+- 인수 없는 `LabelingApplication.Tests.dll` 전체 기본 테스트 묶음 : 통과.
+
+Evidence: `1. Core\Labeling\TemplateMatchingAutoLabelContracts.cs`,
+`1. Core\Labeling\TemplateMatchingAutoLabelService.cs`,
+`1. Core\Labeling\TemplateMatchingBatchAutoLabelService.cs`,
+`docs\CODE_STRUCTURE.md`, 타입 비교 결과
+`TEMPLATE_CONTRACT_TYPE_COUNT=3`, `TEMPLATE_CONTRACT_BODY_MISMATCHES=0`.
+
+Boundary / next dependency: 단일·batch 계약은 같은 template auto-label
+workflow라 한 파일로 유지했습니다. 별도 interface나 service abstraction은
+추가하지 않았습니다. Viewer/OpenGL/ROI/brush/eraser 경로는 변경하지
+않았습니다.
+
+
+## 2026-07-26 Runtime 실행 계약 소유권 분리
+
+Status: Complete
+
+Scope: `Runtime` 서비스와 validator에 흩어져 있던 공개 환경·runtime·YOLO
+smoke 결과 타입 14개를 `PythonEnvironmentContracts.cs`,
+`PythonModelRuntimeContracts.cs`, `YoloWorkerSmokeContracts.cs`로 이동했습니다.
+process 실행, 설치, 연결, self-test와 validation 정책은 기존 서비스가 계속
+소유합니다.
+
+Acceptance criteria:
+
+- 공개 계약 14개가 세 계약 파일에만 존재하고 기존 구현 파일에는 각 서비스
+  공개 타입만 남음: 선언 소유자 검색으로 통과.
+- namespace와 공개 타입 본문이 변경되지 않음: 이전 커밋과 공백 정규화 타입
+  본문 비교에서 불일치 0건.
+- Runtime 빌드와 집중 회귀 게이트가 유지됨: 격리 빌드와 focused gate 7개 통과.
+- 전체 기본 테스트 묶음 통과: 사용자별 last-opened dataset 상태를 테스트 fixture에서
+  보존·격리하도록 보완한 뒤 통과.
+
+Verification:
+
+- 최초 격리 빌드는 `YoloWorkerSmokeContracts.cs`의
+  `MvcVisionSystem._3._Communication.TCP` import 누락으로 실패했습니다. 기존
+  service의 import를 계약 파일로 이동한 최종 빌드는 경고 0, 오류 0.
+- `--python-environment-summaries`, `--python-model-runtime-self-test`,
+  `--python-model-runtime-connection`, `--python-model-settings-validator`,
+  `--yolo-worker-smoke-service`, `--python-model-status-protocol`,
+  `--priority-workflow-docs` : 모두 통과.
+- 최초 anomaly queue focus 실패는 테스트가 설정한 `AnomalyDetection` dataset보다
+  사용자별 last-opened Object Detection dataset 복원이 늦게 적용된 상태 오염으로
+  확인했습니다. `TestSupport.SuppressLastOpenedDatasetRestore()`로 파일을 byte
+  단위로 보존하고 테스트 동안만 격리한 뒤 정확히 복원하도록 보완했습니다.
+- `--wpf-training-dashboard-quality`, `--wpf-anomaly-queue-focus`,
+  `--wpf-startup-dataset-restore`: 모두 통과.
+- 인수 없는 전체 기본 테스트 묶음: 통과(약 280.4초).
+
+Evidence: `1. Core\Runtime\PythonEnvironmentContracts.cs`,
+`1. Core\Runtime\PythonModelRuntimeContracts.cs`,
+`1. Core\Runtime\YoloWorkerSmokeContracts.cs`, `docs\CODE_STRUCTURE.md`,
+`tests\LabelingApplication.Tests\TestSupport.cs`,
+`tests\LabelingApplication.Tests\Program.AnomalyQueueFocusSmoke.cs`,
+`tests\LabelingApplication.Tests\Program.WpfTrainingDatasetReadiness.cs`,
+`tests\LabelingApplication.Tests\Program.cs`,
+타입 비교 결과 `RUNTIME_CONTRACT_TYPE_COUNT=14`,
+`RUNTIME_CONTRACT_BODY_MISMATCHES=0`.
+
+Boundary / next dependency: 제품의 last-opened dataset 복원 동작은 변경하지
+않았습니다. 테스트 runner만 사용자 상태를 임시로 보존·제거·복원하여 fixture
+독립성을 확보했습니다. 이번 구조 변경은 공개 타입의 namespace와 본문을
+유지했으며 UI 동작과 Viewer/OpenGL/ROI/brush/eraser 경로는 변경하지 않았습니다.

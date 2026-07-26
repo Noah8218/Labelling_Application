@@ -4,56 +4,6 @@ using System.Linq;
 
 namespace MvcVisionSystem._1._Core
 {
-    public sealed class PythonModelRuntimeInstallPlan
-    {
-        public PythonModelRuntimeInstallPlan(
-            string engine,
-            string titleText,
-            string summaryText,
-            string detailText,
-            string targetEnvironmentText,
-            string commandText,
-            string installCommandText,
-            string uninstallCommandText,
-            bool isVisible,
-            bool canPreviewCommand,
-            bool canRunInstall,
-            bool canRunUninstall,
-            bool requiresInstallation,
-            bool isAlreadyInstalled)
-        {
-            Engine = engine ?? string.Empty;
-            TitleText = titleText ?? string.Empty;
-            SummaryText = summaryText ?? string.Empty;
-            DetailText = detailText ?? string.Empty;
-            TargetEnvironmentText = targetEnvironmentText ?? string.Empty;
-            CommandText = commandText ?? string.Empty;
-            InstallCommandText = installCommandText ?? string.Empty;
-            UninstallCommandText = uninstallCommandText ?? string.Empty;
-            IsVisible = isVisible;
-            CanPreviewCommand = canPreviewCommand;
-            CanRunInstall = canRunInstall;
-            CanRunUninstall = canRunUninstall;
-            RequiresInstallation = requiresInstallation;
-            IsAlreadyInstalled = isAlreadyInstalled;
-        }
-
-        public string Engine { get; }
-        public string TitleText { get; }
-        public string SummaryText { get; }
-        public string DetailText { get; }
-        public string TargetEnvironmentText { get; }
-        public string CommandText { get; }
-        public string InstallCommandText { get; }
-        public string UninstallCommandText { get; }
-        public bool IsVisible { get; }
-        public bool CanPreviewCommand { get; }
-        public bool CanRunInstall { get; }
-        public bool CanRunUninstall { get; }
-        public bool RequiresInstallation { get; }
-        public bool IsAlreadyInstalled { get; }
-    }
-
     public static class PythonModelRuntimeInstallPlanService
     {
         public static PythonModelRuntimeInstallPlan BuildPlan(PythonModelSettings settings)

@@ -5,26 +5,6 @@ using System.Linq;
 
 namespace MvcVisionSystem._1._Core
 {
-    public sealed class PythonModelRuntimeConnectionResult
-    {
-        public PythonModelRuntimeConnectionResult(
-            PythonModelSettings settings,
-            PythonModelRuntimeSelfTestReport selfTestReport,
-            string summaryText,
-            string detailText)
-        {
-            Settings = settings ?? new PythonModelSettings();
-            SelfTestReport = selfTestReport ?? PythonModelRuntimeSelfTestService.BuildReport(Settings);
-            SummaryText = summaryText ?? string.Empty;
-            DetailText = detailText ?? string.Empty;
-        }
-
-        public PythonModelSettings Settings { get; }
-        public PythonModelRuntimeSelfTestReport SelfTestReport { get; }
-        public string SummaryText { get; }
-        public string DetailText { get; }
-    }
-
     public static class PythonModelRuntimeConnectionService
     {
         public static PythonModelRuntimeConnectionResult BuildYoloV5FolderConnection(

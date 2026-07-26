@@ -210,14 +210,44 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 
 | 경로 | 책임 | 대표 파일 |
 | --- | --- | --- |
-| `ApplicationState` | 전역 application state, recipe/system 상태, 영속 프로젝트 설정 | `CData.cs`, `CGlobal.cs`, `CRecipe.cs`, `CSystem.cs`, `LabelingProjectSettings.cs` |
-| `Anomaly` | anomaly 검토 상태, 분류 결정, 학습 준비도 | `AnomalyImageReviewStatusService.cs`, `AnomalyClassificationDecisionService.cs` |
-| `Dataset` | dataset manifest, image workspace, recipe dataset version | `LabelingDatasetManifestService.cs`, `RecipeDatasetVersionService.cs` |
-| `Detection` | 검출 실행 orchestration과 결과 적용 | `YoloDetectionWorkflowService.cs`, `DetectionResultApplicationService.cs` |
+| `ApplicationState` | 전역 application state, recipe/system 상태, 영속 프로젝트 설정과 설정 모델 | `CData.cs`, `CGlobal.cs`, `LabelingProjectSettings.cs`, `PythonModelSettings.cs`, `ModelRegistrySettings.cs` |
+| `Anomaly` | anomaly 검토 계약, 상태 저장/import/summary, 분류 결정, 학습 준비도 | `AnomalyImageReviewContracts.cs`, `AnomalyImageReviewStatusService.cs`, `AnomalyClassificationDecisionService.cs` |
+| `Dataset` | dataset manifest/version 계약, 저장·content identity·history, image workspace | `LabelingDatasetManifestContracts.cs`, `LabelingDatasetManifestService.cs`, `RecipeDatasetVersionContracts.cs`, `RecipeDatasetVersionService.cs` |
+| `Detection` | 검출 실행 orchestration, 결과 적용, WPF가 소비하는 후보 계약 | `YoloDetectionWorkflowService.cs`, `DetectionResultApplicationService.cs`, `DetectionCandidateContracts.cs` |
 | `Display` | display layer 저장·선택·문서 상태 | `CDisplayManager.cs`, `DisplayLayerStore.cs` |
-| `Labeling` | 수동/템플릿 라벨링 workflow | `LabelingWorkflowService.cs`, `TemplateMatchingAutoLabelService.cs` |
+| `Labeling` | 수동/템플릿 라벨링 workflow와 자동 라벨링 입력·결과 계약 | `LabelingWorkflowService.cs`, `TemplateMatchingAutoLabelContracts.cs`, `TemplateMatchingAutoLabelService.cs` |
 | `Model` | model registry와 학습 workflow | `ModelRegistryService.cs`, `YoloTrainingWorkflowService.cs` |
-| `Runtime` | Python/YOLO process, 환경 검증, runtime 연결과 self-test | `PythonEnvironmentService.cs`, `PythonModelRuntimeConnectionService.cs`, `YoloPythonClientProcessService.cs` |
+| `Runtime` | Python/YOLO 공개 실행 계약, process, 환경 검증, runtime 연결과 self-test | `PythonEnvironmentContracts.cs`, `PythonModelRuntimeContracts.cs`, `YoloWorkerSmokeContracts.cs`, `YoloPythonClientProcessService.cs` |
+
+`ApplicationState/LabelingProjectSettings.cs`는 프로젝트 설정 aggregate와
+dataset 목적만 소유합니다. Python runtime, model registry, 외부 YOLO dataset,
+학습 guide, 내부 YOLO dataset, 학습 parameter, anomaly classification 설정은
+각 이름의 설정 파일이 소유합니다. 이 분리는 JSON/XML에 저장되는 공개 타입과
+기본값을 바꾸지 않고 파일 탐색 소유권만 명확히 합니다.
+
+`Detection/DetectionResultApplicationService.cs`는 후보 상태, timeout, 결과 적용,
+확정 workflow를 하나의 응집된 상태 흐름으로 유지합니다. 공개 enum/event args/
+review item은 `DetectionCandidateContracts.cs`에서 찾습니다.
+
+`Anomaly/AnomalyImageReviewStatusService.cs`는 검토 상태 저장, parent-folder
+import, summary 계산을 소유합니다. WPF, dataset, training이 함께 소비하는 검토
+상태 enum과 status/summary/import result는 `AnomalyImageReviewContracts.cs`에서
+찾습니다.
+
+`Dataset/LabelingDatasetManifestContracts.cs`와
+`RecipeDatasetVersionContracts.cs`는 저장되는 공개 JSON DTO를 소유합니다.
+manifest 구성·저장과 dataset content hash/history 계산·검증은 각각 이름이 같은
+`*Service.cs`가 계속 소유합니다.
+
+`Labeling/TemplateMatchingAutoLabelContracts.cs`는 단일·batch template 자동
+라벨링의 options/result DTO를 소유합니다. matching 계산과 batch queue/저장은
+각 `TemplateMatching*Service.cs`가 계속 소유합니다.
+
+`Runtime/PythonEnvironmentContracts.cs`는 환경 점검·package 설치 결과를,
+`PythonModelRuntimeContracts.cs`는 adapter 지원, 연결, 실행 요약, 설치 계획,
+profile, self-test, runtime 상태와 validation 결과를 소유합니다.
+`YoloWorkerSmokeContracts.cs`는 smoke candidate/result를 소유합니다. process 실행,
+환경 확인, 연결·설치·self-test 정책은 각각 기존 `*Service.cs`가 계속 소유합니다.
 
 ## Python/YOLO Worker 통신
 

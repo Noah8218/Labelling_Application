@@ -28,6 +28,7 @@ internal static class AnomalyQueueFocusSmokeTests
 
         CData previousData = CGlobal.Inst.Data;
         string previousRecipeName = CGlobal.Inst.Recipe.Name;
+        using IDisposable startupRestoreScope = SuppressLastOpenedDatasetRestore();
         string root = CreateTempRoot();
         try
         {
@@ -71,6 +72,11 @@ internal static class AnomalyQueueFocusSmokeTests
                 window.Show();
                 AssertEqual(imageCount, window.LoadImageQueueFromRoot(imageRoot, loadFirstImage: true, refreshDetails: false));
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(200));
+                AssertEqual(
+                    LabelingDatasetPurpose.AnomalyDetection,
+                    CGlobal.Inst.Data.ProjectSettings.DatasetPurpose);
+                AssertTrue(window.ImageQueueViewModel.IsAnomalyImageReviewMode,
+                    "anomaly queue fixture should keep the queue ViewModel in image-level review mode");
                 window.Activate();
                 window.Focus();
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
@@ -98,6 +104,10 @@ internal static class AnomalyQueueFocusSmokeTests
                     ?? throw new InvalidOperationException("Anomaly normal button was not available");
                 WpfButtonBase abnormalButton = queuePanel.FindName("MarkAnomalyAbnormalButton") as WpfButtonBase
                     ?? throw new InvalidOperationException("Anomaly abnormal button was not available");
+                AssertTrue(ReferenceEquals(normalButton.Command, window.ImageQueueViewModel.MarkAnomalyNormalCommand),
+                    "normal decision button should bind to the shell-composed queue ViewModel command");
+                AssertTrue(ReferenceEquals(abnormalButton.Command, window.ImageQueueViewModel.MarkAnomalyAbnormalCommand),
+                    "abnormal decision button should bind to the shell-composed queue ViewModel command");
                 ICollectionView queueView = GetPrivateField<ICollectionView>(window, "imageQueueView");
                 Predicate<object> originalFilter = queueView.Filter;
                 int filterEvaluationCount = 0;
@@ -121,6 +131,7 @@ internal static class AnomalyQueueFocusSmokeTests
                 bool allSelectedRowsWereRealized = true;
                 bool allDecisionsAvoidedViewReset = true;
                 bool allFilterUpdatesWereLocal = true;
+                bool allActiveImagesAdvanced = true;
                 bool allQueuePopulateWorkWasSkipped = true;
                 var decisionDurations = new List<double>();
                 TraceSource resourceTrace = PresentationTraceSources.ResourceDictionarySource;
@@ -135,6 +146,7 @@ internal static class AnomalyQueueFocusSmokeTests
                     {
                         filterEvaluationCount = 0;
                         viewResetCount = 0;
+                        string previousActivePath = GetPrivateField<string>(window, "activeImagePath");
                         Stopwatch decisionStopwatch = Stopwatch.StartNew();
                         if (decisionIndex % 2 == 0)
                         {
@@ -157,9 +169,11 @@ internal static class AnomalyQueueFocusSmokeTests
 
                         Console.WriteLine(
                             $"ANOMALY_QUEUE_FOCUS_{decisionIndex + 1}: active={Path.GetFileName(activePath)}; "
+                            + $"previous={Path.GetFileName(previousActivePath)}; "
                             + $"grid={Path.GetFileName(gridItem?.ImagePath)}; "
                             + $"viewModel={Path.GetFileName(window.ImageQueueViewModel.SelectedQueueItem?.ImagePath)}; "
                             + $"currentCell={Path.GetFileName(currentCellItem?.ImagePath)}; "
+                            + $"review={activeItem.AnomalyReviewState}; "
                             + $"elapsedMs={decisionStopwatch.Elapsed.TotalMilliseconds:0.0}; "
                             + $"viewResets={viewResetCount}; filterEvaluations={filterEvaluationCount}; "
                             + $"loadMs={window.LastImageLoadDiagnostics.TotalMilliseconds:0.0}; "
@@ -171,7 +185,15 @@ internal static class AnomalyQueueFocusSmokeTests
                         allCurrentRowsFollowed &= ReferenceEquals(activeItem, currentCellItem);
                         allDecisionsAvoidedViewReset &= viewResetCount == 0;
                         allFilterUpdatesWereLocal &= filterEvaluationCount < imageCount;
-                        allQueuePopulateWorkWasSkipped &= window.LastImageLoadDiagnostics.QueuePopulateMilliseconds < 50D;
+                        allActiveImagesAdvanced &= !string.Equals(
+                            previousActivePath,
+                            activePath,
+                            StringComparison.OrdinalIgnoreCase);
+                        allQueuePopulateWorkWasSkipped &= string.Equals(
+                                window.LastImageLoadDiagnostics.ImagePath,
+                                activePath,
+                                StringComparison.OrdinalIgnoreCase)
+                            && window.LastImageLoadDiagnostics.QueuePopulateMilliseconds < 50D;
                         queueGrid.UpdateLayout();
                         DataGridRow row = queueGrid.ItemContainerGenerator.ContainerFromItem(activeItem) as DataGridRow;
                         allSelectedRowsWereRealized &= row?.IsSelected == true;
@@ -214,6 +236,8 @@ internal static class AnomalyQueueFocusSmokeTests
                     "OK/NG decision must not reset and redraw the whole image queue view");
                 AssertTrue(allFilterUpdatesWereLocal,
                     "OK/NG decision must not reevaluate the filter for every image queue row");
+                AssertTrue(allActiveImagesAdvanced,
+                    "OK/NG decision should advance to a different unreviewed image");
                 AssertTrue(allQueuePopulateWorkWasSkipped,
                     "OK/NG next-image navigation must not repopulate or refresh the existing queue");
                 AssertTrue(medianDecisionMilliseconds < 750D,

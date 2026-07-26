@@ -4,33 +4,6 @@ using System.IO;
 
 namespace MvcVisionSystem._1._Core
 {
-    public sealed class PythonModelRuntimeExecutionSummary
-    {
-        public PythonModelRuntimeExecutionSummary(
-            string titleText,
-            string summaryText,
-            string workerText,
-            string trainingText,
-            string inspectionText)
-        {
-            TitleText = titleText ?? string.Empty;
-            SummaryText = summaryText ?? string.Empty;
-            WorkerText = workerText ?? string.Empty;
-            TrainingText = trainingText ?? string.Empty;
-            InspectionText = inspectionText ?? string.Empty;
-        }
-
-        public string TitleText { get; }
-
-        public string SummaryText { get; }
-
-        public string WorkerText { get; }
-
-        public string TrainingText { get; }
-
-        public string InspectionText { get; }
-    }
-
     public static class PythonModelRuntimeExecutionSummaryService
     {
         public static PythonModelRuntimeExecutionSummary Build(PythonModelSettings settings)

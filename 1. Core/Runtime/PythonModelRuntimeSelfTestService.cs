@@ -5,50 +5,6 @@ using System.Linq;
 
 namespace MvcVisionSystem._1._Core
 {
-    public sealed class PythonModelRuntimeSelfTestItem
-    {
-        public PythonModelRuntimeSelfTestItem(string labelText, string statusText, string detailText, bool isPassed, bool isWarning)
-        {
-            LabelText = labelText ?? string.Empty;
-            StatusText = statusText ?? string.Empty;
-            DetailText = detailText ?? string.Empty;
-            IsPassed = isPassed;
-            IsWarning = isWarning;
-        }
-
-        public string LabelText { get; }
-        public string StatusText { get; }
-        public string DetailText { get; }
-        public bool IsPassed { get; }
-        public bool IsWarning { get; }
-    }
-
-    public sealed class PythonModelRuntimeSelfTestReport
-    {
-        public PythonModelRuntimeSelfTestReport(
-            string titleText,
-            string summaryText,
-            string detailText,
-            IEnumerable<PythonModelRuntimeSelfTestItem> items,
-            bool canTrain,
-            bool canInspect)
-        {
-            TitleText = titleText ?? string.Empty;
-            SummaryText = summaryText ?? string.Empty;
-            DetailText = detailText ?? string.Empty;
-            Items = (items ?? Enumerable.Empty<PythonModelRuntimeSelfTestItem>()).ToList();
-            CanTrain = canTrain;
-            CanInspect = canInspect;
-        }
-
-        public string TitleText { get; }
-        public string SummaryText { get; }
-        public string DetailText { get; }
-        public IReadOnlyList<PythonModelRuntimeSelfTestItem> Items { get; }
-        public bool CanTrain { get; }
-        public bool CanInspect { get; }
-    }
-
     public static class PythonModelRuntimeSelfTestService
     {
         public static PythonModelRuntimeSelfTestReport BuildReport(PythonModelSettings settings)

@@ -1212,6 +1212,7 @@ internal static partial class Program
             return RunSingleSmoke("MVVM infrastructure observable and command helpers", TestMvvmInfrastructure);
         }
 
+        using IDisposable startupRestoreScope = TestSupport.SuppressLastOpenedDatasetRestore();
         var tests = new (string Name, Action Test)[]
         {
             ("YOLO path normalization uses forward slashes", TestNormalizeYamlPath),

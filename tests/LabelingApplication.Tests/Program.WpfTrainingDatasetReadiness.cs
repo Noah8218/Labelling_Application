@@ -45,6 +45,7 @@ internal static class WpfTrainingDatasetReadinessTests
         }
 
         CData previousData = CGlobal.Inst.Data;
+        using IDisposable startupRestoreScope = SuppressLastOpenedDatasetRestore();
         string root = CreateTempRoot();
         WpfLabelingShellWindow window = null;
         try

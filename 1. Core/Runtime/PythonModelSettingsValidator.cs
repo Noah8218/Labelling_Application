@@ -5,54 +5,6 @@ using System.Linq;
 
 namespace MvcVisionSystem._1._Core
 {
-    public enum PythonModelRuntimeStateKind
-    {
-        NotInstalled,
-        Incomplete,
-        Ready
-    }
-
-    public sealed class PythonModelRuntimeState
-    {
-        public PythonModelRuntimeState(
-            PythonModelRuntimeStateKind state,
-            bool canRunTraining,
-            bool canRunInference,
-            string summaryText,
-            string detailText,
-            string nextActionText)
-        {
-            State = state;
-            CanRunTraining = canRunTraining;
-            CanRunInference = canRunInference;
-            SummaryText = summaryText ?? string.Empty;
-            DetailText = detailText ?? string.Empty;
-            NextActionText = nextActionText ?? string.Empty;
-        }
-
-        public PythonModelRuntimeStateKind State { get; }
-        public bool IsRuntimeInstalled => State != PythonModelRuntimeStateKind.NotInstalled;
-        public bool CanRunTraining { get; }
-        public bool CanRunInference { get; }
-        public string SummaryText { get; }
-        public string DetailText { get; }
-        public string NextActionText { get; }
-    }
-
-    public sealed class PythonModelValidationResult
-    {
-        public PythonModelValidationResult(IEnumerable<string> errors, IEnumerable<string> warnings)
-        {
-            Errors = (errors ?? Enumerable.Empty<string>()).ToList();
-            Warnings = (warnings ?? Enumerable.Empty<string>()).ToList();
-        }
-
-        public IReadOnlyList<string> Errors { get; }
-        public IReadOnlyList<string> Warnings { get; }
-        public bool IsValid => Errors.Count == 0;
-        public string Summary => string.Join(Environment.NewLine, Errors.Concat(Warnings));
-    }
-
     public static class PythonModelSettingsValidator
     {
         public static PythonModelRuntimeState GetRuntimeState(

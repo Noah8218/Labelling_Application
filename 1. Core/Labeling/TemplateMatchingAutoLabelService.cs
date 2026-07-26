@@ -12,27 +12,6 @@ using System.Linq;
 
 namespace MvcVisionSystem._1._Core
 {
-    public sealed class TemplateMatchingAutoLabelOptions
-    {
-        public double MinimumScore { get; set; } = 0.82D;
-        public int MaximumCandidates { get; set; } = 50;
-        public double Magnification { get; set; } = 1D;
-        public TemplateMatchModes MatchMode { get; set; } = TemplateMatchModes.CCoeffNormed;
-        public bool ExcludeSourceRegion { get; set; } = true;
-        public double ExcludeSourceIouThreshold { get; set; } = 0.85D;
-        public bool UseCanny { get; set; }
-        public int CannyLow { get; set; } = 50;
-        public int CannyHigh { get; set; } = 150;
-    }
-
-    public sealed class TemplateMatchingAutoLabelResult
-    {
-        public bool Succeeded { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public TimeSpan Elapsed { get; set; }
-        public IReadOnlyList<YoloWorkerSmokeCandidate> Candidates { get; set; } = Array.Empty<YoloWorkerSmokeCandidate>();
-    }
-
     public sealed class TemplateMatchingAutoLabelService
     {
         public TemplateMatchingAutoLabelResult MatchCurrentImage(

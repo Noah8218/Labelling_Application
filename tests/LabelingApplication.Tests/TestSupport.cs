@@ -1,3 +1,4 @@
+using MvcVisionSystem;
 using MvcVisionSystem._3._Communication.TCP;
 using MvcVisionSystem.Yolo;
 using Newtonsoft.Json;
@@ -93,6 +94,9 @@ internal static class TestSupport
             Directory.Delete(path, recursive: true);
         }
     }
+
+    internal static IDisposable SuppressLastOpenedDatasetRestore()
+        => new LastOpenedDatasetRestoreScope();
 
     internal static void AssertTrue(bool condition, string message)
     {
@@ -658,6 +662,45 @@ internal static class TestSupport
         }
 
         throw new InvalidOperationException("mock worker timed out while reading StartTraining packet");
+    }
+
+    private sealed class LastOpenedDatasetRestoreScope : IDisposable
+    {
+        private readonly string lastOpenedPath;
+        private readonly byte[] previousContents;
+        private readonly bool hadLastOpened;
+        private bool isDisposed;
+
+        internal LastOpenedDatasetRestoreScope()
+        {
+            string recipeRootPath = WpfProjectRecipeService.GetRecipeRootDirectory();
+            lastOpenedPath = WpfProjectRecipeService.BuildLastOpenedRecipePath(recipeRootPath);
+            hadLastOpened = File.Exists(lastOpenedPath);
+            previousContents = hadLastOpened ? File.ReadAllBytes(lastOpenedPath) : Array.Empty<byte>();
+            if (hadLastOpened)
+            {
+                File.Delete(lastOpenedPath);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+
+            isDisposed = true;
+            if (hadLastOpened)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(lastOpenedPath));
+                File.WriteAllBytes(lastOpenedPath, previousContents);
+            }
+            else if (File.Exists(lastOpenedPath))
+            {
+                File.Delete(lastOpenedPath);
+            }
+        }
     }
 }
 
