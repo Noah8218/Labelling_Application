@@ -56,9 +56,9 @@
 | --- | --- |
 | 목적 선택과 tool summary | `0. UI/9) WPF/ViewModels/WpfLearningWorkflowPanelViewModel.cs` |
 | 목적 적용/annotation visibility | `0. UI/9) WPF/Views/WpfLabelingShellWindow.LearningWorkflowModeCommands.cs`, `ShellProjectSettings.cs` |
-| polygon 편집 | `0. UI/9) WPF/Services/WpfPolygonAnnotationService.cs` |
-| brush/eraser mask 편집 | `0. UI/9) WPF/Services/WpfMaskAnnotationService.cs`, `WpfMaskEditStateService.cs`, `WpfMaskStrokeCommitSession.cs` |
-| annotation history | `0. UI/9) WPF/Services/WpfAnnotationHistoryService.cs`, `WpfMaskStrokeHistoryDraftService.cs` |
+| polygon 편집 | `0. UI/9) WPF/Services/Annotation/WpfPolygonAnnotationService.cs` |
+| brush/eraser mask 편집 | `0. UI/9) WPF/Services/Annotation/WpfMaskAnnotationService.cs`, `WpfMaskEditStateService.cs`, `WpfMaskStrokeCommitSession.cs` |
+| annotation history | `0. UI/9) WPF/Services/Annotation/WpfAnnotationHistoryService.cs`, `WpfMaskStrokeHistoryDraftService.cs` |
 | save/load | `Yolo/YoloSegmentationAnnotationService.cs`, `1. Core/LabelingWorkflowService.cs` |
 | OpenGL mask overlay | `OpenVisionLab/Library/OpenVisionLab.ImageCanvas/ViewModel/RoiImageCanvasViewModel*.cs` |
 

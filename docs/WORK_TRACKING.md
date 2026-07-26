@@ -1,6 +1,35 @@
 # Work Tracking
 
-Last updated: 2026-07-23
+Last updated: 2026-07-24
+
+## 2026-07-24 Handoff and current-state reconciliation
+
+- Status: `Complete`
+- Scope:
+  - Reconcile the authoritative handoff, next-session prompt, completeness
+    audit, stable-contract record, and work tracker with commit `ad569dc`.
+  - Separate completed local workflow capability from unverified field quality,
+    deferred work, and deliberately out-of-scope platform breadth.
+- Acceptance criteria and evidence:
+  - Current local/origin checkpoint and latest completed feature scopes are
+    stated without retaining the former “not committed or pushed” wording.
+  - The handoff includes a reusable feature-state table covering Recipe/data,
+    labeling/rework, training/inference, model comparison, documentation,
+    field-quality gaps, and platform boundaries.
+  - YOLO11 detection, segmentation, and recorded local anomaly classification
+    are described consistently; the `82/104` YOLO11 and `90/104` YOLOv8
+    anomaly candidates remain `hold`.
+  - Next work is gated by a reproduced operator defect or newly approved
+    independent camera/session data; completed slices are not reopened by
+    default.
+- Verification: documentation-focused `--priority-workflow-docs` and
+  `git diff --check`.
+- Evidence: `docs/NEXT_THREAD_HANDOFF.md`,
+  `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md`, `CODEX_NEXT_PROMPT.md`, and
+  `docs/STABLE_VERIFIED_AREAS.md`.
+- Boundary / next dependency: no code, UI, model, dataset, runtime, or adoption
+  state changed. Independent field-quality work remains blocked until approved
+  provenance-confirmed data exists.
 
 ## 2026-07-23 YOLO11 anomaly-classification real training and inference
 
@@ -7751,7 +7780,7 @@ Last updated: 2026-07-23
   - `dotnet run --project .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug -- --wpf-responsive-layout --width 1920 --height 1080` passed.
   - `dotnet run --project .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug -- --wpf-responsive-layout --width 1366 --height 768` passed.
   - `dotnet run --project .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug -- --wpf-yolo-training-session-smoke --model-center --width 1920 --height 1080 --output .\artifacts\ui\wpf-model-history-action-1920.png` passed and produced the capture.
-  - `git diff --check -- "0. UI/9) WPF/Services/WpfModelRegistryPresentationService.cs" "0. UI/9) WPF/ViewModels/WpfLabelingShellViewModel.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.xaml" "0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.ModelHistoryCommands.cs" tests/LabelingApplication.Tests/Program.cs` passed with only LF-to-CRLF warnings.
+  - `git diff --check -- "0. UI/9) WPF/Services/Model/WpfModelRegistryPresentationService.cs" "0. UI/9) WPF/ViewModels/WpfLabelingShellViewModel.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.xaml" "0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.ModelHistoryCommands.cs" tests/LabelingApplication.Tests/Program.cs` passed with only LF-to-CRLF warnings.
 - Next planned work: continue the first-use sweep through dataset creation -> label save -> training -> candidate decision -> inspection with the selected model, then remove any remaining places where users must infer state from the bottom log.
 
 ## 2026-07-01 model-center current-inspection action pass
@@ -9522,7 +9551,7 @@ Last updated: 2026-07-23
   - `--wpf-image-queue-status` 통과.
   - `--wpf-labeling-shell` 통과.
   - `--mvvm-infra` 통과.
-  - `rg -n "AI\\uD6C4|AI후보|AI 후보" tests\LabelingApplication.Tests\Program.cs "0. UI/9) WPF/ViewModels/WpfImageQueuePanelViewModel.cs" "0. UI/9) WPF/Services/WpfImageQueuePresenter.cs" "0. UI/9) WPF/Models/WpfImageQueueModels.cs"`로 테스트/표시 경로의 `AI 후보` 기준을 확인했습니다.
+  - `rg -n "AI\\uD6C4|AI후보|AI 후보" tests\LabelingApplication.Tests\Program.cs "0. UI/9) WPF/ViewModels/WpfImageQueuePanelViewModel.cs" "0. UI/9) WPF/Services/ImageQueue/WpfImageQueuePresenter.cs" "0. UI/9) WPF/Models/WpfImageQueueModels.cs"`로 테스트/표시 경로의 `AI 후보` 기준을 확인했습니다.
 - 다음 작업:
   - 신규 구현은 기존 완료 항목을 반복하지 말고, 모델 런타임/모델 비교/추론 결과 확인 흐름 중 아직 테스트 계약이 약한 지점을 먼저 선정합니다.
 
@@ -9616,7 +9645,7 @@ Last updated: 2026-07-23
   - `--wpf-workflow-command-state` 통과.
   - `--wpf-labeling-shell` 통과.
   - `--mvvm-infra` 통과.
-  - `rg -n "硫|紐|寃|異|釉|媛|怨|瑜|瑗|諛|댁|곗씠|숈뒿|멸렇|뺤|쒓|ㅼ튂|쒖옉|理|좏깮|대\?|쒖떆|쇨큵|ㅽ뙣" "0. UI/9) WPF/Services/WpfWorkflowCommandStateService.cs"` 결과 없음.
+  - `rg -n "硫|紐|寃|異|釉|媛|怨|瑜|瑗|諛|댁|곗씠|숈뒿|멸렇|뺤|쒓|ㅼ튂|쒖옉|理|좏깮|대\?|쒖떆|쇨큵|ㅽ뙣" "0. UI/9) WPF/Services/Training/WpfWorkflowCommandStateService.cs"` 결과 없음.
   - `--wpf-visual-smoke --review-tab yolo-model --right-workflow-expanded --missing-model-runtime --width 1920 --height 1080 --output artifacts\ui\wpf-workflow-command-tooltips-after-1920.png` 통과.
 - 캡처:
   - After 1920: `artifacts\ui\wpf-workflow-command-tooltips-after-1920.png`
@@ -14561,3 +14590,1264 @@ Boundary / next dependency: no new product implementation is justified by this
 documentation update alone. The next feature requires a reproduced operator
 defect or changed approved adapter/data workflow; independent camera/session
 data remains an optional field-adoption gate.
+
+## 2026-07-25 template auto-label test ownership refactor
+
+Status: Complete
+
+Scope: move template auto-label verification from the shared `Program` partial
+into the independent `TemplateAutoLabelTests` class, expose only the reusable
+template fixture contract through `TemplateAutoLabelFixtures`, and keep common
+filesystem/assertion/WPF reflection helpers in `TestSupport`. Application
+behavior, templates, and WPF production code were not changed.
+
+Acceptance criteria and evidence:
+
+- `Program.TemplateAutoLabel.cs` no longer declares `partial class Program` or
+  calls `Program.*`: passed by source search.
+- The console runner calls `TemplateAutoLabelTests` directly; the dataset
+  readiness test calls the explicit `TemplateAutoLabelFixtures` helpers:
+  passed by source search and compile.
+- The template batch, guide, and no-candidate WPF paths retain their existing
+  behavior: passed by their focused smoke switches.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` — 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --template-batch-autolabel-storage` — 3 passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --template-guide-ux` — passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-template-current-image-no-candidate` — 2 passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --dataset-readiness-purpose` — passed.
+- `git diff --check` — passed; Git reported only existing LF-to-CRLF normalization notices.
+
+Evidence: `tests\LabelingApplication.Tests\Program.TemplateAutoLabel.cs`,
+`tests\LabelingApplication.Tests\TestSupport.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and
+`tests\LabelingApplication.Tests\Program.YoloDatasetReadiness.cs`.
+
+Boundary / next dependency: other `Program.<Domain>.cs` files remain
+transitional partial partitions. Treat them as navigation aids, not completed
+architectural boundaries, until each has a similarly independent owner and
+explicit shared dependencies.
+
+## 2026-07-25 external interchange test ownership refactor
+
+Status: Complete
+
+Scope: move COCO, Pascal VOC, Label Studio, CVAT, and format-capability
+verification from `Program` partial ownership into seven independent test
+classes. Application import/export behavior and CLI smoke switch names were
+preserved.
+
+Acceptance criteria and evidence:
+
+- The seven format files no longer declare `partial class Program` or call
+  `Program.*`: passed by source search.
+- The console runner and full regression list call the named independent test
+  classes: passed by source search and compile.
+- COCO, Pascal VOC, Label Studio, CVAT, and capability-inventory results are
+  unchanged: passed by all 15 focused smoke switches.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- The 15 switches from `--coco-detection-export` through
+  `--export-capability-inventory` : all passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.CocoDetection.cs`,
+`Program.CocoSegmentation.cs`, `Program.PascalVocDetection.cs`,
+`Program.LabelStudioDetection.cs`, `Program.LabelStudioSegmentation.cs`,
+`Program.Cvat.cs`, `Program.DatasetInterchangeCapability.cs`, and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: the remaining `Program.<Domain>.cs` partials
+still need individual ownership analysis; do not treat their physical file
+split as a completed architecture boundary.
+
+## 2026-07-25 anomaly classification test ownership refactor
+
+Status: Complete
+
+Scope: move anomaly decision, folder-review, WPF purpose/runtime, export,
+training, and evaluation verification from `Program` partial ownership into
+`AnomalyClassificationTests`. Move the shared environment, polling, TCP,
+reflection, and mock-training packet helpers to `TestSupport`; production
+anomaly services and WPF behavior were not changed.
+
+Acceptance criteria and evidence:
+
+- `Program.AnomalyClassification.cs` no longer declares `partial class Program`
+  or calls `Program.*`: passed by source search.
+- Its seven runner paths call `AnomalyClassificationTests` directly: passed by
+  source search and compile.
+- The existing anomaly behavior remains intact: passed by seven focused smoke
+  switches, including WPF purpose/runtime and training packet coverage.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `--wpf-anomaly-purpose-flow`, `--anomaly-folder-auto-review`,
+  `--wpf-yolov8-anomaly-classification-runtime-smoke`,
+  `--anomaly-classification-decision`,
+  `--anomaly-classification-dataset-export`,
+  `--anomaly-classification-training-workflow`, and
+  `--anomaly-classification-evaluation` : all passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.AnomalyClassification.cs`,
+`tests\LabelingApplication.Tests\TestSupport.cs`, and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: remaining domain partials still require the same
+dependency analysis before moving; no production behavior change is implied by
+this test-ownership refactor.
+
+## 2026-07-26 YOLO dataset readiness test ownership refactor
+
+Status: Complete
+
+Scope: move dataset purpose, SEG fixture, readiness report, diagnostics, and
+duplicate-split verification from `Program` partial ownership into
+`YoloDatasetReadinessTests`. Extract the shared dataset setup contract into
+`DatasetReadinessTestFixtures` for Dataset Health and Training Weights. No
+production dataset, training, or WPF behavior was changed.
+
+Acceptance criteria and evidence:
+
+- `Program.YoloDatasetReadiness.cs` no longer declares `partial class Program`
+  or calls `Program.*`: passed by source search.
+- The runner directly calls `YoloDatasetReadinessTests`; Dataset Health and
+  Training Weights explicitly call `DatasetReadinessTestFixtures`: passed by
+  source search and compile.
+- Purpose-specific readiness, YOLOv8 SEG fixture, Dataset Health, and Training
+  Weights behavior are preserved: passed by their focused smoke switches.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `--dataset-readiness-purpose`, `--yolov8-segmentation-app-dataset-fixture`,
+  `--dataset-health`, and `--wpf-training-weights-service` : all passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.YoloDatasetReadiness.cs`,
+`tests\LabelingApplication.Tests\Program.DatasetHealth.cs`,
+`tests\LabelingApplication.Tests\Program.WpfTrainingWeights.cs`, and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: other domain partials still need dependency-driven
+ownership extraction; physical file splitting alone remains insufficient.
+
+## 2026-07-26 YOLO dataset quality audit test ownership refactor
+
+Status: Complete
+
+Scope: move the dataset quality report and Markdown export verification from
+`Program` partial ownership into `YoloDatasetQualityAuditTests`. No audit
+service, report content, or user-visible workflow was changed.
+
+Acceptance criteria and evidence:
+
+- `Program.YoloDatasetQualityAudit.cs` no longer declares `partial class
+  Program` or calls `Program.*`: passed by source search.
+- Its CLI and full-regression runner paths call `YoloDatasetQualityAuditTests`
+  directly: passed by source search and compile.
+- Quality counts, issue detection, and Markdown report export behavior remain
+  unchanged: passed by both focused smoke switches.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `--dataset-quality-audit` and `--dataset-quality-audit-export` : both passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.YoloDatasetQualityAudit.cs`
+and `tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: external-evaluation audit remains owned elsewhere
+in `Program.cs`; do not merge it into this class without a shared durable
+quality-audit boundary.
+
+## 2026-07-26 YOLO annotations test ownership refactor
+
+Status: Complete
+
+Scope: move normalized-coordinate and saved-label reload verification from
+`Program` partial ownership into `YoloAnnotationsTests`. Image copy and split
+ownership coverage remains a separate `Program.cs` responsibility. No
+annotation persistence behavior was changed.
+
+Acceptance criteria and evidence:
+
+- `Program.YoloAnnotations.cs` no longer declares `partial class Program` or
+  calls `Program.*`: passed by source search.
+- The full regression list calls `YoloAnnotationsTests` directly: passed by
+  source search and compile.
+- The closest existing annotation persistence gate retains image extension and
+  split ownership behavior: passed by `--yolo-annotation-storage`.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `--yolo-annotation-storage` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.YoloAnnotations.cs` and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: the moved coordinate/reload tests have no existing
+individual CLI switch and were not independently executed in this step; their
+direct runner references were compilation-verified. Run the full regression
+when a full test-cycle gate is scheduled.
+
+## 2026-07-26 WPF training weights test ownership refactor
+
+Status: Complete
+
+Scope: move latest-weight selection, model comparison, adoption verdict, and
+SEG dataset integration verification from `Program` partial ownership into
+`WpfTrainingWeightsTests`. Reuse `DatasetReadinessTestFixtures` explicitly.
+No WPF production behavior, training execution, or model runtime was changed.
+
+Acceptance criteria and evidence:
+
+- `Program.WpfTrainingWeights.cs` no longer declares `partial class Program`
+  or calls `Program.*`: passed by source search.
+- Its CLI and full-regression runner paths call `WpfTrainingWeightsTests`
+  directly: passed by source search and compile.
+- Weight selection and adoption comparison behavior remain unchanged: passed
+  by the focused Training Weights smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `--wpf-training-weights-service` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.WpfTrainingWeights.cs`,
+`tests\LabelingApplication.Tests\Program.YoloDatasetReadiness.cs`, and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: model comparison and training-guide tests retain
+their own partial ownership and need separate dependency analysis.
+
+## 2026-07-26 WPF training guide history test ownership refactor
+
+Status: Complete
+
+Scope: move training-guide dataset/training/weight-history verification from
+`Program` partial ownership into `WpfTrainingGuideHistoryTests`. No guide UI,
+training flow, persistence format, or production service behavior was changed.
+
+Acceptance criteria and evidence:
+
+- `Program.WpfTrainingGuideHistory.cs` no longer declares `partial class
+  Program` or calls `Program.*`: passed by source search.
+- Its CLI and full-regression runner paths call `WpfTrainingGuideHistoryTests`
+  directly: passed by source search and compile.
+- Dataset readiness history, terminal training status, weight application, and
+  download-guard wording remain unchanged: passed by focused smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `--wpf-training-guide-history` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.WpfTrainingGuideHistory.cs`
+and `tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: model comparison tests retain their own partial
+ownership and need separate dependency analysis.
+
+## 2026-07-26 WPF model comparison test ownership refactor
+
+Status: Complete
+
+Scope: move benchmark-window, comparison-review, and run-request verification
+from `Program` partial ownership into `WpfModelComparisonTests`. Held-out split
+and canvas example-focus coverage remain separate `Program.cs` responsibilities.
+No model comparison UI, execution, or persistence behavior was changed.
+
+Acceptance criteria and evidence:
+
+- `Program.WpfModelComparison.cs` no longer declares `partial class Program`
+  or calls `Program.*`: passed by source search.
+- Its CLI and full-regression runner paths call `WpfModelComparisonTests`
+  directly: passed by source search and compile.
+- Review examples, comparison script request, and benchmark window behavior
+  remain unchanged: passed by three focused smoke switches.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `--wpf-model-comparison-review-service`,
+  `--wpf-model-comparison-run-service`, and `--wpf-model-benchmark-window` :
+  all passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.WpfModelComparison.cs` and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: held-out split and canvas example-focus tests retain
+separate ownership and need their own dependency analysis before any move.
+
+## 2026-07-26 model registry test ownership refactor
+
+Status: Complete
+
+Scope: move model profile, run, candidate, and adoption-history persistence
+verification from `Program` partial ownership into `ModelRegistryTests`. No
+registry schema, persistence behavior, or Model Center UI was changed.
+
+Acceptance criteria and evidence:
+
+- `Program.ModelRegistry.cs` no longer declares `partial class Program` or
+  calls `Program.*`: passed by source search.
+- Its CLI and full-regression runner paths call `ModelRegistryTests` directly:
+  passed by source search and compile.
+- Registry profile/run/candidate/adoption persistence remains unchanged: passed
+  by the focused smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `--model-registry` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.ModelRegistry.cs` and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: Model Center dashboard presentation retains its
+own partial ownership and needs separate dependency analysis.
+
+## 2026-07-26 review services test ownership refactor
+
+Status: Complete
+
+Scope: move Object Review and Candidate Review service tests from `Program`
+partial ownership into `ReviewServicesTests`, and give their shared review
+service boundary an accurate file name. No WPF shell workflow, service
+behavior, or persisted label data changed.
+
+Acceptance criteria and evidence:
+
+- `Program.WpfReviewServices.cs` contains no `partial class Program` or
+  `Program.*` dependency: passed by source search.
+- Candidate Review and Object Review service runner entries call
+  `ReviewServicesTests` directly: passed by source search and compile.
+- Candidate Review presentation still shows unsaved AI-candidate state:
+  passed by the focused smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `artifacts\isolated-out\LabelingApplication.Tests.exe --wpf-candidate-review-presentation` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.WpfReviewServices.cs` and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: the large Object Review panel integration smoke
+remains in the WPF shell integration suite because it validates window
+composition, not review-service behavior.
+
+## 2026-07-26 settings ViewModel test ownership refactor
+
+Status: Complete
+
+Scope: move the WPF settings ViewModel round-trip test from `Program` partial
+ownership into `WpfSettingsViewModelTests`. No editor behavior, command state,
+or project-settings serialization changed.
+
+Acceptance criteria and evidence:
+
+- `Program.WpfSettingsViewModels.cs` no longer declares `partial class
+  Program` or calls `Program.*`: passed by source search.
+- Its focused CLI and full-regression entries call
+  `WpfSettingsViewModelTests` directly: passed by source search and compile.
+- Settings editor values still round-trip across model, training, project,
+  queue, and status ViewModels: passed by the focused smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-settings-viewmodels` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.WpfSettingsViewModels.cs`
+and `tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: this is an integration-level ViewModel contract;
+individual ViewModels remain together because they share one editor workflow.
+
+## 2026-07-26 WPF shell structure test ownership refactor
+
+Status: Complete
+
+Scope: move the single WPF shell construction and panel-composition contract
+from `Program` partial ownership into `WpfShellStructureTests`. Move reusable
+XAML, reflection, source-search, and runtime-command helpers into
+`TestSupport`; keep compatibility wrappers for tests still owned by the main
+runner. No WPF layout, command behavior, or visible UI changed.
+
+Acceptance criteria and evidence:
+
+- `Program.WpfShellStructure.cs` no longer declares `partial class Program`
+  or calls `Program.*`: passed by source search.
+- Its focused CLI and full-regression entries call `WpfShellStructureTests`
+  directly: passed by source search and compile.
+- Shared test helper implementations have one owner in `TestSupport`, while
+  the remaining `Program` methods only forward calls: passed by source review.
+- The shell still constructs and exposes its expected panels, bindings, and
+  commands: passed by the focused smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-labeling-shell` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.WpfShellStructure.cs`,
+`tests\LabelingApplication.Tests\TestSupport.cs`, and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: the large shell contract remains one test because
+it validates one composition root. Splitting it by line count would create
+navigation files without independent runtime boundaries.
+
+## 2026-07-26 WPF training dataset readiness test ownership refactor
+
+Status: Complete
+
+Scope: move training-checklist dataset quality and held-out model-comparison
+gating tests from `Program` partial ownership into
+`WpfTrainingDatasetReadinessTests`. Keep their dataset fixture private to the
+same readiness contract. No dataset validation, training, model comparison,
+or UI behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.WpfTrainingDatasetReadiness.cs` no longer declares `partial class
+  Program` or calls `Program.*`: passed by source search.
+- Both focused CLI paths and full-regression entries call
+  `WpfTrainingDatasetReadinessTests` directly: passed by source search and
+  compile.
+- Dataset quality warnings and blocking split errors remain visible in the
+  training dashboard: passed by the focused dashboard smoke.
+- Model comparison remains gated by labeled held-out test evidence: passed by
+  the focused held-out smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-training-dashboard-quality` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-model-comparison-heldout` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.WpfTrainingDatasetReadiness.cs` and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: the local dataset builder remains in this class
+because only these two readiness contracts use it.
+
+## 2026-07-26 Dataset Health test ownership refactor
+
+Status: Complete
+
+Scope: move the purpose-aware Dataset Health report and WPF analysis-window
+tests from `Program` partial ownership into `DatasetHealthTests`. Reuse the
+existing readiness fixture and shared test support. No health calculation,
+dataset content, or visible window behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.DatasetHealth.cs` no longer declares `partial class Program` or
+  calls `Program.*`: passed by source search.
+- Both focused CLI paths and full-regression entries call
+  `DatasetHealthTests` directly: passed by source search and compile.
+- Detection, segmentation, and anomaly health summaries remain
+  purpose-aware: passed by the focused report smoke.
+- Dataset Health still opens as a separate owned WPF analysis window: passed
+  by the focused window smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --dataset-health` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-dataset-health-window` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.DatasetHealth.cs` and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: Dataset Health remains one test class because the
+report and its read-only WPF projection form one analysis feature.
+
+## 2026-07-26 Image Queue worklist test ownership refactor
+
+Status: Complete
+
+Scope: move the 10K Image Queue worklist contract from `Program` partial
+ownership into `ImageQueueWorklistTests`. No queue filtering, summary,
+selection, collection-update, or UI behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.ImageQueueWorklist.cs` no longer declares `partial class Program`
+  or calls `Program.*`: passed by source search.
+- Its focused CLI and full-regression entries call `ImageQueueWorklistTests`
+  directly: passed by source search and compile.
+- The 10K summary, one-row completion update, filtered view, and original row
+  instances remain stable without a collection reset: passed by the focused
+  worklist smoke.
+- Performance stayed within the existing gates: summary 2.0 ms, update 71.0
+  ms, and one filter evaluation in the current run.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-worklist-10k` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.ImageQueueWorklist.cs` and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: this remains one focused performance contract;
+the separate operator-profile fixture has different policy coverage.
+
+## 2026-07-26 Image Queue operator profile test ownership refactor
+
+Status: Complete
+
+Scope: move the read-only operator-folder performance profile from `Program`
+partial ownership into `ImageQueueOperatorProfileTests`. Move the reusable CLI
+argument parsers into `TestSupport` and retain thin compatibility forwarding
+for remaining runner partials. No queue loading, selection, detail refresh,
+memory policy, or UI behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.ImageQueueOperatorProfile.cs` no longer declares `partial class
+  Program` or calls `Program.*`: passed by source search.
+- Its focused CLI path calls `ImageQueueOperatorProfileTests` directly:
+  passed by source search and compile.
+- Generic string and positive-integer argument parsing has one implementation
+  owner in `TestSupport`: passed by source review and compile.
+- A current-build read-only profile completed against the existing
+  `artifacts\ui` folder: 834 images, catalog return 15.0 ms, total catalog
+  495.3 ms, middle selection 235.6 ms, final selection 132.9 ms, and zero
+  missing dimensions.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-operator-profile --root .\artifacts\ui --minimum-images 1 --timeout-seconds 180` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.ImageQueueOperatorProfile.cs`,
+`tests\LabelingApplication.Tests\TestSupport.cs`, and
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: this run proves the current 834-image local
+artifact folder profile, not the separate 10K operator-folder acceptance
+claim. The established 10K worklist contract remains independently covered.
+
+## 2026-07-26 EXE Image Queue worklist smoke ownership refactor
+
+Status: Complete
+
+Scope: move the current-EXE Image Queue Worklist workflow from `Program`
+partial ownership into `ExeImageQueueWorklistSmokeTests`. Keep workflow-only
+seed and search helpers in that class, and expose only the existing shared EXE
+and UI Automation harness methods as internal runner APIs. No product EXE,
+queue workflow, label persistence, or visible UI behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.ExeImageQueueWorklistSmoke.cs` no longer declares `partial class
+  Program`: passed by source search.
+- The command-line runner calls `ExeImageQueueWorklistSmokeTests` directly:
+  passed by source search and compile.
+- The current-build EXE restored 125 mixed-state images, reduced the Worklist
+  from 120 to 119 after saving, increased completion from 5 to 6, selected
+  `queue-local-001.jpg`, and caused zero queue invalidations or bulk changes:
+  passed by the actual EXE smoke.
+- The tested EXE SHA-256 was
+  `F348298F21F7CFB72E7131EE58CA61DCED0ABEE5CAD3698DD4C338E641E7EE85`.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --exe-image-queue-worklist-smoke --exe .\artifacts\isolated-out\OpenVisionLab.LabelingStudio.exe --artifact-root .\artifacts\exe-image-queue-worklist\refactor-ownership-20260726` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.ExeImageQueueWorklistSmoke.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and
+`artifacts\exe-image-queue-worklist\refactor-ownership-20260726\summary.txt`.
+
+Boundary / next dependency: shared EXE/UI Automation utilities remain in the
+runner harness because multiple EXE workflows use them. Moving that entire
+harness is a separate structural change and was not required for this smoke's
+ownership boundary.
+
+## 2026-07-26 EXE label-create queue-locality smoke ownership refactor
+
+Status: Complete
+
+Scope: move the current-EXE label-create queue-locality workflow from
+`Program` partial ownership into `ExeLabelCreateQueueLocalitySmokeTests`.
+Keep workflow-only scroll, visible-row, and queue assertion helpers in that
+class. Move the two annotation-tool lookup helpers that are also used by the
+Image Queue Worklist smoke into the shared `Program` UI Automation harness.
+No product EXE, queue workflow, label persistence, or visible UI behavior
+changed.
+
+Acceptance criteria and evidence:
+
+- `Program.ExeLabelCreateQueueLocalitySmoke.cs` no longer declares `partial
+  class Program`: passed by source search.
+- The command-line runner calls `ExeLabelCreateQueueLocalitySmokeTests`
+  directly: passed by source search and compile.
+- Shared annotation-tool lookup no longer belongs to either workflow test:
+  passed by source review and compile of both independent smoke classes.
+- The current-build EXE restored 125 images; label creation and save each
+  caused zero queue invalidations and zero bulk changes; and queue scroll
+  stayed at `55.50 -> 55.50 -> 55.50`: passed by the actual EXE smoke.
+- The tested EXE SHA-256 was
+  `7121FE30D53A2F0C3E5D4A941B902527E0F0D24274A81BDDEFEFEE638F5015AD`.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --exe-label-create-queue-locality-smoke --exe .\artifacts\isolated-out\OpenVisionLab.LabelingStudio.exe --artifact-root .\artifacts\exe-label-create-queue-locality\refactor-ownership-20260726` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.ExeLabelCreateQueueLocalitySmoke.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and
+`artifacts\exe-label-create-queue-locality\refactor-ownership-20260726\summary.txt`.
+
+Boundary / next dependency: shared EXE/UI Automation utilities remain in the
+runner harness because multiple EXE workflows use them. The next independent
+workflow boundary is the Anomaly Queue Focus smoke.
+
+## 2026-07-26 Anomaly Queue Focus smoke ownership refactor
+
+Status: Complete
+
+Scope: move the current-source WPF anomaly queue-focus contract from `Program`
+partial ownership into `AnomalyQueueFocusSmokeTests`. Keep its grid lookup and
+decision-command helpers local, and expose only the already shared optional WPF
+capture helper from the `Program` runner harness. No product UI, anomaly
+decision, queue-navigation, persistence, or performance behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.AnomalyQueueFocusSmoke.cs` no longer declares `partial class
+  Program`: passed by source search.
+- Both the focused CLI and full-regression paths call
+  `AnomalyQueueFocusSmokeTests` directly: passed by source search and compile.
+- The 100-image WPF fixture completed 18 alternating OK/NG decisions with the
+  active image, grid selection, ViewModel selection, and current row aligned;
+  view resets stayed at zero, and each decision evaluated the filter once.
+- Decision median was 153.0 ms, maximum was 268.9 ms, queue population stayed
+  at 0.0 ms, and resource warnings stayed at zero in the current run.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-anomaly-queue-focus` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.AnomalyQueueFocusSmoke.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and the current focused-smoke
+console output recorded in this entry.
+
+Boundary / next dependency: shared WPF fixture and capture utilities remain in
+their existing runner/TestSupport owners. The next refactor should be selected
+from remaining large `Program` partial files by coherent workflow ownership.
+
+## 2026-07-26 Model Adapter Catalog test ownership refactor
+
+Status: Complete
+
+Scope: move the model-adapter catalog, settings ViewModel projection, and XAML
+binding contract from `Program` partial ownership into
+`ModelAdapterCatalogTests`. Reuse the existing `TestSupport` assertions and
+repository lookup without adding another helper or abstraction. No catalog
+data, runtime availability, ViewModel behavior, or visible UI changed.
+
+Acceptance criteria and evidence:
+
+- `Program.ModelAdapterCatalog.cs` no longer declares `partial class Program`
+  or references `Program`: passed by source search.
+- The focused CLI calls `ModelAdapterCatalogTests.TestModelAdapterCatalog`
+  directly: passed by source search and compile.
+- The current six-adapter contract, settings ViewModel projection, and named
+  XAML bindings remain covered: passed by `--model-adapter-catalog`.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --model-adapter-catalog` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence: `tests\LabelingApplication.Tests\Program.ModelAdapterCatalog.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and `docs\CODE_STRUCTURE.md`.
+
+Boundary / next dependency: this proves ownership and the current catalog
+contract, not model quality or runtime execution. The next small coherent
+runner partial is the WPF segmentation-adapter comparison contract.
+
+## 2026-07-26 WPF segmentation-adapter comparison test ownership refactor
+
+Status: Complete
+
+Scope: move the WPF U-Net versus YOLO-seg comparison contract from `Program`
+partial ownership into `WpfSegmentationAdapterComparisonTests`. Keep the
+comparison scenario and its ViewModel/source assertions together. Reuse the
+existing shared U-Net fixture and YOLO-engine argument policy through explicit
+internal runner APIs. No comparison service, metric, checkpoint, ViewModel, or
+visible UI behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.WpfSegmentationAdapterComparison.cs` no longer declares `partial
+  class Program`: passed by source search.
+- The focused CLI calls
+  `WpfSegmentationAdapterComparisonTests.TestWpfSegmentationAdapterComparison`
+  directly: passed by source search and compile.
+- Only the existing shared `CreateUnetSegmentationFixture` and
+  `GetSegmentationComparisonYoloEngineArgument` dependencies cross into the
+  runner partials; all scenario-specific assertions remain in the new owner.
+- U-Net/YOLOv8 and U-Net/YOLO11 request construction, command state, recipe
+  visibility, XAML binding, and non-adoption wording remain covered: passed by
+  the focused smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-segmentation-adapter-comparison` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.WpfSegmentationAdapterComparison.cs`,
+`tests\LabelingApplication.Tests\Program.UnetSegmentationDatasetExport.cs`,
+`tests\LabelingApplication.Tests\Program.RealExternalSegmentationAdapterComparison.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and `docs\CODE_STRUCTURE.md`.
+
+Boundary / next dependency: the shared fixture and engine parser remain with
+their current runner partials until those complete segmentation suites receive
+independent owners. The next related small boundary is the canonical
+segmentation-mask comparison suite.
+
+## 2026-07-26 Segmentation Mask Comparison test ownership refactor
+
+Status: Complete
+
+Scope: move the canonical segmentation-mask comparison contract from
+`Program` partial ownership into `SegmentationMaskComparisonTests`. Move the
+generic SHA-256 implementation into `TestSupport` while retaining a thin
+runner forwarding method for existing partial suites. Keep the shared U-Net
+fixture with its current segmentation owner. No mask scoring, provenance
+validation, export request, or product behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.SegmentationMaskComparison.cs` no longer declares `partial class
+  Program`: passed by source search.
+- The focused CLI calls
+  `SegmentationMaskComparisonTests.TestSegmentationMaskComparison` directly:
+  passed by source search and compile.
+- Generic file hashing has one implementation owner in `TestSupport`; the
+  former EXE partial contains only a compatibility forwarding method: passed
+  by source review and compile.
+- Exact baseline scoring, degraded candidate Dice and component counts,
+  incompatible provenance blocking, and explicit prediction adapter arguments
+  remain covered: passed by the focused smoke.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --segmentation-mask-comparison` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.SegmentationMaskComparison.cs`,
+`tests\LabelingApplication.Tests\TestSupport.cs`,
+`tests\LabelingApplication.Tests\Program.ExeYoloV8DetectRestartSmoke.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and `docs\CODE_STRUCTURE.md`.
+
+Boundary / next dependency: `CreateUnetSegmentationFixture` remains explicitly
+owned by the U-Net dataset-export partial because several segmentation suites
+share its complete fixture family. That suite is the next coherent ownership
+boundary.
+
+## 2026-07-26 U-Net Segmentation Dataset Export test ownership refactor
+
+Status: Complete
+
+Scope: move the U-Net canonical dataset-export contract and its complete
+reusable fixture family from `Program` partial ownership into
+`UnetSegmentationDatasetExportTests`. Update the real U-Net runtime,
+segmentation-mask comparison, and WPF adapter-comparison suites to reference
+the new fixture owner directly. No export, split, mask, provenance, training,
+or product behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.UnetSegmentationDatasetExport.cs` no longer declares `partial class
+  Program` or depends on `Program`: passed by source search.
+- The focused CLI calls
+  `UnetSegmentationDatasetExportTests.TestUnetSegmentationDatasetExport`
+  directly: passed by source search and compile.
+- All external fixture consumers call
+  `UnetSegmentationDatasetExportTests.CreateUnetSegmentationFixture`
+  explicitly; no runner forwarding method remains: passed by repository
+  search and compile.
+- Canonical export, source preservation, artifact reuse, split-content
+  duplicate rejection, and class-overlap rejection remain covered: passed by
+  `--unet-segmentation-export`.
+- The canonical mask-comparison and WPF adapter-comparison consumers both
+  replayed successfully with the relocated fixture.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --unet-segmentation-export` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --segmentation-mask-comparison` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-segmentation-adapter-comparison` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.UnetSegmentationDatasetExport.cs`,
+`tests\LabelingApplication.Tests\Program.RealUnetSegmentationRuntime.cs`,
+`tests\LabelingApplication.Tests\Program.SegmentationMaskComparison.cs`,
+`tests\LabelingApplication.Tests\Program.WpfSegmentationAdapterComparison.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and `docs\CODE_STRUCTURE.md`.
+
+Boundary / next dependency: this proves the fixture and deterministic export
+ownership, not a real worker training/inference run or segmentation quality.
+`Program.RealUnetSegmentationRuntime.cs` is the next related ownership
+boundary and retains its existing external runtime prerequisites.
+
+## 2026-07-26 Real U-Net Segmentation Runtime smoke ownership refactor
+
+Status: Complete
+
+Scope: move the real U-Net train/export/restart/inference workflow from
+`Program` partial ownership into `RealUnetSegmentationRuntimeSmokeTests`.
+Keep terminal-state policy with the workflow and expose only the worker-process
+helpers already shared by real runtime smokes as internal runner APIs. Use
+`TestSupport` directly for arguments, ports, waiting, assertions, and hashing.
+No worker, training, prediction, checkpoint, or product behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.RealUnetSegmentationRuntime.cs` no longer declares `partial class
+  Program`: passed by source search.
+- The command-line runner calls
+  `RealUnetSegmentationRuntimeSmokeTests.RunRealUnetSegmentationRuntimeSmoke`
+  directly: passed by source search and compile.
+- Scenario state and the terminal-state predicate remain in the new owner;
+  only shared worker start/stop/log/failure helpers cross into the runner
+  harness: passed by source review and compile.
+- A current local-runtime run completed one CPU epoch, wrote `best.pt`,
+  exported a prediction manifest, restarted the worker, loaded the checkpoint
+  as `ready`, and completed inference.
+- Recipe-source SHA-256 remained
+  `112C37DC7F27EDBA56FCCA4033884E0C0A884B49EE2DE564215BFAD6B68082DA`
+  before and after the run. The generated checkpoint SHA-256 was
+  `D8BD220F7CF7C0A734E7848A7E7D154DCEDDB549163C74589E221ABC1DD1C4F7`.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --real-unet-segmentation-runtime --unet-root C:\Git\unet --timeout-seconds 90 --image-size 32 --batch 1 --epochs 1 --device cpu` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.RealUnetSegmentationRuntime.cs`,
+`tests\LabelingApplication.Tests\Program.RealYoloV8AnomalyFolderTraining.cs`,
+`tests\LabelingApplication.Tests\Program.cs`,
+`artifacts\real-unet-segmentation-runtime-20260726-161138\summary.txt`, and
+`C:\Git\unet\runs\segment\openvisionlab-unet-smoke-20260726-161138\weights\best.pt`.
+
+Boundary / next dependency: this is current reproducibility and integration
+evidence, not segmentation quality, model adoption, or production evidence.
+The next small related runner boundary is the Ultralytics segmentation
+prediction-export smoke.
+
+## 2026-07-26 Real Ultralytics Segmentation Prediction Export ownership refactor
+
+Status: Complete
+
+Scope: move the real Ultralytics canonical prediction-export workflow and its
+single-image canonical fixture from `Program` partial ownership into
+`RealUltralyticsSegmentationPredictionExportSmokeTests`. Use only the existing
+`TestSupport` helpers; no runner harness dependency remains. No checkpoint,
+prediction, manifest, canonical artifact, or product behavior changed.
+
+Acceptance criteria and evidence:
+
+- `Program.RealUltralyticsSegmentationPredictionExport.cs` no longer declares
+  `partial class Program` or references `Program`: passed by source search.
+- The command-line runner calls
+  `RealUltralyticsSegmentationPredictionExportSmokeTests`
+  directly: passed by source search and compile.
+- Canonical fixture generation remains private to the new workflow owner:
+  passed by source review.
+- A current local-runtime export completed from the existing two-class
+  checkpoint, preserved the source image SHA-256, and produced one prediction
+  manifest record.
+- The checkpoint SHA-256 was
+  `9A741059A4A19B0928BD9530D9DC9312ADB52268503D3420BE23BDA13E429A85`;
+  source image SHA-256 remained
+  `D5E61ED06737E1FCE58B7511AF28AA822ACDBE757A3C00188093F127D382AEC1`.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --real-ultralytics-segmentation-prediction-export` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.RealUltralyticsSegmentationPredictionExport.cs`,
+`tests\LabelingApplication.Tests\Program.cs`,
+`artifacts\real-ultralytics-segmentation-prediction-export-20260726-161410\summary.txt`,
+and `docs\CODE_STRUCTURE.md`.
+
+Boundary / next dependency: this proves normalized artifact generation and
+source preservation, not segmentation quality or a valid cross-model metric
+comparison. The next related runner boundary is the real external
+segmentation-adapter comparison workflow.
+
+## 2026-07-26 Segmentation runner ownership batch refactor
+
+Status: Complete
+
+Scope: refactor three remaining cohesive non-EXE segmentation runner partials
+in one batch:
+`RealExternalSegmentationAdapterComparisonSmokeTests`,
+`ExternalYoloSegmentationCanonicalExportTests`, and
+`SegmentationTemplateContourMigrationTests`. Move the reusable external-source
+snapshot implementation into `TestSupport`, retain a thin forwarding method
+for the still-partial external-intake suite, and update every CLI/parser call
+path. No product conversion, comparison, migration, UI, or runtime behavior
+changed. The 1,890-line circular EXE/UI Automation workflow was intentionally
+excluded as a separate high-risk boundary.
+
+Acceptance criteria and evidence:
+
+- The three target files no longer declare `partial class Program`: passed by
+  source search.
+- All four focused/apply CLI routes call the new test owners directly: passed
+  by source search and compile.
+- WPF adapter comparison calls the real-comparison owner for YOLOv8/YOLO11
+  engine argument policy; it no longer imports `Program`: passed by source
+  review and focused smoke.
+- Generic external source-tree snapshot hashing has one implementation owner
+  in `TestSupport`: passed by source review, external canonical-export smoke,
+  and external-intake smoke.
+- External native segmentation canonical export, WPF adapter comparison, and
+  SEG contour migration deterministic contracts all replayed successfully.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --external-yolo-segmentation-canonical-export` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-segmentation-adapter-comparison` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --segmentation-template-contour-migration` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --external-yolo-dataset-intake` : passed.
+- `git diff --check` : passed after the documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.RealExternalSegmentationAdapterComparison.cs`,
+`tests\LabelingApplication.Tests\Program.ExternalYoloSegmentationCanonicalExport.cs`,
+`tests\LabelingApplication.Tests\Program.SegmentationTemplateContourMigration.cs`,
+`tests\LabelingApplication.Tests\Program.WpfSegmentationAdapterComparison.cs`,
+`tests\LabelingApplication.Tests\Program.ExternalYoloDatasetIntake.cs`,
+`tests\LabelingApplication.Tests\TestSupport.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and `docs\CODE_STRUCTURE.md`.
+
+Boundary / next dependency: the real 60-image held-out comparison was not
+replayed because the durable evidence policy prohibits rerunning that split
+without a changed requirement or approved new hypothesis. Its source and both
+checkpoints were confirmed present, the workflow body was unchanged, and the
+current build covers the new call path; this does not create new runtime or
+quality evidence. `Program.ExeCircularSegmentationWorkflow.cs` remains partial
+and should be handled only as a separate EXE-harness refactor.
+
+## 2026-07-26 MobileSAM and external YOLO intake ownership batch refactor
+
+Status: Complete
+
+Scope: replace three cohesive `Program` partial ownership areas with
+`MobileSamBoxPromptTests`, `MobileSamUsabilityMatrixTests`, and
+`ExternalYoloDatasetIntakeTests` in one batch. Preserve every CLI switch,
+default-regression route, opt-in evidence condition, and visual-smoke call.
+Move reusable image-size, saved-mask pixel count, and immutable external-source
+tree snapshot helpers to `TestSupport`. No product behavior, UI layout,
+inference policy, dataset mutation policy, or training behavior changed.
+
+Acceptance criteria and evidence:
+
+- All three target files no longer declare `partial class Program`: passed by
+  source search and compile.
+- CLI, default-regression, and visual-smoke callers name the independent owners
+  directly: passed by source search and the three focused gates.
+- The MobileSAM contract calls the usability metric through its explicit owner
+  rather than hidden partial-member resolution: passed by source review and
+  `--mobile-sam-box-prompt`.
+- Native and split-list external YOLO intake retain source immutability,
+  explicit activation, runtime materialization, and training provenance:
+  passed by both external-intake focused gates.
+- External source-tree hashing now has one shared owner and remains available
+  to the opt-in real training and MobileSAM matrix workflows: passed by source
+  search and compile.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --mobile-sam-box-prompt` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --external-yolo-dataset-intake` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --external-yolo-list-split-intake` : passed.
+- `git diff --check` : passed after this documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.MobileSamBoxPrompt.cs`,
+`tests\LabelingApplication.Tests\Program.MobileSamUsabilityMatrix.cs`,
+`tests\LabelingApplication.Tests\Program.ExternalYoloDatasetIntake.cs`,
+`tests\LabelingApplication.Tests\Program.RealExternalYoloDatasetTraining.cs`,
+`tests\LabelingApplication.Tests\Program.RealYoloV8AnomalyFolderTraining.cs`,
+`tests\LabelingApplication.Tests\TestSupport.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and `docs\CODE_STRUCTURE.md`.
+
+Boundary / next dependency: real MobileSAM inference and 24/96-trial matrix
+execution remain opt-in evidence workflows requiring explicit source paths;
+they were not replayed for a behavior-preserving ownership refactor. The
+remaining large EXE/UI Automation and real-training partials require separate
+risk-scoped ownership work rather than mechanical extraction.
+
+## 2026-07-26 real training runner ownership batch refactor
+
+Status: Complete
+
+Scope: move the opt-in external YOLO training and anomaly-folder training
+workflows from hidden `Program` partial ownership to
+`RealExternalYoloDatasetTrainingSmokeTests` and
+`RealYoloAnomalyFolderTrainingSmokeTests`. Move their shared Python training
+client launcher, process log/failure formatting, termination, and synchronized
+output capture into the existing `TestSupport` owner. Update the already
+independent U-Net runtime smoke to use the same owner directly. Preserve all
+CLI switches, engine selection, arguments, training workflow calls, source
+immutability checks, provenance evidence, and opt-in execution boundaries.
+
+Acceptance criteria and evidence:
+
+- Both target files no longer declare `partial class Program`: passed by
+  source search and compile.
+- The three YOLOv8, YOLO11 anomaly, and external-data CLI routes call the
+  independent owners directly: passed by source search and compile.
+- External YOLO, anomaly classification, and U-Net runtime workflows all call
+  `TestSupport.StartRealYoloTrainingClient`; no target imports `Program`:
+  passed by source search.
+- The launcher implementation has one owner in `TestSupport`; the existing
+  `Program` real-YOLO harness retains only thin compatibility forwarding for
+  its broader legacy runner: passed by source review.
+- Runtime settings/connection and external intake contracts remain valid:
+  passed by three focused deterministic gates.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --python-model-runtime-self-test` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --python-model-runtime-connection` : passed.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --external-yolo-dataset-intake` : passed.
+- `git diff --check` : passed after this documentation update.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.RealExternalYoloDatasetTraining.cs`,
+`tests\LabelingApplication.Tests\Program.RealYoloV8AnomalyFolderTraining.cs`,
+`tests\LabelingApplication.Tests\Program.RealUnetSegmentationRuntime.cs`,
+`tests\LabelingApplication.Tests\TestSupport.cs`,
+`tests\LabelingApplication.Tests\Program.cs`, and `docs\CODE_STRUCTURE.md`.
+
+Boundary / next dependency: no real training was launched because these
+commands create long-running external Python jobs, new run folders, and model
+weights. The current evidence proves compilation, ownership, dependency
+direction, CLI routing, and adjacent deterministic runtime contracts; it does
+not create fresh model-training or quality evidence. Five `Program` partial
+files remain, all involving EXE/UI Automation or the mixed
+`RecipeDatasetVersion` suite.
+
+## 2026-07-26 EXE YOLO restart smoke ownership batch refactor
+
+Status: Complete
+
+Scope: move the YOLOv8/YOLO11 object-detection and anomaly-classification EXE
+restart scenarios from hidden `Program` partial ownership to
+`ExeYoloV8DetectRestartSmokeTests` and
+`ExeYoloV8AnomalyRestartSmokeTests`. Move the shared EXE launch, dataset
+recipe creation, recipe deserialization, settings visibility, path comparison,
+hash forwarding, and last-opened-recipe restoration helpers into the existing
+`Program` UI Automation harness. Expose only the harness methods actually
+required by independent EXE workflows. Preserve CLI switches, recipe cleanup,
+restart behavior, model settings, actual inference, and screenshot evidence.
+
+Acceptance criteria and evidence:
+
+- Both target files no longer declare `partial class Program`: passed by
+  source search and compile.
+- All four YOLOv8/YOLO11 detect/anomaly CLI routes call the independent owners
+  directly: passed by source search and compile.
+- Shared helpers used by detect, anomaly, external-evaluation, image-queue,
+  and label-create smokes no longer belong to the detect scenario owner:
+  passed by source search and compile.
+- The shared harness boundary is explicit through the smallest required
+  `internal` methods; target-specific assertions remain private to their
+  independent class: passed by source review.
+- Current-build YOLOv8 Detect restart, restored settings/image queue, and real
+  inference passed with one candidate.
+- Current-build YOLOv8 anomaly restart and real inference passed through the
+  supported preconfigured-recipe route with one candidate and the expected
+  `Abnormal` review state.
+
+Verification:
+
+- `dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false` : 0 warnings, 0 errors; refreshed the EXE used by both smokes.
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --exe-yolov8-detect-restart-smoke` : passed in 145.7 seconds.
+- `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --exe-yolov8-anomaly-restart-smoke --preconfigured-recipe` : passed in 46.4 seconds.
+- `git diff --check` : passed after documentation and issue-ledger updates.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.ExeYoloV8DetectRestartSmoke.cs`,
+`tests\LabelingApplication.Tests\Program.ExeYoloV8AnomalyRestartSmoke.cs`,
+`tests\LabelingApplication.Tests\Program.ExeCircularSegmentationWorkflow.cs`,
+`tests\LabelingApplication.Tests\Program.cs`,
+`artifacts\exe-yolov8-detect-restart-smoke\codex_yolov8_detect_restart_20260726_164915\summary.txt`,
+`artifacts\exe-yolov8-detect-restart-smoke\codex_yolov8_detect_restart_20260726_164915\screenshots`,
+`artifacts\exe-yolov8-anomaly-restart-smoke\codex_yolov8_anomaly_restart_20260726_165234\summary.txt`,
+`artifacts\exe-yolov8-anomaly-restart-smoke\codex_yolov8_anomaly_restart_20260726_165234\screenshots`,
+and `docs\CODE_STRUCTURE.md`.
+
+Boundary / next dependency: the default wizard-created anomaly route exposed
+a separate current product defect: its manifest records `AnomalyDetection`
+while `VISION.xml` does not reach the same owning purpose field within the
+smoke timeout. The restart refactor and preconfigured runtime route are
+complete; the wizard persistence defect remains open as `.proofline` issue
+`PL-0001` and must pass its listed completion criteria before being resolved.
+Three `Program` partial files remain:
+`Program.ExeExternalEvaluationDataAuditSmoke.cs`,
+`Program.RecipeDatasetVersion.cs`, and
+`Program.ExeCircularSegmentationWorkflow.cs`.
+
+## 2026-07-26 anomaly dataset-purpose settled persistence fix
+
+Status: Complete
+
+Scope: fix `PL-0001` without changing the dataset wizard layout or broadening
+the existing purpose-change behavior. The dataset-creation path now uses an
+explicit persisted-purpose route: after queued WPF selection bindings settle,
+it rechecks the canonical requested purpose and saves the same current recipe.
+The existing non-persisted purpose synchronization used by annotation-tool
+scope changes remains unchanged.
+
+Acceptance criteria and evidence:
+
+- The current Debug EXE default anomaly wizard route passed without
+  `--preconfigured-recipe`.
+- The generated manifest and the saved-before-restart `VISION.xml` both record
+  `AnomalyDetection`.
+- Close/restart restored the created recipe, actual YOLOv8 classification
+  produced one candidate, and the expected image-level `Abnormal` state was
+  persisted.
+- The deferred save is guarded by the captured recipe name so it cannot save
+  into another recipe if the active recipe changes before the dispatcher
+  callback runs.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false` : 0 warnings, 0 errors.
+- `LabelingApplication.Tests.exe --wpf-dataset-setup-request` : passed.
+- `LabelingApplication.Tests.exe --wpf-dataset-setup-ui` : passed.
+- `LabelingApplication.Tests.exe --exe-yolov8-anomaly-restart-smoke` : passed in 146.5 seconds with the current Debug EXE.
+- `git diff --check` : passed after this record and the issue-ledger closure.
+
+Evidence:
+`0. UI\9) WPF\Views\WpfLabelingShellWindow.DatasetSetupCommands.cs`,
+`0. UI\9) WPF\Views\WpfLabelingShellWindow.ShellProjectSettings.cs`,
+`.proofline\issues\PL-0001.md`,
+`artifacts\exe-yolov8-anomaly-restart-smoke\codex_yolov8_anomaly_restart_20260726_170631\summary.txt`,
+`artifacts\exe-yolov8-anomaly-restart-smoke\codex_yolov8_anomaly_restart_20260726_170631\saved-before-restart-VISION.xml`,
+`artifacts\exe-yolov8-anomaly-restart-smoke\codex_yolov8_anomaly_restart_20260726_170631\screenshots\01c_dataset_manifest_after_create.json`,
+and
+`artifacts\exe-yolov8-anomaly-restart-smoke\codex_yolov8_anomaly_restart_20260726_170631\screenshots\04_first_abnormal_inference_after_restart.png`.
+
+Boundary / next dependency: this proves recipe-purpose consistency and the
+supported restart/inference workflow for the recorded local model and image.
+It does not prove classification accuracy on independent field data. The next
+structural refactor remains the three documented `Program` partial owners.
+
+## 2026-07-26 final Program partial ownership batch
+
+Status: Complete
+
+Scope: replace the final three scenario-bearing `Program` partial files with
+`ExeExternalEvaluationDataAuditSmokeTests`,
+`RecipeDatasetVersionTests`, and
+`ExeCircularSegmentationWorkflowTests`. Route every CLI switch through the
+explicit owner. Preserve the existing `Program` entry point and its shared
+UI Automation harness surface, including the exact runtime-configuration
+defaults used by existing callers. No product behavior, UI layout, dataset
+policy, training policy, or model settings changed.
+
+Acceptance criteria and evidence:
+
+- `Program.ExeExternalEvaluationDataAuditSmoke.cs`,
+  `Program.RecipeDatasetVersion.cs`, and
+  `Program.ExeCircularSegmentationWorkflow.cs` no longer declare
+  `partial class Program`: passed by source search and compile.
+- `Program.cs` routes all six affected entry paths (deterministic Dataset
+  Version, WPF visual, Dataset Version EXE, circular segmentation EXE, and
+  external evaluation EXE) through their explicit owners: passed by source
+  review and focused execution.
+- Shared UI Automation dependencies are explicit `internal` harness
+  contracts rather than hidden private partial-member resolution: passed by
+  compile and source review.
+- Dataset Version content identity/history remained deterministic and visible
+  in the current Debug EXE.
+- External duplicate-content audit still blocked one byte-identical external
+  image, accepted one independent image, and left `VISION.xml` unchanged.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug --no-restore /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 0 warnings, 0 errors.
+- `LabelingApplication.Tests.exe --recipe-dataset-version-v2` : passed.
+- `LabelingApplication.Tests.exe --exe-dataset-version-smoke` : passed; current Debug EXE displayed the exact `dsv2-72392c9147f7b4d15e9bcf113238f076d9f7129fcf5ba6d55ca77b94ccb7ba4b` identity.
+- `LabelingApplication.Tests.exe --exe-external-evaluation-data-audit` : passed; duplicate `1`, independent duplicate `0`, recipe mutation `none`.
+- `git diff --check` : passed after documentation updates.
+
+Evidence:
+`tests\LabelingApplication.Tests\Program.cs`,
+`tests\LabelingApplication.Tests\Program.ExeExternalEvaluationDataAuditSmoke.cs`,
+`tests\LabelingApplication.Tests\Program.RecipeDatasetVersion.cs`,
+`tests\LabelingApplication.Tests\Program.ExeCircularSegmentationWorkflow.cs`,
+`docs\CODE_STRUCTURE.md`,
+`artifacts\ui\recipe-dataset-version-v2\exe-dataset-version-1920.png`,
+and
+`artifacts\exe-external-evaluation-data-audit\external_evaluation_audit_20260726_172026\summary.txt`.
+
+Boundary / next dependency: the full circular-segmentation EXE command remains
+an opt-in evidence workflow because it requires the external
+`D:\circular_defect_labeling_dataset_v1\images` source and launches real model
+training. It was not replayed for this behavior-preserving ownership refactor;
+the successful build proves its new owner and dependency resolution, not a
+fresh training/model-quality result. No scenario-bearing `Program` partial
+files remain.

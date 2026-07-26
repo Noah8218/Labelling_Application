@@ -37,6 +37,30 @@ This file defines how Codex should work in this repository.
 - Keep unrelated refactors out of the patch.
 - Do not modify verified hot paths unless the request requires it and focused verification is included.
 
+## Structure and Refactoring Rules
+
+The goal is fast, reliable navigation for both people and LLMs. Prefer clear ownership over maximal decomposition.
+
+- Before a structural change, state `current owner -> intended owner`, the included scope, the behavior that must not change, and the verification to run.
+- Organize files by durable feature/domain ownership, never by file-size targets alone. A large cohesive class or file may remain intact.
+- Do not create a new folder, DTO, service, interface, or partial file for a short one-off command path. Create one only for repeated logic, a durable domain boundary, or an independently testable responsibility.
+- Keep WPF Views as UI adapters: view lifecycle, control integration, and narrowly scoped event bridging may remain in code-behind. Commands, screen state, enablement, workflow, and visible-text decisions belong in a ViewModel or the appropriate service.
+- Keep reusable workflow, calculation, persistence, and presentation coordination in the matching service domain. Do not move namespaces merely to mirror a physical-folder move unless the namespace itself is misleading.
+- `0. UI\9) WPF\Services` is organized by domain: `Annotation`, `Anomaly`, `CandidateReview`, `Dataset`, `Detection`, `ImageQueue`, `Infrastructure`, `Model`, `ObjectReview`, `Project`, `Runtime`, and `Training`. Put new services in the nearest existing domain; introduce a new domain only when it has a durable, clearly named boundary and more than one related responsibility.
+- Keep `WpfLabelingShellWindow.<Domain>.cs` partials focused on one recognizable shell domain. Do not add a partial simply because an individual method is short.
+- Keep test execution and shared helpers in `tests\LabelingApplication.Tests\Program.cs`; place only large, self-contained domain suites in clearly named `Program.<Domain>.cs` partial files. Do not mechanically split tests to reduce line count.
+- When ownership or physical layout changes, update `docs\CODE_STRUCTURE.md` and every affected in-repository reference. Keep public documentation free of local paths and conversation-specific notes.
+- Avoid restructuring Viewer, OpenGL, ROI, brush, or eraser paths unless the requested work requires it; these are performance-sensitive areas.
+
+### Refactor Decision Check
+
+Proceed only when all answers are clear:
+
+1. Which existing or new domain owns this code?
+2. What concrete discovery, maintenance, or reuse problem does the change solve?
+3. Why is this a durable boundary rather than a one-off extraction?
+4. Which build, focused tests, search checks, and documentation updates prove the move is complete?
+
 ## Goal-Driven Execution
 
 - Convert broad requests into concrete completion goals.

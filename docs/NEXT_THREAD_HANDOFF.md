@@ -1,6 +1,6 @@
 # Next Thread Handoff
 
-Last updated: 2026-07-23 KST
+Last updated: 2026-07-24 KST
 
 This is the current operational handoff for C:\Git\Labelling_Application. It is intentionally shorter than the historical journal. Use it to choose the next task; use the linked records only for the detailed evidence behind a claim.
 
@@ -19,8 +19,12 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
 
 - Workspace: C:\Git\Labelling_Application
 - Branch: main. Local `HEAD` and `origin/main` both matched
-  `0f1f91bdd11b28f311826e2b757357296e7c639e` after the explicit normal push on
-  2026-07-23. Always verify the live hashes before new work.
+  `ad569dcd009c836a1cab23d637d6e10186ec7043` after the explicit normal push on
+  2026-07-24. Always verify the live hashes before new work.
+- The latest commit is
+  `ad569dc feat: add dataset versioning and YOLO11 anomaly validation`. It
+  closes Recipe Dataset Version v2, Recipe/anomaly/adapter truth alignment,
+  and the recorded local YOLO11 anomaly-classification runtime slice.
 - The verified relocation fixes and evidence records are committed in
   `0f1f91b fix: preserve relocated runtime workflows`. The relocated copy at
   `C:\새 폴더\OpenVisionLab-Labeling-Studio_TEST` was deleted after the original
@@ -28,7 +32,7 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   EXE smokes. Use only `C:\Git\Labelling_Application` for development.
 - The worktree was clean immediately after the push. Verify live state with
   `git status --short`; do not infer cleanliness from this document.
-- GitHub Actions has not been rechecked for commit `0f1f91b`. Do not cite older
+- GitHub Actions has not been rechecked for commit `ad569dc`. Do not cite older
   CI evidence as current CI evidence.
 - The current focused passes directly verified Dataset Health, external native YOLO intake, model/anomaly comparison, the dedicated Model Center workspace, and the explicit model-adapter catalog slices. The image-queue slice also has a 50,081-image local warm-cache profile and a separate duplicate-file local 8K profile; neither is a network-share or production-camera result.
 - Never push unless the user explicitly says push. A commit request means local commit only.
@@ -72,7 +76,11 @@ The latest audit estimates focused single-operator workstation maturity at 4.0/5
 - Preserve MVVM: code-behind is a WPF adapter; commands, workflow state, presentation decisions, and persistence rules belong in ViewModel or service code when practical.
 - Do not touch Viewer, OpenGL, ROI, brush, eraser, or overlay hot paths unless the user reports a specific defect. Add focused evidence when doing so.
 - Do not download model weights, run pip/package upgrades, or change dependencies without explicit approval.
-- YOLO11 detection and segmentation are verified only for the recorded local Ultralytics runtime, compatible task weights, and focused app paths. Do not generalize that evidence to every YOLO11 task, dataset, runtime, or production deployment.
+- YOLO11 detection, segmentation, and anomaly classification are verified only
+  for the recorded local Ultralytics runtime, compatible task weights, and
+  focused app paths. Do not generalize that evidence to every YOLO11 task,
+  dataset, runtime, or production deployment. The recorded anomaly candidate
+  remains `hold`.
 - ONNX can support inference deployment, but does not replace local-source YOLOv8 training.
 - UI changes require current 1920x1080 evidence and a README/tutorial-image relevance check.
 - Completion requires a build when code changes, focused tests for the changed area, and git diff --check.
@@ -91,9 +99,10 @@ YOLOv8 is local-source operated:
 
 YOLO11 reuses the same local Ultralytics source/runtime root and the bundled
 Ultralytics worker; it does not require a separate `C:\Git\yolo11` repository.
-Actual detection and segmentation training/comparison evidence exists, but
-task-specific compatible weights and live worker capability checks still gate
-execution. A pretrained `yolo11n-seg.pt` is a seed, not an adopted model.
+Actual detection, segmentation, and anomaly-classification training/inference
+evidence exists, but task-specific compatible weights and live worker
+capability checks still gate execution. Pretrained `yolo11n-seg.pt` and
+`yolo11n-cls.pt` files are seeds, not adopted models.
 
 YOLOv5 remains a separately configured local runtime. Do not mix a weight, model engine, task, class list, or data.yaml across engines without explicit compatibility verification.
 
@@ -115,6 +124,18 @@ Treat the following as completed/protected unless there is a reproduced defect:
 - The Model Center adapter catalog is read-only: it exposes only the declared recipe-format, YOLOv5 detection, local-YOLOv8, U-Net segmentation, ONNX inference-only, and verified-scope local-YOLO11 contracts. It must not imply that all GitHub models or all YOLO11 task/runtime combinations are executable.
 
 For the exact contracts and required regression gates, read docs/STABLE_VERIFIED_AREAS.md before changing any protected area.
+
+### Current Capability Snapshot
+
+| Workflow area | Current state | Verified boundary / remaining limitation |
+| --- | --- | --- |
+| Recipe and dataset setup | Complete and protected | Dataset wizard, class schema, image queue, Dataset Health, external native YOLO intake, and deterministic Recipe Dataset Version v2 are implemented. Dataset Version is local immutable metadata, not a copied dataset or cloud VCS. |
+| Labeling and rework | Complete and protected for the local operator workflow | Object boxes; segmentation polygon/brush/eraser/undo/redo; anomaly whole-image OK/NG review; template labeling; MobileSAM box-prompt candidates; Candidate Review; and the 10K review Worklist are covered. Multi-user assignment, comments, and immutable reviewer history are not included. |
+| Training and inference | Complete for declared adapters | Local YOLOv5 detection, local YOLOv8 detection/segmentation/classification, recorded local YOLO11 detection/segmentation/classification, and U-Net segmentation have focused runtime evidence. ONNX remains inference-only. Arbitrary GitHub repositories are not automatically executable. |
+| Model comparison and adoption evidence | Complete as a decision workflow | YOLOv5/YOLOv8 detection comparison, U-Net/YOLOv8/YOLO11 segmentation comparison, anomaly evaluation, provenance, error review, and fail-closed adoption guards exist. Current synthetic/same-source candidates are regression evidence and remain non-adopted unless their recorded decision says otherwise. |
+| Documentation and beginner workflow | Complete for the current three task types | README/tutorial and current-EXE beginner audits cover object detection, segmentation, and anomaly classification. Refresh screenshots only after a visible UI change. |
+| Field model quality | Incomplete because evidence is unavailable | Independent, provenance-confirmed production-camera/cross-session detection, segmentation, and anomaly held-outs are still missing. This limits production/adoption claims, not the implemented workflow. |
+| Network/team/platform breadth | Deferred or out of scope | Shared/network-storage queue behavior remains unverified and inactive. Accounts, cloud collaboration, workforce management, deployment, PLC/fleet control, video/3D/keypoints, and a generic model marketplace are outside the approved product direction. |
 
 ## 7. Committed Feature Slice Map
 
@@ -150,7 +171,7 @@ Behavior and boundary:
 Files include:
 
 - 0. UI/9) WPF/Models/WpfImageQueueModels.cs
-- 0. UI/9) WPF/Services/WpfImageQueueSelectionService.cs
+- 0. UI/9) WPF/Services/ImageQueue/WpfImageQueueSelectionService.cs
 - 0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueue*.cs
 - DatasetSetupCommands.cs, ImageQueueCommands.cs, ImageQueuePresentation.cs, PanelWiring.ImageQueue.cs, ShellLifecycle.cs, WpfLabelingShellWindow.xaml.cs
 - tests/LabelingApplication.Tests/Program.cs
@@ -312,19 +333,28 @@ Not complete:
 
 ### YOLO11
 
-Verified for the recorded local Ultralytics detection and segmentation paths.
+Verified for the recorded local Ultralytics detection, segmentation, and
+anomaly-classification paths.
 The detection 30-epoch benchmark/restart smoke is recorded in
 `docs\YOLO11_ENGINE_COMPARISON_20260721.md`; the segmentation 30-epoch
 training and normalized three-model comparison are recorded in
-`docs\SEGMENTATION_E30_THREE_MODEL_COMPARISON_20260722.md`. Keep compatible
-task weights, worker capability, source identity, and non-adoption guards
-explicit. Anomaly-classification and arbitrary external YOLO11 runtimes remain
-unverified unless their own focused evidence exists.
+`docs\SEGMENTATION_E30_THREE_MODEL_COMPARISON_20260722.md`; the classification
+training, fixed evaluation, Model Center route, and actual-EXE restart inference
+are recorded in
+`docs\YOLO11_ANOMALY_CLASSIFICATION_PREREQUISITE_AUDIT_20260723.md`. At
+confidence `0.8`, YOLO11 scored `82/104` versus YOLOv8 `90/104` on the same
+synthetic test fingerprint, so both remain `hold`. Keep compatible task weights,
+worker capability, source identity, and non-adoption guards explicit. Arbitrary
+external YOLO11 runtimes and production accuracy remain unverified.
 
 ## 9. Known Gaps, Risks, and TODO Scan
 
-- The former dirty feature slices and the relocation/runtime verification are committed and pushed through `0f1f91b`. Do not repeat their focused reviews unless source, requirements, environment, or evidence validity changes.
-- GitHub Actions CI #22 passed for historical commit `58166f8`; CI has not been rechecked for `0f1f91b` and must not be implied current.
+- The former dirty feature slices, relocation/runtime verification, Recipe
+  Dataset Version v2, truth alignment, and YOLO11 anomaly closure are committed
+  and pushed through `ad569dc`. Do not repeat their focused reviews unless
+  source, requirements, environment, or evidence validity changes.
+- GitHub Actions CI #22 passed for historical commit `58166f8`; CI has not been
+  rechecked for `ad569dc` and must not be implied current.
 - Image-queue behavior on shared/network storage and provenance-confirmed production-camera folders is unverified. Mixed local 50K warm-cache and local duplicate-file 8K profiles exist, but neither is a network result; the 8K source has only 250 distinct contents copied 32 times and is not a production-data proxy. The operator removed this unavailable profile from the active priority list on 2026-07-18; retain the risk record without treating it as next work.
 - Model quality remains data-limited, not implementation-limited.
 - The supplied circular-disk 500 OK / 500 NG package now has completed synthetic anomaly and exact metadata-backed object-detection evidence. It does not satisfy the independent production-camera requirement. Full record: `docs\CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
@@ -333,7 +363,10 @@ unverified unless their own focused evidence exists.
 
 ## 10. Next Priorities
 
-The 2026-07-23 Recipe/anomaly/model-adapter truth-alignment and Recipe Dataset Version v2 priorities are complete. The latter now links exact image/annotation/class/split content to immutable local history, training, and model records. Keep both protected unless a focused regression fails.
+The 2026-07-23 Recipe/anomaly/model-adapter truth-alignment, Recipe Dataset
+Version v2, and recorded local YOLO11 anomaly runtime priorities are complete
+and committed in `ad569dc`. Keep them protected unless a focused regression
+fails.
 
 1. Acquire a new, approved NG-rich object-detection camera/session source, define its object classes and box rules, create a content-separated held-out test split, and rerun the unchanged controlled engine comparison. This is next because current synthetic comparisons prove runtime/format behavior but not field generalization. It includes provenance, label audit, SHA-256 non-overlap, fixed thresholds, and error review; it excludes treating folder-level OK/NG names as boxes or tuning on the held-out test. The operator-excluded `D:\기타이미지\2022.11.16_SIT 이미지` path must not be inspected or used.
    Prerequisite: a newly approved source with trustworthy bounding boxes and enough NG examples.
@@ -341,7 +374,9 @@ The 2026-07-23 Recipe/anomaly/model-adapter truth-alignment and Recipe Dataset V
    Reasoning effort: n/a
 
 2. Acquire balanced independent production-camera/cross-session normal and abnormal anomaly data, keep it outside training initially, and rerun the unchanged anomaly evaluation guard. This distinguishes a repeatable classifier runtime from generalizable anomaly quality; it includes provenance, content-overlap checks, confidence-gated errors, and an adopt/hold decision, and excludes tuning against the preserved circular or MultiIndustry synthetic evaluation sets.
-   The 2026-07-20 circular synthetic 1,000-image candidate remains `hold` at 90/104 confidence-gated test accuracy with seven false OK ring-deformation cases. Do not tune the threshold against that test or substitute it for new acquisition evidence.
+   On the same 104-image circular synthetic test at confidence `0.8`, YOLOv8
+   remains `hold` at `90/104` and YOLO11 remains `hold` at `82/104`. Do not tune
+   either model against that test or substitute it for new acquisition evidence.
    Prerequisite: new normal and abnormal images with provenance and representative operating conditions.
    Recommended model: none until the data is available
    Reasoning effort: n/a
@@ -368,6 +403,7 @@ dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplicat
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --external-yolo-dataset-intake
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --dataset-readiness-purpose
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --dataset-quality-audit
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --recipe-dataset-version-v2
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-labeling-shell
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --model-adapter-catalog
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-yolo-model-settings-panel
@@ -701,7 +737,7 @@ contract. Independent camera/session data remains an optional field-adoption gat
 
 ## 27. 2026-07-23 Latest Checkpoint: Recipe Dataset Version v2
 
-Status: `Complete` in the current worktree; not committed or pushed.
+Status: `Complete`; committed and pushed in `ad569dc`.
 
 - Exact recipe-owned image/annotation content, ordered classes, and split
   ownership now produce a deterministic `dsv2-<64 hex>` identity.
@@ -729,7 +765,7 @@ field-quality proof. Maturity remains `4.0/5`.
 
 ## 28. 2026-07-23 Latest Checkpoint: Recipe And Adapter Contract Truth Alignment
 
-Status: `Complete` in the current worktree; not committed or pushed.
+Status: `Complete`; committed and pushed in `ad569dc`.
 
 - Anomaly Recipe manifests now record `image-level-normal-abnormal` and
   navigation-only `panZoom` instead of the obsolete `box-and-mask` drawing
@@ -762,7 +798,7 @@ remains the anomaly model-adoption prerequisite.
 
 ## 29. 2026-07-23 Latest Checkpoint: YOLO11 Anomaly Runtime Closure
 
-Status: `Complete`.
+Status: `Complete`; committed and pushed in `ad569dc`.
 
 - With explicit approval, official `yolo11n-cls.pt` SHA-256
   `C62D41BF9625777760018BF914D2E6CD472420CCD01706D97A61CB6C82502BD7`

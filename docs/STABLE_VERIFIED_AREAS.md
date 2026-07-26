@@ -41,6 +41,9 @@ Protected behavior:
 - Switching from anomaly back to object detection restores the Select tool. The anomaly learning state exposes Pan/Zoom only and no undo/redo/delete annotation commands.
 - The read-only catalog contains six explicit contracts: Recipe interchange, YOLOv5 detection, local YOLOv8, U-Net segmentation, ONNX inference-only, and local YOLO11.
 - U-Net remains segmentation-only and uses the app-owned canonical raster-mask export. YOLO11 is verified for the recorded local detection, segmentation, and anomaly-classification paths. Its 104-image anomaly candidate remains `hold`; arbitrary YOLO11 forks/runtimes and production accuracy remain unverified.
+- This six-contract state supersedes the dated 2026-07-18 five-card,
+  blocked-YOLO11 catalog entry later in this historical journal. Retain the
+  older entry only as evidence of the original boundary, not as current status.
 
 Required gates:
 
@@ -68,7 +71,9 @@ Status: stable as of 2026-07-20 for cross-engine native test comparison cache cl
 
 ## Persistent-Adapter Anomaly Classification Evaluation
 
-Status: stable for large local YOLOv8 classification evaluation as of 2026-07-20. This is evaluator runtime and evidence-contract proof, not model-adoption proof.
+Status: stable for recorded local YOLOv8 and YOLO11 classification evaluation
+as of 2026-07-23. This is evaluator runtime and evidence-contract proof, not
+model-adoption proof.
 
 Protected behavior:
 
@@ -92,6 +97,11 @@ Latest evidence:
 PASS Two supplied images: persistent-adapter and legacy per-image paths returned identical class names and confidence values.
 PASS 600-image persistent-adapter run: 15,214ms total, 25.36ms/image.
 Evidence: artifacts\external-anomaly-evaluation\circular-disk-supplied-synthetic-1000-20260720-000459\evaluation-current-source-batch-timing\classification-evaluation-20260720-001826\classification-evaluation-summary.json
+PASS Same 104-image fingerprint at confidence 0.8: YOLOv8 90/104 and YOLO11
+82/104; both decisions remain hold.
+PASS Actual EXE reopened the YOLO11 profile/weight, inferred a held-out NG image
+as abnormal, and persisted Abnormal.
+Evidence: docs\YOLO11_ANOMALY_CLASSIFICATION_PREREQUISITE_AUDIT_20260723.md
 ```
 
 ## Task-Aware Model Runtime Profile Transition
@@ -1645,7 +1655,7 @@ Do not change these files casually:
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.AnnotationSegmentEdit.cs`
 - `1. Core/TemplateMatchingBatchAutoLabelService.cs`
 - `Yolo/YoloImageLabelStatusService.cs`
-- `0. UI/9) WPF/Services/WpfPolygonAnnotationService.cs`
+- `0. UI/9) WPF/Services/Annotation/WpfPolygonAnnotationService.cs`
 - `OpenVisionLab/Library/OpenVisionLab.ImageCanvas/ViewModel/RoiImageCanvasViewModel.cs`
 
 Required gates before reporting a change complete:
@@ -1699,9 +1709,9 @@ Protected behavior:
 Do not change these files casually:
 
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.AnnotationMask*.cs`
-- `0. UI/9) WPF/Services/WpfMaskAnnotationService.cs`
-- `0. UI/9) WPF/Services/WpfMaskEditStateService.cs`
-- `0. UI/9) WPF/Services/WpfMaskStrokeHistoryDraftService.cs`
+- `0. UI/9) WPF/Services/Annotation/WpfMaskAnnotationService.cs`
+- `0. UI/9) WPF/Services/Annotation/WpfMaskEditStateService.cs`
+- `0. UI/9) WPF/Services/Annotation/WpfMaskStrokeHistoryDraftService.cs`
 - `OpenVisionLab/Library/OpenVisionLab.ImageCanvas/ViewModel/RoiImageCanvasViewModel.cs`
 - `OpenVisionLab/Library/OpenVisionLab.ImageCanvas/ViewModel/RoiImageCanvasMaskOverlay.cs`
 
@@ -1835,7 +1845,7 @@ Protected behavior:
 
 Do not change these paths casually:
 
-- `0. UI/9) WPF/Services/WpfImageQueueSelectionService.cs`
+- `0. UI/9) WPF/Services/ImageQueue/WpfImageQueueSelectionService.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueue*.cs`
 - `0. UI/9) WPF/ViewModels/WpfImageQueuePanelViewModel.cs`
 - `0. UI/9) WPF/Views/WpfImageQueuePanel.xaml`
@@ -2168,12 +2178,12 @@ Do not change these paths casually:
 - `0. UI/9) WPF/Views/WpfCandidateReviewPanel.xaml`
 - `0. UI/9) WPF/Views/WpfStatusBarPanel.xaml`
 - `0. UI/9) WPF/ViewModels/WpfObjectReviewPanelViewModel.cs`
-- `0. UI/9) WPF/Services/WpfImageQueuePresenter.cs`
-- `0. UI/9) WPF/Services/WpfModelComparisonRunService.cs`
-- `0. UI/9) WPF/Services/WpfModelComparisonReviewService.cs`
-- `0. UI/9) WPF/Services/WpfObjectReview*.cs`
-- `0. UI/9) WPF/Services/WpfDatasetSamplePresetService.cs`
-- `0. UI/9) WPF/Services/WpfImageQueueFilterService.cs`
+- `0. UI/9) WPF/Services/ImageQueue/WpfImageQueuePresenter.cs`
+- `0. UI/9) WPF/Services/Model/WpfModelComparisonRunService.cs`
+- `0. UI/9) WPF/Services/Model/WpfModelComparisonReviewService.cs`
+- `0. UI/9) WPF/Services/ObjectReview/WpfObjectReview*.cs`
+- `0. UI/9) WPF/Services/Dataset/WpfDatasetSamplePresetService.cs`
+- `0. UI/9) WPF/Services/ImageQueue/WpfImageQueueFilterService.cs`
 - `0. UI/9) WPF/Views/WpfDatasetSetupWizardWindow.xaml`
 - `Yolo/YoloAnnotationService.cs`
 

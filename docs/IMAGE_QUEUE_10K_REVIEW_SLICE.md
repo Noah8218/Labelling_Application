@@ -32,7 +32,7 @@ Excluded scope:
 ### Direct modifications
 
 - `0. UI/9) WPF/Models/WpfImageQueueModels.cs` — lightweight catalog entry and shell-row construction.
-- `0. UI/9) WPF/Services/WpfImageQueueSelectionService.cs` — cancellation-aware enumeration/catalog creation.
+- `0. UI/9) WPF/Services/ImageQueue/WpfImageQueueSelectionService.cs` — cancellation-aware enumeration/catalog creation.
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueue.cs` — catalog request lifecycle, version guard, path index, and single queue replacement.
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueueCommands.cs` and `DatasetSetupCommands.cs` — operator commands use asynchronous catalog loading.
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueueDetailRefresh.cs` and `ImageQueueDetailRefreshLifecycle.cs` — bounded background detail batches, progress, cancellation, and final refresh.

@@ -145,18 +145,22 @@ MVVM 공용 기반은 `OpenVisionLab/Library/OpenVisionLab.Mvvm`입니다. WPF V
 
 ## WPF Services
 
-WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태 변환입니다.
+WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태 변환입니다. 물리 경로도 `Services` 바로 아래에 평면으로 두지 않고, 아래 도메인 하위 폴더와 일치시킵니다. namespace는 이동만으로 바꾸지 않습니다.
 
-| 그룹 | 대표 파일 | 역할 |
+| 경로 | 대표 파일 | 역할 |
 | --- | --- | --- |
-| Annotation | `WpfAnnotationHistoryService`, `WpfAnnotationWorkflowService`, `WpfAnnotationToolCapabilityService` | undo/redo snapshot, tool capability, workflow action mapping. |
-| Mask | `WpfMaskAnnotationService`, `WpfMaskEditStateService`, `WpfMaskStrokeCommitSession`, `WpfMaskStrokeHistoryDraftService` | brush/eraser CPU mask apply, FBO-preview 정책, stroke buffering, undo delta draft. |
-| Object Review | `WpfObjectReviewPresenter`, `WpfObjectReviewEditService`, `WpfObjectReviewSelectionService` | object row text, class/delete plan, selection policy. |
-| Candidate Review | `WpfCandidateReviewPresenter`, `WpfCandidateReviewStateService`, `WpfCandidateConfirmationService` | AI 후보 row/detail, review state, confirm/skip 정책. |
-| Image Queue | `WpfImageQueueSelectionService`, `WpfImageQueuePresenter`, `WpfImageQueueFilterService`, `WpfImageQueueDetailLoader` | 큐 선택, row 표시, 필터, detail load. |
-| Image Loading | `WpfImageDecodeService`, `WpfImageDecodeCacheService`, `WpfImageDecodePreloadService`, `WpfImageLoadDiagnosticsService` | 이미지 decode/cache/preload/diagnostics. |
-| Detection/Batch | `WpfDetectionTargetService`, `WpfDetectionResultPresentationService`, `WpfBatchDetectionProgressService`, `WpfDetectionWorkerCompletionWaiter` | 검출 target, result card, batch progress, worker wait. |
-| Project/Training | `WpfProjectRecipeService`, `WpfTrainingWeightsService`, `WpfTrainingGuideHistoryService`, `WpfWorkflowCommandStateService` | recipe path, latest weight, training guide history, command availability. |
+| `Services/Annotation` | `WpfAnnotation*`, `WpfMask*`, `WpfPolygonAnnotationService` | annotation/mask 편집 상태와 undo/redo. |
+| `Services/Anomaly` | `WpfAnomaly*` | anomaly 평가와 dashboard 표시. |
+| `Services/CandidateReview` | `WpfCandidateReview*`, `WpfCandidateConfirmationService` | AI 후보 row/detail, review state, confirm/skip 정책. |
+| `Services/Dataset` | `WpfDataset*`, `WpfRecipeDatasetVersionPresentationService` | dataset setup, 상태, 품질, version 표시. |
+| `Services/Detection` | `WpfDetection*`, `WpfBatchDetectionProgressService`, `WpfInferenceStatusPresentationService` | 검출 target, result card, batch progress, worker wait. |
+| `Services/ImageQueue` | `WpfImageQueue*`, `WpfImageDecode*`, `WpfImageLoad*` | 큐 선택/표시와 이미지 decode/cache/preload. |
+| `Services/Model` | `WpfModel*`, `WpfMobileSamBoxPromptService`, `WpfSegmentationAdapterComparisonRunService` | model catalog, 비교, runtime 안내. |
+| `Services/ObjectReview` | `WpfObjectReview*` | object row text, class/delete plan, selection policy. |
+| `Services/Project` | `WpfProjectRecipe*` | recipe path와 session 상태. |
+| `Services/Training` | `WpfTraining*`, `WpfWorkflow*` | training readiness/progress와 workflow command state. |
+| `Services/Runtime` | `WpfYolo*` | YOLO runtime/settings 상태와 command 표시. |
+| `Services/Infrastructure` | `WpfFileDialogService`, `WpfWorkspaceLayoutSettingsService` | WPF 공통 dialog와 workspace layout 설정. |
 
 새 UI 요구사항이 생기면 먼저 Presenter/Selection/State service로 분리할 수 있는지 봅니다. Shell partial에는 “어느 service를 언제 호출할지” 정도만 남기는 것이 목표입니다.
 
@@ -260,7 +264,22 @@ Python worker 통신은 `3. Communication/TCP`가 담당합니다.
 
 ## 테스트 구조
 
-`tests/LabelingApplication.Tests/Program.cs`는 단일 콘솔 테스트 러너입니다. 일반 실행은 전체 회귀를 돌리고, flag로 집중 smoke를 돌릴 수 있습니다.
+`tests/LabelingApplication.Tests/Program.cs`는 단일 콘솔 테스트 러너와 기존 호출을 위한 얇은 전달 메서드만 둡니다. 공통 테스트 도구는 `TestSupport.cs`가, 도메인 검증은 `Program.<Domain>.cs`의 독립 테스트 클래스가 소유합니다. 일반 실행은 전체 회귀를, flag는 집중 smoke를 실행합니다.
+
+- WPF UI: `Program.WpfShellStructure.cs` (`WpfShellStructureTests`), `Program.WpfSettingsViewModels.cs` (`WpfSettingsViewModelTests`), `Program.WpfReviewServices.cs` (`ReviewServicesTests`), `Program.WpfTrainingDatasetReadiness.cs` (`WpfTrainingDatasetReadinessTests`)
+- Image Queue: `Program.ImageQueueWorklist.cs` (`ImageQueueWorklistTests`), `Program.ImageQueueOperatorProfile.cs` (`ImageQueueOperatorProfileTests`)
+- EXE workflow smoke: `Program.ExeImageQueueWorklistSmoke.cs` (`ExeImageQueueWorklistSmokeTests`), `Program.ExeLabelCreateQueueLocalitySmoke.cs` (`ExeLabelCreateQueueLocalitySmokeTests`), `Program.ExeYoloV8DetectRestartSmoke.cs` (`ExeYoloV8DetectRestartSmokeTests`), `Program.ExeYoloV8AnomalyRestartSmoke.cs` (`ExeYoloV8AnomalyRestartSmokeTests`), `Program.ExeExternalEvaluationDataAuditSmoke.cs` (`ExeExternalEvaluationDataAuditSmokeTests`), and `Program.ExeCircularSegmentationWorkflow.cs` (`ExeCircularSegmentationWorkflowTests`). The shared UI Automation surface remains an explicit internal harness contract in `Program`.
+- Recipe Dataset Version: `Program.RecipeDatasetVersion.cs` (`RecipeDatasetVersionTests`; deterministic identity/history contract, current-source visual capture, and actual-EXE visibility smoke)
+- 모델·학습: `Program.ModelAdapterCatalog.cs` (`ModelAdapterCatalogTests`), `Program.WpfModelComparison.cs` (`WpfModelComparisonTests`), `Program.WpfSegmentationAdapterComparison.cs` (`WpfSegmentationAdapterComparisonTests`), `Program.ModelRegistry.cs` (`ModelRegistryTests`), `Program.WpfTrainingWeights.cs` (`WpfTrainingWeightsTests`), `Program.WpfTrainingGuideHistory.cs` (`WpfTrainingGuideHistoryTests`)
+- Real training evidence runners: `Program.RealExternalYoloDatasetTraining.cs` (`RealExternalYoloDatasetTrainingSmokeTests`), `Program.RealYoloV8AnomalyFolderTraining.cs` (`RealYoloAnomalyFolderTrainingSmokeTests`). `TestSupport.cs` owns their shared Python process launcher, logging, termination, and source-tree snapshot helpers.
+- 이상 분류: `Program.AnomalyClassification.cs` (`AnomalyClassificationTests` 독립 테스트 클래스)
+- Anomaly queue focus: `Program.AnomalyQueueFocusSmoke.cs` (`AnomalyQueueFocusSmokeTests`; the shared WPF capture helper remains in `Program`)
+- Segmentation: `Program.UnetSegmentationDatasetExport.cs` (`UnetSegmentationDatasetExportTests`; owns the reusable canonical U-Net fixture family), `Program.SegmentationMaskComparison.cs` (`SegmentationMaskComparisonTests`), `Program.ExternalYoloSegmentationCanonicalExport.cs` (`ExternalYoloSegmentationCanonicalExportTests`), `Program.WpfSegmentationAdapterComparison.cs` (`WpfSegmentationAdapterComparisonTests`), `Program.RealUnetSegmentationRuntime.cs` (`RealUnetSegmentationRuntimeSmokeTests`; shared worker-process harness remains in `Program`), `Program.RealUltralyticsSegmentationPredictionExport.cs` (`RealUltralyticsSegmentationPredictionExportSmokeTests`), `Program.RealExternalSegmentationAdapterComparison.cs` (`RealExternalSegmentationAdapterComparisonSmokeTests`), `Program.SegmentationTemplateContourMigration.cs` (`SegmentationTemplateContourMigrationTests`)
+- MobileSAM: `Program.MobileSamBoxPrompt.cs` (`MobileSamBoxPromptTests`; contract, opt-in real prompt, and visual-smoke adapter), `Program.MobileSamUsabilityMatrix.cs` (`MobileSamUsabilityMatrixTests`; synthetic usability and prompt-jitter evidence)
+- External YOLO intake: `Program.ExternalYoloDatasetIntake.cs` (`ExternalYoloDatasetIntakeTests`; native and split-list source contracts). Shared immutable-source snapshot helpers belong to `TestSupport.cs`.
+- YOLO 데이터셋·주석·이미지 상태: `Program.DatasetHealth.cs` (`DatasetHealthTests`), `Program.YoloAnnotations.cs` (`YoloAnnotationsTests`), `Program.YoloDatasetQualityAudit.cs` (`YoloDatasetQualityAuditTests`), `Program.YoloDatasetReadiness.cs` (`YoloDatasetReadinessTests`와 `DatasetReadinessTestFixtures`), `Program.YoloImageReviewStatus.cs` (`YoloImageReviewStatusTests`는 독립 테스트 클래스)
+- 템플릿 자동 라벨: `Program.TemplateAutoLabel.cs` (`TemplateAutoLabelTests` 독립 테스트 클래스)
+- 외부 형식 상호변환: `Program.CocoDetection.cs`, `Program.CocoSegmentation.cs`, `Program.PascalVocDetection.cs`, `Program.LabelStudioDetection.cs`, `Program.LabelStudioSegmentation.cs`, `Program.Cvat.cs`, `Program.DatasetInterchangeCapability.cs` (각 파일은 독립 테스트 클래스)
 
 대표 명령:
 

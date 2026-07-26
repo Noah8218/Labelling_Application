@@ -147,7 +147,7 @@ Purpose:
 
 Examples of files in this broader scope:
 
-- Many `0. UI/9) WPF/Services/*.cs`
+- Many `0. UI/9) WPF/Services/**/*.cs`
 - Many `0. UI/9) WPF/ViewModels/*.cs`
 - Many `0. UI/9) WPF/Views/WpfLabelingShellWindow.*.cs`
 - `1. Core/ModelRegistryService.cs`

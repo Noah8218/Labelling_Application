@@ -2,6 +2,29 @@
 
 Date: 2026-07-13
 
+## Latest Handoff Reconciliation (2026-07-24)
+
+Status: `Complete` for the documented local-workstation feature scope at commit
+`ad569dc`; this is not a production-model adoption claim.
+
+- Recipe Dataset Version v2, anomaly Recipe/adapter truth alignment, and the
+  recorded local YOLO11 anomaly-classification runtime are committed and pushed.
+- The complete local workflow covers Recipe/dataset setup, class configuration,
+  image queue and 10K Worklist, object/segmentation/anomaly labeling, template
+  and MobileSAM-assisted review, declared-adapter training/inference, candidate
+  review, model comparison, provenance, and adoption guards.
+- The incomplete quality work is evidence-limited: independent
+  provenance-confirmed camera/cross-session detection, segmentation, and
+  balanced anomaly held-outs are unavailable. Synthetic/same-source comparisons
+  prove workflow and regression behavior but not field accuracy.
+- Shared/network-storage queue profiling remains deferred. Accounts, reviewer
+  assignment, comments, cloud sync, deployment, PLC/fleet control,
+  video/3D/keypoints, and generic arbitrary-model execution remain outside the
+  approved local single-operator product scope.
+- Focused single-operator workflow maturity remains `4.0/5`; general commercial
+  labeling-suite parity remains `3.1/5`; intentional enterprise/team-platform
+  parity remains `1.2/5`. These are workflow/scope estimates, not accuracy.
+
 This audit answers one product question: when compared with established labeling tools, which parts of OpenVisionLab Labeling Studio are mature enough to stop revisiting, and which gaps should drive the next development work.
 
 The score below is product completeness, not code quality. A lower score can still be acceptable when the feature is outside the current product goal.
@@ -230,7 +253,7 @@ Labelbox sets an ontology and workforce baseline: reusable ontologies, projects,
 | Object-detection box labeling | 4.5 | Protected MVP. Real EXE smoke and save/reopen gates exist. Avoid changing ROI/viewer paths without rerunning focused gates. |
 | Image queue, completion, reopen | 4 | Verified and protected. Empty-normal completion is done for object-detection use. |
 | Object review and candidate review | 4 | Strong local review workflow. Continue only when tied to model comparison, anomaly, or export evidence. |
-| Local YOLO training and current inference | 4.0 | YOLOv5 and local-source YOLOv8 task-aware training/inference are verified for the intended workstation workflow. YOLO11 remains runtime/weight gated and multi-backend parity is not claimed. |
+| Local YOLO training and current inference | 4.1 | YOLOv5 and local-source YOLOv8 task-aware training/inference are verified for the intended workstation workflow. Recorded local YOLO11 detection, segmentation, and anomaly-classification paths are also verified, while compatible task weights/live capability still gate execution and multi-backend parity is not claimed. |
 | Model registry/history/comparison | 3.8 | Strong local model-decision surface, including a YOLOv8/YOLO11 Ultralytics segmentation validation path, Candidate Review polygon examples, and fail-closed adoption guards for insufficient background evidence, low UI-threshold positive coverage, excessive background candidates, or incomplete image-level results. The current inspection confidence must now match the comparison summary confidence; a mismatch disables Model Center save and blocks recipe/adoption-history persistence. A circular-fixture operating-selected YOLOv8 candidate passes at confidence 0.20, but this remains a local artifact workflow rather than a general registry service for future backends. |
 | Segmentation annotation | 4.2 | Polygon/brush/eraser save/export foundations are present and verified, COCO, Label Studio, plus CVAT polygon exports/imports now exist, YOLOv8/YOLO11 segmentation inference polygons can be preserved by worker/protocol and explicit smoke-result parsing, and model polygons can be confirmed as saved segmentation labels. The local `C:\Git\yolov8` adapter now also preserves `result.masks.xy` as candidate polygon metadata, matching the bundled worker contract. The Ultralytics training request contract now sends segmentation datasets as `segment` training with task-specific `yolov8n-seg.pt` and `yolo11n-seg.pt` packet plus fake-worker training coverage, and app segment JSON polygons are now converted into Ultralytics YOLO segmentation `labels/*.txt` lines before training starts. The worker now prefers matching cached task weights from the model root, reports resolved training weights plus runtime-ready/runtime-blocked and download-required/runtime-blocked-missing task-weight cache inventory through status/detail diagnostics, blocks implicit training weight downloads without explicit request approval, verifies all explicit worker opt-in aliases through fake training only, focused C# packet tests verify no download approval flag is sent, reports YOLO11 only when the selected Ultralytics runtime supports it, and the bundled smoke-test CLI now reports unsupported adapter/runtime blockers such as missing YOLO11 `C3k2` before model load. The local YOLOv8 worker has now completed tiny 1-epoch segmentation training smokes, including one app-generated dataset fixture and the corrected `runs/segment/.../weights/best.pt` output path, loaded generated `best.pt` files through its inference smoke path, the app connection path now prefers trained `best.pt` over pretrained seed weights including the newest app-generated `runs/segment` smoke, post-training selection reads YOLOv8 `args.yaml` current-dataset metadata for segmentation runs, including an app-generated segmentation `data.yaml` staging fixture, a real TCP workflow smoke verifies app-fixture polygon candidate confirmation saves non-empty segment JSON plus mask PNG artifacts, the model comparison runner can now validate local Ultralytics segmentation candidates against a held-out split, and the real EXE parent-folder workflow now selects the operator `images` folder with `OK`/`NG` children, labels NG masks, includes OK empty-label background samples, trains YOLOv8 SEG, applies `best.pt`, restarts stale Python workers when weights change, and completes current-image inference with an `NG` candidate from the trained model. Production accuracy remains a separate gate. |
 | Operational SEG model quality | 2.8 | Runtime, contour transport, comparison, and adoption plumbing are present, but 120/125 current OK labels are four-point rectangles and there is no independent production-camera/cross-session evidence. Correct labels and rerun the unchanged held-out comparison before adoption claims. |
@@ -524,14 +547,31 @@ Approved direction as of 2026-07-15:
 
 ## Next Development Recommendation
 
-The bounded shell, `Evaluation data evidence` surface, and controlled Test01 engine comparison are complete. The user is currently unable to acquire or train data, so avoid speculative UI expansion before operator use and keep data-dependent model work gated:
+The bounded shell, `Evaluation data evidence` surface, controlled Test01 engine
+comparison, 10K review Worklist, Recipe Dataset Version v2, and the declared
+YOLO11 runtime slices are complete. Avoid speculative UI/model expansion and
+keep the next work evidence-gated:
 
-1. Use the completed `Model Center > Data` evidence surface with an existing recipe when possible. Add a local review/rework worklist only if that operator use proves the existing image-level review state insufficient; do not prebuild per-object persistence.
-2. Keep the frozen Test01 `85/20/20` snapshot, five-repeat report, threshold review, native comparison chart, and current model-neutral catalog as the scoped regression baseline. Do not add a chart dependency or rerun the older 97/28 validation-only comparison as primary evidence.
-3. When independent data becomes available, acquire a new production-camera or cross-session NG-rich object-detection set and run the same frozen-snapshot/fingerprint/five-repeat path before production adoption; the hash-identical `Test02` copy is not new evidence.
-4. Then collect an independent production-camera or cross-session normal/abnormal set and rerun the unchanged anomaly evaluation guard. Existing runtime/restart and same-source circular-defect smokes are already complete and should not be repeated as production proof.
-5. Keep the verified compact context header, task-specific left-panel tabs, fixed annotation-tool rail, splitters, completed SEG annotation, queue, Viewer/OpenGL, runtime, profile persistence, and model-neutral benchmark paths stable. Use `C:\Git\OpenVisionLab_Dev` WPF-UI/AvalonDock patterns only when a future bounded pane requirement proves native controls insufficient.
-6. Keep the completed MobileSAM box slice and fixed box-jitter gate stable. Point/negative refinement waits for a reproduced operator failure; collaboration/workforce, video/3D/keypoints, broad API/platform work, and Labelbox NDJSON remain deferred.
+1. If a concrete operator defect is reproduced, fix that bounded workflow and
+   rerun its protected gate. Do not add another queue, catalog, or broad UI
+   system without such evidence.
+2. When an approved NG-rich object-detection camera/session source with
+   trustworthy boxes becomes available, create a content-separated held-out
+   split and rerun the frozen fingerprint/comparison/error-review path.
+3. When balanced independent normal/abnormal camera-session data becomes
+   available, keep it outside training initially and rerun the unchanged
+   anomaly evaluation guard. The fixed 104-image synthetic test already places
+   YOLOv8 at `90/104` and YOLO11 at `82/104`; both remain `hold` and must not be
+   tuned on that test.
+4. Use independent mask evidence for any future segmentation production claim.
+   The fixed same-source comparison is regression evidence only: U-Net
+   `0.243091` Dice, YOLOv8-seg `0.721702`, and YOLO11-seg `0.773711`.
+5. Keep the verified compact shell, task tabs, annotation rail, splitters,
+   queue/Worklist, Viewer/OpenGL, runtime profiles, comparison, MobileSAM box
+   slice, and Model Center contracts stable.
+6. Shared/network-storage profiling remains deferred until an approved source
+   exists. Collaboration/workforce, video/3D/keypoints, broad cloud/platform
+   work, and generic arbitrary-model execution remain out of scope.
 
 The evidence-surface slice does not replace independent model data. It only makes the existing missing-data condition and integrity checks easier to discover.
 

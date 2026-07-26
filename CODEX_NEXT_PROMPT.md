@@ -24,10 +24,12 @@ Required start order:
 
 Current checkpoint:
 - Workspace: C:\Git\Labelling_Application
-- Branch: main. The verified relocation/runtime closure is committed as
-  `0f1f91bdd11b28f311826e2b757357296e7c639e`; local `HEAD` and `origin/main`
-  matched after the explicit 2026-07-23 push. Verify live hashes before work and
-  do not push again without a new explicit request.
+- Branch: main. The latest verified feature closure is committed as
+  `ad569dcd009c836a1cab23d637d6e10186ec7043`; local `HEAD` and `origin/main`
+  matched after the explicit 2026-07-24 push. It includes Recipe Dataset
+  Version v2, Recipe/anomaly/adapter truth alignment, and the recorded local
+  YOLO11 anomaly-classification closure. Verify live hashes before work and do
+  not push again without a new explicit request.
 - The temporary `C:\새 폴더\OpenVisionLab-Labeling-Studio_TEST` clone was deleted
   after the original path independently passed Dataset wizard, Worklist, and
   YOLOv8 restart/inference EXE smokes. Develop only in
@@ -47,6 +49,10 @@ Product direction:
 - The supplied circular-disk 500 OK / 500 NG package is complete synthetic workflow evidence: exact metadata-backed 5-class detection data, YOLOv5/YOLOv8 one-epoch connectivity, a controlled 20-epoch 150-image test benchmark, and a new 20-epoch anomaly candidate. The anomaly candidate remains `hold`; the detection benchmark favors YOLOv8n (`mAP50/mAP50-95 0.955/0.678`, 27.575ms) over YOLOv5s (`0.900/0.567`, 52.45ms) but is explicitly `engine-benchmark`, not adoption. The fixed comparison cleanup preserves the exact source-tree SHA-256. The package is derived from one earlier OK source image; do not present it as independent camera evidence. Read `docs/CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
 
 Current immediate priority:
+- No new implementation is justified from the current evidence alone. First
+  check for a newly reproduced operator defect, a failed protected gate, a
+  changed approved contract, or newly approved independent data. Do not reopen
+  a completed slice merely to create work.
 - The approved YOLO11 anomaly-classification runtime slice is complete. The
   official classification seed, one-epoch connectivity, 20-epoch app/TCP
   training, fixed 104-image evaluation, Model Center evaluation route, and
@@ -58,7 +64,7 @@ Current immediate priority:
   production-camera/cross-session normal and abnormal images with provenance
   and content-overlap checks. Until that prerequisite exists, do not spend
   model tokens repeating same-source synthetic training.
-- Recipe Dataset Version v2 is complete in the current worktree. It hashes exact
+- Recipe Dataset Version v2 is complete and committed/pushed in `ad569dc`. It hashes exact
   recipe-owned image/annotation content, ordered classes, and split ownership;
   records immutable metadata-only history; links training/model history to that
   identity; and passed current-source plus actual-EXE evidence. Do not reopen it
