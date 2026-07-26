@@ -54,7 +54,7 @@
 
 | 책임 | 위치 |
 | --- | --- |
-| 목적 선택과 tool summary | `0. UI/9) WPF/ViewModels/WpfLearningWorkflowPanelViewModel.cs` |
+| 목적 선택과 tool summary | `0. UI/9) WPF/ViewModels/Shell/WpfLearningWorkflowPanelViewModel.cs` |
 | 목적 적용/annotation visibility | `0. UI/9) WPF/Views/WpfLabelingShellWindow.LearningWorkflowModeCommands.cs`, `ShellProjectSettings.cs` |
 | polygon 편집 | `0. UI/9) WPF/Services/Annotation/WpfPolygonAnnotationService.cs` |
 | brush/eraser mask 편집 | `0. UI/9) WPF/Services/Annotation/WpfMaskAnnotationService.cs`, `WpfMaskEditStateService.cs`, `WpfMaskStrokeCommitSession.cs` |

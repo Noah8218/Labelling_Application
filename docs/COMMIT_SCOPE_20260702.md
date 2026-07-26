@@ -93,8 +93,8 @@ Purpose:
 Files:
 
 - `0. UI/9) WPF/Models/WpfImageQueueModels.cs`
-- `0. UI/9) WPF/ViewModels/WpfImageQueuePanelViewModel.cs`
-- `0. UI/9) WPF/ViewModels/WpfObjectReviewPanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfImageQueuePanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfObjectReviewPanelViewModel.cs`
 - `0. UI/9) WPF/Views/WpfObjectReviewPanel.xaml`
 - `0. UI/9) WPF/Views/WpfObjectReviewPanel.xaml.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.AnnotationPersistence.cs`
@@ -148,7 +148,7 @@ Purpose:
 Examples of files in this broader scope:
 
 - Many `0. UI/9) WPF/Services/**/*.cs`
-- Many `0. UI/9) WPF/ViewModels/*.cs`
+- Many `0. UI/9) WPF/ViewModels/*/*.cs`
 - Many `0. UI/9) WPF/Views/WpfLabelingShellWindow.*.cs`
 - `1. Core/ModelRegistryService.cs`
 - `1. Core/TemplateMatchingAutoLabelService.cs`
@@ -291,7 +291,7 @@ git add -p docs/WORK_TRACKING.md
 3. Saved-label UX only:
 
 ```powershell
-git add -p "0. UI/9) WPF/Models/WpfImageQueueModels.cs" "0. UI/9) WPF/ViewModels/WpfImageQueuePanelViewModel.cs" "0. UI/9) WPF/ViewModels/WpfObjectReviewPanelViewModel.cs" "0. UI/9) WPF/Views/WpfObjectReviewPanel.xaml" "0. UI/9) WPF/Views/WpfObjectReviewPanel.xaml.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.AnnotationPersistence.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueueDetailRefresh.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueueReviewStatus.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelAccessors.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.ReviewPanels.cs" tests/LabelingApplication.Tests/Program.cs docs/WORK_TRACKING.md docs/STABLE_VERIFIED_AREAS.md
+git add -p "0. UI/9) WPF/Models/WpfImageQueueModels.cs" "0. UI/9) WPF/ViewModels/Labeling/WpfImageQueuePanelViewModel.cs" "0. UI/9) WPF/ViewModels/Labeling/WpfObjectReviewPanelViewModel.cs" "0. UI/9) WPF/Views/WpfObjectReviewPanel.xaml" "0. UI/9) WPF/Views/WpfObjectReviewPanel.xaml.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.AnnotationPersistence.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueueDetailRefresh.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueueReviewStatus.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelAccessors.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.ReviewPanels.cs" tests/LabelingApplication.Tests/Program.cs docs/WORK_TRACKING.md docs/STABLE_VERIFIED_AREAS.md
 git diff --cached --stat
 git diff --cached --name-status
 ```

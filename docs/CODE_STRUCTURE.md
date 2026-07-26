@@ -96,7 +96,7 @@ flowchart TD
 | 경로 | 역할 |
 | --- | --- |
 | `Views` | XAML/UserControl/Window. 화면 요소와 shell partial orchestration. |
-| `ViewModels` | WPF 패널 상태, command state, 표시 텍스트, selected item, enabled state. |
+| `ViewModels` | WPF 패널 상태, command state, 표시 텍스트, selected item, enabled state. `Shell`, `Labeling`, `Dataset`, `Model`의 네 소유 도메인으로 구성. |
 | `Services` | WPF 경계에서 필요한 테스트 가능 로직. presenter, selection, image load, annotation workflow, mask/ROI state 등. |
 | `Models` | WPF 전용 표시 모델. 예: image queue row/filter model. |
 | `Interop` | 기존 진입점에서 WPF shell을 여는 얇은 bridge. |
@@ -129,19 +129,16 @@ ViewModel은 가능하면 이름에 `ViewModel`을 명시합니다. UserControl�
 
 대표 ViewModel:
 
-| 파일 | 역할 |
-| --- | --- |
-| `WpfLabelingShellViewModels.cs` | shell이 사용하는 panel ViewModel 묶음. |
-| `WpfLearningWorkflowPanelViewModel.cs` | dataset purpose, annotation tool palette, tutorial/workflow step 상태. |
-| `WpfImageQueuePanelViewModel.cs` | 이미지 큐 필터, 검색, 선택, 버튼 상태. |
-| `WpfCanvasPanelViewModel.cs` | 캔버스 상단 상태/워크플로우 표시. |
-| `WpfObjectReviewPanelViewModel.cs` | 현재 객체 목록, 선택, class 적용/delete 상태. |
-| `WpfCandidateReviewPanelViewModel.cs` | AI 후보 목록, 선택 후보 detail, confirm/skip 상태. |
-| `WpfYoloStatusPanelViewModel.cs` | YOLO runtime/settings/command 상태. |
-| `WpfProjectConfigPanelViewModel.cs` | recipe/config/manifest path 표시와 선택 상태. |
-| `WpfTrainingSettingsPanelViewModel.cs` | 학습 parameter editor 상태. |
+| 경로 | 대표 파일 | 역할 |
+| --- | --- | --- |
+| `ViewModels/Shell` | `WpfLabelingShellViewModel`, `WpfLearningWorkflowPanelViewModel`, `WpfLearningWorkflowItems` | shell composition, workflow navigation, 공통 status/log 상태와 workflow 표시 item. |
+| `ViewModels/Labeling` | `WpfCanvasPanelViewModel`, `WpfImageQueuePanelViewModel`, review ViewModel | 라벨 편집, 이미지 큐, 후보/객체 검토 상태. |
+| `ViewModels/Dataset` | `WpfDatasetSetupWizardViewModel`, `WpfProjectConfigPanelViewModel` | 데이터셋 선택·건강 상태와 Recipe/config 상태. |
+| `ViewModels/Model` | `WpfTrainingSettingsPanelViewModel`, `WpfYoloModelSettingsPanelViewModel`, `WpfModelBenchmarkViewModel`, `WpfModelBenchmarkItems` | 학습, 실행기 설정, 모델 비교 상태와 benchmark row/item 표시 모델. |
 
 MVVM 공용 기반은 `OpenVisionLab/Library/OpenVisionLab.Mvvm`입니다. WPF ViewModel은 `WpfObservableViewModel`을 통해 shared observable/command infrastructure를 사용합니다.
+
+StatusBar, ProjectConfig, YOLO 설정/명령 상태는 shell이 해당 ViewModel만 갱신하고 XAML binding이 control에 전달합니다. 이 경로에 `TextBlock.Text`나 `ProgressBar.Visibility` 직접 쓰기 fallback을 다시 추가하지 않습니다. focus, theme, animation처럼 실제 control 수명주기가 필요한 작업만 View adapter에 남깁니다.
 
 ## WPF Services
 

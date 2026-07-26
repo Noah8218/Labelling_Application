@@ -32,7 +32,7 @@ Excluded scope:
 ### New, slice-owned files
 
 - `Yolo/YoloDatasetHealthService.cs`
-- `0. UI/9) WPF/ViewModels/WpfDatasetHealthViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Dataset/WpfDatasetHealthViewModel.cs`
 - `0. UI/9) WPF/Views/WpfDatasetHealthWindow.xaml`
 - `0. UI/9) WPF/Views/WpfDatasetHealthWindow.xaml.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.DatasetHealth.cs`
@@ -40,7 +40,7 @@ Excluded scope:
 
 ### Direct modifications
 
-- `0. UI/9) WPF/ViewModels/WpfLabelingShellViewModel.cs` — opens the owned analysis window through a command.
+- `0. UI/9) WPF/ViewModels/Shell/WpfLabelingShellViewModel.cs` — opens the owned analysis window through a command.
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.cs` — command binding.
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ShellStatus.cs` and `ShellLifecycle.cs` — theme propagation and owner-close cleanup.
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.xaml` — Model Center `데이터 > 분석` entry only.

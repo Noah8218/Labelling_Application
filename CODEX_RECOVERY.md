@@ -145,7 +145,7 @@ YOLO 방향:
 - `Yolo/YoloAnnotationService.cs`
   - `SaveAnnotations`에 `sourceImagePath` optional parameter 추가.
   - 배치 저장 시 현재 active image가 아닌 대상 이미지의 확장자를 유지.
-- `0. UI/9) WPF/ViewModels/WpfTemplateMatchingAutoLabelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfTemplateMatchingAutoLabelViewModel.cs`
   - 현재 이미지 템플릿 후보 찾기 Command.
   - 큐 템플릿 배치 Command.
   - 배치 루프, 진행 상태 집계, 로그 흐름 담당.
@@ -207,10 +207,10 @@ Auto labeling / template matching:
 - `1. Core/TemplateMatchingAutoLabelService.cs`
 - `1. Core/TemplateMatchingBatchAutoLabelService.cs`
 - `Yolo/YoloAnnotationService.cs`
-- `0. UI/9) WPF/ViewModels/WpfTemplateMatchingAutoLabelViewModel.cs`
-- `0. UI/9) WPF/ViewModels/WpfLabelingShellViewModels.cs`
-- `0. UI/9) WPF/ViewModels/WpfLabelingShellViewModel.cs`
-- `0. UI/9) WPF/ViewModels/WpfImageQueuePanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfTemplateMatchingAutoLabelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Shell/WpfLabelingShellViewModels.cs`
+- `0. UI/9) WPF/ViewModels/Shell/WpfLabelingShellViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfImageQueuePanelViewModel.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.TemplateMatchingCommands.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.ImageQueue.cs`

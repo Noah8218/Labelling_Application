@@ -148,7 +148,7 @@ Files include:
 - 1. Core/AnomalyImageReviewStatusService.cs
 - 1. Core/AnomalyClassificationTrainingReadinessService.cs
 - Yolo/AnomalyClassificationDatasetExportService.cs
-- 0. UI/9) WPF/ViewModels/WpfImageQueuePanelViewModel.cs
+- 0. UI/9) WPF/ViewModels/Labeling/WpfImageQueuePanelViewModel.cs
 - 0. UI/9) WPF/Views/WpfImageQueuePanel.xaml
 - 0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueue.cs
 - 0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.ImageQueue.cs
@@ -203,7 +203,7 @@ Review the isolated file ownership, latest-request-wins contract, shared-file hu
 
 Committed files include:
 
-- 0. UI/9) WPF/ViewModels/WpfDatasetHealthViewModel.cs
+- 0. UI/9) WPF/ViewModels/Dataset/WpfDatasetHealthViewModel.cs
 - 0. UI/9) WPF/Views/WpfDatasetHealthWindow.xaml
 - 0. UI/9) WPF/Views/WpfDatasetHealthWindow.xaml.cs
 - 0. UI/9) WPF/Views/WpfLabelingShellWindow.DatasetHealth.cs

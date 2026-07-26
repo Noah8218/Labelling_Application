@@ -104,7 +104,7 @@ Completed: the Guide training-result card now shows the model-comparison basis b
 
 | 책임 | 위치 |
 | --- | --- |
-| 학습 설정 ViewModel | `0. UI/9) WPF/ViewModels/WpfTrainingSettingsPanelViewModel.cs` |
+| 학습 설정 ViewModel | `0. UI/9) WPF/ViewModels/Model/WpfTrainingSettingsPanelViewModel.cs` |
 | 학습 weight/results.csv 검색과 비교 문구 | `0. UI/9) WPF/Services/Training/WpfTrainingWeightsService.cs` |
 | 학습 guide history | `0. UI/9) WPF/Services/Training/WpfTrainingGuideHistoryService.cs` |
 | 학습 command orchestration | `0. UI/9) WPF/Views/WpfLabelingShellWindow.Training*.cs`, `ProjectTrainingWeights.cs` |

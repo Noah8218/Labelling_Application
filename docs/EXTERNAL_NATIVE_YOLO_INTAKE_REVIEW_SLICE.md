@@ -36,7 +36,7 @@ It is not a source-data quality assessment, a model-quality evaluation, a model-
 - `1. Core/LabelingProjectSettings.cs` — persisted external profile and provenance fields.
 - `1. Core/YoloTrainingWorkflowService.cs` — explicit external preparation, source-identity fail-closed check, and provenance recording.
 - `3. Communication/TCP/CCommunicationLearning.cs` and `3. Communication/TCP/LearningProtocol.cs` — native YAML/task/run packet fields.
-- `0. UI/9) WPF/ViewModels/WpfLearningWorkflowPanelViewModel.cs` and `WpfTrainingSettingsPanelViewModel.cs` — explicit selection/activation presentation and external split wording.
+- `0. UI/9) WPF/ViewModels/Shell/WpfLearningWorkflowPanelViewModel.cs` and `WpfTrainingSettingsPanelViewModel.cs` — explicit selection/activation presentation and external split wording.
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.cs`, `PanelWiring.LearningWorkflow.cs`, `TrainingStatus.cs`, `YoloTrainingCommands.cs`, `WpfLabelingShellWindow.xaml`, and `WpfLabelingShellWindow.xaml.cs` — Model Center data card, command wiring, persisted status refresh, and save boundary.
 - `Runtime/Python/openvisionlab_ultralytics_worker.py` — `data_yaml_working_directory` and `label_cache_directory` only.
 

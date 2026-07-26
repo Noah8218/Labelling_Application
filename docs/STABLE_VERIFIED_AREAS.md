@@ -1847,7 +1847,7 @@ Do not change these paths casually:
 
 - `0. UI/9) WPF/Services/ImageQueue/WpfImageQueueSelectionService.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueue*.cs`
-- `0. UI/9) WPF/ViewModels/WpfImageQueuePanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfImageQueuePanelViewModel.cs`
 - `0. UI/9) WPF/Views/WpfImageQueuePanel.xaml`
 - `Yolo/YoloAnnotationService.cs`
 - `Yolo/YoloDatasetSplitService.cs`
@@ -1889,7 +1889,7 @@ Do not change these paths casually:
 
 - `0. UI/9) WPF/Views/WpfImageQueuePanel.xaml`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.xaml`
-- `0. UI/9) WPF/ViewModels/WpfLabelingShellViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Shell/WpfLabelingShellViewModel.cs`
 - `tests/LabelingApplication.Tests/Program.cs`
 
 Required gates before reporting a change complete:
@@ -1935,11 +1935,11 @@ Protected behavior:
 
 Do not change these paths casually:
 
-- `0. UI/9) WPF/ViewModels/WpfCanvasPanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfCanvasPanelViewModel.cs`
 - `0. UI/9) WPF/Views/WpfCanvasPanel.xaml`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ClassCatalog.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.Canvas.cs`
-- `0. UI/9) WPF/ViewModels/WpfClassCatalogPanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfClassCatalogPanelViewModel.cs`
 - `0. UI/9) WPF/Views/WpfClassCatalogPanel.xaml`
 - `Yolo/ClassCatalogService.cs`
 
@@ -1991,7 +1991,7 @@ Do not change these paths casually:
 - `scripts/smoke-yolo-tcp.ps1`
 - `scripts/compare-yolo-models.ps1`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.WorkflowCommandStateFanout.cs`
-- `0. UI/9) WPF/ViewModels/WpfLearningWorkflowPanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Shell/WpfLearningWorkflowPanelViewModel.cs`
 
 Required gates before reporting a change complete:
 
@@ -2023,7 +2023,7 @@ Protected behavior:
 Do not change these paths casually:
 
 - `0. UI/9) WPF/Views/WpfCandidateReviewPanel.xaml`
-- `0. UI/9) WPF/ViewModels/WpfCandidateReviewPanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfCandidateReviewPanelViewModel.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.CandidateReview*.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.AnnotationPersistence.cs`
 - `Yolo/YoloImageReviewStatusService.cs`
@@ -2051,7 +2051,7 @@ Protected behavior:
 Do not change these paths casually:
 
 - `0. UI/9) WPF/Views/WpfLearningWorkflowPanel.xaml`
-- `0. UI/9) WPF/ViewModels/WpfLearningWorkflowPanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Shell/WpfLearningWorkflowPanelViewModel.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.WorkflowTrainingGuideCommands.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.LearningWorkflow.cs`
 
@@ -2086,7 +2086,7 @@ Protected behavior:
 Do not change these paths casually:
 
 - `0. UI/9) WPF/Views/WpfLearningWorkflowPanel.xaml`
-- `0. UI/9) WPF/ViewModels/WpfLearningWorkflowPanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Shell/WpfLearningWorkflowPanelViewModel.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.TrainingGuideStatus.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.LearningWorkflow.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.WorkflowTrainingGuideCommands.cs`
@@ -2177,7 +2177,7 @@ Do not change these paths casually:
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ImageQueue*.cs`
 - `0. UI/9) WPF/Views/WpfCandidateReviewPanel.xaml`
 - `0. UI/9) WPF/Views/WpfStatusBarPanel.xaml`
-- `0. UI/9) WPF/ViewModels/WpfObjectReviewPanelViewModel.cs`
+- `0. UI/9) WPF/ViewModels/Labeling/WpfObjectReviewPanelViewModel.cs`
 - `0. UI/9) WPF/Services/ImageQueue/WpfImageQueuePresenter.cs`
 - `0. UI/9) WPF/Services/Model/WpfModelComparisonRunService.cs`
 - `0. UI/9) WPF/Services/Model/WpfModelComparisonReviewService.cs`

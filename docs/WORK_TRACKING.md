@@ -1,6 +1,122 @@
 # Work Tracking
 
-Last updated: 2026-07-24
+Last updated: 2026-07-26
+
+## 2026-07-26 bound status state ownership
+
+- Status: `Complete`
+- Scope:
+  - Remove unreachable direct-control fallbacks from StatusBar, ProjectConfig,
+    YOLO settings, and YOLO command status updates.
+  - Keep view-specific theme, focus, inference animation, batch progress, and
+    training binding-recovery adapters unchanged.
+- Acceptance criteria and evidence:
+  - `WpfLabelingShellViewModels` constructs every affected ViewModel and the
+    shell constructor rejects a null composition object: passed.
+  - StatusBar, ProjectConfig, and YOLO status XAML bind every affected text,
+    tooltip, progress visibility, indeterminate state, and value property:
+    passed.
+  - Ten direct assignments to the bound status controls were removed from
+    shell code-behind: passed.
+  - The new shell structure regression fails if any of those ten direct
+    assignments returns: passed.
+- Structural proof:
+  - Before: shell methods preferred a ViewModel but retained an unreachable
+    branch that wrote status controls directly.
+  - After: `shell adapter -> ViewModel setter -> XAML binding -> control` is the
+    only status-state path.
+  - State owner: `WpfStatusBarPanelViewModel`,
+    `WpfProjectConfigPanelViewModel`, and `WpfYoloStatusPanelViewModel`.
+- Verification:
+  - Isolated test build passed with 0 warnings and 0 errors.
+  - `--wpf-status-panels`, `--wpf-project-config-panel`,
+    `--wpf-settings-viewmodels`, `--wpf-yolo-model-settings-panel`,
+    `--wpf-labeling-shell`, and `--mvvm-infra` passed.
+  - `git diff --check` passed.
+- Evidence:
+  - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ShellStatus.cs`
+  - `0. UI/9) WPF/Views/WpfLabelingShellWindow.ProjectConfigPaths.cs`
+  - `0. UI/9) WPF/Views/WpfLabelingShellWindow.YoloSettingsPanelStatus.cs`
+  - `0. UI/9) WPF/Views/WpfLabelingShellWindow.YoloEnvironmentCommandLifecycle.cs`
+  - `tests/LabelingApplication.Tests/Program.WpfShellStructure.cs`
+- Boundary / next dependency: no visible text, XAML, command availability,
+  workflow decision, runtime operation, Viewer/OpenGL, ROI, brush, or eraser
+  behavior changed. No screenshot was required for this non-visual state-path
+  cleanup.
+
+## 2026-07-26 WPF workflow and benchmark item ownership
+
+- Status: `Complete`
+- Scope:
+  - Keep `WpfLearningWorkflowPanelViewModel.cs` and
+    `WpfModelBenchmarkViewModel.cs` focused on their main screen state and
+    orchestration.
+  - Move 13 workflow enum/item declarations to
+    `WpfLearningWorkflowItems.cs` and 9 benchmark row/item declarations to
+    `WpfModelBenchmarkItems.cs`.
+  - Preserve namespaces, type names, constructors, properties, call paths,
+    state ownership, XAML bindings, and visible behavior.
+- Acceptance criteria and evidence:
+  - Each main ViewModel file now declares only its main ViewModel class:
+    passed.
+  - All 22 moved type declarations exist once under their new owner and no
+    longer exist in the main ViewModel files: passed.
+  - The moved declaration tails match the corresponding source at `dc1b2db`,
+    while the main-file prefixes differ only by their required namespace
+    closing brace: passed.
+  - Static source tests read the main workflow ViewModel and its item file as
+    one module instead of assuming every type lives in one file: passed.
+- Verification:
+  - Isolated test build passed with 0 warnings and 0 errors.
+  - `--wpf-learning-workflow-panel`, `--wpf-model-benchmark-window`,
+    `--wpf-labeling-shell`, and `--wpf-canvas-panel-commands` passed.
+  - The first learning-workflow run exposed the old single-file source-test
+    assumption; the test input was updated and the final run passed.
+- Evidence:
+  - `0. UI/9) WPF/ViewModels/Shell/WpfLearningWorkflowPanelViewModel.cs`
+  - `0. UI/9) WPF/ViewModels/Shell/WpfLearningWorkflowItems.cs`
+  - `0. UI/9) WPF/ViewModels/Model/WpfModelBenchmarkViewModel.cs`
+  - `0. UI/9) WPF/ViewModels/Model/WpfModelBenchmarkItems.cs`
+  - `docs/CODE_STRUCTURE.md`
+- Boundary / next dependency: no new service, DTO layer, namespace, XAML,
+  workflow behavior, model evaluation logic, Viewer/OpenGL, ROI, brush, or
+  eraser path changed. No screenshot was required for this non-visual
+  declaration-ownership move.
+
+## 2026-07-26 WPF ViewModel domain ownership
+
+- Status: `Complete`
+- Scope:
+  - Move the 20 WPF ViewModel source files from one flat folder into four
+    stable ownership folders: `Shell`, `Labeling`, `Dataset`, and `Model`.
+  - Preserve every class, namespace, binding contract, state owner, and
+    observable behavior.
+  - Update source-inspection tests and repository documentation to use the
+    current physical paths.
+- Acceptance criteria and evidence:
+  - `ViewModels` contains zero root-level C# files; domain counts are
+    `Shell=6`, `Labeling=6`, `Dataset=4`, and `Model=4`: passed.
+  - All 20 destination files have the same Git blob hash as their source file
+    at `dc1b2db`: passed.
+  - Repository searches found no remaining direct flat-ViewModel path
+    references: passed.
+  - `docs/CODE_STRUCTURE.md` describes the four domain owners and representative
+    ViewModels: passed.
+- Verification:
+  - Isolated test build passed with 0 warnings and 0 errors.
+  - `--mvvm-infra`, `--wpf-labeling-shell`, `--wpf-image-queue-status`,
+    `--wpf-candidate-review-panel`, `--wpf-object-review-panel`,
+    `--wpf-dataset-setup-ui`, `--wpf-settings-viewmodels`,
+    `--wpf-model-benchmark-window`, and
+    `--wpf-yolo-model-settings-panel` passed.
+  - The first `--wpf-labeling-shell` run exposed a stale source-inspection
+    path; all 15 direct ViewModel test paths were updated and the final run
+    passed.
+- Evidence: `0. UI/9) WPF/ViewModels`, `docs/CODE_STRUCTURE.md`, and this
+  completion record.
+- Boundary / next dependency: no ViewModel content, namespace, XAML, UI
+  layout, workflow behavior, Viewer/OpenGL, ROI, brush, or eraser path
+  changed. No screenshot was required for this non-visual structural move.
 
 ## 2026-07-24 Handoff and current-state reconciliation
 
@@ -7780,7 +7896,7 @@ Last updated: 2026-07-24
   - `dotnet run --project .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug -- --wpf-responsive-layout --width 1920 --height 1080` passed.
   - `dotnet run --project .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug -- --wpf-responsive-layout --width 1366 --height 768` passed.
   - `dotnet run --project .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug -- --wpf-yolo-training-session-smoke --model-center --width 1920 --height 1080 --output .\artifacts\ui\wpf-model-history-action-1920.png` passed and produced the capture.
-  - `git diff --check -- "0. UI/9) WPF/Services/Model/WpfModelRegistryPresentationService.cs" "0. UI/9) WPF/ViewModels/WpfLabelingShellViewModel.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.xaml" "0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.ModelHistoryCommands.cs" tests/LabelingApplication.Tests/Program.cs` passed with only LF-to-CRLF warnings.
+  - `git diff --check -- "0. UI/9) WPF/Services/Model/WpfModelRegistryPresentationService.cs" "0. UI/9) WPF/ViewModels/Shell/WpfLabelingShellViewModel.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.xaml" "0. UI/9) WPF/Views/WpfLabelingShellWindow.PanelWiring.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.ModelHistoryCommands.cs" tests/LabelingApplication.Tests/Program.cs` passed with only LF-to-CRLF warnings.
 - Next planned work: continue the first-use sweep through dataset creation -> label save -> training -> candidate decision -> inspection with the selected model, then remove any remaining places where users must infer state from the bottom log.
 
 ## 2026-07-01 model-center current-inspection action pass
@@ -9551,7 +9667,7 @@ Last updated: 2026-07-24
   - `--wpf-image-queue-status` 통과.
   - `--wpf-labeling-shell` 통과.
   - `--mvvm-infra` 통과.
-  - `rg -n "AI\\uD6C4|AI후보|AI 후보" tests\LabelingApplication.Tests\Program.cs "0. UI/9) WPF/ViewModels/WpfImageQueuePanelViewModel.cs" "0. UI/9) WPF/Services/ImageQueue/WpfImageQueuePresenter.cs" "0. UI/9) WPF/Models/WpfImageQueueModels.cs"`로 테스트/표시 경로의 `AI 후보` 기준을 확인했습니다.
+  - `rg -n "AI\\uD6C4|AI후보|AI 후보" tests\LabelingApplication.Tests\Program.cs "0. UI/9) WPF/ViewModels/Labeling/WpfImageQueuePanelViewModel.cs" "0. UI/9) WPF/Services/ImageQueue/WpfImageQueuePresenter.cs" "0. UI/9) WPF/Models/WpfImageQueueModels.cs"`로 테스트/표시 경로의 `AI 후보` 기준을 확인했습니다.
 - 다음 작업:
   - 신규 구현은 기존 완료 항목을 반복하지 말고, 모델 런타임/모델 비교/추론 결과 확인 흐름 중 아직 테스트 계약이 약한 지점을 먼저 선정합니다.
 
@@ -9597,7 +9713,7 @@ Last updated: 2026-07-24
   - `--wpf-learning-workflow-panel` 통과.
   - `--mvvm-infra` 통과.
   - `--wpf-visual-smoke --review-tab guide --right-workflow-expanded --width 1920 --height 1080 --output artifacts\ui\wpf-learning-guide-readable-source-clean-after-1920.png` 통과.
-  - `rg -n "硫|紐|寃|異|釉|媛|怨|瑜|瑗|諛|댁|곗씠|숈뒿|멸렇|뺤" "0. UI/9) WPF/ViewModels/WpfLearningWorkflowPanelViewModel.cs"` 결과 없음.
+  - `rg -n "硫|紐|寃|異|釉|媛|怨|瑜|瑗|諛|댁|곗씠|숈뒿|멸렇|뺤" "0. UI/9) WPF/ViewModels/Shell/WpfLearningWorkflowPanelViewModel.cs"` 결과 없음.
 - 캡처:
   - Before 1920: `artifacts\ui\wpf-purpose-runtime-boundary-after-1920.png`
   - After 1920: `artifacts\ui\wpf-learning-guide-readable-source-clean-after-1920.png`
@@ -9621,7 +9737,7 @@ Last updated: 2026-07-24
   - `--wpf-yolo-model-settings-panel` 통과.
   - `--wpf-settings-viewmodels` 통과.
   - `--mvvm-infra` 통과.
-  - `rg -n "硫|紐|寃|異|釉|媛|怨|瑜|瑗|諛|댁|곗씠|숈뒿|멸렇|뺤|쒓|ㅼ튂|쒖옉|理" "0. UI/9) WPF/ViewModels/WpfYoloModelSettingsPanelViewModel.cs"` 결과 없음.
+  - `rg -n "硫|紐|寃|異|釉|媛|怨|瑜|瑗|諛|댁|곗씠|숈뒿|멸렇|뺤|쒓|ㅼ튂|쒖옉|理" "0. UI/9) WPF/ViewModels/Model/WpfYoloModelSettingsPanelViewModel.cs"` 결과 없음.
   - `--wpf-visual-smoke --review-tab yolo-model --right-workflow-expanded --missing-model-runtime --width 1920 --height 1080 --output artifacts\ui\wpf-runtime-package-action-status-after-1920.png` 통과.
 - 캡처:
   - After 1920: `artifacts\ui\wpf-runtime-package-action-status-after-1920.png`
@@ -10115,7 +10231,7 @@ Last updated: 2026-07-24
   - `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-yolo-training-session-smoke --model-center --width 1920 --height 1080 --output artifacts\ui\wpf-model-center-no-duplicate-top-actions-after-1920.png` 통과.
   - `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-yolo-training-session-smoke --model-center --width 1920 --height 1080 --output artifacts\ui\wpf-model-center-single-action-zone-after-1920.png` 통과.
   - `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-responsive-layout --width 1920 --height 1080` 통과.
-  - `git diff --check -- "0. UI/9) WPF/ViewModels/WpfLabelingShellViewModel.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.xaml" tests/LabelingApplication.Tests/Program.cs` 통과. LF/CRLF 경고만 표시됐습니다.
+  - `git diff --check -- "0. UI/9) WPF/ViewModels/Shell/WpfLabelingShellViewModel.cs" "0. UI/9) WPF/Views/WpfLabelingShellWindow.xaml" tests/LabelingApplication.Tests/Program.cs` 통과. LF/CRLF 경고만 표시됐습니다.
 - 캡처:
   - 이전: `artifacts\ui\wpf-model-reject-consistency-after-1920.png`
   - 이후: `artifacts\ui\wpf-model-center-single-action-zone-after-1920.png`
