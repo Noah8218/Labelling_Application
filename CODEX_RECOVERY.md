@@ -132,13 +132,13 @@ YOLO 방향:
 - `OpenVisionLab.LabelingStudio.csproj`
   - `$(LibraryNoahSourceRoot)\Lib.OpenCV\Lib.OpenCV.csproj` ProjectReference 추가.
   - 조건부 참조이므로 해당 경로가 있을 때만 사용.
-- `1. Core/TemplateMatchingAutoLabelService.cs`
+- `1. Core/Labeling/TemplateMatchingAutoLabelService.cs`
   - `Lib.OpenCV.Tool.MatchingTool` 기반 템플릿 매칭 서비스.
   - obsolete `CVMatching` 대신 최신 `MatchingTool` 사용.
   - 현재 이미지에서 선택 ROI를 템플릿으로 후보 탐색.
   - 외부 template bitmap으로 임의 이미지 매칭 가능.
   - 후보 dedupe, source ROI 제외, score normalize 포함.
-- `1. Core/TemplateMatchingBatchAutoLabelService.cs`
+- `1. Core/Labeling/TemplateMatchingBatchAutoLabelService.cs`
   - 큐 이미지 대상으로 템플릿 매칭 후 YOLO 라벨 저장.
   - 기존 라벨 파일이 있는 이미지는 덮어쓰지 않음.
   - 이미지 원본 확장자 보존을 위해 `YoloAnnotationService.SaveAnnotations(..., sourceImagePath)` 사용.
@@ -204,8 +204,8 @@ dotnet run --project .\tests\LabelingApplication.Tests\LabelingApplication.Tests
 Auto labeling / template matching:
 
 - `OpenVisionLab.LabelingStudio.csproj`
-- `1. Core/TemplateMatchingAutoLabelService.cs`
-- `1. Core/TemplateMatchingBatchAutoLabelService.cs`
+- `1. Core/Labeling/TemplateMatchingAutoLabelService.cs`
+- `1. Core/Labeling/TemplateMatchingBatchAutoLabelService.cs`
 - `Yolo/YoloAnnotationService.cs`
 - `0. UI/9) WPF/ViewModels/Labeling/WpfTemplateMatchingAutoLabelViewModel.cs`
 - `0. UI/9) WPF/ViewModels/Shell/WpfLabelingShellViewModels.cs`

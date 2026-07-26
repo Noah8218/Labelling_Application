@@ -59,7 +59,7 @@
 | polygon 편집 | `0. UI/9) WPF/Services/Annotation/WpfPolygonAnnotationService.cs` |
 | brush/eraser mask 편집 | `0. UI/9) WPF/Services/Annotation/WpfMaskAnnotationService.cs`, `WpfMaskEditStateService.cs`, `WpfMaskStrokeCommitSession.cs` |
 | annotation history | `0. UI/9) WPF/Services/Annotation/WpfAnnotationHistoryService.cs`, `WpfMaskStrokeHistoryDraftService.cs` |
-| save/load | `Yolo/YoloSegmentationAnnotationService.cs`, `1. Core/LabelingWorkflowService.cs` |
+| save/load | `Yolo/YoloSegmentationAnnotationService.cs`, `1. Core/Labeling/LabelingWorkflowService.cs` |
 | OpenGL mask overlay | `OpenVisionLab/Library/OpenVisionLab.ImageCanvas/ViewModel/RoiImageCanvasViewModel*.cs` |
 
 ## 필수 게이트

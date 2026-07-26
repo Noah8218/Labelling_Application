@@ -145,8 +145,8 @@ The former dirty worktree was split into the following reviewed local commits. K
 
 Files include:
 
-- 1. Core/AnomalyImageReviewStatusService.cs
-- 1. Core/AnomalyClassificationTrainingReadinessService.cs
+- 1. Core/Anomaly/AnomalyImageReviewStatusService.cs
+- 1. Core/Anomaly/AnomalyClassificationTrainingReadinessService.cs
 - Yolo/AnomalyClassificationDatasetExportService.cs
 - 0. UI/9) WPF/ViewModels/Labeling/WpfImageQueuePanelViewModel.cs
 - 0. UI/9) WPF/Views/WpfImageQueuePanel.xaml
@@ -256,8 +256,8 @@ Review the isolated file ownership, shared-file hunk boundaries, contract, and a
 
 Committed files include:
 
-- 1. Core/AnomalyImageReviewStatusService.cs
-- 1. Core/YoloTrainingWorkflowService.cs
+- 1. Core/Anomaly/AnomalyImageReviewStatusService.cs
+- 1. Core/Model/YoloTrainingWorkflowService.cs
 - 3. Communication/TCP/CCommunicationLearning.cs
 - 3. Communication/TCP/LearningProtocol.cs
 - Runtime/Python/openvisionlab_ultralytics_worker.py

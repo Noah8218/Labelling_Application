@@ -15705,7 +15705,7 @@ internal static partial class Program
             AssertTrue(!imageSizeValidation.IsValid, "out-of-range inference image size should be invalid");
             AssertTrue(imageSizeValidation.Errors.Any(line => line.Contains("\uCD94\uB860 \uC774\uBBF8\uC9C0 \uD06C\uAE30", StringComparison.Ordinal)), "inference image size error was not reported");
 
-            string cGlobalSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "1. Core", "CGlobal.cs"));
+            string cGlobalSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "1. Core", "ApplicationState", "CGlobal.cs"));
             int ensureStartIndex = cGlobalSource.IndexOf("if (autoStartClient && !EnsurePythonModelClientStarted())", StringComparison.Ordinal);
             int connectedReturnIndex = cGlobalSource.IndexOf("if (status.IsClientConnected && connectedAfterClientStart)", StringComparison.Ordinal);
             AssertTrue(ensureStartIndex >= 0, "client readiness should validate the current Python process settings before using an existing connection");
@@ -16304,7 +16304,7 @@ internal static partial class Program
         };
         AssertEqual("pip output", installFailed.Summary);
 
-        string serviceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "1. Core", "PythonEnvironmentService.cs"));
+        string serviceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "1. Core", "Runtime", "PythonEnvironmentService.cs"));
         AssertTrue(serviceSource.Contains("requirements.txt 파일을 찾을 수 없습니다", StringComparison.Ordinal), "missing requirements message should be localized");
         AssertTrue(serviceSource.Contains("Python 패키지 목록이 비어 있거나 읽을 수 없습니다", StringComparison.Ordinal), "empty pip-list message should be localized");
         AssertTrue(serviceSource.Contains("Python 명령 시간이 초과되었습니다", StringComparison.Ordinal), "timeout message should be localized");
@@ -16676,9 +16676,9 @@ internal static partial class Program
     private static void TestRuntimeCommandFailureMessages()
     {
         string repositoryRoot = FindRepositoryRoot();
-        string detectionResultSource = File.ReadAllText(Path.Combine(repositoryRoot, "1. Core", "DetectionResultApplicationService.cs"));
-        string detectionWorkflowSource = File.ReadAllText(Path.Combine(repositoryRoot, "1. Core", "YoloDetectionWorkflowService.cs"));
-        string trainingWorkflowSource = File.ReadAllText(Path.Combine(repositoryRoot, "1. Core", "YoloTrainingWorkflowService.cs"));
+        string detectionResultSource = File.ReadAllText(Path.Combine(repositoryRoot, "1. Core", "Detection", "DetectionResultApplicationService.cs"));
+        string detectionWorkflowSource = File.ReadAllText(Path.Combine(repositoryRoot, "1. Core", "Detection", "YoloDetectionWorkflowService.cs"));
+        string trainingWorkflowSource = File.ReadAllText(Path.Combine(repositoryRoot, "1. Core", "Model", "YoloTrainingWorkflowService.cs"));
         string combinedSource = string.Concat(detectionResultSource, detectionWorkflowSource, trainingWorkflowSource);
 
         string[] previousEnglishMessages =
@@ -16928,7 +16928,7 @@ internal static partial class Program
         AssertTrue(communicationSource.Contains("WorkerCachedTrainingWeights = new List<string>(statusMessage.CachedTrainingWeights", StringComparison.Ordinal), "worker capability status should preserve cached training weight inventory");
         AssertTrue(communicationSource.Contains("WorkerRuntimeBlockedTrainingWeights = new List<string>(statusMessage.RuntimeBlockedTrainingWeights", StringComparison.Ordinal), "worker capability status should preserve runtime-blocked weight inventory");
         AssertTrue(communicationSource.Contains("WorkerDownloadRequiredTrainingWeights = new List<string>(statusMessage.DownloadRequiredTrainingWeights", StringComparison.Ordinal), "worker capability status should preserve download-required missing weight inventory");
-        string globalSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "1. Core", "CGlobal.cs"));
+        string globalSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "1. Core", "ApplicationState", "CGlobal.cs"));
         AssertTrue(globalSource.Contains("SendModelStatus(pendingStatusRequestId", StringComparison.Ordinal), "worker readiness should request fresh model identity before accepting a connection");
         AssertTrue(globalSource.Contains("PythonModelIdentity.Matches", StringComparison.Ordinal), "worker readiness should reject stale engine or weight settings");
         string tcpSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "3. Communication", "TCP", "CTCPAsync.cs"));
@@ -23298,8 +23298,8 @@ internal static partial class Program
         string solutionSource = File.ReadAllText(Path.Combine(root, "OpenVisionLab.LabelingStudio.sln"));
         string programSource = File.ReadAllText(Path.Combine(root, "Program.cs"));
         string commonSource = File.ReadAllText(Path.Combine(root, "2. Common", "CCommon.cs"));
-        string dataSource = File.ReadAllText(Path.Combine(root, "1. Core", "CData.cs"));
-        string recipeSource = File.ReadAllText(Path.Combine(root, "1. Core", "CRecipe.cs"));
+        string dataSource = File.ReadAllText(Path.Combine(root, "1. Core", "ApplicationState", "CData.cs"));
+        string recipeSource = File.ReadAllText(Path.Combine(root, "1. Core", "ApplicationState", "CRecipe.cs"));
         string captureSource = File.ReadAllText(Path.Combine(root, "2. Common", "ScreenCaptureService.cs"));
         string shellSource = ReadWpfLabelingShellWindowSources();
         string viewerSource = File.ReadAllText(Path.Combine(root, "Library", "CViewer.cs"));

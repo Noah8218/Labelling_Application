@@ -1653,7 +1653,7 @@ Do not change these files casually:
 
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.TemplateMatchingCommands.cs`
 - `0. UI/9) WPF/Views/WpfLabelingShellWindow.AnnotationSegmentEdit.cs`
-- `1. Core/TemplateMatchingBatchAutoLabelService.cs`
+- `1. Core/Labeling/TemplateMatchingBatchAutoLabelService.cs`
 - `Yolo/YoloImageLabelStatusService.cs`
 - `0. UI/9) WPF/Services/Annotation/WpfPolygonAnnotationService.cs`
 - `OpenVisionLab/Library/OpenVisionLab.ImageCanvas/ViewModel/RoiImageCanvasViewModel.cs`
@@ -1985,7 +1985,7 @@ Do not change these paths casually:
 - `Yolo/CYolov5.cs`
 - `Yolo/YoloDatasetValidator.cs`
 - `Yolo/YoloDatasetReadinessService.cs`
-- `1. Core/YoloTrainingWorkflowService.cs`
+- `1. Core/Model/YoloTrainingWorkflowService.cs`
 - `3. Communication/TCP/LearningProtocol.cs`
 - `3. Communication/TCP/PythonModelStatusProtocol.cs`
 - `scripts/smoke-yolo-tcp.ps1`

@@ -55,7 +55,7 @@
 | `Program.cs` | 앱 시작점. 기본적으로 WPF 라벨링 셸을 실행합니다. |
 | `OpenVisionLab.LabelingStudio.csproj` | .NET 8 Windows 데스크톱 앱 프로젝트. WPF가 기본이며 일부 OpenGL 호환 경계 때문에 WinForms도 켜져 있습니다. |
 | `0. UI/9) WPF` | 현재 메인 WPF UI, ViewModel, UI 전용 service, shell partial 파일. |
-| `1. Core` | 전역 데이터, 레시피/프로젝트 설정, display layer 상태, 라벨링/검출 application service. |
+| `1. Core` | application state와 핵심 workflow service. 책임별 하위 폴더는 아래 `Core 책임 구조`를 따릅니다. |
 | `2. Common` | 공용 유틸리티, 로그/메시지 어댑터 등 앱 공통 기능. |
 | `3. Communication/TCP` | Python YOLO worker와 통신하는 TCP listener, 메시지 framing, protocol parsing. |
 | `Yolo` | YOLO 클래스/라벨 저장, dataset yaml, split, readiness/validation/statistics, review status. |
@@ -202,7 +202,22 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | `YoloImageLabelStatusService.cs` | 이미지 라벨 개수/status 계산. |
 | `CYolov5.cs` | data.yaml 생성과 YOLO path normalization. |
 
-`1. Core`의 `LabelingWorkflowService`, `DetectionResultApplicationService`, `LabelingDatasetManifestService`, `CData`, `LabelingProjectSettings`는 UI와 YOLO/file system 사이의 application state를 묶습니다.
+`1. Core`의 `Labeling/LabelingWorkflowService`, `Detection/DetectionResultApplicationService`, `Dataset/LabelingDatasetManifestService`, `ApplicationState/CData`, `ApplicationState/LabelingProjectSettings`는 UI와 YOLO/file system 사이의 application state를 묶습니다.
+
+## Core 책임 구조
+
+`1. Core`는 namespace를 바꾸지 않고 물리 경로만 책임별로 나눕니다. 폴더는 탐색 경계이며, 새 계층이나 추상화를 뜻하지 않습니다.
+
+| 경로 | 책임 | 대표 파일 |
+| --- | --- | --- |
+| `ApplicationState` | 전역 application state, recipe/system 상태, 영속 프로젝트 설정 | `CData.cs`, `CGlobal.cs`, `CRecipe.cs`, `CSystem.cs`, `LabelingProjectSettings.cs` |
+| `Anomaly` | anomaly 검토 상태, 분류 결정, 학습 준비도 | `AnomalyImageReviewStatusService.cs`, `AnomalyClassificationDecisionService.cs` |
+| `Dataset` | dataset manifest, image workspace, recipe dataset version | `LabelingDatasetManifestService.cs`, `RecipeDatasetVersionService.cs` |
+| `Detection` | 검출 실행 orchestration과 결과 적용 | `YoloDetectionWorkflowService.cs`, `DetectionResultApplicationService.cs` |
+| `Display` | display layer 저장·선택·문서 상태 | `CDisplayManager.cs`, `DisplayLayerStore.cs` |
+| `Labeling` | 수동/템플릿 라벨링 workflow | `LabelingWorkflowService.cs`, `TemplateMatchingAutoLabelService.cs` |
+| `Model` | model registry와 학습 workflow | `ModelRegistryService.cs`, `YoloTrainingWorkflowService.cs` |
+| `Runtime` | Python/YOLO process, 환경 검증, runtime 연결과 self-test | `PythonEnvironmentService.cs`, `PythonModelRuntimeConnectionService.cs`, `YoloPythonClientProcessService.cs` |
 
 ## Python/YOLO Worker 통신
 

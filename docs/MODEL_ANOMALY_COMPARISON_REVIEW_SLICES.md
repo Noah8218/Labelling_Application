@@ -20,14 +20,14 @@ Import a conventional anomaly folder layout such as `images\\OK\\product\\image.
 
 Direct files:
 
-- `1. Core/AnomalyImageReviewStatusService.cs`: only the parent-folder traversal in `TryInferReviewStateFromParentFolder`.
+- `1. Core/Anomaly/AnomalyImageReviewStatusService.cs`: only the parent-folder traversal in `TryInferReviewStateFromParentFolder`.
 - `3. Communication/TCP/CCommunicationLearning.cs`: only the optional `runName` forwarding in `SendTrainingData`.
 - `3. Communication/TCP/LearningProtocol.cs`: only the optional `runName` field in the normalized training packet.
 - `tests/LabelingApplication.Tests/Program.RealYoloV8AnomalyFolderTraining.cs`: only run-name input, single-folder/no-overwrite assertions, TCP request forwarding, and artifact summary identity.
 
 Shared files; review only these hunks:
 
-- `1. Core/YoloTrainingWorkflowService.cs`: optional `runName` argument and forwarding it to `CCommunicationLearning.SendTrainingData`. The external-native-data profile handling in the same file belongs to `EXTERNAL_NATIVE_YOLO_INTAKE_REVIEW_SLICE.md`.
+- `1. Core/Model/YoloTrainingWorkflowService.cs`: optional `runName` argument and forwarding it to `CCommunicationLearning.SendTrainingData`. The external-native-data profile handling in the same file belongs to `EXTERNAL_NATIVE_YOLO_INTAKE_REVIEW_SLICE.md`.
 - `Runtime/Python/openvisionlab_ultralytics_worker.py`: `plots=False` in `model.train`, which skips optional plot generation before terminal training status. Its YAML working-directory and label-cache contexts belong to the external-intake slice, not this one.
 - `tests/LabelingApplication.Tests/Program.cs`: dispatch and assertions for anomaly-folder import, classification workflow, runtime candidate mapping, evaluation hold guard, and the worker's `plots=False` contract. Do not review unrelated Dataset Health, image-queue, external-intake, or comparison assertions as part of this slice.
 

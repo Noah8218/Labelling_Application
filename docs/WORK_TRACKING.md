@@ -15967,3 +15967,37 @@ training. It was not replayed for this behavior-preserving ownership refactor;
 the successful build proves its new owner and dependency resolution, not a
 fresh training/model-quality result. No scenario-bearing `Program` partial
 files remain.
+
+## 2026-07-26 Core 책임 폴더 정리
+
+Status: Complete
+
+Scope: `1. Core` 루트에 평면 배치되어 있던 33개 C# 파일을 기존
+namespace와 동작을 유지한 채 `ApplicationState`, `Anomaly`, `Dataset`,
+`Detection`, `Display`, `Labeling`, `Model`, `Runtime`의 8개 책임 폴더로
+이동했습니다. 소스 경로를 직접 읽는 테스트와 현재 구조/복구 문서의
+탐색 경로를 함께 갱신했습니다.
+
+Acceptance criteria:
+
+- `1. Core` 루트에 C# 파일이 남지 않고 33개 파일이 8개 책임 폴더에만
+  존재함: 재귀 파일 목록과 루트 파일 검색으로 통과.
+- 타입, namespace, 실행 동작이 물리 경로 이동 전과 동일함: 격리 빌드,
+  focused gate 5개, 전체 기본 테스트 묶음으로 통과.
+- 테스트와 현재 탐색 문서가 새 경로를 가리킴: 이전 평면 경로 검색으로
+  통과.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\` : 경고 0, 오류 0.
+- `--python-model-settings-validator`, `--python-environment-summaries`,
+  `--runtime-command-failure-messages`, `--python-model-status-protocol`,
+  `--priority-workflow-docs` : 모두 통과.
+- 인수 없는 `LabelingApplication.Tests.dll` 전체 기본 테스트 묶음 : 통과.
+
+Evidence: `1. Core`, `docs\CODE_STRUCTURE.md`,
+`tests\LabelingApplication.Tests\Program.cs`.
+
+Boundary / next dependency: 이번 변경은 탐색성을 위한 물리 폴더 이동입니다.
+namespace 재편이나 대형 클래스 분해는 포함하지 않았습니다. 이후 클래스
+분리는 파일 길이가 아니라 독립 책임과 테스트 경계가 확인될 때만 진행합니다.
