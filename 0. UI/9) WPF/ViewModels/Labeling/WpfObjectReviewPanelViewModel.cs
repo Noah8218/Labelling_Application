@@ -31,6 +31,9 @@ namespace MvcVisionSystem
         private bool isSplitEnabled;
         private bool isSplitPending;
         private string splitStatusText = "\uC120\uD0DD\uD55C \uC138\uADF8\uBA3C\uD2B8\uB97C \uC138\uB85C \uB610\uB294 \uAC00\uB85C\uB85C \uC808\uB2E8\uD569\uB2C8\uB2E4.";
+        private bool isHoleEditEnabled;
+        private bool isHoleEditPending;
+        private string holeEditStatusText = "\uB0B4\uBD80 \uAD6C\uBA4D\uC744 \uB2E4\uAC01\uD615\uC73C\uB85C \uCD94\uAC00\uD558\uAC70\uB098 \uD074\uB9AD\uD574 \uCC44\uC6C1\uB2C8\uB2E4.";
         private string qualityReviewStatusText = "이미지 없음";
         private string qualityReviewDetailText = "이미지를 열면 품질 검수 상태를 표시합니다.";
         private string qualityReviewNoteText = string.Empty;
@@ -47,6 +50,9 @@ namespace MvcVisionSystem
         private ICommand beginVerticalSplitCommand = new RelayCommand(NoOpCommand);
         private ICommand beginHorizontalSplitCommand = new RelayCommand(NoOpCommand);
         private ICommand cancelSplitCommand = new RelayCommand(NoOpCommand);
+        private ICommand beginAddHoleCommand = new RelayCommand(NoOpCommand);
+        private ICommand beginRemoveHoleCommand = new RelayCommand(NoOpCommand);
+        private ICommand cancelHoleEditCommand = new RelayCommand(NoOpCommand);
         private ICommand objectSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
         private ICommand objectPreviewKeyDownCommand = new RelayCommand<KeyInputCommandArgs>(NoOpKeyCommand);
         private ICommand markQualityUnreviewedCommand = new RelayCommand(NoOpCommand);
@@ -110,6 +116,24 @@ namespace MvcVisionSystem
         {
             get => cancelSplitCommand;
             private set => SetProperty(ref cancelSplitCommand, value);
+        }
+
+        public ICommand BeginAddHoleCommand
+        {
+            get => beginAddHoleCommand;
+            private set => SetProperty(ref beginAddHoleCommand, value);
+        }
+
+        public ICommand BeginRemoveHoleCommand
+        {
+            get => beginRemoveHoleCommand;
+            private set => SetProperty(ref beginRemoveHoleCommand, value);
+        }
+
+        public ICommand CancelHoleEditCommand
+        {
+            get => cancelHoleEditCommand;
+            private set => SetProperty(ref cancelHoleEditCommand, value);
         }
 
         public ICommand ObjectSelectionChangedCommand
@@ -262,6 +286,24 @@ namespace MvcVisionSystem
             private set => SetProperty(ref splitStatusText, value ?? string.Empty);
         }
 
+        public bool IsHoleEditEnabled
+        {
+            get => isHoleEditEnabled;
+            private set => SetProperty(ref isHoleEditEnabled, value);
+        }
+
+        public bool IsHoleEditPending
+        {
+            get => isHoleEditPending;
+            private set => SetProperty(ref isHoleEditPending, value);
+        }
+
+        public string HoleEditStatusText
+        {
+            get => holeEditStatusText;
+            private set => SetProperty(ref holeEditStatusText, value ?? string.Empty);
+        }
+
         public string QualityReviewStatusText
         {
             get => qualityReviewStatusText;
@@ -334,7 +376,10 @@ namespace MvcVisionSystem
             Action<object> mergeSelectionChanged = null,
             Action beginVerticalSplit = null,
             Action beginHorizontalSplit = null,
-            Action cancelSplit = null)
+            Action cancelSplit = null,
+            Action beginAddHole = null,
+            Action beginRemoveHole = null,
+            Action cancelHoleEdit = null)
         {
             // The review panel exposes commands; the shell injects workflow actions without owning the view events.
             DeleteObjectCommand = new RelayCommand(deleteObject ?? NoOpCommand);
@@ -354,6 +399,9 @@ namespace MvcVisionSystem
             BeginVerticalSplitCommand = new RelayCommand(beginVerticalSplit ?? NoOpCommand);
             BeginHorizontalSplitCommand = new RelayCommand(beginHorizontalSplit ?? NoOpCommand);
             CancelSplitCommand = new RelayCommand(cancelSplit ?? NoOpCommand);
+            BeginAddHoleCommand = new RelayCommand(beginAddHole ?? NoOpCommand);
+            BeginRemoveHoleCommand = new RelayCommand(beginRemoveHole ?? NoOpCommand);
+            CancelHoleEditCommand = new RelayCommand(cancelHoleEdit ?? NoOpCommand);
         }
 
         public void SetSplitPending(WpfSegmentationSplitOrientation? orientation)
@@ -366,6 +414,20 @@ namespace MvcVisionSystem
                 WpfSegmentationSplitOrientation.Horizontal
                     => "\uAC00\uB85C \uC808\uB2E8 \uC704\uCE58\uB97C \uCE94\uBC84\uC2A4\uC5D0\uC11C \uD074\uB9AD\uD558\uC138\uC694. \uC6B0\uD074\uB9AD\uC740 \uCDE8\uC18C\uC785\uB2C8\uB2E4.",
                 _ => "\uC120\uD0DD\uD55C \uC138\uADF8\uBA3C\uD2B8\uB97C \uC138\uB85C \uB610\uB294 \uAC00\uB85C\uB85C \uC808\uB2E8\uD569\uB2C8\uB2E4."
+            };
+            RefreshActionState();
+        }
+
+        public void SetHoleEditPending(WpfSegmentationHoleEditMode? mode)
+        {
+            IsHoleEditPending = mode.HasValue;
+            HoleEditStatusText = mode switch
+            {
+                WpfSegmentationHoleEditMode.Add
+                    => "\uAC1D\uCCB4 \uC548\uCABD\uC5D0 \uAD6C\uBA4D \uB2E4\uAC01\uD615\uC744 \uADF8\uB9AC\uACE0 \uCCAB \uC810\uC744 \uD074\uB9AD\uD558\uAC70\uB098 \uB354\uBE14\uD074\uB9AD\uD558\uC138\uC694.",
+                WpfSegmentationHoleEditMode.Remove
+                    => "\uCC44\uC6B8 \uB0B4\uBD80 \uAD6C\uBA4D\uC744 \uCE94\uBC84\uC2A4\uC5D0\uC11C \uD074\uB9AD\uD558\uC138\uC694.",
+                _ => "\uB0B4\uBD80 \uAD6C\uBA4D\uC744 \uB2E4\uAC01\uD615\uC73C\uB85C \uCD94\uAC00\uD558\uAC70\uB098 \uD074\uB9AD\uD574 \uCC44\uC6C1\uB2C8\uB2E4."
             };
             RefreshActionState();
         }
@@ -581,7 +643,8 @@ namespace MvcVisionSystem
             bool hasSelectedObject = SelectedObject?.IsEnabled == true;
             IsDeleteEnabled = hasSelectedObject;
             IsApplyClassEnabled = hasSelectedObject && !string.IsNullOrWhiteSpace(SelectedClassName);
-            IsSplitEnabled = SelectedObject?.IsManualSegment == true && !IsSplitPending;
+            IsSplitEnabled = SelectedObject?.IsManualSegment == true && !IsSplitPending && !IsHoleEditPending;
+            IsHoleEditEnabled = SelectedObject?.IsManualSegment == true && !IsSplitPending && !IsHoleEditPending;
             int mergeSelectionCount = Objects.Count(item => item?.IsManualSegment == true && item.IsMergeSelected);
             IsMergeSelectedSegmentsEnabled = mergeSelectionCount >= 2;
             MergeSelectionText = FormattableString.Invariant(

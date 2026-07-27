@@ -110,6 +110,7 @@ namespace MvcVisionSystem
                 manualRoiOverlayIds.Clear();
                 manualSegments.Clear();
                 CancelPendingSegmentationSplit(updateStatus: false);
+                CancelPendingSegmentationHoleEdit(updateStatus: false);
                 ClearQueuedMaskStrokeCommits();
                 polygonAnnotationService.Reset();
                 CancelMaskStrokePreviewCommitSwap();
@@ -222,6 +223,7 @@ namespace MvcVisionSystem
             manualRoiOverlayIds.Clear();
             manualSegments.Clear();
             CancelPendingSegmentationSplit(updateStatus: false);
+            CancelPendingSegmentationHoleEdit(updateStatus: false);
             ClearQueuedMaskStrokeCommits();
             polygonAnnotationService.Reset();
             CancelMaskStrokePreviewCommitSwap();

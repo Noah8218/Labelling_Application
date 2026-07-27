@@ -21,7 +21,10 @@ namespace MvcVisionSystem
                 mergeSelectionChanged: null,
                 beginVerticalSplit: ExecuteBeginVerticalSegmentationSplitCommand,
                 beginHorizontalSplit: ExecuteBeginHorizontalSegmentationSplitCommand,
-                cancelSplit: ExecuteCancelSegmentationSplitCommand);
+                cancelSplit: ExecuteCancelSegmentationSplitCommand,
+                beginAddHole: ExecuteBeginAddSegmentationHoleCommand,
+                beginRemoveHole: ExecuteBeginRemoveSegmentationHoleCommand,
+                cancelHoleEdit: ExecuteCancelSegmentationHoleEditCommand);
             RefreshAttachedCommandBindings(
                 ObjectListBox,
                 InputCommandBehaviors.SelectedItemChangedCommandProperty,
@@ -44,6 +47,10 @@ namespace MvcVisionSystem
             RegisterObjectReviewName(nameof(BeginHorizontalSplitButton), BeginHorizontalSplitButton);
             RegisterObjectReviewName(nameof(CancelSplitButton), CancelSplitButton);
             RegisterObjectReviewName(nameof(SplitStatusText), SplitStatusText);
+            RegisterObjectReviewName(nameof(BeginAddHoleButton), BeginAddHoleButton);
+            RegisterObjectReviewName(nameof(BeginRemoveHoleButton), BeginRemoveHoleButton);
+            RegisterObjectReviewName(nameof(CancelHoleEditButton), CancelHoleEditButton);
+            RegisterObjectReviewName(nameof(HoleEditStatusText), HoleEditStatusText);
             RegisterObjectReviewName(nameof(ObjectListBox), ObjectListBox);
         }
 

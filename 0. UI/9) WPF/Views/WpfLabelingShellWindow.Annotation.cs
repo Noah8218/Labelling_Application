@@ -23,6 +23,11 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (TryApplyPendingSegmentationHoleEdit(e))
+            {
+                return;
+            }
+
             if (TryApplySmartMaskPointInput(e))
             {
                 return;

@@ -104,6 +104,18 @@ namespace MvcVisionSystem
                         polygonAnnotationService.IsClosed,
                         isDraft: true));
                 }
+
+                if (pendingSegmentationHoleEditMode == WpfSegmentationHoleEditMode.Add
+                    && holePolygonAnnotationService.Points.Count > 0)
+                {
+                    overlays.Add(new RoiImageCanvasPolygonOverlay(
+                        holePolygonAnnotationService.Points,
+                        $"HOLE DRAFT {holePolygonAnnotationService.Points.Count}",
+                        System.Drawing.Color.Orange,
+                        holePolygonAnnotationService.IsClosed,
+                        isDraft: true,
+                        isSelected: true));
+                }
             }
 
             AppendSmartMaskPromptOverlays(overlays);

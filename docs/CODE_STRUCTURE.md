@@ -606,9 +606,9 @@ partial이나 공개 타입을 기계적으로 더 나누는 일이 아닙니다
 P0-A `Labeling Command and Productivity Foundation`, P0-B
 `Interactive Smart Mask Refinement`, P1-A segmentation interchange
 preservation/loss contract, P1-B canonical schema v3, P1-C merge/join과
-axis-aligned split/slice는 완료되었습니다. 다음 bounded 기능은
+axis-aligned split/slice와 enclosed hole add/fill은 완료되었습니다. 다음 bounded 기능은
 `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`의 P1-C
-manual hole editing 또는 z-order입니다.
+z-order입니다.
 
 - Current owner:
   - tool capability는 `WpfAnnotationToolCapabilityService`
@@ -651,8 +651,11 @@ merge/join geometry/validation은 `WpfSegmentationMergeService`, 선택
 polygon/raster 공통 mask 변환은 `WpfSegmentationMaskGeometryService`,
 axis-aligned cut validation/component extraction은
 `WpfSegmentationSplitService`, point-input/mutation/history bridge는
-`WpfLabelingShellWindow.SegmentationSplitCommands`가 소유합니다. 이후
-hole/z-order도 각각 독립된 command/service와 focused test로 추가합니다.
+`WpfLabelingShellWindow.SegmentationSplitCommands`가 소유합니다.
+enclosed hole validation/flood fill은 `WpfSegmentationHoleService`,
+draft/point-input/mutation/history bridge는
+`WpfLabelingShellWindow.SegmentationHoleCommands`가 소유합니다. 이후
+z-order도 독립된 command/service와 focused test로 추가합니다.
 Dataset Health 시각 QA와 포맷/batch preflight는 핵심 라벨링 slice
 이후입니다. `OpenVisionLab.ImageCanvas`의 별도 프로젝트화와 남은
 WinForms 호환 경계는 현재 기능 우선순위가 아닙니다.

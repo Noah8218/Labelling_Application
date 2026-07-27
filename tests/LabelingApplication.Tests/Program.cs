@@ -1059,6 +1059,13 @@ internal static partial class Program
                 SegmentationSplitTests.TestSplitWorkflow);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--segmentation-hole", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Segmentation hole editing preserves enclosure, history, and canonical identity",
+                SegmentationHoleTests.TestHoleWorkflow);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--segmentation-historical-remediation-audit", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("Historical segmentation remediation audit stays read-only and reports mask-derived label differences", TestYoloSegmentationHistoricalRemediationAudit);
@@ -1769,6 +1776,7 @@ internal static partial class Program
         bool selectMaskObject = HasArgument(args, "--select-mask-object");
         bool selectMergeSegments = HasArgument(args, "--select-merge-segments");
         string armSegmentationSplit = GetArgumentValue(args, "--arm-segmentation-split", string.Empty);
+        string armSegmentationHole = GetArgumentValue(args, "--arm-segmentation-hole", string.Empty);
         bool openHeaderToolsMenu = HasArgument(args, "--open-header-tools-menu");
         bool showWorkspaceLayoutControls = HasArgument(args, "--show-workspace-layout-controls");
         bool showTrainingRecoveryStatus = HasArgument(args, "--show-training-recovery-status");
@@ -2288,6 +2296,18 @@ internal static partial class Program
                         else
                         {
                             window.ObjectReviewViewModel.BeginVerticalSplitCommand.Execute(null);
+                        }
+                    }
+                    if (!string.IsNullOrWhiteSpace(armSegmentationHole))
+                    {
+                        SelectVisualSmokeMaskObject(window);
+                        if (armSegmentationHole.Equals("remove", StringComparison.OrdinalIgnoreCase))
+                        {
+                            window.ObjectReviewViewModel.BeginRemoveHoleCommand.Execute(null);
+                        }
+                        else
+                        {
+                            window.ObjectReviewViewModel.BeginAddHoleCommand.Execute(null);
                         }
                     }
 

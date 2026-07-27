@@ -26,6 +26,14 @@ namespace MvcVisionSystem
                 CancelPendingSegmentationSplit(updateStatus: false);
             }
 
+            if (pendingSegmentationHoleEditMode.HasValue
+                && (selectedItem is not WpfObjectReviewListItem selectedHoleRow
+                    || !selectedHoleRow.IsManualSegment
+                    || selectedHoleRow.SourceIndex != pendingSegmentationHoleSourceIndex))
+            {
+                CancelPendingSegmentationHoleEdit(updateStatus: false);
+            }
+
             SyncObjectClassEditorToSelection();
             UpdateObjectReviewActionState();
             bool isManualSegmentSelected = ObjectReviewViewModel?.IsSelectedSource(WpfObjectReviewSource.ManualSegment) == true;

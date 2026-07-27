@@ -29,6 +29,10 @@ namespace MvcVisionSystem
         public WpfUiButton HorizontalSplitButton => BeginHorizontalSplitButton;
         public WpfUiButton SplitCancelButton => CancelSplitButton;
         public TextBlock SplitStatusTextBlock => SplitStatusText;
+        public WpfUiButton AddHoleButton => BeginAddHoleButton;
+        public WpfUiButton RemoveHoleButton => BeginRemoveHoleButton;
+        public WpfUiButton HoleEditCancelButton => CancelHoleEditButton;
+        public TextBlock HoleEditStatusTextBlock => HoleEditStatusText;
         public ListBox ObjectList => ObjectListBox;
     }
 }

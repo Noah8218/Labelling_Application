@@ -161,6 +161,10 @@ namespace MvcVisionSystem
         private Wpf.Ui.Controls.Button BeginHorizontalSplitButton => ObjectReviewPanelControl?.HorizontalSplitButton;
         private Wpf.Ui.Controls.Button CancelSplitButton => ObjectReviewPanelControl?.SplitCancelButton;
         private TextBlock SplitStatusText => ObjectReviewPanelControl?.SplitStatusTextBlock;
+        private Wpf.Ui.Controls.Button BeginAddHoleButton => ObjectReviewPanelControl?.AddHoleButton;
+        private Wpf.Ui.Controls.Button BeginRemoveHoleButton => ObjectReviewPanelControl?.RemoveHoleButton;
+        private Wpf.Ui.Controls.Button CancelHoleEditButton => ObjectReviewPanelControl?.HoleEditCancelButton;
+        private TextBlock HoleEditStatusText => ObjectReviewPanelControl?.HoleEditStatusTextBlock;
         private ListBox ObjectListBox => ObjectReviewPanelControl?.ObjectList;
         private Slider CandidateConfidenceSlider => CandidateReviewPanelControl?.ConfidenceSlider;
         private Grid CandidateReviewRoleSplitPanel => CandidateReviewPanelControl?.RoleSplitPanel;

@@ -52,8 +52,8 @@ This new workflow evidence changes prioritization and adds a separate
 labeling-editor score; it does not reduce the product-wide focused-workstation
 score. Focused single-operator workflow maturity remains `4.0/5`; labeling
 editor depth moved from the video-review baseline `2.1/5` to `2.5/5` after
-P0-A/P0-B, to `2.6/5` after P1-C merge/join, and to `2.7/5` after the
-axis-aligned P1-C split/slice command;
+P0-A/P0-B, to `2.6/5` after P1-C merge/join, to `2.7/5` after the
+axis-aligned split/slice command, and to `2.8/5` after enclosed hole add/fill;
 general commercial labeling-suite parity remains
 `3.1/5`; intentional enterprise/team-platform parity remains `1.2/5`. These
 are structured workflow estimates, not accuracy benchmarks. Independent
@@ -87,13 +87,15 @@ Status: `Complete`. Field validation: `Not evaluated`.
 - P1-C axis-aligned split/slice is complete with polygon/raster support,
   invalid-cut no-mutation behavior, one-step undo/redo, and canonical v3
   save/load/re-save evidence.
-- The next product-development priority is explicit hole editing or z-order;
-  remove-underlying warning behavior remains a separate acceptance-gated
-  slice.
+- P1-C enclosed hole add/fill is complete with polygon/raster support,
+  exterior-connected background rejection, one-step undo/redo, and canonical
+  v3 evidence.
+- The next product-development priority is z-order; remove-underlying warning
+  behavior remains a separate acceptance-gated slice.
 - P2 object state/precision, P3 display-only aids, P4 Dataset Health visual QA,
   and P5 interchange/batch preflight remain ordered follow-ups.
 
-The `2.7/5` labeling-editor score is still materially below CVAT/V7 editor
+The `2.8/5` labeling-editor score is still materially below CVAT/V7 editor
 depth. It does not claim mask-structure parity, object-state parity, video
 propagation, collaboration, field accuracy, or production model readiness.
 

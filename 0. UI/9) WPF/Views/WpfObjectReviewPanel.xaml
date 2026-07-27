@@ -574,6 +574,55 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                            FontSize="9.5"
                            Margin="0,4,0,0"
                            TextWrapping="Wrap" />
+                <Grid Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ui:Button x:Name="BeginAddHoleButton"
+                               AutomationProperties.AutomationId="BeginAddHoleButton"
+                               AutomationProperties.Name="&#xB0B4;&#xBD80; &#xAD6C;&#xBA4D; &#xB2E4;&#xAC01;&#xD615; &#xADF8;&#xB9AC;&#xAE30;"
+                               Style="{StaticResource ObjectReviewButtonStyle}"
+                               Height="24"
+                               Margin="0,0,3,0"
+                               Content="&#xAD6C;&#xBA4D; &#xADF8;&#xB9AC;&#xAE30;"
+                               ToolTip="&#xC120;&#xD0DD;&#xD55C; &#xC138;&#xADF8;&#xBA3C;&#xD2B8; &#xC548;&#xCABD;&#xC5D0; &#xB2E4;&#xAC01;&#xD615; &#xAD6C;&#xBA4D; &#xCD94;&#xAC00;"
+                               IsEnabled="{Binding IsHoleEditEnabled}"
+                               Command="{Binding BeginAddHoleCommand}" />
+                    <ui:Button x:Name="BeginRemoveHoleButton"
+                               Grid.Column="1"
+                               AutomationProperties.AutomationId="BeginRemoveHoleButton"
+                               AutomationProperties.Name="&#xB0B4;&#xBD80; &#xAD6C;&#xBA4D; &#xCC44;&#xC6B0;&#xAE30;"
+                               Style="{StaticResource ObjectReviewButtonStyle}"
+                               Height="24"
+                               Margin="3,0"
+                               Content="&#xAD6C;&#xBA4D; &#xCC44;&#xC6B0;&#xAE30;"
+                               ToolTip="&#xC120;&#xD0DD;&#xD55C; &#xC138;&#xADF8;&#xBA3C;&#xD2B8;&#xC758; &#xBE48; &#xB0B4;&#xBD80; &#xAD6C;&#xBA4D;&#xC744; &#xD074;&#xB9AD;&#xD574; &#xCC44;&#xC6B0;&#xAE30;"
+                               IsEnabled="{Binding IsHoleEditEnabled}"
+                               Command="{Binding BeginRemoveHoleCommand}" />
+                    <ui:Button x:Name="CancelHoleEditButton"
+                               Grid.Column="2"
+                               AutomationProperties.AutomationId="CancelHoleEditButton"
+                               AutomationProperties.Name="&#xB0B4;&#xBD80; &#xAD6C;&#xBA4D; &#xD3B8;&#xC9D1; &#xCDE8;&#xC18C;"
+                               Style="{StaticResource ObjectReviewButtonStyle}"
+                               MinWidth="44"
+                               Height="24"
+                               Margin="3,0,0,0"
+                               Padding="7,0"
+                               Content="&#xCDE8;&#xC18C;"
+                               ToolTip="&#xB0B4;&#xBD80; &#xAD6C;&#xBA4D; &#xD3B8;&#xC9D1; &#xCDE8;&#xC18C;"
+                               IsEnabled="{Binding IsHoleEditPending}"
+                               Command="{Binding CancelHoleEditCommand}" />
+                </Grid>
+                <TextBlock x:Name="HoleEditStatusText"
+                           AutomationProperties.AutomationId="HoleEditStatusText"
+                           Text="{Binding HoleEditStatusText}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           FontFamily="Segoe UI"
+                           FontSize="9.5"
+                           Margin="0,4,0,0"
+                           TextWrapping="Wrap" />
             </StackPanel>
         </Border>
         <ListBox x:Name="ObjectListBox"

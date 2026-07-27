@@ -237,18 +237,18 @@ segmentation의 주 생산 도구 목록에 포함되지 않으므로 상용 비
 | --- | ---: | ---: | --- |
 | 기본 shape와 직접 편집 | `3.0/5` | 15% | 저장 가능한 box/polygon/brush/eraser 기반 |
 | 반복·고처리량 생산성 | `2.8/5` | 15% | P0-A shortcut/repeat/duplicate/help 완료; batch propagation은 제외 |
-| mask/geometry 구조 편집 | `2.5/5` | 20% | P1-A/P1-B 계약과 user-visible merge/join 및 axis-aligned split/slice 완료; hole/z-order 남음 |
+| mask/geometry 구조 편집 | `3.0/5` | 20% | P1-A/P1-B 계약과 merge/join, axis-aligned split/slice, enclosed hole add/fill 완료; z-order 남음 |
 | 대화형 AI correction | `3.5/5` | 20% | P0-B box+positive/negative correction, rerun-replace, 상세도, 다음 객체 완료 |
 | 객체 상태·metadata | `1.0/5` | 10% | class/delete 외 상태가 매우 제한적 |
 | 이미지·overlay 가시성 | `1.5/5` | 10% | opacity 외 display aid 부족 |
 | 저장·검토 안정성 | `4.0/5` | 10% | Recipe/no-autosave/canonical save/provenance |
-| 가중 합계 | **`2.7/5`** | 100% | P0-A/P0-B와 P1-C merge/join 및 split/slice 완료 후 상용 영상 대비 구조적 워크플로 추정 |
+| 가중 합계 | **`2.8/5`** | 100% | P0-A/P0-B와 P1-C merge/join, split/slice, hole add/fill 완료 후 상용 영상 대비 구조적 워크플로 추정 |
 
 이 점수는 제품 전체 완성도나 모델 정확도가 아닙니다. 현재 제품 전체의
 집중형 로컬 워크플로 평가는 `4.0/5`로 유지하되, 라벨링 편집기 깊이는
 영상 재평가 당시 기준선 `2.1/5`에서 P0-A/P0-B 완료 후 `2.5/5`, 첫
 P1-C merge/join 완료 후 `2.6/5`, axis-aligned split/slice 완료 후
-`2.7/5`로 관리합니다. 남은 P1 mask structure,
+`2.7/5`, enclosed hole add/fill 완료 후 `2.8/5`로 관리합니다. 남은 P1 mask structure,
 P2 object state, P3 display aid가
 있으므로 CVAT/V7 parity로 해석하지 않습니다.
 
@@ -260,7 +260,7 @@ P2 object state, P3 display aid가
 | --- | --- | --- | --- |
 | P0-A command/productivity | **Complete** | 단축키·반복·복제·도움말 구현, focused 회귀, current-source 및 actual-EXE 1920x1080 증거 통과 | 상용 parity는 아니며 이후 회귀 시에만 재개 |
 | P0-B interactive Smart Mask | **Complete** | 실제 box+positive+negative worker, session/stale/replace/no-autosave 계약, actual-EXE confirm/next-instance 통과 | field validation은 `Not evaluated`; 이후 회귀 시에만 재개 |
-| P1 mask structure | **진행 중 (P1-A/P1-B 및 P1-C merge/join·split/slice 완료)** | 포맷별 preservation/loss matrix, canonical v3 identity, 같은 클래스 merge, axis-aligned split, 단일 undo/redo와 save/load/re-save 통과 | P1-C hole, z-order, remove-underlying |
+| P1 mask structure | **진행 중 (P1-A/P1-B 및 P1-C merge/join·split/slice·hole 완료)** | preservation/loss, canonical v3 identity, merge, axis-aligned split, enclosed hole add/fill, undo/redo와 save/load/re-save 통과 | P1-C z-order, remove-underlying |
 | P2 object state/precision | 대기 | object list·class 변경·delete 존재 | 상태 의미 계약과 정밀 geometry 편집 |
 | P3 display aids | 대기 | 기본 canvas 표시 존재 | source/training 불변 display-only 처리 |
 | P4 visual QA | 순서 이동 후 대기 | Dataset Health 숫자/표 기반 분석 존재 | dataset-level 시각 문제 탐색과 editor 이동 |
@@ -588,7 +588,7 @@ Reasoning effort: `medium`
 
 1. P0-A command/productivity foundation — **Complete**
 2. P0-B interactive Smart Mask — **Complete**
-3. P1 mask structure contract와 editor — **진행 중; merge/join·split/slice 완료, hole/z-order 다음**
+3. P1 mask structure contract와 editor — **진행 중; merge/join·split/slice·hole 완료, z-order 다음**
 4. P2 object state/precision
 5. P3 display-only aids
 6. P4 visual QA
@@ -611,7 +611,7 @@ Acceptance criteria:
 - box, mask, AI, object state, shortcut 격차가 각각 기록됨: pass
 - 라벨링 편집기 영상 기준선 `2.1/5`, P0-A/P0-B 완료 후 `2.5/5`, 첫
   P1-C merge/join 완료 후 `2.6/5`, split/slice 완료 후 `2.7/5`
-  근거가 계산됨: pass
+  및 hole add/fill 완료 후 `2.8/5` 근거가 계산됨: pass
 - P0-A/P0-B의 owner, included/excluded scope, state safety, 완료 기준이
   구현 가능한 수준으로 정의됨: pass
 - protected behavior와 out-of-scope가 명시됨: pass
@@ -630,9 +630,9 @@ Evidence:
 - `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`
 - 이 문서
 
-Boundary / next dependency: P0-A/P0-B와 P1-C merge/join·split/slice는
+Boundary / next dependency: P0-A/P0-B와 P1-C merge/join·split/slice·hole은
 각 acceptance criteria와 protected regression을 통과했습니다. 다음
-구현은 P1-C manual hole editing 또는 z-order이며, remove-underlying은
+구현은 P1-C z-order이며, remove-underlying은
 영향 객체 preview/warning 계약이 먼저 필요합니다. 현재
 완료는 CVAT/V7 parity, field accuracy, video propagation, cloud/team
 platform을 의미하지 않습니다.

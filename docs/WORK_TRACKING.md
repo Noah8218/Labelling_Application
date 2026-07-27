@@ -17592,3 +17592,51 @@ workstation maturity remains `4.0/5`. Manual hole editing, z-order, and
 remove-underlying remain independent P1-C slices. Remove-underlying requires an
 affected-object preview/warning before mutation. Recommended model:
 `gpt-5.6-sol`; reasoning effort: `high`.
+
+## 2026-07-28 P1-C Segmentation Hole Editing
+
+Status: `Complete`
+
+Scope:
+
+- select one saved polygon or raster-mask object;
+- draw one enclosed polygon hole or click one enclosed empty component to fill;
+- reject boundary-crossing, foreground-fill, and exterior-connected inputs
+  before mutation;
+- preserve object ID/class/z-order with `HoleAdd` or `HoleRemove` provenance;
+- support visible/right-click cancellation, one-step undo/redo, and canonical
+  v3 save/load/re-save.
+
+Acceptance criteria:
+
+- polygon source and raster publication: pass;
+- valid enclosed add and fill: pass;
+- external polygon, foreground click, and open background channel rejection:
+  pass;
+- invalid input leaves source/history unchanged: pass;
+- stable identity, class, z-order, and operation provenance: pass;
+- one Undo/Redo per successful edit: pass;
+- current-source 1920x1080 before/after evidence: pass.
+
+Verification:
+
+- isolated/app Debug builds: warning 0, error 0;
+- `--segmentation-hole`: pass;
+- merge/split/interchange/storage/history/segmentation/mask-performance
+  regressions: pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `0. UI\9) WPF\Services\Annotation\WpfSegmentationHoleService.cs`;
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.SegmentationHoleCommands.cs`;
+- `tests\LabelingApplication.Tests\Program.SegmentationHole.cs`;
+- `docs\SEGMENTATION_HOLE_P1C_20260728.md`;
+- `artifacts\ui\segmentation-hole-p1c-20260728`.
+
+Boundary / next dependency: labeling-editor depth is now `2.8/5`; focused
+workstation maturity remains `4.0/5`. The next bounded P1-C operation is
+z-order. Remove-underlying remains separate and requires an affected-object
+preview/warning before mutation. Recommended model: `gpt-5.6-sol`; reasoning
+effort: `high`.

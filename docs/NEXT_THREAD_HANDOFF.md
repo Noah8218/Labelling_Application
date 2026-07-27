@@ -1,6 +1,6 @@
 # Next Thread Handoff
 
-Last updated: 2026-07-27 KST
+Last updated: 2026-07-28 KST
 
 This is the current operational handoff for C:\Git\Labelling_Application. It is intentionally shorter than the historical journal. Use it to choose the next task; use the linked records only for the detailed evidence behind a claim.
 
@@ -10,7 +10,7 @@ This is the current operational handoff for C:\Git\Labelling_Application. It is 
 2. Read AGENTS.md.
 3. Read this file.
 4. Read CODEX_NEXT_PROMPT.md, docs/WORK_TRACKING.md, docs/STABLE_VERIFIED_AREAS.md, and docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md.
-5. Inspect the current diff directly. The dirty worktree is more authoritative than this handoff.
+5. Inspect the live branch, status, and diff directly. Git state is more authoritative than this handoff.
 6. Before editing, state the immediate priority, remaining product priority, assumptions, and verification plan.
 
 There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapshot. AGENTS.md in this repository is the available project instruction source.
@@ -21,6 +21,10 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
 - Branch: main. The structural-refactor implementation through
   `889abdf refactor: clarify yolo contract ownership` was explicitly pushed to
   `origin/main` on 2026-07-27. Always verify the live hashes before new work.
+- The labeling-editor structure workflow through P0-A/P0-B, P1-A/P1-B,
+  merge/join, and axis-aligned split/slice was committed and pushed as
+  `9b2160a feat: advance labeling editor structure workflows` on 2026-07-28.
+  The enclosed hole add/fill closure follows it in current source.
 - The structural-refactor sequence is `3351abd` (Core contract ownership),
   `5ed829c` (Model/Yolo ownership), and `889abdf` (Yolo contract ownership and
   final declaration audit). This phase is complete; do not reopen mechanical
@@ -47,18 +51,18 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`. A denser V7/CVAT
   labeling review corrected the initial visual-QA-first decision. P0-A
   command/productivity, P0-B interactive Smart Mask, and the first P1-C
-  merge/join and axis-aligned split/slice commands are now complete in the
-  current dirty worktree. The labeling-only estimate moved from the review
-  baseline `2.1/5` to `2.7/5`;
+  merge/join, axis-aligned split/slice, and enclosed hole add/fill commands are now complete in the
+  current source. The labeling-only estimate moved from the review
+  baseline `2.1/5` to `2.8/5`;
   object state, remaining structural mask editing, display
   aids, video propagation, and collaboration still prevent CVAT/V7 parity.
   This remains separate from the focused local-workstation estimate of `4.0/5`.
   `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md` is the current
    implementation contract.
-- Active development started from `ef155ed docs: close structural refactoring
-  phase` on 2026-07-27. The current dirty worktree contains the commercial-video
-  review and labeling-gap documentation listed above; these are intentional
-  project changes. Local `.proofline/STATE.md` and `.proofline/dashboard/` are
+- This labeling-editor development sequence started from
+  `ef155ed docs: close structural refactoring phase` on 2026-07-27. Its reviewed
+  work through split/slice is now in `9b2160a`; use the live branch state for
+  later closures. Local `.proofline/STATE.md` and `.proofline/dashboard/` are
   unrelated untracked state and must remain untouched.
 - Never push unless the user explicitly says push. A commit request means local commit only.
 
@@ -107,9 +111,9 @@ Evidence:
 
 Boundary / next dependency:
 
-- P1-C merge/join and axis-aligned split/slice are complete and raise the
-  labeling-editor depth estimate only to `2.7/5`.
-- P1-C continues with structural hole editing or z-order next.
+- P1-C merge/join, axis-aligned split/slice, and enclosed hole add/fill are
+  complete and raise the labeling-editor depth estimate only to `2.8/5`.
+- P1-C continues with z-order next.
   Remove-underlying remains a separate command with a required affected-object
   preview/warning.
 - Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
@@ -154,8 +158,30 @@ Boundary / next dependency:
 - Evidence:
   `docs\SEGMENTATION_SPLIT_P1C_20260727.md` and
   `artifacts\ui\segmentation-split-p1c-20260727`.
-- Next bounded operation: manual hole editing or z-order. Remove-underlying
-  requires an affected-object warning before mutation.
+- Hole editing is completed in the following checkpoint. Remove-underlying
+  still requires an affected-object warning before mutation.
+
+### Completed P1-C hole editing checkpoint (2026-07-28)
+
+- Saved Labels exposes **구멍 그리기**, **구멍 채우기**, and visible cancel
+  controls for one selected manual segmentation object.
+- Hole-add accepts a polygon only when all rasterized pixels are foreground
+  and the resulting empty component remains enclosed.
+- Hole-fill accepts only one empty internal component; exterior-connected
+  background, concavities, and open channels are rejected.
+- Invalid input works on copied geometry and leaves source/history unchanged.
+- Polygon/raster output keeps object ID, class, and z-order; provenance becomes
+  `HoleAdd` or `HoleRemove`.
+- Each successful operation is one undo/redo step. Canonical v3
+  save/load/re-save preserves identity and provenance.
+- Right-click, visible cancel, selected-object/image/tool change cancel pending
+  input, and Smart Mask cannot own point input concurrently.
+- Focused gate: `--segmentation-hole`.
+- Evidence:
+  `docs\SEGMENTATION_HOLE_P1C_20260728.md` and
+  `artifacts\ui\segmentation-hole-p1c-20260728`.
+- Next bounded operation: z-order. Remove-underlying remains separate and
+  requires an affected-object preview/warning.
 
 ### Completed P0-A development checkpoint (2026-07-27)
 
@@ -272,10 +298,11 @@ P0-B durable status: `Complete`. Field validation: `Not evaluated`.
 - Existing 24-call exact-box and 96-call box-jitter results remain protected
   regression evidence, not field accuracy.
 
-The immediate product priority is now P1-C manual hole editing or z-order. P1-A
+The immediate product priority is now P1-C z-order. P1-A
 JSON/mask-PNG/YOLO/COCO/CVAT preservation/loss semantics and P1-B canonical
 v3 object/component identity are complete, and P1-C merge/join plus
-axis-aligned split/slice have user-visible commands and focused evidence.
+axis-aligned split/slice and enclosed hole add/fill have user-visible commands
+and focused evidence.
 Keep the next structural command independently acceptance-gated.
 
 ### Completed structural-refactor phase
@@ -642,9 +669,9 @@ reproduced. Preserve P0-B's box-only compatibility, point session,
 rerun-replace, cancellation, stale guard, confirm-only save, provenance, and
 next-instance behavior.
 
-1. Add P1-C manual hole editing or z-order, then remove-underlying with an
+1. Add P1-C z-order, then remove-underlying with an
    affected-object warning and undo. Merge/join and axis-aligned split/slice
-   are complete. P1-A already states what
+   and enclosed hole add/fill are complete. P1-A already states what
    polygon/segment JSON, mask PNG, YOLO, COCO, and CVAT preserve or reject
    before editing code. Do not treat an internal brush-span merge as a
    user-visible object merge.

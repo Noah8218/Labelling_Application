@@ -168,6 +168,11 @@ namespace MvcVisionSystem
                 CancelPendingSegmentationSplit(updateStatus: false);
             }
 
+            if (pendingSegmentationHoleEditMode.HasValue)
+            {
+                CancelPendingSegmentationHoleEdit(updateStatus: false);
+            }
+
             WpfAnnotationToolItem selectedTool = ResolveSelectableAnnotationTool(tool);
             if (selectedTool == null)
             {

@@ -13,7 +13,7 @@ Required start order:
 3. Read docs/NEXT_THREAD_HANDOFF.md. It is the current project handoff and source-of-truth summary.
 4. Read docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md for current product scope, maturity, and commercial comparison.
 5. Read this CODEX_NEXT_PROMPT.md, docs/WORK_TRACKING.md, and docs/STABLE_VERIFIED_AREAS.md for the bounded next action and durable evidence.
-6. Inspect the actual current diff before selecting work. The dirty worktree is authoritative over documentation.
+6. Inspect the live branch, status, and diff before selecting work. Git state is authoritative over documentation.
 7. Before editing or running follow-up commands, state:
    - immediate priority;
    - remaining product priority;
@@ -24,12 +24,11 @@ Required start order:
 
 Current checkpoint:
 - Workspace: C:\Git\Labelling_Application
-- Branch: main. The latest verified feature closure is committed as
-  `ad569dcd009c836a1cab23d637d6e10186ec7043`; local `HEAD` and `origin/main`
-  matched after the explicit 2026-07-24 push. It includes Recipe Dataset
-  Version v2, Recipe/anomaly/adapter truth alignment, and the recorded local
-  YOLO11 anomaly-classification closure. Verify live hashes before work and do
-  not push again without a new explicit request.
+- Branch: main. The labeling-editor structure workflow through P1-C
+  merge/join and axis-aligned split/slice is committed and pushed as
+  `9b2160a feat: advance labeling editor structure workflows`. The enclosed
+  hole add/fill closure follows it in current source. Verify live hashes before
+  work and do not push again without a new explicit request.
 - The temporary `C:\새 폴더\OpenVisionLab-Labeling-Studio_TEST` clone was deleted
   after the original path independently passed Dataset wizard, Worklist, and
   YOLOv8 restart/inference EXE smokes. Develop only in
@@ -46,8 +45,9 @@ Product direction:
 - Do not expand into cloud collaboration, accounts, reviewer assignment, deployment, or enterprise governance.
 - The focused single-operator maturity estimate remains 4.0/5. It is workflow maturity, not model accuracy.
 - Labeling-editor depth moved from the commercial-video baseline `2.1/5` to
-  `2.5/5` after P0-A/P0-B, `2.6/5` after P1-C merge/join, and `2.7/5`
-  after axis-aligned split/slice. It remains materially below CVAT/V7 because mask
+  `2.5/5` after P0-A/P0-B, `2.6/5` after P1-C merge/join, `2.7/5`
+  after axis-aligned split/slice, and `2.8/5` after enclosed hole add/fill.
+  It remains materially below CVAT/V7 because mask
   structure, object state/precision, display aids, propagation, and
   collaboration are still absent or intentionally excluded.
 - Synthetic-first evidence may complete product features when the declared-origin, locked-split, SHA-256 non-overlap/source-immutability, runtime-provenance, normalized-result, and non-adopting decision gates in `docs/SYNTHETIC_EVIDENCE_CONTRACT.md` pass. Independent production-camera/cross-session data is an optional field-adoption gate, not an implementation blocker.
@@ -60,10 +60,10 @@ Current immediate priority:
   box/polygon/brush/eraser and save/review baseline, but repeat commands,
   object state, structural mask editing, and interactive AI correction were
   materially behind. P0-A, P0-B, and P1-C merge/join plus split/slice are now
-  complete; the labeling-only estimate is `2.7/5`, while the focused local-workstation product estimate remains
+  complete; the labeling-only estimate is `2.8/5`, while the focused local-workstation product estimate remains
   `4.0/5`.
 - P0-A, the labeling command and repeat-productivity foundation, is complete in
-  the current dirty worktree. It adds purpose-filtered tool hotkeys, class
+  committed source. It adds purpose-filtered tool hotkeys, class
   `1~9`, `0` Class Catalog fallback, last shape+class repeat, selected
   box/polygon/raster-mask duplicate, tool/class retention, text-entry
   suppression, numbered class chips, and an F1 help card.
@@ -73,7 +73,7 @@ Current immediate priority:
   `--exe-labeling-productivity-smoke` against the latest Debug EXE. The help
   card stays in a separate Auto row above the WinForms/OpenGL canvas so actual
   EXE airspace cannot hide it.
-- P0-B interactive Smart Mask is also complete in the current dirty worktree.
+- P0-B interactive Smart Mask is also complete in committed source.
   It adds box+positive/negative-point correction, point undo/clear,
   48/96/256 detail, async cancellation, rerun-replace, confirm/skip, and
   next-instance box restoration. It preserves no-autosave, stale-result guards,
@@ -85,32 +85,38 @@ Current immediate priority:
 - Read
   `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md` and
   `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md` before editing.
-- P1-A mask-structure preservation/loss contract is complete in the current
-  dirty worktree. `SegmentationInterchangeContractService` declares one matrix
+- P1-A mask-structure preservation/loss contract is complete in committed
+  source. `SegmentationInterchangeContractService` declares one matrix
   for canonical JSON, mask PNG, YOLO, COCO, and CVAT; COCO/CVAT/YOLO export
   results surface deduplicated conditional/loss warnings. The focused gate is
   `--segmentation-interchange-contract`; the durable contract is
   `docs\SEGMENTATION_INTERCHANGE_PRESERVATION_CONTRACT_20260727.md`.
-- P1-B canonical schema v3 is complete in the current dirty worktree.
+- P1-B canonical schema v3 is complete in committed source.
   Disconnected raster components preserve one object ID, stable component
   indices, z-order, and last structural operation across save/load/re-save.
   Version 1/2 polygon/raster files load with deterministic legacy metadata;
   history preserves identity and duplicate starts a new identity. The focused
   gate remains `--segmentation-interchange-contract`.
-- P1-C merge/join is complete in the current dirty worktree. Saved Labels
+- P1-C merge/join is complete in committed source. Saved Labels
   exposes per-segment merge checkboxes and a count/button; same-class
   polygon/raster sources become one raster object with a new v3 ID, `Merge`
   provenance, one-step undo/redo, and save/load/re-save evidence. The focused
   gate is `--segmentation-merge`; read
   `docs\SEGMENTATION_MERGE_P1C_20260727.md`.
-- P1-C axis-aligned split/slice is complete in the current dirty worktree.
+- P1-C axis-aligned split/slice is complete in committed source.
   Saved Labels exposes vertical/horizontal point-input commands and cancel;
   polygon/raster sources split only when a one-pixel cut creates 2+
   4-connected components. New v3 IDs, `Split` provenance, invalid-cut
   no-mutation, one-step undo/redo, and save/load/re-save are covered by
   `--segmentation-split`; read
   `docs\SEGMENTATION_SPLIT_P1C_20260727.md`.
-- The next bounded implementation is P1-C manual hole editing or z-order.
+- P1-C enclosed hole add/fill is complete in current source.
+  Saved Labels exposes polygon hole drawing and enclosed-background click fill;
+  exterior-connected background is rejected without mutation. Stable identity,
+  `HoleAdd`/`HoleRemove`, one-step history, and v3 re-save are covered by
+  `--segmentation-hole`; read
+  `docs\SEGMENTATION_HOLE_P1C_20260728.md`.
+- The next bounded implementation is P1-C z-order.
   Remove-underlying must show an affected-object warning before mutation.
   Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
 - Mask hole/z-order/remove-underlying remains P1-C. Dataset Health

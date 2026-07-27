@@ -127,6 +127,11 @@ namespace MvcVisionSystem
         private LabelingSegmentationObject pendingSegmentationSplitSource;
         private int pendingSegmentationSplitSourceIndex = -1;
         private WpfSegmentationSplitOrientation? pendingSegmentationSplitOrientation;
+        private readonly WpfSegmentationHoleService segmentationHoleService = new WpfSegmentationHoleService();
+        private readonly WpfPolygonAnnotationService holePolygonAnnotationService = new WpfPolygonAnnotationService();
+        private LabelingSegmentationObject pendingSegmentationHoleSource;
+        private int pendingSegmentationHoleSourceIndex = -1;
+        private WpfSegmentationHoleEditMode? pendingSegmentationHoleEditMode;
         private readonly List<WpfAnnotationHistorySnapshot> undoAnnotationHistory = new List<WpfAnnotationHistorySnapshot>();
         private readonly List<WpfAnnotationHistorySnapshot> redoAnnotationHistory = new List<WpfAnnotationHistorySnapshot>();
         private readonly WpfCandidateReviewStateService candidateReviewState = new WpfCandidateReviewStateService();
