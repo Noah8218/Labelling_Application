@@ -17086,3 +17086,45 @@ Boundary / next dependency: 이번 감사는 두 파일을 분리하지 않았�
 코드를 바꾸지 않았습니다. 다른 adapter가 계약을 공유하거나 독립
 serializer/schema owner가 생길 때만 예외를 재검토합니다. Viewer/OpenGL/
 ROI/brush/eraser와 segmentation materialization 경로는 변경하지 않았습니다.
+
+
+## 2026-07-27 Labeling Studio 구조 리팩토링 단계 종료
+
+Status: Complete
+
+Scope: 사람과 LLM의 탐색성을 높이기 위한 Core·Model·Yolo 책임 소유권,
+공개 계약 파일, 구조 navigation 문서 정리를 완료했습니다. 주요 구현
+체크포인트는 `3351abd`, `5ed829c`, `889abdf`이며 마지막 Yolo 계약 배치는
+`origin/main`에 푸시되었습니다.
+
+Acceptance criteria:
+
+- 폴더와 클래스 이름으로 주요 도메인 소유자를 찾을 수 있음:
+  `docs\CODE_STRUCTURE.md`의 navigation map으로 통과.
+- 공개 result/report/DTO가 책임 이름의 계약 파일에서 검색됨:
+  누적 계약 소유권 감사로 통과.
+- Yolo 공개 타입 이름 중복이 없고 남은 다중 공개 파일이 모두 설명됨:
+  공개 선언 133개, 중복 0개, 의도적 예외 2개.
+- 구조 이동이 실행 동작을 바꾸지 않음: 격리 빌드 경고 0·오류 0과 각
+  완료 기록의 focused gate로 통과.
+- 종료 상태와 재개 조건이 다음 작업자에게 전달됨:
+  `docs\NEXT_THREAD_HANDOFF.md`와 이 완료 기록으로 통과.
+
+Verification:
+
+- 마지막 누적 격리 빌드: 경고 0, 오류 0.
+- 최종 구조 감사 게이트: `--wpf-settings-viewmodels`,
+  `--segmentation-annotation-storage`, `--priority-workflow-docs` 통과.
+- 선언 감사: `DUPLICATE_PUBLIC_TYPE_NAMES=0`,
+  `NON_CONTRACT_MULTI_PUBLIC_FILES=2`.
+- 구현 커밋 `889abdf`의 local HEAD와 `origin/main` 일치 확인.
+- `git diff --check` 통과.
+
+Evidence: `docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`,
+`docs\NEXT_THREAD_HANDOFF.md`, 각 2026-07-26~27 계약 소유권 완료 기록.
+
+Boundary / next dependency: 이 완료 상태는 현재 구조 정리 단계의 종료이며,
+모든 미래 코드가 리팩토링 불필요하다는 주장이 아닙니다. 이후에는 파일
+길이·타입 개수가 아니라 실제 혼합 소유권, 탐색 오류, 재사용 또는 테스트
+경계 문제가 확인될 때만 구조 리팩토링을 재개합니다. 프로젝트 우선순위는
+기능 개발과 재현된 결함 수정으로 전환합니다.

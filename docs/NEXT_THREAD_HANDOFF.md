@@ -18,29 +18,36 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
 ## 2. Repository Checkpoint
 
 - Workspace: C:\Git\Labelling_Application
-- Branch: main. Local `HEAD` and `origin/main` both matched
-  `ad569dcd009c836a1cab23d637d6e10186ec7043` after the explicit normal push on
-  2026-07-24. Always verify the live hashes before new work.
-- The latest commit is
-  `ad569dc feat: add dataset versioning and YOLO11 anomaly validation`. It
-  closes Recipe Dataset Version v2, Recipe/anomaly/adapter truth alignment,
-  and the recorded local YOLO11 anomaly-classification runtime slice.
+- Branch: main. The structural-refactor implementation through
+  `889abdf refactor: clarify yolo contract ownership` was explicitly pushed to
+  `origin/main` on 2026-07-27. Always verify the live hashes before new work.
+- The structural-refactor sequence is `3351abd` (Core contract ownership),
+  `5ed829c` (Model/Yolo ownership), and `889abdf` (Yolo contract ownership and
+  final declaration audit). This phase is complete; do not reopen mechanical
+  splitting without a concrete ownership, navigation, reuse, or test-boundary
+  problem.
+- The earlier product commit
+  `ad569dc feat: add dataset versioning and YOLO11 anomaly validation` closes
+  Recipe Dataset Version v2, Recipe/anomaly/adapter truth alignment, and the
+  recorded local YOLO11 anomaly-classification runtime slice.
 - The verified relocation fixes and evidence records are committed in
   `0f1f91b fix: preserve relocated runtime workflows`. The relocated copy at
   `C:\새 폴더\OpenVisionLab-Labeling-Studio_TEST` was deleted after the original
   path independently passed the Dataset wizard, Worklist, and YOLOv8 restart
   EXE smokes. Use only `C:\Git\Labelling_Application` for development.
-- The worktree was clean immediately after the push. Verify live state with
-  `git status --short`; do not infer cleanliness from this document.
-- GitHub Actions has not been rechecked for commit `ad569dc`. Do not cite older
-  CI evidence as current CI evidence.
+- Tracked project files were clean immediately after the structural-refactor
+  push. Local `.proofline/STATE.md` and `.proofline/dashboard/` remain untracked
+  and outside project commits. Verify live state with `git status --short`.
+- GitHub Actions has not been rechecked for the current structural-refactor and
+  closure documentation commits. Do not cite older CI evidence as current CI
+  evidence.
 - The current focused passes directly verified Dataset Health, external native YOLO intake, model/anomaly comparison, the dedicated Model Center workspace, and the explicit model-adapter catalog slices. The image-queue slice also has a 50,081-image local warm-cache profile and a separate duplicate-file local 8K profile; neither is a network-share or production-camera result.
 - Never push unless the user explicitly says push. A commit request means local commit only.
 
-### Current uncommitted structural-refactor batch
+### Completed structural-refactor phase
 
-The current dirty worktree contains a behavior-preserving Yolo contract-ownership
-refactor. Public result/report/DTO types were moved from service implementations
+The behavior-preserving Core/Model/Yolo ownership refactor is complete and
+pushed. Public result/report/DTO types were moved from service implementations
 into responsibility-named `*Contracts.cs` files; the exact navigation map and
 per-slice verification records are in `docs/CODE_STRUCTURE.md` and
 `docs/WORK_TRACKING.md`.
@@ -52,8 +59,10 @@ types. They are documented co-location exceptions, not pending mechanical
 splits. Do not restructure the segmentation annotation/materialization path
 without a concrete requirement and focused evidence.
 
-The batch is not committed or pushed. Keep `.proofline/STATE.md` and
-`.proofline/dashboard/` outside this batch.
+Do not continue refactoring merely to reduce file length or public-type count.
+Resume structural work only when a concrete change exposes mixed ownership,
+stale coupling, an untestable responsibility, or a real navigation problem.
+Keep `.proofline/STATE.md` and `.proofline/dashboard/` outside project commits.
 
 ## 3. Product Identity and Direction
 
