@@ -18,6 +18,16 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (TryApplyPendingSegmentationSplit(e))
+            {
+                return;
+            }
+
+            if (TryApplySmartMaskPointInput(e))
+            {
+                return;
+            }
+
             if (activeAnnotationTool == WpfAnnotationTool.Select && TryBeginSelectedSegmentEdit(e))
             {
                 return;

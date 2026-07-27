@@ -18,6 +18,14 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (pendingSegmentationSplitOrientation.HasValue
+                && (selectedItem is not WpfObjectReviewListItem selectedRow
+                    || !selectedRow.IsManualSegment
+                    || selectedRow.SourceIndex != pendingSegmentationSplitSourceIndex))
+            {
+                CancelPendingSegmentationSplit(updateStatus: false);
+            }
+
             SyncObjectClassEditorToSelection();
             UpdateObjectReviewActionState();
             bool isManualSegmentSelected = ObjectReviewViewModel?.IsSelectedSource(WpfObjectReviewSource.ManualSegment) == true;
@@ -81,6 +89,44 @@ namespace MvcVisionSystem
         private void ExecuteDeleteObjectCommand()
         {
             DeleteSelectedObject();
+        }
+
+        private void ExecuteMergeSelectedSegmentsCommand()
+        {
+            IReadOnlyList<int> selectedIndices = ObjectReviewViewModel?
+                .GetMergeSelectedManualSegmentIndices()
+                ?? Array.Empty<int>();
+            if (!segmentationMergeService.TryMerge(
+                manualSegments,
+                selectedIndices,
+                activeImageSize,
+                out WpfSegmentationMergeResult mergeResult,
+                out string error))
+            {
+                SetYoloCommandStatus(error, isBusy: false);
+                AppendLog($"Segment merge skipped: {error}");
+                ObjectReviewViewModel?.RefreshActionState();
+                return;
+            }
+
+            WpfAnnotationHistorySnapshot beforeChange = CaptureAnnotationHistory("\uC138\uADF8\uBA3C\uD2B8 \uBCD1\uD569");
+            foreach (int index in mergeResult.SourceIndices.OrderByDescending(index => index))
+            {
+                manualSegments.RemoveAt(index);
+            }
+
+            int insertIndex = Math.Max(0, Math.Min(mergeResult.InsertIndex, manualSegments.Count));
+            manualSegments.Insert(insertIndex, mergeResult.MergedSegment);
+            PushAnnotationHistorySnapshot(beforeChange);
+            MainCanvasViewModel?.ClearMaskStrokePreview(refresh: false, clearTexture: true);
+            RefreshPolygonOverlays();
+            RefreshObjectListWithSelection(WpfObjectReviewItemRef.ManualSegment(insertIndex));
+            QueueActiveImageQueueStatusRefresh(hasActiveCandidates: pendingDetectionCandidates.Count > 0);
+
+            string status = FormattableString.Invariant(
+                $"\uC138\uADF8\uBA3C\uD2B8 \uBCD1\uD569: {mergeResult.SourceIndices.Count}\uAC1C \u2192 1\uAC1C / {mergeResult.MergedSegment.ClassName}");
+            SetYoloCommandStatus(status, isBusy: false);
+            AppendLog(status);
         }
 
         private void ExecuteObjectPreviewKeyDownCommand(KeyInputCommandArgs e)

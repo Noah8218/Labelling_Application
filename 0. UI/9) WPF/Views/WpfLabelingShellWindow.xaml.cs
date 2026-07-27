@@ -122,6 +122,11 @@ namespace MvcVisionSystem
         private readonly List<LabelingSegmentationObject> manualSegments = new List<LabelingSegmentationObject>();
         private readonly WpfPolygonAnnotationService polygonAnnotationService = new WpfPolygonAnnotationService();
         private readonly WpfMaskAnnotationService maskAnnotationService = new WpfMaskAnnotationService();
+        private readonly WpfSegmentationMergeService segmentationMergeService = new WpfSegmentationMergeService();
+        private readonly WpfSegmentationSplitService segmentationSplitService = new WpfSegmentationSplitService();
+        private LabelingSegmentationObject pendingSegmentationSplitSource;
+        private int pendingSegmentationSplitSourceIndex = -1;
+        private WpfSegmentationSplitOrientation? pendingSegmentationSplitOrientation;
         private readonly List<WpfAnnotationHistorySnapshot> undoAnnotationHistory = new List<WpfAnnotationHistorySnapshot>();
         private readonly List<WpfAnnotationHistorySnapshot> redoAnnotationHistory = new List<WpfAnnotationHistorySnapshot>();
         private readonly WpfCandidateReviewStateService candidateReviewState = new WpfCandidateReviewStateService();
@@ -143,6 +148,7 @@ namespace MvcVisionSystem
         private readonly WpfModelComparisonRunService modelComparisonRunService = new WpfModelComparisonRunService();
         private readonly WpfSegmentationAdapterComparisonRunService segmentationAdapterComparisonRunService = new WpfSegmentationAdapterComparisonRunService();
         private readonly WpfMobileSamBoxPromptService mobileSamBoxPromptService = new WpfMobileSamBoxPromptService();
+        private readonly WpfSmartMaskPromptSessionService smartMaskPromptSession = new WpfSmartMaskPromptSessionService();
         private readonly WpfAnomalyClassificationEvaluationRunService anomalyClassificationEvaluationRunService = new WpfAnomalyClassificationEvaluationRunService();
         private readonly WpfWorkspaceLayoutSettingsService workspaceLayoutSettingsService = new WpfWorkspaceLayoutSettingsService();
         private readonly WpfTrainingGuideHistoryService trainingGuideHistoryService = new WpfTrainingGuideHistoryService();
@@ -151,6 +157,7 @@ namespace MvcVisionSystem
         private bool suppressImageQueueSelection;
         private bool isDetecting;
         private bool isCreatingSmartMask;
+        private CancellationTokenSource smartMaskCancellation;
         private bool isBatchDetectionRunning;
         private bool isYoloEnvironmentCommandRunning;
         private bool isTrainingCommandRunning;

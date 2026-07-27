@@ -42,7 +42,241 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   closure documentation commits. Do not cite older CI evidence as current CI
   evidence.
 - The current focused passes directly verified Dataset Health, external native YOLO intake, model/anomaly comparison, the dedicated Model Center workspace, and the explicit model-adapter catalog slices. The image-queue slice also has a 50,081-image local warm-cache profile and a separate duplicate-file local 8K profile; neither is a network-share or production-camera result.
+- The 2026-07-27 review of ten user-provided commercial integration videos is
+  recorded in
+  `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`. A denser V7/CVAT
+  labeling review corrected the initial visual-QA-first decision. P0-A
+  command/productivity, P0-B interactive Smart Mask, and the first P1-C
+  merge/join and axis-aligned split/slice commands are now complete in the
+  current dirty worktree. The labeling-only estimate moved from the review
+  baseline `2.1/5` to `2.7/5`;
+  object state, remaining structural mask editing, display
+  aids, video propagation, and collaboration still prevent CVAT/V7 parity.
+  This remains separate from the focused local-workstation estimate of `4.0/5`.
+  `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md` is the current
+   implementation contract.
+- Active development started from `ef155ed docs: close structural refactoring
+  phase` on 2026-07-27. The current dirty worktree contains the commercial-video
+  review and labeling-gap documentation listed above; these are intentional
+  project changes. Local `.proofline/STATE.md` and `.proofline/dashboard/` are
+  unrelated untracked state and must remain untouched.
 - Never push unless the user explicitly says push. A commit request means local commit only.
+
+### Completed P1-A/P1-B development checkpoint (2026-07-27)
+
+Immediate outcome:
+
+- one code-owned preservation matrix covers canonical segment JSON, class-index
+  mask PNG, YOLO segmentation, COCO polygon, and CVAT polygon;
+- every format declares class, polygon, raster, hole, multi-component,
+  instance-grouping, z-order, and remove-underlying provenance as
+  `Preserved`, `Conditional`, or `Lost`;
+- annotation-derived COCO/CVAT/YOLO export results expose deduplicated warnings;
+- a cutout/hole fixture reports `Holes: Lost` for all three polygon export
+  paths instead of presenting them as lossless.
+- canonical segment JSON v3 stores persistent object ID, component index,
+  z-order, and last structural operation;
+- disconnected raster components retain one object identity across
+  save/load/re-save;
+- segment JSON v1/v2 loads with unchanged geometry and deterministic legacy
+  metadata.
+
+Owner boundary:
+
+- `Yolo\SegmentationInterchangeContractService.cs`: capability matrix,
+  annotation profile, audit, and warning text;
+- `Yolo\YoloSegmentationAnnotationService.cs`: v3 serialization and v1/v2
+  compatibility;
+- `LabelingSegmentationObject` and annotation history: in-memory identity and
+  undo preservation; duplicate deliberately starts a new identity;
+- COCO/CVAT/YOLO export services: append the shared warnings to existing result
+  objects;
+- Viewer/OpenGL and brush/eraser input paths: unchanged.
+
+Verification:
+
+- isolated test build: 0 warnings, 0 errors;
+- `--segmentation-interchange-contract`: pass;
+- existing segmentation storage/export/import regressions must remain part of
+  the final gate.
+
+Evidence:
+
+- `docs\SEGMENTATION_INTERCHANGE_PRESERVATION_CONTRACT_20260727.md`;
+- `tests\LabelingApplication.Tests\Program.SegmentationInterchangeContract.cs`.
+
+Boundary / next dependency:
+
+- P1-C merge/join and axis-aligned split/slice are complete and raise the
+  labeling-editor depth estimate only to `2.7/5`.
+- P1-C continues with structural hole editing or z-order next.
+  Remove-underlying remains a separate command with a required affected-object
+  preview/warning.
+- Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
+
+### Completed P1-C merge/join checkpoint (2026-07-27)
+
+- Saved Labels exposes merge checkboxes only on segmentation rows, a selected
+  count, and an accessible **선택 마스크 병합** command.
+- Two or more same-class polygon/raster objects are unioned into one raster
+  object. Polygon cutouts are applied per source before the union, so another
+  source can fill a cutout without being erased.
+- Mixed classes are rejected before mutation.
+- The merged object receives a new v3 object ID, component `-1`, maximum source
+  z-order, and `LastStructuralOperation=Merge`.
+- The replacement is one undo/redo step. Canonical save/load/re-save preserves
+  shared identity, sequential disconnected component indices, and provenance.
+- Viewer/OpenGL, ROI, brush, eraser, and mask-drag hot paths are unchanged.
+- Focused gate: `--segmentation-merge`.
+- Evidence:
+  `docs\SEGMENTATION_MERGE_P1C_20260727.md` and
+  `artifacts\ui\segmentation-merge-p1c-20260727`.
+- Split/slice is completed in the following checkpoint.
+
+### Completed P1-C split/slice checkpoint (2026-07-27)
+
+- Saved Labels exposes **세로 절단**, **가로 절단**, and visible cancel
+  controls only when one manual segmentation object is selected.
+- A canvas click removes one pixel column or row. The command commits only
+  when the selected polygon/raster source becomes at least two 4-connected
+  components; invalid clicks leave source geometry and history unchanged.
+- Polygon cutouts remain empty because merge and split now share
+  `WpfSegmentationMaskGeometryService`.
+- Every result gets an independent new v3 object ID, component `-1`, preserved
+  class/z-order, and `LastStructuralOperation=Split`.
+- The source replacement is one undo/redo step. Canonical v3 save/load/re-save
+  preserves the generated identities and provenance.
+- Pending split is cancelled by right-click, the visible cancel button,
+  selected-object/image/tool change, and cannot compete with an active Smart
+  Mask session.
+- Viewer/OpenGL, ROI, brush, eraser, and mask-drag hot paths are unchanged.
+- Focused gate: `--segmentation-split`.
+- Evidence:
+  `docs\SEGMENTATION_SPLIT_P1C_20260727.md` and
+  `artifacts\ui\segmentation-split-p1c-20260727`.
+- Next bounded operation: manual hole editing or z-order. Remove-underlying
+  requires an affected-object warning before mutation.
+
+### Completed P0-A development checkpoint (2026-07-27)
+
+Immediate outcome:
+
+- add purpose-filtered tool shortcuts and class `1~9` shortcuts;
+- use `0` to open Class Catalog as the deterministic larger-catalog fallback;
+- repeat the last drawing tool and class without toolbar reselection;
+- duplicate the selected box, polygon, or raster mask while preserving class,
+  geometry type, history, dirty state, and canonical save behavior;
+- keep the current drawing tool and class after object creation;
+- expose an in-product shortcut help surface;
+- suppress drawing shortcuts while a text-entry or value-editing control owns
+  keyboard focus.
+
+Included owner boundary:
+
+- `Services\Annotation`: shortcut mapping and safe duplicate geometry policy;
+- `WpfCanvasPanelViewModel`: visible shortcut/help state, class index state, and
+  last drawing tool/class state;
+- `WpfLabelingShellWindow.ShellInputCommands`: input bridge only;
+- existing Annotation history, object review, and save owners: mutation
+  registration and refresh;
+- `OpenVisionLab.ImageCanvas`: unchanged geometry drawing, hit-test, move, and
+  resize owner.
+
+Excluded from this slice:
+
+- Viewer/OpenGL input redesign;
+- ROI, brush, or eraser hot-path redesign;
+- new AI models, point-prompt Smart Mask, video propagation, cloud/team shortcut
+  profiles, and persisted user-custom shortcut profiles.
+
+Evidence captured before code changes:
+
+- current application build:
+  `dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Debug /nr:false -m:1
+  /p:UseSharedCompilation=false` passed with 0 warnings and 0 errors;
+- closest reproducible current-source 1920x1080 baseline:
+  `artifacts\ui\labeling-productivity-p0a-20260727\before-current-source-1920x1080.png`;
+- `--exe-industrial-object-labeling-smoke` stopped before capture because the
+  guide/tools tab selector could not select the expected row;
+- `--exe-real-labeling-smoke` stopped before capture because its native click
+  could not find the segmentation dataset purpose.
+
+The two pre-existing actual-EXE automation failures remain stale general-smoke
+selector limitations, not P0-A regressions. P0-A now has its own current-build
+`--exe-labeling-productivity-smoke`, which opens the latest Debug EXE, verifies
+the visible help button, clicks it natively, verifies the help text, and captures
+`artifacts\ui\labeling-productivity-p0a-20260727\after-actual-exe-1920x1080.png`.
+
+P0-A completion gates:
+
+1. shortcut mapping, purpose filtering, text-entry suppression, class `1~9`, and
+   `0` fallback tests pass: `--labeling-productivity` and
+   `--wpf-undo-redo-shortcuts`;
+2. repeat and box/polygon/raster-mask duplicate preserve tool, class, source
+   geometry, and deterministic in-bounds offset or documented same-position
+   fallback;
+3. each duplicate is one undo step and existing undo/redo behavior remains
+   intact;
+4. canonical save/reopen and protected ROI/segmentation/mask gates pass;
+5. fresh 1920x1080 after evidence shows the help surface and numbered classes;
+6. isolated build and `git diff --check` pass.
+
+P0-A durable status: `Complete`. The implementation does not establish V7/CVAT
+feature parity; it closes only the command/repeat/duplicate/help foundation.
+
+Full development sequence:
+
+1. P0-A command/productivity: `Complete`.
+2. P0-B interactive Smart Mask: `Complete`.
+3. P1 mask structure: P1-A preservation/loss, P1-B canonical v3 identity, and
+   P1-C merge/join plus axis-aligned split/slice are complete. P1-C continues
+   with holes, z-order, and remove-underlying warnings.
+4. P2 object state and precision geometry: hide/lock/pin, contract-backed
+   occlusion/tags/groups, 4-point boxes, polygon vertex insert/delete, and a
+   separately proven edge-aware slice.
+5. P3 display-only aids: brightness, contrast, gamma, invert,
+   histogram/equalization, and overlay alignment without changing source or
+   training pixels.
+6. P4 Dataset Health visual label QA: read-only dataset-level issue discovery
+   with navigation back to the canonical editor.
+7. P5 interchange and batch preflight: dry-run/Apply validation for existing
+   formats and explicit batch AI scope, model, class mapping, confidence, and
+   existing-label policy.
+
+Data-dependent gates remain separate: production claims for detection,
+segmentation, and anomaly quality require independent provenance-confirmed
+camera/session data. Do not spend implementation tokens pretending UI work can
+close those evidence gaps.
+
+### Completed P0-B development checkpoint (2026-07-27)
+
+P0-B durable status: `Complete`. Field validation: `Not evaluated`.
+
+- `WpfSmartMaskPromptSessionService` owns the start box, image/Recipe/class
+  identity, positive/negative points, input mode, generation, polygon detail,
+  and next-instance state.
+- The bundled worker accepts box plus repeated point labels and deterministic
+  48/96/256 polygon limits while preserving the existing box-only path.
+- The shell exposes point add/undo/clear, worker cancellation, rerun-replace,
+  confirm/skip, and next-instance/new-box flow. Pending candidates do not save;
+  confirmation continues through the canonical segment JSON/mask PNG owner.
+- Image/Recipe/prompt generation changes reject stale results. Rerun replaces
+  one pending Smart Mask candidate while preserving confirmed labels.
+- The actual current Debug EXE completed box → positive point → negative point
+  → rerun → confirm → next instance → new box readiness. Evidence:
+  `artifacts\ui\smart-mask-p0b-20260727`.
+- Real MobileSAM fixture evidence:
+  `artifacts\mobile-sam-point-correction\20260727-185324\point-correction-evidence.json`.
+  Positive input expanded `4431 → 6529`; negative input removed `22113` pixels
+  from the wide positive result; the source image hash remained unchanged.
+- Existing 24-call exact-box and 96-call box-jitter results remain protected
+  regression evidence, not field accuracy.
+
+The immediate product priority is now P1-C manual hole editing or z-order. P1-A
+JSON/mask-PNG/YOLO/COCO/CVAT preservation/loss semantics and P1-B canonical
+v3 object/component identity are complete, and P1-C merge/join plus
+axis-aligned split/slice have user-visible commands and focused evidence.
+Keep the next structural command independently acceptance-gated.
 
 ### Completed structural-refactor phase
 
@@ -157,7 +391,7 @@ For the exact contracts and required regression gates, read docs/STABLE_VERIFIED
 | Workflow area | Current state | Verified boundary / remaining limitation |
 | --- | --- | --- |
 | Recipe and dataset setup | Complete and protected | Dataset wizard, class schema, image queue, Dataset Health, external native YOLO intake, and deterministic Recipe Dataset Version v2 are implemented. Dataset Version is local immutable metadata, not a copied dataset or cloud VCS. |
-| Labeling and rework | Complete and protected for the local operator workflow | Object boxes; segmentation polygon/brush/eraser/undo/redo; anomaly whole-image OK/NG review; template labeling; MobileSAM box-prompt candidates; Candidate Review; and the 10K review Worklist are covered. Multi-user assignment, comments, and immutable reviewer history are not included. |
+| Labeling and rework | Core storage/review baseline complete; editor depth incomplete | Object boxes; segmentation polygon/brush/eraser/undo/redo; anomaly whole-image OK/NG review; template labeling; MobileSAM box-prompt candidates; Candidate Review; and the 10K review Worklist are covered. V7/CVAT-level repeat commands, object state, mask structure editing, and interactive point correction are not complete. Multi-user assignment, comments, and immutable reviewer history remain out of scope. |
 | Training and inference | Complete for declared adapters | Local YOLOv5 detection, local YOLOv8 detection/segmentation/classification, recorded local YOLO11 detection/segmentation/classification, and U-Net segmentation have focused runtime evidence. ONNX remains inference-only. Arbitrary GitHub repositories are not automatically executable. |
 | Model comparison and adoption evidence | Complete as a decision workflow | YOLOv5/YOLOv8 detection comparison, U-Net/YOLOv8/YOLO11 segmentation comparison, anomaly evaluation, provenance, error review, and fail-closed adoption guards exist. Current synthetic/same-source candidates are regression evidence and remain non-adopted unless their recorded decision says otherwise. |
 | Documentation and beginner workflow | Complete for the current three task types | README/tutorial and current-EXE beginner audits cover object detection, segmentation, and anomaly classification. Refresh screenshots only after a visible UI change. |
@@ -400,12 +634,52 @@ Version v2, and recorded local YOLO11 anomaly runtime priorities are complete
 and committed in `ad569dc`. Keep them protected unless a focused regression
 fails.
 
-1. Acquire a new, approved NG-rich object-detection camera/session source, define its object classes and box rules, create a content-separated held-out test split, and rerun the unchanged controlled engine comparison. This is next because current synthetic comparisons prove runtime/format behavior but not field generalization. It includes provenance, label audit, SHA-256 non-overlap, fixed thresholds, and error review; it excludes treating folder-level OK/NG names as boxes or tuning on the held-out test. The operator-excluded `D:\기타이미지\2022.11.16_SIT 이미지` path must not be inspected or used.
+P0-A command/productivity and P0-B interactive Smart Mask are complete in the
+current worktree. Preserve P0-A's
+purpose-filtered shortcuts, numbered class order, one-step duplicate history,
+canonical save path, and separate-row help card unless a focused regression is
+reproduced. Preserve P0-B's box-only compatibility, point session,
+rerun-replace, cancellation, stale guard, confirm-only save, provenance, and
+next-instance behavior.
+
+1. Add P1-C manual hole editing or z-order, then remove-underlying with an
+   affected-object warning and undo. Merge/join and axis-aligned split/slice
+   are complete. P1-A already states what
+   polygon/segment JSON, mask PNG, YOLO, COCO, and CVAT preserve or reject
+   before editing code. Do not treat an internal brush-span merge as a
+   user-visible object merge.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+
+2. Add object-state and precision-edit slices only after the mask contract.
+   Start hide/lock/pin as presentation/session state; persist occluded/tags only
+   when Recipe and export consumers are defined. Separate 4-point box,
+   polygon-vertex insert/delete, and edge-aware scissors into focused
+   acceptance-gated work.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+
+3. Add display-only brightness, contrast, gamma, invert, and
+   histogram/equalization without changing source pixels, dataset hashes, or
+   training inputs. Overlay alignment and current image-switch behavior must
+   remain deterministic.
+   Recommended model: `gpt-5.6-terra`
+   Reasoning effort: `medium`
+
+4. After the core labeling slices, add the previously designed read-only
+   Dataset Health visual-label-QA gallery, followed by dry-run-first
+   interchange and batch-AI preflight slices. The gallery still must not edit
+   labels, auto-approve candidates, create a new queue, or preload all 10K
+   images at full resolution.
+   Recommended model: `gpt-5.6-terra`
+   Reasoning effort: `medium`
+
+5. Acquire a new, approved NG-rich object-detection camera/session source, define its object classes and box rules, create a content-separated held-out test split, and rerun the unchanged controlled engine comparison. This remains the next object-detection quality priority because current synthetic comparisons prove runtime/format behavior but not field generalization. It includes provenance, label audit, SHA-256 non-overlap, fixed thresholds, and error review; it excludes treating folder-level OK/NG names as boxes or tuning on the held-out test. The operator-excluded `D:\기타이미지\2022.11.16_SIT 이미지` path must not be inspected or used.
    Prerequisite: a newly approved source with trustworthy bounding boxes and enough NG examples.
    Recommended model: none until the data is available
    Reasoning effort: n/a
 
-2. Acquire balanced independent production-camera/cross-session normal and abnormal anomaly data, keep it outside training initially, and rerun the unchanged anomaly evaluation guard. This distinguishes a repeatable classifier runtime from generalizable anomaly quality; it includes provenance, content-overlap checks, confidence-gated errors, and an adopt/hold decision, and excludes tuning against the preserved circular or MultiIndustry synthetic evaluation sets.
+6. Acquire balanced independent production-camera/cross-session normal and abnormal anomaly data, keep it outside training initially, and rerun the unchanged anomaly evaluation guard. This remains the next anomaly-quality priority and distinguishes a repeatable classifier runtime from generalizable anomaly quality; it includes provenance, content-overlap checks, confidence-gated errors, and an adopt/hold decision, and excludes tuning against the preserved circular or MultiIndustry synthetic evaluation sets.
    On the same 104-image circular synthetic test at confidence `0.8`, YOLOv8
    remains `hold` at `90/104` and YOLO11 remains `hold` at `82/104`. Do not tune
    either model against that test or substitute it for new acquisition evidence.
@@ -413,7 +687,13 @@ fails.
    Recommended model: none until the data is available
    Reasoning effort: n/a
 
-Do not start another broad UI redesign without a reproduced operator defect. The task tabs, Dataset Health window, model-comparison workspace, Model Center workspace, and adapter catalog are completed contracts.
+The detailed current contract is
+`docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`. Keep the task
+tabs, main shell, image queue, Dataset Health, model-comparison workspace,
+Model Center, adapter catalog, Recipe source-of-truth, Candidate Review, and
+explicit Preview/Run/training behavior stable. Collaboration, comments,
+accounts, cloud sync, deployment, video tracking, 3D, camera/PLC/I/O, and
+automatic candidate save remain out of scope.
 
 ## 11. Focused Verification Menu
 
@@ -438,6 +718,9 @@ dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplicat
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --recipe-dataset-version-v2
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-labeling-shell
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --model-adapter-catalog
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --mobile-sam-box-prompt
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --real-mobile-sam-point-correction
+dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --exe-smart-mask-point-smoke --exe .\artifacts\run\Debug\OpenVisionLab.LabelingStudio.exe
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-yolo-model-settings-panel
 
 dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --anomaly-classification-training-workflow
@@ -550,10 +833,13 @@ validation is `Not evaluated`; no production accuracy is claimed.
   `artifacts\mobile-sam-box-prompt\20260722-150938\mobile-sam-evidence.json`,
   and current-build prompt/candidate captures under
   `artifacts\ui\smart-mask-20260722`.
-- Boundary: box prompt only. Point/negative/text prompts, multi-object automatic
-  labeling, MobileSAM training, automatic confirmation, and field accuracy are
-  excluded. Do not reopen for broader infrastructure unless operator use
-  exposes a concrete failure of the box workflow.
+- Historical boundary: the completed slice is box prompt only.
+  Point/negative/text prompts, multi-object automatic labeling, MobileSAM
+  training, automatic confirmation, and field accuracy were excluded from that
+  slice. The 2026-07-27 labeling-editor roadmap now approves positive/negative
+  point refinement as a separate P0-B product slice after P0-A; text prompts,
+  broad automatic labeling, training, automatic confirmation, and field
+  accuracy remain excluded.
 
 ## 18. 2026-07-22 Latest Checkpoint: MobileSAM 8-Class Usability Matrix
 
@@ -571,9 +857,11 @@ small-box tolerance boundary.
 - The source remained 4,525 files with tree SHA-256
   `4E511A2E08F2ED609B78B40D6B789DE691C968E71ED5A298B76A1E7CA1FB52A8`
   before and after.
-- Decision: keep the current box-only plus polygon/brush fallback. Point and
-  negative prompts are not the next implementation priority. The later fixed
-  box-jitter regression passed; reopen only after a new real operator failure.
+- Historical decision: keep the current box-only plus polygon/brush fallback.
+  The later fixed box-jitter regression passed. The 2026-07-27 commercial
+  labeling review supersedes only the old product-priority restriction and
+  schedules positive/negative refinement as P0-B; the completed matrix and its
+  field-accuracy boundary remain unchanged.
 - Evidence: `docs\MOBILE_SAM_8_CLASS_USABILITY_MATRIX_20260722.md` and
   `artifacts\mobile-sam-usability-matrix\20260722-153003`.
 
@@ -635,10 +923,12 @@ validation remains `Not evaluated`.
   `predicted-masks/<variant>/<split>/<class>`.
 
 Boundary / next dependency: keep the current box-only plus polygon/brush
-fallback. Do not add point/negative prompts without a new reproducible operator
-failure. No additional product implementation is currently justified solely by
-the existing synthetic evidence; production adoption still requires an
-approved independent camera/session packet.
+fallback as protected regression behavior. The 2026-07-27 labeling-editor
+roadmap supersedes the former “new reproducible failure required” product
+priority and permits positive/negative refinement as a separate P0-B after
+P0-A. The existing synthetic evidence still does not prove point-refinement
+quality or production accuracy; production adoption requires an approved
+independent camera/session packet.
 
 ## 22. 2026-07-22 Latest Checkpoint: Documentation Baseline And Beginner EXE Audit
 
@@ -851,3 +1141,26 @@ Status: `Complete`; committed and pushed in `ad569dc`.
 Boundary / next dependency: runtime/workflow support is complete only for the
 recorded local profile. Independent normal/abnormal camera-session data is
 required before any production-quality or adoption claim.
+
+## 30. 2026-07-27 Latest Checkpoint: Interactive Smart Mask P0-B
+
+Status: `Complete`. Field validation: `Not evaluated`.
+
+- Segmentation now retains Rectangle as a selectable tool because the explicit
+  Smart Mask session starts from an operator-drawn box.
+- The session supports positive/negative points, point undo/clear, 48/96/256
+  polygon detail, cancellation, pending-candidate replacement, confirm/skip,
+  and next-instance box restoration.
+- Stale image/Recipe/prompt generations fail closed. Pending results do not
+  save; confirmation uses the existing canonical segment JSON/mask PNG path.
+- Real-worker evidence and source immutability:
+  `artifacts\mobile-sam-point-correction\20260727-185324`.
+- Current Debug EXE evidence before/after confirmation:
+  `artifacts\ui\smart-mask-p0b-20260727`.
+- Preserve the completed box-only 24-call exact and 96-call jitter matrices as
+  regressions. They are not field-accuracy evidence.
+
+Boundary / next dependency: P0-B completes one local single-operator
+correction session, not V7/CVAT parity. P1 must define canonical
+JSON/mask-PNG/YOLO/COCO/CVAT structure semantics before merge/split/hole,
+multi-component, z-order, or remove-underlying implementation.

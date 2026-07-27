@@ -26,6 +26,11 @@ namespace MvcVisionSystem
         private string selectedClassName = string.Empty;
         private bool isDeleteEnabled;
         private bool isApplyClassEnabled;
+        private bool isMergeSelectedSegmentsEnabled;
+        private string mergeSelectionText = "\uBCD1\uD569 \uC120\uD0DD 0\uAC1C \u00B7 \uAC19\uC740 \uD074\uB798\uC2A4 2\uAC1C \uC774\uC0C1";
+        private bool isSplitEnabled;
+        private bool isSplitPending;
+        private string splitStatusText = "\uC120\uD0DD\uD55C \uC138\uADF8\uBA3C\uD2B8\uB97C \uC138\uB85C \uB610\uB294 \uAC00\uB85C\uB85C \uC808\uB2E8\uD569\uB2C8\uB2E4.";
         private string qualityReviewStatusText = "이미지 없음";
         private string qualityReviewDetailText = "이미지를 열면 품질 검수 상태를 표시합니다.";
         private string qualityReviewNoteText = string.Empty;
@@ -37,6 +42,11 @@ namespace MvcVisionSystem
         private int selectionNotificationSuppressDepth;
         private ICommand deleteObjectCommand = new RelayCommand(NoOpCommand);
         private ICommand applyObjectClassCommand = new RelayCommand(NoOpCommand);
+        private ICommand mergeSelectedSegmentsCommand = new RelayCommand(NoOpCommand);
+        private ICommand mergeSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
+        private ICommand beginVerticalSplitCommand = new RelayCommand(NoOpCommand);
+        private ICommand beginHorizontalSplitCommand = new RelayCommand(NoOpCommand);
+        private ICommand cancelSplitCommand = new RelayCommand(NoOpCommand);
         private ICommand objectSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
         private ICommand objectPreviewKeyDownCommand = new RelayCommand<KeyInputCommandArgs>(NoOpKeyCommand);
         private ICommand markQualityUnreviewedCommand = new RelayCommand(NoOpCommand);
@@ -70,6 +80,36 @@ namespace MvcVisionSystem
         {
             get => applyObjectClassCommand;
             private set => SetProperty(ref applyObjectClassCommand, value);
+        }
+
+        public ICommand MergeSelectedSegmentsCommand
+        {
+            get => mergeSelectedSegmentsCommand;
+            private set => SetProperty(ref mergeSelectedSegmentsCommand, value);
+        }
+
+        public ICommand MergeSelectionChangedCommand
+        {
+            get => mergeSelectionChangedCommand;
+            private set => SetProperty(ref mergeSelectionChangedCommand, value);
+        }
+
+        public ICommand BeginVerticalSplitCommand
+        {
+            get => beginVerticalSplitCommand;
+            private set => SetProperty(ref beginVerticalSplitCommand, value);
+        }
+
+        public ICommand BeginHorizontalSplitCommand
+        {
+            get => beginHorizontalSplitCommand;
+            private set => SetProperty(ref beginHorizontalSplitCommand, value);
+        }
+
+        public ICommand CancelSplitCommand
+        {
+            get => cancelSplitCommand;
+            private set => SetProperty(ref cancelSplitCommand, value);
         }
 
         public ICommand ObjectSelectionChangedCommand
@@ -192,6 +232,36 @@ namespace MvcVisionSystem
             private set => SetProperty(ref isApplyClassEnabled, value);
         }
 
+        public bool IsMergeSelectedSegmentsEnabled
+        {
+            get => isMergeSelectedSegmentsEnabled;
+            private set => SetProperty(ref isMergeSelectedSegmentsEnabled, value);
+        }
+
+        public string MergeSelectionText
+        {
+            get => mergeSelectionText;
+            private set => SetProperty(ref mergeSelectionText, value ?? string.Empty);
+        }
+
+        public bool IsSplitEnabled
+        {
+            get => isSplitEnabled;
+            private set => SetProperty(ref isSplitEnabled, value);
+        }
+
+        public bool IsSplitPending
+        {
+            get => isSplitPending;
+            private set => SetProperty(ref isSplitPending, value);
+        }
+
+        public string SplitStatusText
+        {
+            get => splitStatusText;
+            private set => SetProperty(ref splitStatusText, value ?? string.Empty);
+        }
+
         public string QualityReviewStatusText
         {
             get => qualityReviewStatusText;
@@ -259,7 +329,12 @@ namespace MvcVisionSystem
             Action markQualityReviewed,
             Action exportQualityReviewReport,
             Action<object> objectSelectionChanged,
-            Action<KeyInputCommandArgs> objectPreviewKeyDown)
+            Action<KeyInputCommandArgs> objectPreviewKeyDown,
+            Action mergeSelectedSegments = null,
+            Action<object> mergeSelectionChanged = null,
+            Action beginVerticalSplit = null,
+            Action beginHorizontalSplit = null,
+            Action cancelSplit = null)
         {
             // The review panel exposes commands; the shell injects workflow actions without owning the view events.
             DeleteObjectCommand = new RelayCommand(deleteObject ?? NoOpCommand);
@@ -270,6 +345,29 @@ namespace MvcVisionSystem
             ExportQualityReviewReportCommand = new RelayCommand(exportQualityReviewReport ?? NoOpCommand);
             ObjectSelectionChangedCommand = new RelayCommand<object>(objectSelectionChanged ?? NoOpSelectionCommand);
             ObjectPreviewKeyDownCommand = new RelayCommand<KeyInputCommandArgs>(objectPreviewKeyDown ?? NoOpKeyCommand);
+            MergeSelectedSegmentsCommand = new RelayCommand(mergeSelectedSegments ?? NoOpCommand);
+            MergeSelectionChangedCommand = new RelayCommand<object>(item =>
+            {
+                (mergeSelectionChanged ?? NoOpSelectionCommand)(item);
+                RefreshActionState();
+            });
+            BeginVerticalSplitCommand = new RelayCommand(beginVerticalSplit ?? NoOpCommand);
+            BeginHorizontalSplitCommand = new RelayCommand(beginHorizontalSplit ?? NoOpCommand);
+            CancelSplitCommand = new RelayCommand(cancelSplit ?? NoOpCommand);
+        }
+
+        public void SetSplitPending(WpfSegmentationSplitOrientation? orientation)
+        {
+            IsSplitPending = orientation.HasValue;
+            SplitStatusText = orientation switch
+            {
+                WpfSegmentationSplitOrientation.Vertical
+                    => "\uC138\uB85C \uC808\uB2E8 \uC704\uCE58\uB97C \uCE94\uBC84\uC2A4\uC5D0\uC11C \uD074\uB9AD\uD558\uC138\uC694. \uC6B0\uD074\uB9AD\uC740 \uCDE8\uC18C\uC785\uB2C8\uB2E4.",
+                WpfSegmentationSplitOrientation.Horizontal
+                    => "\uAC00\uB85C \uC808\uB2E8 \uC704\uCE58\uB97C \uCE94\uBC84\uC2A4\uC5D0\uC11C \uD074\uB9AD\uD558\uC138\uC694. \uC6B0\uD074\uB9AD\uC740 \uCDE8\uC18C\uC785\uB2C8\uB2E4.",
+                _ => "\uC120\uD0DD\uD55C \uC138\uADF8\uBA3C\uD2B8\uB97C \uC138\uB85C \uB610\uB294 \uAC00\uB85C\uB85C \uC808\uB2E8\uD569\uB2C8\uB2E4."
+            };
+            RefreshActionState();
         }
 
         public IDisposable SuppressSelectionNotifications()
@@ -318,7 +416,16 @@ namespace MvcVisionSystem
             // of one CollectionChanged event per object so the side panel stays responsive.
             Objects.ReplaceAll(rows);
             SelectedObject = selected ?? Objects.FirstOrDefault(item => item.IsEnabled);
+            RefreshActionState();
         }
+
+        public IReadOnlyList<int> GetMergeSelectedManualSegmentIndices()
+            => Objects
+                .Where(item => item?.IsManualSegment == true && item.IsMergeSelected)
+                .Select(item => item.SourceIndex)
+                .Distinct()
+                .OrderBy(index => index)
+                .ToList();
 
         public bool TryReplaceObject(int objectRowIndex, WpfObjectReviewListItem item, bool select)
             => TryUpsertObject(objectRowIndex, item, summary: null, select);
@@ -474,6 +581,11 @@ namespace MvcVisionSystem
             bool hasSelectedObject = SelectedObject?.IsEnabled == true;
             IsDeleteEnabled = hasSelectedObject;
             IsApplyClassEnabled = hasSelectedObject && !string.IsNullOrWhiteSpace(SelectedClassName);
+            IsSplitEnabled = SelectedObject?.IsManualSegment == true && !IsSplitPending;
+            int mergeSelectionCount = Objects.Count(item => item?.IsManualSegment == true && item.IsMergeSelected);
+            IsMergeSelectedSegmentsEnabled = mergeSelectionCount >= 2;
+            MergeSelectionText = FormattableString.Invariant(
+                $"\uBCD1\uD569 \uC120\uD0DD {mergeSelectionCount}\uAC1C \u00B7 \uAC19\uC740 \uD074\uB798\uC2A4 2\uAC1C \uC774\uC0C1");
             RefreshSelectedObjectTaskText();
         }
 
@@ -550,8 +662,10 @@ namespace MvcVisionSystem
         }
     }
 
-    public sealed class WpfObjectReviewListItem
+    public sealed class WpfObjectReviewListItem : WpfObservableViewModel
     {
+        private bool isMergeSelected;
+
         public WpfObjectReviewListItem(string displayText, string toolTip, string sourceKey, int sourceIndex, object payload, bool isEnabled = true)
         {
             DisplayText = displayText ?? string.Empty;
@@ -575,6 +689,15 @@ namespace MvcVisionSystem
         public object Payload { get; }
 
         public bool IsEnabled { get; }
+
+        public bool IsManualSegment => IsEnabled
+            && string.Equals(SourceKey, WpfObjectReviewSource.ManualSegment.ToString(), StringComparison.OrdinalIgnoreCase);
+
+        public bool IsMergeSelected
+        {
+            get => isMergeSelected;
+            set => SetProperty(ref isMergeSelected, value);
+        }
 
         public static WpfObjectReviewListItem Empty(string text)
             => new WpfObjectReviewListItem(text, string.Empty, string.Empty, -1, null, isEnabled: false);

@@ -38,6 +38,29 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
+        <Style x:Key="SmartMaskPointToggleStyle" TargetType="ToggleButton">
+            <Setter Property="Height" Value="26" />
+            <Setter Property="MinWidth" Value="82" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="Background" Value="{DynamicResource ToolbarButtonBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButtonBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.45" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <SolidColorBrush x:Key="DetectionOverlayConfirmableBackgroundBrush" Color="#33031D12" />
         <SolidColorBrush x:Key="DetectionOverlayConfirmableBorderBrush" Color="#5524D366" />
         <SolidColorBrush x:Key="DetectionOverlayConfirmableAccentBrush" Color="#24D366" />
@@ -369,6 +392,8 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -852,6 +877,27 @@
                                 </Grid>
                             </ui:Button>
                         </StackPanel>
+                        <ui:Button x:Name="CanvasShortcutHelpButton"
+                                   Style="{StaticResource CanvasAnnotationCommandButtonStyle}"
+                                   MinWidth="96"
+                                   Margin="6,0,0,0"
+                                   AutomationProperties.AutomationId="CanvasShortcutHelpButton"
+                                   AutomationProperties.Name="라벨링 단축키 도움말"
+                                   ToolTip="{Binding ShortcutSummaryText}"
+                                   Command="{Binding ToggleShortcutHelpCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial Kind="KeyboardOutline"
+                                                            Width="14"
+                                                            Height="14"
+                                                            Margin="0,0,5,0"
+                                                            VerticalAlignment="Center" />
+                                <TextBlock Text="단축키 F1"
+                                           FontFamily="Segoe UI"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ui:Button>
                         <Border x:Name="CanvasActiveLabelClassCard"
                                 Background="{DynamicResource CanvasBrush}"
                                 BorderBrush="{DynamicResource ToolbarButtonBorderBrush}"
@@ -911,8 +957,102 @@
                         </Border>
                 </WrapPanel>
             </Border>
-            <Border x:Name="DetectionResultOverlay"
+            <Border x:Name="CanvasSmartMaskPromptBar"
                     Grid.Row="4"
+                    Visibility="{Binding SmartMaskSessionVisibility}"
+                    Background="#1A2563EB"
+                    BorderBrush="#704F8CFF"
+                    BorderThickness="0,0,0,1"
+                    Padding="8,4"
+                    AutomationProperties.AutomationId="CanvasSmartMaskPromptBar">
+                <DockPanel LastChildFill="True">
+                    <ui:Button DockPanel.Dock="Right"
+                               Style="{StaticResource CanvasAnnotationCommandButtonStyle}"
+                               MinWidth="92"
+                               Margin="6,0,0,0"
+                               IsEnabled="{Binding IsSmartMaskNextInstanceEnabled}"
+                               ToolTip="현재 후보를 확정 또는 스킵한 뒤 다음 객체 박스를 시작합니다."
+                               AutomationProperties.AutomationId="CanvasSmartMaskNextInstanceButton"
+                               Command="{Binding NextSmartMaskInstanceCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="ArrowRightCircleOutline" Width="13" Height="13" Margin="0,0,5,0" />
+                            <TextBlock Text="다음 객체" />
+                        </StackPanel>
+                    </ui:Button>
+                    <WrapPanel VerticalAlignment="Center">
+                        <TextBlock Text="Smart Mask 보정"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   FontFamily="Segoe UI"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,6,0"
+                                   VerticalAlignment="Center" />
+                        <ToggleButton Style="{StaticResource SmartMaskPointToggleStyle}"
+                                      IsChecked="{Binding IsPositiveSmartMaskPointMode, Mode=OneWay}"
+                                      IsEnabled="{Binding IsSmartMaskPointActionEnabled}"
+                                      ToolTip="객체에 포함되어야 할 위치를 캔버스에서 클릭합니다."
+                                      AutomationProperties.AutomationId="CanvasSmartMaskPositivePointButton"
+                                      Command="{Binding AddPositiveSmartMaskPointCommand}">
+                            <TextBlock Text="+ 포함점" />
+                        </ToggleButton>
+                        <ToggleButton Style="{StaticResource SmartMaskPointToggleStyle}"
+                                      IsChecked="{Binding IsNegativeSmartMaskPointMode, Mode=OneWay}"
+                                      IsEnabled="{Binding IsSmartMaskPointActionEnabled}"
+                                      ToolTip="후보에서 제외되어야 할 위치를 캔버스에서 클릭합니다."
+                                      AutomationProperties.AutomationId="CanvasSmartMaskNegativePointButton"
+                                      Command="{Binding AddNegativeSmartMaskPointCommand}">
+                            <TextBlock Text="− 제외점" />
+                        </ToggleButton>
+                        <ui:Button Style="{StaticResource CanvasAnnotationCommandButtonStyle}"
+                                   MinWidth="64"
+                                   IsEnabled="{Binding IsSmartMaskPointUndoEnabled}"
+                                   ToolTip="마지막 보정점을 취소합니다."
+                                   AutomationProperties.AutomationId="CanvasSmartMaskUndoPointButton"
+                                   Command="{Binding UndoSmartMaskPointCommand}">
+                            <TextBlock Text="점 취소" />
+                        </ui:Button>
+                        <ui:Button Style="{StaticResource CanvasAnnotationCommandButtonStyle}"
+                                   MinWidth="64"
+                                   IsEnabled="{Binding IsSmartMaskPointUndoEnabled}"
+                                   ToolTip="현재 객체의 모든 보정점을 지웁니다."
+                                   AutomationProperties.AutomationId="CanvasSmartMaskClearPointsButton"
+                                   Command="{Binding ClearSmartMaskPointsCommand}">
+                            <TextBlock Text="점 지우기" />
+                        </ui:Button>
+                        <ui:Button Style="{StaticResource CanvasAnnotationCommandButtonStyle}"
+                                   MinWidth="72"
+                                   IsEnabled="{Binding IsSmartMaskCancelEnabled}"
+                                   ToolTip="실행 중인 MobileSAM 후보 생성을 취소하고 현재 프롬프트를 유지합니다."
+                                   AutomationProperties.AutomationId="CanvasSmartMaskCancelGenerationButton"
+                                   Command="{Binding CancelSmartMaskGenerationCommand}">
+                            <TextBlock Text="생성 취소" />
+                        </ui:Button>
+                        <TextBlock Text="경계"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontFamily="Segoe UI"
+                                   FontSize="10"
+                                   FontWeight="SemiBold"
+                                   Margin="10,0,4,0"
+                                   VerticalAlignment="Center" />
+                        <ComboBox Width="108"
+                                  Height="26"
+                                  ItemsSource="{Binding SmartMaskDetails}"
+                                  SelectedItem="{Binding SelectedSmartMaskDetail, Mode=TwoWay}"
+                                  DisplayMemberPath="Text"
+                                  IsEnabled="{Binding IsSmartMaskPointActionEnabled}"
+                                  AutomationProperties.AutomationId="CanvasSmartMaskDetailComboBox" />
+                        <TextBlock Text="{Binding SmartMaskPromptSummaryText}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontFamily="Segoe UI"
+                                   FontSize="10.5"
+                                   FontWeight="SemiBold"
+                                   Margin="10,0,0,0"
+                                   VerticalAlignment="Center" />
+                    </WrapPanel>
+                </DockPanel>
+            </Border>
+            <Border x:Name="DetectionResultOverlay"
+                    Grid.Row="5"
                     Margin="10,8,10,8"
                         MaxWidth="560"
                         MaxHeight="92"
@@ -1052,7 +1192,46 @@
                                    Visibility="Collapsed" />
                     </Grid>
                 </Border>
-            <Grid Grid.Row="5">
+            <Border x:Name="CanvasShortcutHelpCard"
+                    Grid.Row="6"
+                    AutomationProperties.AutomationId="CanvasShortcutHelpCard"
+                    AutomationProperties.Name="라벨링 단축키 카드"
+                    Visibility="{Binding ShortcutHelpVisibility}"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    MaxWidth="760"
+                    Margin="10,6"
+                    Padding="12,10"
+                    Background="{DynamicResource PanelBrush}"
+                    BorderBrush="{DynamicResource AccentBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                <StackPanel>
+                    <DockPanel LastChildFill="True">
+                        <iconPacks:PackIconMaterial Kind="KeyboardOutline"
+                                                    DockPanel.Dock="Left"
+                                                    Width="16"
+                                                    Height="16"
+                                                    Margin="0,0,7,0"
+                                                    Foreground="{DynamicResource AccentBrush}" />
+                        <TextBlock Text="라벨링 단축키"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   FontFamily="Segoe UI"
+                                   FontSize="12"
+                                   FontWeight="SemiBold" />
+                    </DockPanel>
+                    <TextBlock x:Name="CanvasShortcutHelpText"
+                               AutomationProperties.AutomationId="CanvasShortcutHelpText"
+                               Text="{Binding ShortcutHelpText}"
+                               Foreground="{DynamicResource PrimaryTextBrush}"
+                               FontFamily="Segoe UI"
+                               FontSize="11"
+                               LineHeight="19"
+                               Margin="0,7,0,0"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+            <Grid Grid.Row="7">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="{Binding AnnotationToolRailWidth}" />
                     <ColumnDefinition Width="*" />

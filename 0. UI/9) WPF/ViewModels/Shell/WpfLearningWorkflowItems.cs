@@ -116,6 +116,11 @@ namespace MvcVisionSystem
             baseToolTip = string.IsNullOrWhiteSpace(toolTip)
                 ? capability.StatusText
                 : $"{toolTip} / {capability.StatusText}";
+            string shortcutText = WpfAnnotationProductivityService.GetToolShortcutText(tool);
+            if (!string.IsNullOrWhiteSpace(shortcutText))
+            {
+                baseToolTip = $"{baseToolTip} / 단축키 {shortcutText}";
+            }
             ToolTip = baseToolTip;
             IsConnected = capability.IsConnected;
             CapabilityText = capability.StateText;

@@ -802,6 +802,7 @@ namespace MvcVisionSystem
                 case WpfLearningMode.Segmentation:
                     return new[]
                     {
+                        WpfAnnotationTool.Rectangle,
                         WpfAnnotationTool.Brush,
                         WpfAnnotationTool.Eraser,
                         WpfAnnotationTool.Polygon,
@@ -1501,7 +1502,7 @@ namespace MvcVisionSystem
             DatasetPurposeToolSummaryText = SelectedDatasetPurposeMode?.Mode switch
             {
                 WpfLearningMode.ObjectDetection => "\uD45C\uC2DC \uB3C4\uAD6C: \uC120\uD0DD, \uBC15\uC2A4, \uC774\uB3D9. \uBE0C\uB7EC\uC2DC/\uC9C0\uC6B0\uAC1C\uB294 \uC228\uACA8 \uBC15\uC2A4 \uB77C\uBCA8\uB9C1\uC5D0 \uC9D1\uC911\uD569\uB2C8\uB2E4.",
-                WpfLearningMode.Segmentation => "\uD45C\uC2DC \uB3C4\uAD6C: \uC120\uD0DD, \uD3F4\uB9AC\uACE4, \uBE0C\uB7EC\uC2DC, \uC9C0\uC6B0\uAC1C, \uC774\uB3D9. \uD53D\uC140 \uB9C8\uC2A4\uD06C \uC791\uC5C5\uC5D0 \uD544\uC694\uD55C \uB3C4\uAD6C\uB9CC \uBCF4\uC785\uB2C8\uB2E4.",
+                WpfLearningMode.Segmentation => "\uD45C\uC2DC \uB3C4\uAD6C: \uBC15\uC2A4(Smart Mask \uC2DC\uC791), \uC120\uD0DD, \uD3F4\uB9AC\uACE4, \uBE0C\uB7EC\uC2DC, \uC9C0\uC6B0\uAC1C, \uC774\uB3D9. \uBC15\uC2A4\uB294 Smart Mask \uD504\uB86C\uD504\uD2B8\uB85C \uC0AC\uC6A9\uD569\uB2C8\uB2E4.",
                 WpfLearningMode.AnomalyDetection => "이미지 전체 판정 작업에는 그리기 도구가 없습니다. 확대/축소와 이동만 사용할 수 있습니다.",
                 _ => "\uB370\uC774\uD130\uC14B \uBAA9\uC801\uC5D0 \uB9DE\uB294 \uB3C4\uAD6C\uB9CC \uD45C\uC2DC\uD569\uB2C8\uB2E4."
             };

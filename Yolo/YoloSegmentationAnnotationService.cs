@@ -14,6 +14,7 @@ namespace MvcVisionSystem.Yolo
     {
         private const string PolygonGeometryType = "Polygon";
         private const string RasterMaskGeometryType = "RasterMask";
+        private const int CanonicalSchemaVersion = 3;
 
         private static readonly string[] DatasetModes =
         {
@@ -156,8 +157,9 @@ namespace MvcVisionSystem.Yolo
                 : new Size(Math.Max(1, annotation.ImageWidth), Math.Max(1, annotation.ImageHeight));
             TryLoadMaskClassValues(maskPath, targetSize, out byte[] maskClassValues);
 
-            foreach (SegmentationPolygonRecord record in annotation.Polygons)
+            for (int recordIndex = 0; recordIndex < annotation.Polygons.Count; recordIndex++)
             {
+                SegmentationPolygonRecord record = annotation.Polygons[recordIndex];
                 string className = ResolveClassName(record, classes);
                 if (string.IsNullOrWhiteSpace(className) || record.Points == null)
                 {
@@ -181,6 +183,7 @@ namespace MvcVisionSystem.Yolo
                 CClassItem classItem = ResolveClassItem(className, classes);
                 if (TryBuildRasterMaskSegment(record, points, classItem, targetSize, maskClassValues, out LabelingSegmentationObject rasterSegment))
                 {
+                    ApplyCanonicalMetadata(rasterSegment, record, recordIndex);
                     result[className].Add(rasterSegment);
                     continue;
                 }
@@ -189,6 +192,7 @@ namespace MvcVisionSystem.Yolo
                 {
                     ClassName = className
                 };
+                ApplyCanonicalMetadata(segment, record, recordIndex);
                 foreach (List<SegmentationPointRecord> cutoutRecord in record.Cutouts ?? new List<List<SegmentationPointRecord>>())
                 {
                     List<Point> cutout = SegmentationGeometry.NormalizePolygon(
@@ -251,13 +255,19 @@ namespace MvcVisionSystem.Yolo
                 record.Points.Select(point => new Point(point.X, point.Y)),
                 imageSize,
                 minimumDistance: 1);
-            return TryBuildRasterMaskSegment(
+            bool built = TryBuildRasterMaskSegment(
                 record,
                 points,
                 ResolveClassItem(className, classes),
                 imageSize,
                 maskClassValues,
                 out segment);
+            if (built)
+            {
+                ApplyCanonicalMetadata(segment, record, 0);
+            }
+
+            return built;
         }
 
         public static IReadOnlyList<SegmentationPolygonRecord> BuildPolygonRecords(
@@ -281,9 +291,15 @@ namespace MvcVisionSystem.Yolo
 
                 foreach (LabelingSegmentationObject segment in segments.Where(item => item != null))
                 {
+                    string objectId = EnsureObjectId(segment);
                     if (segment.IsRasterMask)
                     {
-                        records.AddRange(BuildRasterMaskPolygonRecords(segment, classIndex, className, imageSize));
+                        records.AddRange(BuildRasterMaskPolygonRecords(
+                            segment,
+                            classIndex,
+                            className,
+                            imageSize,
+                            objectId));
 
                         continue;
                     }
@@ -299,6 +315,10 @@ namespace MvcVisionSystem.Yolo
                         ClassIndex = classIndex,
                         ClassName = className,
                         GeometryType = PolygonGeometryType,
+                        ObjectId = objectId,
+                        ComponentIndex = Math.Max(0, segment.ComponentIndex),
+                        ZOrder = segment.ZOrder,
+                        LastStructuralOperation = segment.LastStructuralOperation ?? string.Empty,
                         Points = points.Select(point => new SegmentationPointRecord { X = point.X, Y = point.Y }).ToList(),
                         Cutouts = NormalizeCutouts(segment.CutoutPolygons, imageSize)
                             .Select(cutout => cutout.Select(point => new SegmentationPointRecord { X = point.X, Y = point.Y }).ToList())
@@ -314,7 +334,8 @@ namespace MvcVisionSystem.Yolo
             LabelingSegmentationObject segment,
             int classIndex,
             string className,
-            Size imageSize)
+            Size imageSize,
+            string objectId)
         {
             Rectangle bounds = segment?.Bounds ?? Rectangle.Empty;
             if (bounds.IsEmpty)
@@ -337,13 +358,22 @@ namespace MvcVisionSystem.Yolo
                 regions.Add(new SegmentationGeometry.SegmentationMaskRegion { Points = fallback });
             }
 
-            return regions
+            List<SegmentationGeometry.SegmentationMaskRegion> validRegions = regions
                 .Where(region => region?.Points?.Count >= 3)
-                .Select(region => new SegmentationPolygonRecord
+                .ToList();
+            int firstComponentIndex = segment.ComponentIndex >= 0
+                ? segment.ComponentIndex
+                : 0;
+            return validRegions
+                .Select((region, regionIndex) => new SegmentationPolygonRecord
                 {
                     ClassIndex = classIndex,
                     ClassName = className,
                     GeometryType = RasterMaskGeometryType,
+                    ObjectId = objectId,
+                    ComponentIndex = firstComponentIndex + regionIndex,
+                    ZOrder = segment.ZOrder,
+                    LastStructuralOperation = segment.LastStructuralOperation ?? string.Empty,
                     Points = region.Points
                         .Select(point => new SegmentationPointRecord { X = point.X, Y = point.Y })
                         .ToList(),
@@ -352,6 +382,41 @@ namespace MvcVisionSystem.Yolo
                         .ToList()
                 })
                 .ToList();
+        }
+
+        private static string EnsureObjectId(LabelingSegmentationObject segment)
+        {
+            if (segment == null)
+            {
+                return string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(segment.ObjectId))
+            {
+                segment.ObjectId = Guid.NewGuid().ToString("N");
+            }
+
+            return segment.ObjectId;
+        }
+
+        private static void ApplyCanonicalMetadata(
+            LabelingSegmentationObject segment,
+            SegmentationPolygonRecord record,
+            int recordIndex)
+        {
+            if (segment == null)
+            {
+                return;
+            }
+
+            segment.ObjectId = string.IsNullOrWhiteSpace(record?.ObjectId)
+                ? $"legacy-{Math.Max(0, recordIndex):D6}"
+                : record.ObjectId.Trim();
+            segment.ComponentIndex = (record?.ComponentIndex ?? -1) >= 0
+                ? record.ComponentIndex
+                : 0;
+            segment.ZOrder = record?.ZOrder ?? 0;
+            segment.LastStructuralOperation = record?.LastStructuralOperation ?? string.Empty;
         }
 
         private static bool TryBuildRasterMaskSegment(
@@ -753,7 +818,7 @@ namespace MvcVisionSystem.Yolo
         {
             var annotation = new SegmentationAnnotationFile
             {
-                Version = polygons.Any(polygon => polygon.Cutouts != null && polygon.Cutouts.Count > 0) ? 2 : 1,
+                Version = CanonicalSchemaVersion,
                 ImageName = imageName,
                 ImageWidth = imageSize.Width,
                 ImageHeight = imageSize.Height,
@@ -817,6 +882,10 @@ namespace MvcVisionSystem.Yolo
         public int ClassIndex { get; set; }
         public string ClassName { get; set; } = "";
         public string GeometryType { get; set; } = "";
+        public string ObjectId { get; set; } = "";
+        public int ComponentIndex { get; set; } = -1;
+        public int ZOrder { get; set; }
+        public string LastStructuralOperation { get; set; } = "";
         public List<SegmentationPointRecord> Points { get; set; } = new List<SegmentationPointRecord>();
         public List<List<SegmentationPointRecord>> Cutouts { get; set; } = new List<List<SegmentationPointRecord>>();
     }

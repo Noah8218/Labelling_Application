@@ -45,14 +45,77 @@ Product direction:
 - Keep a single-operator task-oriented UI. Use separate read-only analysis windows for dense data/model information.
 - Do not expand into cloud collaboration, accounts, reviewer assignment, deployment, or enterprise governance.
 - The focused single-operator maturity estimate remains 4.0/5. It is workflow maturity, not model accuracy.
+- Labeling-editor depth moved from the commercial-video baseline `2.1/5` to
+  `2.5/5` after P0-A/P0-B, `2.6/5` after P1-C merge/join, and `2.7/5`
+  after axis-aligned split/slice. It remains materially below CVAT/V7 because mask
+  structure, object state/precision, display aids, propagation, and
+  collaboration are still absent or intentionally excluded.
 - Synthetic-first evidence may complete product features when the declared-origin, locked-split, SHA-256 non-overlap/source-immutability, runtime-provenance, normalized-result, and non-adopting decision gates in `docs/SYNTHETIC_EVIDENCE_CONTRACT.md` pass. Independent production-camera/cross-session data is an optional field-adoption gate, not an implementation blocker.
 - The supplied circular-disk 500 OK / 500 NG package is complete synthetic workflow evidence: exact metadata-backed 5-class detection data, YOLOv5/YOLOv8 one-epoch connectivity, a controlled 20-epoch 150-image test benchmark, and a new 20-epoch anomaly candidate. The anomaly candidate remains `hold`; the detection benchmark favors YOLOv8n (`mAP50/mAP50-95 0.955/0.678`, 27.575ms) over YOLOv5s (`0.900/0.567`, 52.45ms) but is explicitly `engine-benchmark`, not adoption. The fixed comparison cleanup preserves the exact source-tree SHA-256. The package is derived from one earlier OK source image; do not present it as independent camera evidence. Read `docs/CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
 
 Current immediate priority:
-- No new implementation is justified from the current evidence alone. First
-  check for a newly reproduced operator defect, a failed protected gate, a
-  changed approved contract, or newly approved independent data. Do not reopen
-  a completed slice merely to create work.
+- The 2026-07-27 review of ten user-provided commercial integration videos is
+  new workflow evidence. A denser V7/CVAT pass corrects the initial
+  visual-QA-first conclusion: the current editor has a stable basic
+  box/polygon/brush/eraser and save/review baseline, but repeat commands,
+  object state, structural mask editing, and interactive AI correction were
+  materially behind. P0-A, P0-B, and P1-C merge/join plus split/slice are now
+  complete; the labeling-only estimate is `2.7/5`, while the focused local-workstation product estimate remains
+  `4.0/5`.
+- P0-A, the labeling command and repeat-productivity foundation, is complete in
+  the current dirty worktree. It adds purpose-filtered tool hotkeys, class
+  `1~9`, `0` Class Catalog fallback, last shape+class repeat, selected
+  box/polygon/raster-mask duplicate, tool/class retention, text-entry
+  suppression, numbered class chips, and an F1 help card.
+- P0-A evidence includes `--labeling-productivity`,
+  `--wpf-undo-redo-shortcuts`, ROI/segmentation/storage/performance focused
+  gates, current-source before/after, and
+  `--exe-labeling-productivity-smoke` against the latest Debug EXE. The help
+  card stays in a separate Auto row above the WinForms/OpenGL canvas so actual
+  EXE airspace cannot hide it.
+- P0-B interactive Smart Mask is also complete in the current dirty worktree.
+  It adds box+positive/negative-point correction, point undo/clear,
+  48/96/256 detail, async cancellation, rerun-replace, confirm/skip, and
+  next-instance box restoration. It preserves no-autosave, stale-result guards,
+  runtime/weight provenance, confirmed candidates, and canonical save.
+- P0-B evidence includes `--mobile-sam-box-prompt`,
+  `--real-mobile-sam-point-correction`, the current Debug EXE
+  `--exe-smart-mask-point-smoke`, and
+  `artifacts\ui\smart-mask-p0b-20260727`.
+- Read
+  `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md` and
+  `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md` before editing.
+- P1-A mask-structure preservation/loss contract is complete in the current
+  dirty worktree. `SegmentationInterchangeContractService` declares one matrix
+  for canonical JSON, mask PNG, YOLO, COCO, and CVAT; COCO/CVAT/YOLO export
+  results surface deduplicated conditional/loss warnings. The focused gate is
+  `--segmentation-interchange-contract`; the durable contract is
+  `docs\SEGMENTATION_INTERCHANGE_PRESERVATION_CONTRACT_20260727.md`.
+- P1-B canonical schema v3 is complete in the current dirty worktree.
+  Disconnected raster components preserve one object ID, stable component
+  indices, z-order, and last structural operation across save/load/re-save.
+  Version 1/2 polygon/raster files load with deterministic legacy metadata;
+  history preserves identity and duplicate starts a new identity. The focused
+  gate remains `--segmentation-interchange-contract`.
+- P1-C merge/join is complete in the current dirty worktree. Saved Labels
+  exposes per-segment merge checkboxes and a count/button; same-class
+  polygon/raster sources become one raster object with a new v3 ID, `Merge`
+  provenance, one-step undo/redo, and save/load/re-save evidence. The focused
+  gate is `--segmentation-merge`; read
+  `docs\SEGMENTATION_MERGE_P1C_20260727.md`.
+- P1-C axis-aligned split/slice is complete in the current dirty worktree.
+  Saved Labels exposes vertical/horizontal point-input commands and cancel;
+  polygon/raster sources split only when a one-pixel cut creates 2+
+  4-connected components. New v3 IDs, `Split` provenance, invalid-cut
+  no-mutation, one-step undo/redo, and save/load/re-save are covered by
+  `--segmentation-split`; read
+  `docs\SEGMENTATION_SPLIT_P1C_20260727.md`.
+- The next bounded implementation is P1-C manual hole editing or z-order.
+  Remove-underlying must show an affected-object warning before mutation.
+  Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
+- Mask hole/z-order/remove-underlying remains P1-C. Dataset Health
+  visual QA moves to P4 after the core labeling slices. Collaboration, video,
+  account/cloud/platform scope and automatic candidate save remain excluded.
 - The approved YOLO11 anomaly-classification runtime slice is complete. The
   official classification seed, one-epoch connectivity, 20-epoch app/TCP
   training, fixed 104-image evaluation, Model Center evaluation route, and
@@ -96,8 +159,11 @@ Current immediate priority:
   first anomaly inference. Read
   `docs\DATASET_PURPOSE_AUTOMATIC_NAME_SYNC_20260722.md` and do not reopen the
   slice without a focused regression.
-- No additional MobileSAM input mode or broad UI/model expansion is currently justified. The next implementation must start from a newly reproduced operator defect or a changed approved contract. Independent camera/session data remains an optional field-adoption prerequisite, not a reason to repeat synthetic training or evaluation.
-- The bounded MobileSAM single-box smart-mask slice, fixed 8-class exact-box matrix, and deterministic box-jitter matrix are complete. The 24 exact prompts produced 24/24 usable candidates. The later 96-call matrix applied 20% expansion, 10% contraction, and 10% translation in each diagonal direction; all 96 remained usable, overall median IoU was `0.856132`, lowest class median was `crack 0.704918`, and the 4,525-file source tree SHA-256 stayed unchanged. Keep box-only plus polygon/brush correction. Point/negative prompts are not an implementation priority unless a new operator failure is reproduced. Read `docs\MOBILE_SAM_SMART_MASK.md`, `docs\MOBILE_SAM_8_CLASS_USABILITY_MATRIX_20260722.md`, and `docs\MOBILE_SAM_BOX_JITTER_MATRIX_20260722.md` before reopening it.
+- The prior rule that point/negative MobileSAM prompts required a newly
+  reproduced box-prompt failure was superseded by the user-approved commercial
+  labeling-parity direction. P0-B is now complete; do not reopen it without a
+  failed regression or changed contract.
+- The bounded MobileSAM single-box smart-mask slice, fixed 8-class exact-box matrix, deterministic box-jitter matrix, and P0-B point-correction session are completed regressions. The 24 exact prompts produced 24/24 usable candidates. The later 96-call matrix applied 20% expansion, 10% contraction, and 10% translation in each diagonal direction; all 96 remained usable, overall median IoU was `0.856132`, lowest class median was `crack 0.704918`, and the 4,525-file source tree SHA-256 stayed unchanged. The P0-B fixture separately proved positive expansion, negative removal, 48-point detail, source immutability, and actual-EXE confirm/next-instance behavior. Do not reinterpret any of this as commercial editor parity or field accuracy. Read `docs\MOBILE_SAM_SMART_MASK.md`, `docs\MOBILE_SAM_8_CLASS_USABILITY_MATRIX_20260722.md`, `docs\MOBILE_SAM_BOX_JITTER_MATRIX_20260722.md`, and `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md` before reopening it.
 - The fixed three-model segmentation comparison is complete. On the unchanged 60-image canonical test masks, mean Dice/IoU is U-Net `0.243091/0.156165`, YOLOv8-seg at confidence `0.25` `0.721702/0.570198`, and YOLO11-seg at confidence `0.25` `0.773711/0.636553`. The YOLO11 30-epoch app/TCP run preserved the native 2,004-file tree SHA-256 and records full runtime/checkpoint provenance. This is a synthetic same-source engine benchmark, not adoption or production evidence. See `docs\SEGMENTATION_E30_THREE_MODEL_COMPARISON_20260722.md`.
 - The external native YOLO segmentation source contract and approved 30-epoch same-data benchmark are complete: selected `data.yaml` source is read-only, U-Net receives a recipe-owned canonical raster-mask export, and every YOLO training request receives an app-owned runtime copy so cache files cannot mutate the source. U-Net CUDA versus YOLOv8-seg CPU completed 30 epochs at image 320/batch 4 on the same 360/80/60 packet; the 60-image common-mask report favors U-Net (`Dice/IoU 0.243091/0.156165`) over YOLOv8-seg (`0.079059/0.044103`), without selecting either model.
 - Do not repeat the 30-epoch benchmark unless source, runtime, behavior, acceptance criteria, or a deliberate hyperparameter decision changes. The controlled error analysis and one final held-out replay are complete: the runner now records an explicit YOLO `0.25` confidence, which was selected on `valid` only; the unchanged test replay measured YOLOv8-seg Dice/IoU `0.721702` / `0.570198` versus U-Net `0.243091` / `0.156165`. Do not adopt either model automatically. Keep U-Net's two zero-Dice classes as a separate class-confusion/training hypothesis; independent camera/session data remains required for any production claim. See `docs\SEGMENTATION_E30_CONFIDENCE025_TEST_EVIDENCE_20260722.md`.

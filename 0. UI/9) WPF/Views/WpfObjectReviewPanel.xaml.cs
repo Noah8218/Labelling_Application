@@ -23,6 +23,12 @@ namespace MvcVisionSystem
         public WpfUiButton DeleteButton => DeleteObjectButton;
         public ComboBox ClassBox => ObjectClassBox;
         public WpfUiButton ApplyClassButton => ApplyObjectClassButton;
+        public TextBlock MergeSelectionTextBlock => MergeSelectionText;
+        public WpfUiButton MergeSegmentsButton => MergeSelectedSegmentsButton;
+        public WpfUiButton VerticalSplitButton => BeginVerticalSplitButton;
+        public WpfUiButton HorizontalSplitButton => BeginHorizontalSplitButton;
+        public WpfUiButton SplitCancelButton => CancelSplitButton;
+        public TextBlock SplitStatusTextBlock => SplitStatusText;
         public ListBox ObjectList => ObjectListBox;
     }
 }

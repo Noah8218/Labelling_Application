@@ -22,6 +22,14 @@ namespace MvcVisionSystem
 
         public CClassItem ClassItem { get; set; }
 
+        public string ObjectId { get; set; } = string.Empty;
+
+        public int ComponentIndex { get; set; } = -1;
+
+        public int ZOrder { get; set; }
+
+        public string LastStructuralOperation { get; set; } = string.Empty;
+
         public List<Point> Points { get; set; } = new List<Point>();
 
         public List<List<Point>> CutoutPolygons { get; set; } = new List<List<Point>>();

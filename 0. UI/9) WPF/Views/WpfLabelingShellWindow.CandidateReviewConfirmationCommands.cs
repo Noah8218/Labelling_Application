@@ -63,6 +63,7 @@ namespace MvcVisionSystem
             AddCandidateReviewHistory($"스킵: {FormatCandidate(candidate)}");
             SetPythonStatus($"\uCD94\uB860: \uB300\uAE30 {pendingDetectionCandidates.Count} / \uD655\uC815 {confirmedDetectionCandidates.Count}");
             AppendLog($"후보 스킵: {FormatCandidate(candidate)}");
+            RefreshSmartMaskCommandState();
         }
 
         private void ExecuteCompleteImageAndNextCommand()
@@ -198,6 +199,7 @@ namespace MvcVisionSystem
             {
                 AppendLog(result.DuplicateLogMessage);
             }
+            RefreshSmartMaskCommandState();
         }
 
         private void EnsureConfirmedCandidateClassItems(IEnumerable<YoloWorkerSmokeCandidate> candidates)

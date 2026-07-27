@@ -111,6 +111,10 @@ namespace MvcVisionSystem
                 draft.RenderDirtyBounds,
                 draft.ClassName,
                 draft.ClassItem,
+                draft.ObjectId,
+                draft.ComponentIndex,
+                draft.ZOrder,
+                draft.LastStructuralOperation,
                 draft.Selected,
                 removeCreatedSegment: draft.RemoveCreatedSegment,
                 restoreRemovedSegment: restoreRemovedSegment);

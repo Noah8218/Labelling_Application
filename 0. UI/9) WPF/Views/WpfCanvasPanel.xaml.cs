@@ -38,6 +38,9 @@ namespace MvcVisionSystem
         public TextBlock ActiveLabelClassTitleTextBlock => CanvasActiveLabelClassTitleText;
         public TextBlock ActiveLabelClassDetailTextBlock => CanvasActiveLabelClassDetailText;
         public WpfUiButton OpenClassCatalogButton => CanvasOpenClassCatalogButton;
+        public WpfUiButton ShortcutHelpButton => CanvasShortcutHelpButton;
+        public Border ShortcutHelpCard => CanvasShortcutHelpCard;
+        public TextBlock ShortcutHelpTextBlock => CanvasShortcutHelpText;
         public Border ResultOverlay => DetectionResultOverlay;
         public TextBlock OverlayTitleText => DetectionOverlayTitleText;
         public TextBlock OverlaySummaryText => DetectionOverlaySummaryText;

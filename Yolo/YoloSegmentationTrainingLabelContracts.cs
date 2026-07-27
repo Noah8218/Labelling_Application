@@ -22,6 +22,8 @@ namespace MvcVisionSystem.Yolo
 
         public List<string> Errors { get; } = new List<string>();
 
+        public List<string> Warnings { get; } = new List<string>();
+
         public bool IsReady => Errors.Count == 0 && LabelFileCount > 0 && PolygonCount > 0;
     }
 }

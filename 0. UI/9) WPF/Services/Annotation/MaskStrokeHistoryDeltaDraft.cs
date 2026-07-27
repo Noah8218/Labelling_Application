@@ -25,6 +25,10 @@ namespace MvcVisionSystem
                 RenderDirtyBounds = System.Drawing.Rectangle.Empty,
                 ClassName = className ?? string.Empty,
                 ClassItem = CloneClassItem(classItem),
+                ObjectId = string.Empty,
+                ComponentIndex = -1,
+                ZOrder = 0,
+                LastStructuralOperation = string.Empty,
                 Selected = false,
                 RemoveCreatedSegment = true,
                 RestoreIfRemoved = false
@@ -48,6 +52,10 @@ namespace MvcVisionSystem
                 RenderDirtyBounds = segment?.RenderDirtyBounds ?? System.Drawing.Rectangle.Empty,
                 ClassName = segment?.ClassName ?? string.Empty,
                 ClassItem = CloneClassItem(segment?.ClassItem),
+                ObjectId = segment?.ObjectId ?? string.Empty,
+                ComponentIndex = segment?.ComponentIndex ?? -1,
+                ZOrder = segment?.ZOrder ?? 0,
+                LastStructuralOperation = segment?.LastStructuralOperation ?? string.Empty,
                 Selected = segment?.Selected == true,
                 RestoreIfRemoved = restoreIfRemoved
             };
@@ -71,6 +79,14 @@ namespace MvcVisionSystem
         public string ClassName { get; private set; }
 
         public CClassItem ClassItem { get; private set; }
+
+        public string ObjectId { get; private set; }
+
+        public int ComponentIndex { get; private set; }
+
+        public int ZOrder { get; private set; }
+
+        public string LastStructuralOperation { get; private set; }
 
         public bool Selected { get; private set; }
 

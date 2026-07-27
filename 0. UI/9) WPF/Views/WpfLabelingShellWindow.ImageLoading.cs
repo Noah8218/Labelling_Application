@@ -109,6 +109,7 @@ namespace MvcVisionSystem
                 manualRoiShapeKinds.Clear();
                 manualRoiOverlayIds.Clear();
                 manualSegments.Clear();
+                CancelPendingSegmentationSplit(updateStatus: false);
                 ClearQueuedMaskStrokeCommits();
                 polygonAnnotationService.Reset();
                 CancelMaskStrokePreviewCommitSwap();
@@ -119,6 +120,7 @@ namespace MvcVisionSystem
                 ResetMaskStrokeCommitBuffer();
                 activeMaskStrokeNeedsFullObjectRefresh = false;
                 candidateReviewState.ClearAll();
+                smartMaskPromptSession.Reset();
                 ClearAnnotationHistory();
                 UpdateDetectionResultOverlay();
                 int loadedSavedBoxCount = LoadSavedBoxAnnotationsForActiveImage(imagePath);
@@ -219,6 +221,7 @@ namespace MvcVisionSystem
             manualRoiShapeKinds.Clear();
             manualRoiOverlayIds.Clear();
             manualSegments.Clear();
+            CancelPendingSegmentationSplit(updateStatus: false);
             ClearQueuedMaskStrokeCommits();
             polygonAnnotationService.Reset();
             CancelMaskStrokePreviewCommitSwap();
@@ -229,6 +232,7 @@ namespace MvcVisionSystem
             ResetMaskStrokeCommitBuffer();
             activeMaskStrokeNeedsFullObjectRefresh = false;
             candidateReviewState.ClearAll();
+            smartMaskPromptSession.Reset();
             ClearAnnotationHistory();
 
             MainCanvasViewModel.ClearImage();

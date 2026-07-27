@@ -34,5 +34,7 @@ namespace MvcVisionSystem.Yolo
         public List<string> Splits { get; } = new List<string>();
 
         public List<string> ArchiveEntryNames { get; } = new List<string>();
+
+        public List<string> Warnings { get; } = new List<string>();
     }
 }

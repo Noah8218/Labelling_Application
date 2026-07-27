@@ -17128,3 +17128,467 @@ Boundary / next dependency: 이 완료 상태는 현재 구조 정리 단계의 
 길이·타입 개수가 아니라 실제 혼합 소유권, 탐색 오류, 재사용 또는 테스트
 경계 문제가 확인될 때만 구조 리팩토링을 재개합니다. 프로젝트 우선순위는
 기능 개발과 재현된 결함 수정으로 전환합니다.
+
+
+## 2026-07-27 상용 프로그램 연동 영상 비교와 개발 계약
+
+Status: Complete
+
+Scope: `C:\Git\GoPxL_Video\새 폴더`의 상용 프로그램 연동 영상 10개를
+구간별 키프레임으로 검토하고, 현재 Labeling Studio의
+View·ViewModel·Service·test·최신 UI 근거와 비교했습니다. 현재 제품
+방향에 맞는 격차와 보류/제외 범위를 분리하고, 다음 bounded 기능인
+Dataset Health 시각적 라벨 QA의 소유권, 포함/제외 범위, 상태 안전
+규칙, 완료 기준과 검증을 문서로 고정했습니다. 제품 코드는 변경하지
+않았습니다. 이 우선순위 결론은 같은 날의 V7/CVAT 고밀도 라벨링
+재검토와 사용자 요구 명확화에 따라 아래 정정 기록으로 대체되었습니다.
+
+Acceptance criteria:
+
+- 10개 영상의 파일, 길이, 실제 작업 흐름이 영상별로 기록됨:
+  `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`의 인벤토리로
+  통과.
+- 상용 기능을 현재 구현됨/부족함/조건부/제외로 구분함:
+  비교표와 P0~P4 결정표로 통과.
+- 현재 제품 정체성과 범위를 유지함:
+  로컬 단일 작업자, Recipe source-of-truth, 명시적 실행/후보 검토를
+  유지하고 team/cloud/video/camera/PLC 범위를 제외해 통과.
+- 다음 개발 항목이 구현 가능한 계약으로 정의됨:
+  P0의 current owner -> intended owner, 사용자 흐름, 10K lazy-decode,
+  stale-thumbnail, 현재 EXE before/after 기준으로 통과.
+- 독립 생산 데이터 품질 gate가 UI 기능 우선순위와 혼동되지 않음:
+  object detection/anomaly 항목을 prerequisite 차단 상태로 유지해 통과.
+
+Verification:
+
+- 각 영상의 전 구간을 덮는 16시점 1920x1080 접촉 시트 검토.
+- V7/CVAT 02·04·05·06에는 추출 가능한 subtitle stream이 없었음.
+- 현재 저장소 source/test와 2026-07-22 actual-EXE tutorial image 대조.
+- 격리 빌드: 경고 0, 오류 0.
+- `--priority-workflow-docs`: 통과.
+- `git diff --check`: 통과.
+
+Evidence:
+
+- `artifacts\commercial-video-review-20260727`
+- `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`
+- `docs\LABELING_STUDIO_COMPLETENESS_AUDIT.md`
+- `docs\NEXT_THREAD_HANDOFF.md`
+- `CODEX_NEXT_PROMPT.md`
+- `docs\CODE_STRUCTURE.md`
+
+Boundary / next dependency: 이 완료 상태는 영상 비교와 개발 계약 문서의
+초기 검토 완료 기록입니다. Dataset Health 시각 QA를 P0로 둔 결론은
+아래 라벨링 편집기 격차 정정 기록으로 대체되며, 현재 P0는 라벨링
+명령·반복 생산성 기반입니다. 독립 생산 카메라 데이터가 오기 전에는
+object detection/anomaly 모델 품질 우선순위에 모델 토큰을 사용하지
+않습니다.
+
+
+## 2026-07-27 V7/CVAT 라벨링 편집기 격차 정정과 로드맵
+
+Status: Complete
+
+Scope: 사용자 피드백에 따라 V7 annotation/auto-annotate와 CVAT
+bounding-box/brush-mask/AI-tool 영상을 6~15초 간격의 고밀도 접촉
+시트로 다시 검토했습니다. 현재 source, tests, actual-EXE 튜토리얼
+화면과 대조해 라벨링 편집기 격차를 독립 평가하고, 초기의
+Dataset Health 시각-QA-first 결론을 라벨링-first P0-A/P0-B 계약으로
+정정했습니다. 제품 코드는 변경하지 않았습니다.
+
+Acceptance criteria:
+
+- V7의 tool/class/instance/interactive correction 흐름과 CVAT의
+  repeat/object-state/mask-structure/point-interactor 흐름이 실제 화면
+  근거로 기록됨: pass.
+- 현재 box/polygon/brush/eraser와 save/undo/redo가 안정적 기준선이지만
+  상용 편집기 parity는 아니라는 경계가 기록됨: pass.
+- 라벨링 편집기 별도 평가 `2.1/5`와 가중 근거가 기록됨: pass.
+- P0-A command/productivity와 P0-B interactive Smart Mask의 owner,
+  포함/제외 범위, 상태 안전, 완료 기준이 구현 가능한 계약으로 정의됨:
+  pass.
+- mask structure, object state, display aids, visual QA, preflight의
+  P1~P5 순서와 team/cloud/video/camera/PLC 제외 범위가 기록됨: pass.
+- 기존 96/96 MobileSAM box-jitter 근거가 regression으로 유지되고
+  point correction 보류 근거로 오용되지 않음: pass.
+
+Verification:
+
+- `artifacts\commercial-video-review-20260727\labeling-detail`의 V7/CVAT
+  고밀도 접촉 시트 13개 시각 검토.
+- current source/test와 2026-07-22 object-detection/segmentation actual-EXE
+  tutorial 화면 대조.
+- V7/CVAT 02·04·05·06 subtitle stream 부재 확인.
+- 문서 변경 후 isolated build, `--priority-workflow-docs`,
+  `git diff --check`.
+
+Evidence:
+
+- `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`
+- `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`
+- `artifacts\commercial-video-review-20260727\labeling-detail`
+- `docs\LABELING_STUDIO_COMPLETENESS_AUDIT.md`
+- `docs\NEXT_THREAD_HANDOFF.md`
+- `CODEX_NEXT_PROMPT.md`
+- `docs\CODE_STRUCTURE.md`
+
+Boundary / next dependency: 이 기록 시점에는 P0-A/P0-B가 구현되지
+않았지만, 아래 P0-A 완료 기록이 command/productivity 범위를
+대체합니다. P0-B와 P1~P5는 별도 acceptance gate가 필요합니다. 데이터가
+필요한 detection/anomaly 품질 평가는 새 provenance-confirmed 생산
+데이터가 오기 전까지 차단 상태입니다.
+
+
+## 2026-07-27 P0-A 라벨링 명령·반복 생산성 기반
+
+Status: Complete
+
+Scope: Annotation 도메인에 목적별 tool shortcut, class `1~9`, `0` Class
+Catalog fallback, 마지막 drawing tool+class 반복, 선택된
+box/polygon/raster-mask 복제, tool/class 유지, text-entry shortcut 차단,
+번호가 붙은 class chip과 F1 도움말을 추가했습니다. Shell은 key/event와
+object refresh bridge만 담당하며 Viewer/OpenGL/ROI/brush/eraser
+hot path는 변경하지 않았습니다.
+
+Acceptance criteria:
+
+- tool/class shortcut과 11-class fallback: `--labeling-productivity`와
+  실제 shell command fixture 통과.
+- text-entry focus에서 drawing shortcut 차단, 목적 밖 tool 차단:
+  source policy와 WPF shell fixture 통과.
+- `N`이 마지막 Rectangle+Defect를 복구하고 새 ROI 생성 후 tool/class를
+  유지함: `--wpf-undo-redo-shortcuts` 통과.
+- `Ctrl+D` box가 class/shape/geometry를 보존하고 in-bounds offset을
+  사용하며, canonical save/reopen 후 두 geometry가 동일함: WPF shell
+  fixture 통과.
+- polygon/raster-mask 복제가 source와 buffer를 변경하지 않고 class,
+  cutout, geometry type을 보존함: deterministic fixture 통과.
+- duplicate가 한 번의 undo/redo로 복원됨: WPF history fixture 통과.
+- 실제 EXE에서 numbered class chip, 도움말 버튼과 카드가 표시됨:
+  전용 native-click actual-EXE smoke 통과.
+
+Verification:
+
+- isolated test build: 경고 0, 오류 0.
+- current app Debug build: 경고 0, 오류 0.
+- `--labeling-productivity`: pass.
+- `--wpf-undo-redo-shortcuts`: pass.
+- `--wpf-roi-object-verification`: pass.
+- `--wpf-segmentation-object-verification`: pass.
+- `--segmentation-annotation-storage`: pass.
+- `--wpf-mask-drag-performance`: pass.
+- `--roi-drawing-preview-performance`: pass.
+- `--wpf-labeling-session-smoke --show-shortcut-help --width 1920 --height
+  1080`: pass.
+- `--exe-labeling-productivity-smoke`: pass against
+  `artifacts\run\Debug\OpenVisionLab.LabelingStudio.exe`.
+- `--priority-workflow-docs`: pass.
+- `git diff --check`: pass.
+
+Evidence:
+
+- `0. UI\9) WPF\Services\Annotation\WpfAnnotationProductivityContracts.cs`
+- `0. UI\9) WPF\Services\Annotation\WpfAnnotationProductivityService.cs`
+- `0. UI\9) WPF\ViewModels\Labeling\WpfCanvasPanelViewModel.cs`
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.ShellInputCommands.cs`
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.AnnotationToolSelectionCommands.cs`
+- `tests\LabelingApplication.Tests\Program.LabelingProductivity.cs`
+- `artifacts\ui\labeling-productivity-p0a-20260727\before-current-source-1920x1080.png`
+- `artifacts\ui\labeling-productivity-p0a-20260727\after-current-source-1920x1080.png`
+- `artifacts\ui\labeling-productivity-p0a-20260727\after-actual-exe-1920x1080.png`
+
+Boundary / next dependency: P0-A는 상용 편집기 parity가 아니라 반복
+명령 기반만 완료합니다. 기존 `--exe-industrial-object-labeling-smoke`와
+`--exe-real-labeling-smoke`는 P0-A 변경 전부터 각각 guide/tools tab과
+segmentation purpose 선택자에서 실패하며, 별도 P0-A actual-EXE smoke로
+현재 기능을 검증했습니다. 다음 제품 우선순위는 P0-B interactive Smart
+Mask이며 positive/negative point worker fixture와 상태 안전 gate가
+필요합니다.
+
+
+## 2026-07-27 P0-B 대화형 Smart Mask 보정
+
+Status: Complete
+
+Scope: 기존 MobileSAM box-only 후보 생성을 시작 box +
+positive/negative point correction session으로 확장했습니다. point
+undo/clear, 48/96/256 polygon detail, async worker cancellation,
+rerun-replace, confirm/skip, next-instance/new-box, prompt/candidate overlay
+구분을 포함합니다. 기존 Candidate Review와 canonical segment JSON/mask
+PNG 저장 owner를 재사용하며, text prompt, video tracking, task-wide
+automatic segmentation, auto confirm/save, auto weight download, field
+accuracy 주장은 제외했습니다.
+
+Acceptance criteria:
+
+- real worker positive point가 누락 영역을 추가함: mask area
+  `4431 → 6529`, pass.
+- real worker negative point가 넓은 positive 결과의 오검출을 제거함:
+  `44512 → 22399`, removed `22113` pixels, pass.
+- point undo/clear, input mode, 48/96/256 detail과 cancellation command가
+  ViewModel/session owner에서 결정적으로 동작함: pass.
+- rerun이 confirmed label을 보존하고 pending candidate 하나를 교체함:
+  source/WPF candidate regression, pass.
+- image/Recipe/prompt generation mismatch를 적용하지 않음: session/source
+  stale guard, pass.
+- confirm 전 저장 없음, confirm 후 기존 canonical save 실행: focused
+  source/storage와 actual EXE, pass.
+- actual Debug EXE box → positive → negative → rerun → confirm →
+  next-instance → new box readiness: pass.
+- source image SHA-256 불변, runtime/weight provenance 기록: pass.
+
+Verification:
+
+- Python worker `py_compile`와 `--self-test`: pass.
+- isolated test build: 경고 0, 오류 0.
+- current app Debug build: 경고 0, 오류 0.
+- `--mobile-sam-box-prompt`: pass.
+- `--real-mobile-sam-point-correction`: pass.
+- `--wpf-labeling-shell`: pass.
+- `--wpf-annotation-purpose-scope`: pass.
+- `--wpf-segmentation-object-verification`: pass.
+- `--segmentation-annotation-storage`: pass.
+- `--wpf-mask-drag-performance`: pass.
+- `--roi-drawing-preview-performance`: pass.
+- `--priority-workflow-docs`: pass.
+- `--exe-smart-mask-point-smoke`: pass against the current Debug EXE.
+- `git diff --check`: pass.
+
+Evidence:
+
+- `0. UI\9) WPF\Services\Annotation\WpfSmartMaskPromptSessionService.cs`
+- `0. UI\9) WPF\Services\Model\WpfMobileSamBoxPromptService.cs`
+- `Runtime\Python\openvisionlab_mobile_sam_box_prompt.py`
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.SmartMask.cs`
+- `tests\LabelingApplication.Tests\Program.SmartMaskPoint.cs`
+- `artifacts\mobile-sam-point-correction\20260727-185324\point-correction-evidence.json`
+- `artifacts\ui\smart-mask-p0b-20260727\before-current-source-1920x1080.png`
+- `artifacts\ui\smart-mask-p0b-20260727\after-current-source-1920x1080.png`
+- `artifacts\ui\smart-mask-p0b-20260727\after-actual-exe-before-confirm-1920x1080.png`
+- `artifacts\ui\smart-mask-p0b-20260727\after-actual-exe-after-confirm-1920x1080.png`
+
+Boundary / next dependency: 이 완료는 합성 fixture 기반 단일 작업자
+correction session이며 field validation은 `Not evaluated`입니다.
+라벨링 편집기 평가는 영상 재검토 기준선 `2.1/5`에서 P0-A/P0-B 완료 후
+`2.5/5`로 갱신하지만 CVAT/V7 parity가 아닙니다. 다음 제품 우선순위는
+P1 canonical JSON/mask-PNG/YOLO/COCO/CVAT mask-structure round-trip
+계약과 merge/split/hole/multi-component/z-order editor입니다.
+
+
+## 2026-07-27 P1-A segmentation interchange preservation/loss contract
+
+Status: Complete
+
+Scope: canonical segment JSON, class-index mask PNG, YOLO segmentation, COCO
+polygon, and CVAT polygon conversion semantics now use one programmatic
+capability matrix. Each target declares class, polygon, raster, hole,
+multi-component, instance-grouping, z-order, and remove-underlying provenance
+as `Preserved`, `Conditional`, or `Lost`. COCO/CVAT/YOLO export result objects
+surface deduplicated annotation-derived warnings. Existing file output and
+Viewer/OpenGL/brush/eraser paths are unchanged.
+
+Acceptance criteria:
+
+- all five targets declare exactly one capability for all eight semantics:
+  pass;
+- current v1/v2 annotation profiling detects class, polygon, raster origin, and
+  cutout/hole semantics: pass;
+- canonical JSON reports sibling-PNG and missing instance-group limitations:
+  pass;
+- mask PNG reports exact raster preservation and instance/z-order loss: pass;
+- YOLO/COCO/CVAT report hole loss for the same cutout fixture: pass;
+- COCO/CVAT/YOLO export results expose the shared deduplicated warning: pass;
+- existing segment JSON/mask PNG behavior remains backward compatible: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--segmentation-interchange-contract`: pass;
+- `--segmentation-annotation-storage`: pass;
+- `--coco-segmentation-export`: pass;
+- `--coco-segmentation-import`: pass;
+- `--cvat-segmentation-export`: pass;
+- `--cvat-segmentation-import`: pass;
+- `--prepare-segmentation-training-labels` or the equivalent focused YOLO
+  segmentation export regression: pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `Yolo\SegmentationInterchangeContractService.cs`;
+- `Yolo\CocoSegmentationExportService.cs`;
+- `Yolo\CvatSegmentationArchiveExportService.cs`;
+- `Yolo\YoloSegmentationTrainingLabelService.cs`;
+- `tests\LabelingApplication.Tests\Program.SegmentationInterchangeContract.cs`;
+- `docs\SEGMENTATION_INTERCHANGE_PRESERVATION_CONTRACT_20260727.md`.
+
+Boundary / next dependency: P1-A does not add merge/split/z-order UI and does
+not raise the labeling-editor `2.5/5` estimate. P1-B must introduce a
+backward-compatible canonical schema for persistent object/component identity,
+component order, z-order, and remove-underlying provenance while loading v1/v2
+without behavior change. Structural editor commands remain P1-C.
+
+
+## 2026-07-27 P1-B canonical segmentation schema v3
+
+Status: Complete
+
+Scope: new canonical segment JSON saves now use schema version 3. Every
+component record stores persistent object ID, component index, z-order, and
+last structural operation. `LabelingSegmentationObject`, full history clones,
+and mask-stroke delta history retain the same metadata. Duplicate commands
+clear identity and operation provenance so canonical save assigns a distinct
+new object. No editor command or visible UI was added.
+
+Acceptance criteria:
+
+- one disconnected raster object saves as two components sharing one object
+  ID and indices `0,1`: pass;
+- object ID, component index, z-order, and `RemoveUnderlying` provenance
+  survive save/load/re-save: pass;
+- segment JSON v2 loads with unchanged polygon bounds and deterministic legacy
+  metadata: pass;
+- history clone preserves identity and duplicate starts without source
+  identity/provenance: pass;
+- canonical v3 reports grouping, z-order, and operation provenance as
+  preserved while PNG/YOLO/COCO/CVAT losses remain explicit: pass;
+- existing storage/export/import, WPF manipulation, and mask performance
+  behavior remains green: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- current app Debug build: warning 0, error 0;
+- `--segmentation-interchange-contract`: pass;
+- `--segmentation-annotation-storage`: pass;
+- `--labeling-productivity`: pass;
+- `--wpf-undo-redo-shortcuts`: pass;
+- `--coco-segmentation-export` / `--coco-segmentation-import`: pass;
+- `--cvat-segmentation-export` / `--cvat-segmentation-import`: pass;
+- `--yolov8-segmentation-app-dataset-fixture`: pass;
+- `--wpf-segmentation-object-verification`: pass;
+- `--wpf-mask-drag-performance`: pass.
+
+Evidence:
+
+- `Library\Viewer\LabelingSegmentationObject.cs`;
+- `Yolo\YoloSegmentationAnnotationService.cs`;
+- `Yolo\SegmentationInterchangeContractService.cs`;
+- `0. UI\9) WPF\Services\Annotation\WpfAnnotationHistoryService.cs`;
+- `tests\LabelingApplication.Tests\Program.SegmentationInterchangeContract.cs`;
+- `docs\SEGMENTATION_INTERCHANGE_PRESERVATION_CONTRACT_20260727.md`.
+
+Boundary / next dependency: this completes P1-B storage compatibility but not
+P1 editor parity. P1-C should implement merge/join as the first structural
+operation with one-step undo/redo, v3 identity/provenance updates, save/load
+replay, and no Viewer/OpenGL hot-path rewrite.
+
+
+## 2026-07-27 P1-C same-class segmentation merge/join
+
+Status: Complete
+
+Scope: Saved Labels now lets the operator check two or more manual
+segmentation rows and merge same-class polygon/raster sources into one raster
+mask object. This includes per-source polygon cutout handling, disconnected
+components, a new canonical v3 identity with `Merge` provenance, and one-step
+undo/redo. Split/slice, manual hole creation, z-order UI, and
+remove-underlying are excluded.
+
+Acceptance criteria:
+
+- only manual segmentation rows expose merge selection and the button enables
+  at two selections: pass;
+- same-class polygon, cutout, and raster geometry union correctly: pass;
+- another source can fill a cutout while unfilled cutout pixels stay empty:
+  pass;
+- disconnected components survive: pass;
+- mixed classes are rejected before mutation: pass;
+- three sources become one new-ID object and one Undo/Redo restores/reapplies
+  exact identities: pass;
+- canonical v3 save/load/re-save retains shared object ID, sequential component
+  indices, z-order, and `Merge` provenance: pass;
+- current-source 1920x1080 before/after shows the new selection and command
+  without clipping: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- current app Debug build: warning 0, error 0;
+- `--segmentation-merge`: pass;
+- `--segmentation-interchange-contract`: pass;
+- `--segmentation-annotation-storage`: pass;
+- `--wpf-undo-redo-shortcuts`: pass;
+- `--wpf-segmentation-object-verification`: pass;
+- `--wpf-mask-drag-performance`: pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `0. UI\9) WPF\Services\Annotation\WpfSegmentationMergeService.cs`;
+- `0. UI\9) WPF\ViewModels\Labeling\WpfObjectReviewPanelViewModel.cs`;
+- `0. UI\9) WPF\Views\WpfObjectReviewPanel.xaml`;
+- `tests\LabelingApplication.Tests\Program.SegmentationMerge.cs`;
+- `docs\SEGMENTATION_MERGE_P1C_20260727.md`;
+- `artifacts\ui\segmentation-merge-p1c-20260727`.
+
+Boundary / next dependency: this closes one structural operation, not CVAT/V7
+parity. The labeling-editor depth estimate moves from `2.5/5` to `2.6/5`;
+focused workstation maturity remains `4.0/5`. The next bounded operation is
+P1-C split/slice with an explicit cut contract, one-step history, v3 identity
+rules, and canonical replay. Recommended model: `gpt-5.6-sol`; reasoning
+effort: `high`.
+
+## 2026-07-27 P1-C Axis-Aligned Segmentation Split / Slice
+
+Status: `Complete`
+
+Scope:
+
+- select one saved polygon or raster-mask object;
+- arm vertical or horizontal cut input from Saved Labels;
+- apply a one-pixel row/column cut only when 2+ four-connected components
+  result;
+- publish independent new-ID raster objects with preserved class/z-order and
+  `Split` provenance;
+- support visible/right-click cancellation, one-step undo/redo, and canonical
+  v3 save/load/re-save.
+
+Acceptance criteria:
+
+- polygon source, polygon cutout, raster source, and both cut orientations:
+  pass;
+- outside/edge/non-separating cut does not mutate the source: pass;
+- every result receives a new independent ID and `Split` provenance: pass;
+- one Undo restores the original source identity and one Redo restores result
+  identities: pass;
+- canonical v3 reopen/re-save preserves IDs and provenance: pass;
+- current-source 1920x1080 before/after shows controls and armed point-input
+  guidance without clipping: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- current app Debug build: warning 0, error 0;
+- `--segmentation-split`: pass;
+- merge/interchange/storage/history/segmentation/mask-performance regressions:
+  pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `0. UI\9) WPF\Services\Annotation\WpfSegmentationMaskGeometryService.cs`;
+- `0. UI\9) WPF\Services\Annotation\WpfSegmentationSplitService.cs`;
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.SegmentationSplitCommands.cs`;
+- `tests\LabelingApplication.Tests\Program.SegmentationSplit.cs`;
+- `docs\SEGMENTATION_SPLIT_P1C_20260727.md`;
+- `artifacts\ui\segmentation-split-p1c-20260727`.
+
+Boundary / next dependency: labeling-editor depth is now `2.7/5`; focused
+workstation maturity remains `4.0/5`. Manual hole editing, z-order, and
+remove-underlying remain independent P1-C slices. Remove-underlying requires an
+affected-object preview/warning before mutation. Recommended model:
+`gpt-5.6-sol`; reasoning effort: `high`.

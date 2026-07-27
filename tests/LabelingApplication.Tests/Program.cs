@@ -299,6 +299,13 @@ internal static partial class Program
             return RunWpfLabelingSessionSmoke(args);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--labeling-productivity", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "labeling productivity shortcuts, repeat state, duplicate geometry, and help UI",
+                LabelingProductivityTests.TestLabelingProductivity);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--wpf-undo-redo-shortcuts", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("WPF shell undo/redo keyboard shortcuts restore annotation state", TestWpfShellUndoRedoRestoresAnnotationState);
@@ -322,6 +329,16 @@ internal static partial class Program
         if (args.Any(arg => string.Equals(arg, "--exe-real-labeling-smoke", StringComparison.OrdinalIgnoreCase)))
         {
             return RunExeRealLabelingSmoke(args);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--exe-labeling-productivity-smoke", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunExeLabelingProductivitySmoke(args);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--exe-smart-mask-point-smoke", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunExeSmartMaskPointSmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--exe-label-create-queue-locality-smoke", StringComparison.OrdinalIgnoreCase)))
@@ -477,6 +494,11 @@ internal static partial class Program
         if (args.Any(arg => string.Equals(arg, "--real-mobile-sam-box-prompt", StringComparison.OrdinalIgnoreCase)))
         {
             return MobileSamBoxPromptTests.RunRealMobileSamBoxPrompt(args);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--real-mobile-sam-point-correction", StringComparison.OrdinalIgnoreCase)))
+        {
+            return MobileSamBoxPromptTests.RunRealMobileSamPointCorrection(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--real-mobile-sam-usability-matrix", StringComparison.OrdinalIgnoreCase)
@@ -1014,6 +1036,27 @@ internal static partial class Program
         if (args.Any(arg => string.Equals(arg, "--segmentation-annotation-storage", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("Segmentation annotation lookup stays isolated to the active dataset", TestSegmentationAnnotationFileWrite);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--segmentation-interchange-contract", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Segmentation interchange contract reports preservation and loss",
+                SegmentationInterchangeContractTests.TestPreservationAndLossContract);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--segmentation-merge", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Same-class segmentation merge preserves geometry, history, and canonical identity",
+                SegmentationMergeTests.TestMergeWorkflow);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--segmentation-split", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Axis-aligned segmentation split preserves geometry, history, and canonical identity",
+                SegmentationSplitTests.TestSplitWorkflow);
         }
 
         if (args.Any(arg => string.Equals(arg, "--segmentation-historical-remediation-audit", StringComparison.OrdinalIgnoreCase)))
@@ -1724,6 +1767,8 @@ internal static partial class Program
         bool focusDatasetDashboard = HasArgument(args, "--focus-dataset-dashboard");
         bool expandLabelingDetails = HasArgument(args, "--expand-labeling-details");
         bool selectMaskObject = HasArgument(args, "--select-mask-object");
+        bool selectMergeSegments = HasArgument(args, "--select-merge-segments");
+        string armSegmentationSplit = GetArgumentValue(args, "--arm-segmentation-split", string.Empty);
         bool openHeaderToolsMenu = HasArgument(args, "--open-header-tools-menu");
         bool showWorkspaceLayoutControls = HasArgument(args, "--show-workspace-layout-controls");
         bool showTrainingRecoveryStatus = HasArgument(args, "--show-training-recovery-status");
@@ -1753,6 +1798,8 @@ internal static partial class Program
         bool smartMaskCandidate = HasArgument(args, "--smart-mask-candidate");
         bool smartMaskPromptOnly = HasArgument(args, "--smart-mask-prompt-only");
         string smartMaskPromptBox = GetArgumentValue(args, "--smart-mask-prompt-box", string.Empty);
+        string smartMaskPositivePoint = GetArgumentValue(args, "--smart-mask-positive-point", string.Empty);
+        string smartMaskNegativePoint = GetArgumentValue(args, "--smart-mask-negative-point", string.Empty);
         bool preserveDatasetOutput = roiOnly &&
             !string.IsNullOrWhiteSpace(datasetOutputRoot) &&
             Directory.Exists(datasetOutputRoot);
@@ -1960,6 +2007,16 @@ internal static partial class Program
                     {
                         SelectVisualSmokeMaskObject(window);
                     }
+                    if (selectMergeSegments)
+                    {
+                        foreach (WpfObjectReviewListItem item in window.ObjectReviewViewModel.Objects
+                            .Where(item => item.IsManualSegment)
+                            .Take(2))
+                        {
+                            item.IsMergeSelected = true;
+                            window.ObjectReviewViewModel.MergeSelectionChangedCommand.Execute(item);
+                        }
+                    }
 
                     SelectVisualSmokeReviewTab(window, reviewTab);
                     EnsureVisualSmokeRightWorkflowExpanded(window, expandRightWorkflow);
@@ -2068,7 +2125,12 @@ internal static partial class Program
                     PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
                     if (smartMaskCandidate)
                     {
-                        MobileSamBoxPromptTests.ApplyVisualSmokeSmartMaskCandidate(window, imageSize, smartMaskPromptBox);
+                        MobileSamBoxPromptTests.ApplyVisualSmokeSmartMaskCandidate(
+                            window,
+                            imageSize,
+                            smartMaskPromptBox,
+                            smartMaskPositivePoint,
+                            smartMaskNegativePoint);
                     }
                     else if (smartMaskPromptOnly)
                     {
@@ -2204,6 +2266,29 @@ internal static partial class Program
                         && window.FindName("ImageQueueColumn") is System.Windows.Controls.ColumnDefinition imageQueueColumn)
                     {
                         imageQueueColumn.Width = new System.Windows.GridLength(Math.Clamp(rightPaneWidth, 260, 640));
+                    }
+
+                    if (selectMergeSegments)
+                    {
+                        foreach (WpfObjectReviewListItem item in window.ObjectReviewViewModel.Objects
+                            .Where(item => item.IsManualSegment)
+                            .Take(2))
+                        {
+                            item.IsMergeSelected = true;
+                            window.ObjectReviewViewModel.MergeSelectionChangedCommand.Execute(item);
+                        }
+                    }
+                    if (!string.IsNullOrWhiteSpace(armSegmentationSplit))
+                    {
+                        SelectVisualSmokeMaskObject(window);
+                        if (armSegmentationSplit.Equals("horizontal", StringComparison.OrdinalIgnoreCase))
+                        {
+                            window.ObjectReviewViewModel.BeginHorizontalSplitCommand.Execute(null);
+                        }
+                        else
+                        {
+                            window.ObjectReviewViewModel.BeginVerticalSplitCommand.Execute(null);
+                        }
                     }
 
                     window.UpdateLayout();
@@ -3308,6 +3393,10 @@ internal static partial class Program
                     PumpWpfDispatcher(TimeSpan.FromMilliseconds(500));
                     WpfLabelingSessionResult result = ExecuteWpfLabelingSessionFlow(window, imagePath, outputRoot);
                     SelectVisualSmokeReviewTab(window, "candidates");
+                    if (args.Any(arg => string.Equals(arg, "--show-shortcut-help", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        window.CanvasPanelViewModel.ToggleShortcutHelp();
+                    }
                     window.UpdateLayout();
                     PumpWpfDispatcher(TimeSpan.FromMilliseconds(400));
                     CaptureWindow(window, outputPath);
@@ -13021,7 +13110,7 @@ internal static partial class Program
                     image.Size);
             AssertTrue(!loadedPolygonObjects["Defect"][0].IsRasterMask, "saved polygon annotations should remain editable polygons when a matching mask PNG exists");
             SegmentationAnnotationFile annotationFile = JsonConvert.DeserializeObject<SegmentationAnnotationFile>(File.ReadAllText(segmentPath));
-            AssertEqual(2, annotationFile.Version);
+            AssertEqual(3, annotationFile.Version);
             AssertEqual("Polygon", annotationFile.Polygons[0].GeometryType);
 
             var maskData = new byte[20 * 20];
@@ -14102,7 +14191,7 @@ internal static partial class Program
             window.MainCanvasViewModel.IsImagePointInputMode = false;
             InvokePrivateResult<object>(window, "ApplyDatasetPurposeToCurrentProject", LabelingDatasetPurpose.Segmentation);
             InvokePrivateResult<object>(window, "RefreshAnnotationVisibilityForDatasetPurpose", true);
-            AssertEqual("Brush,Eraser,Polygon,Select,PanZoom", string.Join(",", window.CanvasPanelViewModel.AnnotationTools.Select(item => item.Tool)));
+            AssertEqual("Rectangle,Brush,Eraser,Polygon,Select,PanZoom", string.Join(",", window.CanvasPanelViewModel.AnnotationTools.Select(item => item.Tool)));
             AssertEqual(WpfAnnotationTool.Brush, window.CanvasPanelViewModel.SelectedAnnotationTool.Tool);
             AssertEqual(WpfAnnotationTool.Brush, GetPrivateField<WpfAnnotationTool>(window, "activeAnnotationTool"));
             AssertTrue(window.MainCanvasViewModel.IsImagePointInputMode, "segmentation purpose restore should apply the visible Brush selection to canvas input");
@@ -14947,6 +15036,7 @@ internal static partial class Program
         data.LastSelectImageName = "wpf-undo-redo";
         data.ClassNamedList.Add(new CClassItem { Text = "Defect", DrawColor = Color.LimeGreen });
         data.ConfigureOutputRoot(root);
+        data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.ObjectDetection;
         data.ProjectSettings.YoloDataset.ValidationPercent = 0;
         CGlobal.Inst.Data = data;
 
@@ -14969,6 +15059,58 @@ internal static partial class Program
             SetPrivateField(window, "activeImageSize", new Size(40, 40));
             SetPrivateField(window, "activeImageBitmap", bitmap);
 
+            var rectangleShortcutArgs = new OpenVisionLab.Mvvm.KeyInputCommandArgs(
+                System.Windows.Input.Key.R,
+                System.Windows.Input.ModifierKeys.None,
+                isRepeat: false);
+            window.ShellViewModel.PreviewKeyDownCommand.Execute(rectangleShortcutArgs);
+            AssertTrue(rectangleShortcutArgs.Handled, "R should select the purpose-available rectangle tool");
+            AssertEqual(WpfAnnotationTool.Rectangle, window.CanvasPanelViewModel.SelectedAnnotationTool.Tool);
+
+            var textEditingShortcutArgs = new OpenVisionLab.Mvvm.KeyInputCommandArgs(
+                System.Windows.Input.Key.P,
+                System.Windows.Input.ModifierKeys.None,
+                isRepeat: false,
+                originalSource: new System.Windows.Controls.TextBox());
+            window.ShellViewModel.PreviewKeyDownCommand.Execute(textEditingShortcutArgs);
+            AssertTrue(!textEditingShortcutArgs.Handled, "drawing shortcuts should be suppressed while a text box owns focus");
+            AssertEqual(WpfAnnotationTool.Rectangle, window.CanvasPanelViewModel.SelectedAnnotationTool.Tool);
+
+            var classShortcutArgs = new OpenVisionLab.Mvvm.KeyInputCommandArgs(
+                System.Windows.Input.Key.D1,
+                System.Windows.Input.ModifierKeys.None,
+                isRepeat: false);
+            window.ShellViewModel.PreviewKeyDownCommand.Execute(classShortcutArgs);
+            AssertTrue(classShortcutArgs.Handled, "class shortcut 1 should be handled");
+            AssertEqual("Defect", window.CanvasPanelViewModel.SelectedLabelClass.Text);
+
+            var helpShortcutArgs = new OpenVisionLab.Mvvm.KeyInputCommandArgs(
+                System.Windows.Input.Key.F1,
+                System.Windows.Input.ModifierKeys.None,
+                isRepeat: false);
+            window.ShellViewModel.PreviewKeyDownCommand.Execute(helpShortcutArgs);
+            AssertTrue(helpShortcutArgs.Handled, "F1 should open labeling shortcut help");
+            AssertEqual(System.Windows.Visibility.Visible, window.CanvasPanelViewModel.ShortcutHelpVisibility);
+            window.ShellViewModel.PreviewKeyDownCommand.Execute(new OpenVisionLab.Mvvm.KeyInputCommandArgs(
+                System.Windows.Input.Key.F1,
+                System.Windows.Input.ModifierKeys.None,
+                isRepeat: false));
+            AssertEqual(System.Windows.Visibility.Collapsed, window.CanvasPanelViewModel.ShortcutHelpVisibility);
+
+            window.ShellViewModel.PreviewKeyDownCommand.Execute(new OpenVisionLab.Mvvm.KeyInputCommandArgs(
+                System.Windows.Input.Key.V,
+                System.Windows.Input.ModifierKeys.None,
+                isRepeat: false));
+            AssertEqual(WpfAnnotationTool.Select, window.CanvasPanelViewModel.SelectedAnnotationTool.Tool);
+            var repeatShortcutArgs = new OpenVisionLab.Mvvm.KeyInputCommandArgs(
+                System.Windows.Input.Key.N,
+                System.Windows.Input.ModifierKeys.None,
+                isRepeat: false);
+            window.ShellViewModel.PreviewKeyDownCommand.Execute(repeatShortcutArgs);
+            AssertTrue(repeatShortcutArgs.Handled, "N should restore the last drawing tool and class");
+            AssertEqual(WpfAnnotationTool.Rectangle, window.CanvasPanelViewModel.SelectedAnnotationTool.Tool);
+            AssertEqual("Defect", window.CanvasPanelViewModel.SelectedLabelClass.Text);
+
             var rect = new CanvasRect<float>(5, 30, 20, 15)
             {
                 UniqueId = "undo-roi-1",
@@ -14979,6 +15121,12 @@ internal static partial class Program
 
             var manualRois = GetPrivateField<List<Rectangle>>(window, "manualRois");
             AssertEqual(1, manualRois.Count);
+            AssertTrue(
+                window.CanvasPanelViewModel.SelectedAnnotationTool.Tool == WpfAnnotationTool.Rectangle,
+                "rectangle creation should retain the current drawing tool");
+            AssertTrue(
+                string.Equals(window.CanvasPanelViewModel.SelectedLabelClass.Text, "Defect", StringComparison.Ordinal),
+                "rectangle creation should retain the current drawing class");
             PumpWpfDispatcher(TimeSpan.FromMilliseconds(20));
             AssertTrue(statusPanel.ViewModel.IsAnnotationDirty, "ROI add should mark annotation view model as dirty");
             AssertTrue(saveStatusText.Text.Contains("\uC800\uC7A5 \uD544\uC694", StringComparison.Ordinal), "ROI add should mark annotations as needing save");
@@ -15025,6 +15173,48 @@ internal static partial class Program
             AssertEqual(1, manualRois.Count);
             PumpWpfDispatcher(TimeSpan.FromMilliseconds(20));
             AssertTrue(!redoTool.IsActionEnabled, "Ctrl+Shift+Z should consume the redo entry");
+
+            InvokePrivateResult<object>(
+                window,
+                "RefreshObjectListWithSelection",
+                WpfObjectReviewItemRef.Manual(0));
+            var ctrlDArgs = new OpenVisionLab.Mvvm.KeyInputCommandArgs(
+                System.Windows.Input.Key.D,
+                System.Windows.Input.ModifierKeys.Control,
+                isRepeat: false);
+            window.ShellViewModel.PreviewKeyDownCommand.Execute(ctrlDArgs);
+            AssertTrue(ctrlDArgs.Handled, "Ctrl+D should duplicate the selected manual ROI");
+            AssertEqual(2, manualRois.Count);
+            AssertEqual("Defect", GetPrivateField<List<string>>(window, "manualRoiClassNames")[1]);
+            AssertEqual(
+                GetPrivateField<List<CanvasRoiShapeKind>>(window, "manualRoiShapeKinds")[0],
+                GetPrivateField<List<CanvasRoiShapeKind>>(window, "manualRoiShapeKinds")[1]);
+            AssertTrue(manualRois[0] != manualRois[1], "duplicate should use a deterministic offset when image bounds allow it");
+
+            object[] duplicateSaveArgs = { 0 };
+            AssertTrue(InvokePrivateResult<bool>(window, "SaveCurrentAnnotations", duplicateSaveArgs), "duplicated ROI should use the canonical save path");
+            AssertEqual(2, (int)duplicateSaveArgs[0]);
+            string savedDuplicateImagePath = Directory
+                .EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
+                .First(path => string.Equals(
+                    Path.GetFileName(Path.GetDirectoryName(path)),
+                    "images",
+                    StringComparison.OrdinalIgnoreCase));
+            IReadOnlyDictionary<string, List<Rectangle>> reopenedDuplicateRois =
+                YoloAnnotationService.LoadAnnotationRectanglesForImage(
+                    savedDuplicateImagePath,
+                    data.ClassNamedList,
+                    data,
+                    new Size(40, 40));
+            AssertEqual(2, reopenedDuplicateRois["Defect"].Count);
+            AssertTrue(
+                reopenedDuplicateRois["Defect"].Contains(manualRois[0])
+                    && reopenedDuplicateRois["Defect"].Contains(manualRois[1]),
+                "canonical reopen should preserve both duplicate ROI geometries and their class");
+            AssertTrue(InvokePrivateResult<bool>(window, "UndoWpfAnnotationHistory"), "duplicate should be one undo step");
+            AssertEqual(1, manualRois.Count);
+            AssertTrue(InvokePrivateResult<bool>(window, "RedoWpfAnnotationHistory"), "duplicate should be one redo step");
+            AssertEqual(2, manualRois.Count);
 
             InvokePrivateResult<object>(window, "BeginMaskAnnotationMode", WpfAnnotationTool.Brush);
             InvokePrivateResult<object>(window, "MainCanvasViewModel_ImagePointClicked", window.MainCanvasViewModel, new CanvasImagePointEventArgs(CanvasPointerButton.Left, 1, 0, 0, new Point(10, 10), PointF.Empty));
@@ -21325,10 +21515,13 @@ internal static partial class Program
         viewModel.SelectedMode = viewModel.LearningModes.First(item => item.Mode == WpfLearningMode.Segmentation);
         AssertEqual("Select,Rectangle,PanZoom", string.Join(",", viewModel.SelectableAnnotationTools.Select(item => item.Tool)));
         viewModel.SelectedDatasetPurposeMode = viewModel.DatasetPurposeModes.First(item => item.Mode == WpfLearningMode.Segmentation);
-        AssertEqual("Brush,Eraser,Polygon,Select,PanZoom", string.Join(",", viewModel.SelectableAnnotationTools.Select(item => item.Tool)));
+        AssertEqual("Rectangle,Brush,Eraser,Polygon,Select,PanZoom", string.Join(",", viewModel.SelectableAnnotationTools.Select(item => item.Tool)));
         AssertEqual(WpfAnnotationTool.Brush, viewModel.SelectedTool.Tool);
-        AssertEqual(8, viewModel.VisibleAnnotationTools.Count);
+        AssertEqual(9, viewModel.VisibleAnnotationTools.Count);
         AssertTrue(viewModel.DatasetPurposeToolSummaryText.Contains("\uBE0C\uB7EC\uC2DC", StringComparison.Ordinal), "segmentation purpose should explain brush visibility");
+        AssertTrue(viewModel.DatasetPurposeToolSummaryText.Contains("\uBC15\uC2A4", StringComparison.Ordinal)
+            && viewModel.DatasetPurposeToolSummaryText.Contains("Smart Mask", StringComparison.Ordinal),
+            "segmentation purpose should explain that the box tool starts Smart Mask");
         AssertTrue(viewModel.DatasetSetupFirstActionText.Contains("\uC138\uADF8\uBA58\uD14C\uC774\uC158", StringComparison.Ordinal), "segmentation first-run cue should name mask dataset setup");
         AssertEqual("\uC0C8\uB85C \uB9CC\uB4E4\uAE30", viewModel.DatasetSetupActionText);
         AssertTrue(viewModel.DatasetPurposeSummaryText.Contains("세그", StringComparison.Ordinal), "segmentation purpose should explain mask labeling");
@@ -21798,8 +21991,8 @@ internal static partial class Program
 
             learningPanel.DatasetPurposeList.SelectedItem = learningPanel.ViewModel.DatasetPurposeModes.First(item => item.Mode == WpfLearningMode.Segmentation);
             PumpWpfDispatcher(TimeSpan.FromMilliseconds(60));
-            AssertEqual("Brush,Eraser,Polygon,Select,PanZoom", string.Join(",", learningPanel.ViewModel.SelectableAnnotationTools.Select(item => item.Tool)));
-            AssertEqual("Brush,Eraser,Polygon,Select,PanZoom", string.Join(",", canvasPanel.ViewModel.AnnotationTools.Select(item => item.Tool)));
+            AssertEqual("Rectangle,Brush,Eraser,Polygon,Select,PanZoom", string.Join(",", learningPanel.ViewModel.SelectableAnnotationTools.Select(item => item.Tool)));
+            AssertEqual("Rectangle,Brush,Eraser,Polygon,Select,PanZoom", string.Join(",", canvasPanel.ViewModel.AnnotationTools.Select(item => item.Tool)));
             AssertEqual(WpfAnnotationTool.Brush, learningPanel.ViewModel.SelectedTool.Tool);
             AssertEqual(WpfAnnotationTool.Brush, canvasPanel.ViewModel.SelectedAnnotationTool.Tool);
             AssertEqual(LabelingDatasetPurpose.Segmentation, CGlobal.Inst.Data.ProjectSettings.DatasetPurpose);

@@ -16,7 +16,12 @@ namespace MvcVisionSystem
                 ExecuteMarkQualityReviewedCommand,
                 ExecuteExportQualityReviewReportCommand,
                 ExecuteObjectSelectionChangedCommand,
-                ExecuteObjectPreviewKeyDownCommand);
+                ExecuteObjectPreviewKeyDownCommand,
+                ExecuteMergeSelectedSegmentsCommand,
+                mergeSelectionChanged: null,
+                beginVerticalSplit: ExecuteBeginVerticalSegmentationSplitCommand,
+                beginHorizontalSplit: ExecuteBeginHorizontalSegmentationSplitCommand,
+                cancelSplit: ExecuteCancelSegmentationSplitCommand);
             RefreshAttachedCommandBindings(
                 ObjectListBox,
                 InputCommandBehaviors.SelectedItemChangedCommandProperty,
@@ -33,6 +38,12 @@ namespace MvcVisionSystem
             RegisterObjectReviewName(nameof(DeleteObjectButton), DeleteObjectButton);
             RegisterObjectReviewName(nameof(ObjectClassBox), ObjectClassBox);
             RegisterObjectReviewName(nameof(ApplyObjectClassButton), ApplyObjectClassButton);
+            RegisterObjectReviewName(nameof(MergeSelectionText), MergeSelectionText);
+            RegisterObjectReviewName(nameof(MergeSelectedSegmentsButton), MergeSelectedSegmentsButton);
+            RegisterObjectReviewName(nameof(BeginVerticalSplitButton), BeginVerticalSplitButton);
+            RegisterObjectReviewName(nameof(BeginHorizontalSplitButton), BeginHorizontalSplitButton);
+            RegisterObjectReviewName(nameof(CancelSplitButton), CancelSplitButton);
+            RegisterObjectReviewName(nameof(SplitStatusText), SplitStatusText);
             RegisterObjectReviewName(nameof(ObjectListBox), ObjectListBox);
         }
 

@@ -163,6 +163,11 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (pendingSegmentationSplitOrientation.HasValue)
+            {
+                CancelPendingSegmentationSplit(updateStatus: false);
+            }
+
             WpfAnnotationToolItem selectedTool = ResolveSelectableAnnotationTool(tool);
             if (selectedTool == null)
             {
@@ -230,6 +235,97 @@ namespace MvcVisionSystem
             SetModelStatus($"\uD604\uC7AC \uB370\uC774\uD130\uC14B \uBAA9\uC801({purposeName})\uC5D0\uC11C\uB294 {toolName} \uB3C4\uAD6C\uB97C \uC0AC\uC6A9\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.");
             AppendLog($"\uB3C4\uAD6C \uC120\uD0DD \uCC28\uB2E8: purpose={purposeName}, tool={toolName}");
             RefreshCanvasWorkflowContext();
+        }
+
+        private bool TryDuplicateSelectedAnnotation()
+        {
+            CompleteMaskAnnotationStroke();
+            FlushQueuedMaskStrokeCommits();
+            if (!TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef selectedItem))
+            {
+                SetYoloCommandStatus("복제할 저장 라벨을 먼저 선택하세요.", isBusy: false);
+                return false;
+            }
+
+            switch (selectedItem.Source)
+            {
+                case WpfObjectReviewSource.ManualRoi:
+                    return TryDuplicateManualRoi(selectedItem.Index);
+
+                case WpfObjectReviewSource.ManualSegment:
+                    return TryDuplicateManualSegment(selectedItem.Index);
+
+                default:
+                    SetYoloCommandStatus("수동 박스, 폴리곤, 브러시 마스크만 복제할 수 있습니다.", isBusy: false);
+                    return false;
+            }
+        }
+
+        private bool TryDuplicateManualRoi(int sourceIndex)
+        {
+            if (sourceIndex < 0 || sourceIndex >= manualRois.Count)
+            {
+                return false;
+            }
+
+            if (GetManualRoiShapeKind(sourceIndex)
+                != OpenVisionLab.ImageCanvas.CanvasShapes.CanvasRoiShapeKind.Rectangle)
+            {
+                SetYoloCommandStatus("현재 P0-A 복제는 박스, 폴리곤, 브러시 마스크만 지원합니다.", isBusy: false);
+                return false;
+            }
+
+            RegisterAnnotationHistoryBeforeChange("라벨 복제");
+            System.Drawing.Rectangle duplicate = WpfAnnotationProductivityService.CreateOffsetRectangle(
+                manualRois[sourceIndex],
+                activeImageSize);
+            string className = GetManualRoiClassName(sourceIndex);
+            manualRois.Add(duplicate);
+            manualRoiClassNames.Add(className);
+            manualRoiShapeKinds.Add(GetManualRoiShapeKind(sourceIndex));
+            manualRoiOverlayIds.Add(string.Empty);
+
+            int duplicateIndex = manualRois.Count - 1;
+            RedrawReviewRois();
+            RefreshObjectListWithSelection(WpfObjectReviewItemRef.Manual(duplicateIndex));
+            ShowSavedLabelsWorkflowView();
+            QueueActiveImageQueueStatusRefresh(hasActiveCandidates: pendingDetectionCandidates.Count > 0);
+            SetYoloCommandStatus(
+                $"라벨 복제: {className} / x={duplicate.X}, y={duplicate.Y}, w={duplicate.Width}, h={duplicate.Height}",
+                isBusy: false);
+            AppendLog($"Duplicated manual ROI: source={sourceIndex + 1}, target={duplicateIndex + 1}, class={className}");
+            return true;
+        }
+
+        private bool TryDuplicateManualSegment(int sourceIndex)
+        {
+            if (sourceIndex < 0 || sourceIndex >= manualSegments.Count)
+            {
+                return false;
+            }
+
+            LabelingSegmentationObject duplicate = WpfAnnotationProductivityService.CreateOffsetSegment(
+                manualSegments[sourceIndex],
+                activeImageSize,
+                maskAnnotationService);
+            if (duplicate == null)
+            {
+                return false;
+            }
+
+            RegisterAnnotationHistoryBeforeChange("라벨 복제");
+            manualSegments.Add(duplicate);
+            int duplicateIndex = manualSegments.Count - 1;
+            RefreshObjectListWithSelection(WpfObjectReviewItemRef.ManualSegment(duplicateIndex));
+            RefreshPolygonOverlays();
+            ShowSavedLabelsWorkflowView();
+            QueueActiveImageQueueStatusRefresh(hasActiveCandidates: pendingDetectionCandidates.Count > 0);
+
+            string shapeName = duplicate.IsRasterMask ? "마스크" : "폴리곤";
+            string className = FirstNonEmpty(duplicate.ClassName, duplicate.ClassItem?.Text, "Defect");
+            SetYoloCommandStatus($"라벨 복제: {shapeName} / {className}", isBusy: false);
+            AppendLog($"Duplicated manual segment: source={sourceIndex + 1}, target={duplicateIndex + 1}, shape={shapeName}, class={className}");
+            return true;
         }
     }
 }

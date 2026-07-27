@@ -401,7 +401,7 @@ namespace MvcVisionSystem
 
         public static string FormatConfidence(YoloWorkerSmokeCandidate candidate, string format)
             => IsSmartMask(candidate)
-                ? "\uBC15\uC2A4 \uD504\uB86C\uD504\uD2B8"
+                ? "Smart Mask \uD504\uB86C\uD504\uD2B8"
                 : (candidate?.Confidence ?? 0D).ToString(format, CultureInfo.CurrentCulture);
 
         private static bool IsSmartMask(YoloWorkerSmokeCandidate candidate)

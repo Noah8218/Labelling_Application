@@ -1,6 +1,101 @@
 # OpenVisionLab Labeling Studio Completeness Audit
 
-Date: 2026-07-13
+Date: 2026-07-27
+
+## Commercial Video Reassessment (2026-07-27)
+
+Status: `Complete` for the comparison and development-contract scope. This is
+not a new product-feature or model-accuracy completion claim.
+
+Ten user-provided commercial integration videos under
+`C:\Git\GoPxL_Video\새 폴더` were reviewed through whole-timeline keyframe
+contact sheets, with a second dense V7/CVAT labeling pass, then compared
+against current View/ViewModel/Service/test evidence. The reviewed V7/CVAT
+videos did not expose extractable subtitle streams, so the comparison is based
+on visible UI actions and state changes rather than caption or audio claims.
+The detailed evidence table and bounded development contracts are in
+`docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md` and
+`docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`.
+
+The evidence does not justify copying a broad commercial platform. It
+identifies these in-scope gaps:
+
+1. The labeling editor has a safe basic shape, save/reopen, undo/redo, and
+   candidate-review baseline, but V7/CVAT are materially ahead in tool/class
+   shortcuts, repeat and duplicate commands, per-object state, mask
+   merge/split/hole/z-order semantics, and interactive positive/negative-point
+   AI correction. This is the strongest current in-scope workflow gap.
+2. Dataset Health shows counts, splits, classes, and readiness but not a
+   dataset-wide visual review of saved overlays. That visual-QA gap remains
+   valid but moves behind the core labeling-editor slices.
+3. COCO, Pascal VOC, Label Studio, and CVAT interchange services exist, but a
+   dedicated WPF dry-run/Apply flow was not found. The first future
+   interchange slice should expose implemented capabilities rather than add a
+   new format.
+4. Visible-row batch detection, progress/stop, confidence, and Candidate Review
+   exist, but a compact execution preflight could make scope, model/weight,
+   class contract, threshold, and existing-label policy explicit.
+5. Recipe source-of-truth, canonical save/reopen, Candidate Review/no-autosave,
+   Image Queue/Worklist, Dataset Health, and model provenance remain protected
+   product strengths. They do not prove labeling-editor parity.
+
+This evidence selected P0-A and P0-B as the first two bounded implementation
+slices. Both are now complete in the current worktree. P0-A provides
+purpose-filtered tool/class shortcuts, repeat, box/polygon/raster-mask
+duplicate, tool/class retention, shortcut help, and deterministic text-entry
+conflict rules. P0-B provides box plus positive/negative-point Smart Mask
+correction, point undo/clear, cancellation, rerun candidate replacement,
+polygon detail, confirm/skip, and next-instance flow while preserving
+no-autosave, provenance, stale-result guards, and canonical save.
+
+This new workflow evidence changes prioritization and adds a separate
+labeling-editor score; it does not reduce the product-wide focused-workstation
+score. Focused single-operator workflow maturity remains `4.0/5`; labeling
+editor depth moved from the video-review baseline `2.1/5` to `2.5/5` after
+P0-A/P0-B, to `2.6/5` after P1-C merge/join, and to `2.7/5` after the
+axis-aligned P1-C split/slice command;
+general commercial labeling-suite parity remains
+`3.1/5`; intentional enterprise/team-platform parity remains `1.2/5`. These
+are structured workflow estimates, not accuracy benchmarks. Independent
+production-camera/cross-session evidence remains the model-quality
+prerequisite. Collaboration, comments, accounts, cloud sync, deployment, video
+tracking, 3D, camera/PLC/I/O, and generic arbitrary-model execution remain out
+of scope.
+
+## P0-A/P0-B Labeling Editor Implementation Update (2026-07-27)
+
+Status: `Complete`. Field validation: `Not evaluated`.
+
+- P0-A actual-EXE evidence is under
+  `artifacts\ui\labeling-productivity-p0a-20260727`.
+- P0-B actual-EXE evidence is under
+  `artifacts\ui\smart-mask-p0b-20260727`; it shows the purple start box,
+  green positive point, red negative point, blue unconfirmed candidate, then
+  one confirmed saved label and enabled next-instance state.
+- The real-worker point fixture records positive expansion, negative removal,
+  deterministic 48-point detail, unchanged source hash, and MobileSAM /
+  Ultralytics / Torch / CPU / weight provenance in
+  `artifacts\mobile-sam-point-correction\20260727-185324`.
+- P1-A canonical JSON/mask-PNG/YOLO/COCO/CVAT preservation/loss semantics are
+  complete. Format capability and warning text now have one code authority,
+  and COCO/CVAT/YOLO export results surface detected losses.
+- P1-B canonical schema v3 is complete: object/component identity, z-order,
+  last structural operation, v1/v2 compatibility, history identity, and
+  duplicate new-identity behavior have focused evidence.
+- P1-C merge/join is complete with same-class polygon/raster union, cutout
+  semantics, one-step undo/redo, and canonical v3 save/load/re-save evidence.
+- P1-C axis-aligned split/slice is complete with polygon/raster support,
+  invalid-cut no-mutation behavior, one-step undo/redo, and canonical v3
+  save/load/re-save evidence.
+- The next product-development priority is explicit hole editing or z-order;
+  remove-underlying warning behavior remains a separate acceptance-gated
+  slice.
+- P2 object state/precision, P3 display-only aids, P4 Dataset Health visual QA,
+  and P5 interchange/batch preflight remain ordered follow-ups.
+
+The `2.7/5` labeling-editor score is still materially below CVAT/V7 editor
+depth. It does not claim mask-structure parity, object-state parity, video
+propagation, collaboration, field accuracy, or production model readiness.
 
 ## Latest Handoff Reconciliation (2026-07-24)
 
@@ -472,7 +567,7 @@ After the 2026-07-03 object-detection import/export slices, segmentation export 
 4. Foundation-model assisted labeling.
    - Why: Roboflow/CVAT/Label Studio now set user expectations around SAM or prompt-based assistance.
    - First completed slice: local MobileSAM single-box prompting creates one reviewable polygon candidate, preserves confirmed labels, fails closed when the image/prompt changes, and does not save before operator confirmation.
-   - Next slice only when operator evidence requires it: point/negative refinement on the same local runtime. Do not add text-prompt or broad auto-label infrastructure speculatively.
+   - Current next slice after P0-A: point/negative refinement on the same local runtime under the P0-B correction-session contract. Do not add text-prompt or broad auto-label infrastructure speculatively.
 
 5. Collaboration/workforce.
    - Why: important for enterprise parity, but it is a different product shape from the current local workstation.
@@ -526,7 +621,7 @@ Approved direction as of 2026-07-15:
 | --- | --- | --- |
 | Project/data context and class definitions | Local dataset, class catalog, queue, readiness, and SHA-256 external-data audit exist. The audit is currently a collapsed detail surface in `Model Center > Data`. | Improve discoverability, not duplicate the services. |
 | Review/rework and annotation QA | Image-level issue state, filter, reason, and report are complete. Per-object issues, immutable review history, reviewer identity, comments, and consensus do not exist. | Keep the current single-operator slice stable; design a local review worklist only after the data-evidence surface is used. |
-| AI-assisted pre-labeling | Template matching, local YOLO candidates, and a bounded local MobileSAM box-prompt candidate are present. | Keep the verified box flow small; add point/negative refinement only for a reproduced operator need. |
+| AI-assisted pre-labeling | Template matching, local YOLO candidates, and a bounded local MobileSAM box-prompt candidate are present. | Preserve the verified box flow as a regression and add point/negative refinement under the 2026-07-27 P0-B correction-session contract. |
 | Model evaluation | Read-only model-neutral catalog, same-evidence fingerprint checks, task-aware metrics, Takt conditions, threshold review, and native scatter visualization exist. | Preserve the current comparison window; improve data-readiness entry first. |
 | Team collaboration/workforce | No accounts, assignment, server sync, consensus, or hosted labeling. | Explicitly out of scope for the local workstation product. |
 
@@ -549,29 +644,61 @@ Approved direction as of 2026-07-15:
 
 The bounded shell, `Evaluation data evidence` surface, controlled Test01 engine
 comparison, 10K review Worklist, Recipe Dataset Version v2, and the declared
-YOLO11 runtime slices are complete. Avoid speculative UI/model expansion and
-keep the next work evidence-gated:
+YOLO11 runtime slices are complete. The 2026-07-27 V7/CVAT review establishes
+this current sequence:
 
-1. If a concrete operator defect is reproduced, fix that bounded workflow and
-   rerun its protected gate. Do not add another queue, catalog, or broad UI
-   system without such evidence.
-2. When an approved NG-rich object-detection camera/session source with
+1. Implement P0-A labeling command/productivity foundation: tool/class
+   shortcuts, repeat, duplicate, retained tool/class, shortcut help, and
+   deterministic text-entry exclusion. Keep Viewer/OpenGL/ROI/brush/eraser
+   behavior protected.
+   Recommended model: `gpt-5.6-terra`
+   Reasoning effort: `medium`
+2. After P0-A passes, implement P0-B positive/negative-point Smart Mask
+   refinement with clear/rerun replacement, confirm/skip, no-autosave, stale
+   result rejection, and current-EXE evidence.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+3. Implement P1-C merge/split/hole/z-order after the completed P1-A/P1-B
+   preservation and canonical identity contracts, then add
+   object-state/precision and display-only image aids as separate focused
+   slices.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+4. Move Dataset Health visual QA and existing interchange/batch preflight
+   exposure behind the core editor slices.
+   Recommended model: `gpt-5.6-terra`
+   Reasoning effort: `medium`
+5. When an approved NG-rich object-detection camera/session source with
    trustworthy boxes becomes available, create a content-separated held-out
    split and rerun the frozen fingerprint/comparison/error-review path.
-3. When balanced independent normal/abnormal camera-session data becomes
+   Prerequisite: provenance-confirmed images and trustworthy boxes.
+   Recommended model: none until data is available
+   Reasoning effort: n/a
+6. When balanced independent normal/abnormal camera-session data becomes
    available, keep it outside training initially and rerun the unchanged
    anomaly evaluation guard. The fixed 104-image synthetic test already places
    YOLOv8 at `90/104` and YOLO11 at `82/104`; both remain `hold` and must not be
    tuned on that test.
-4. Use independent mask evidence for any future segmentation production claim.
+   Prerequisite: provenance-confirmed balanced normal/abnormal images.
+   Recommended model: none until data is available
+   Reasoning effort: n/a
+7. Use independent mask evidence for any future segmentation production claim.
    The fixed same-source comparison is regression evidence only: U-Net
    `0.243091` Dice, YOLOv8-seg `0.721702`, and YOLO11-seg `0.773711`.
-5. Keep the verified compact shell, task tabs, annotation rail, splitters,
+   Prerequisite: provenance-confirmed images and trustworthy masks.
+   Recommended model: none until data is available
+   Reasoning effort: n/a
+8. Keep the verified compact shell, task tabs, annotation rail, splitters,
    queue/Worklist, Viewer/OpenGL, runtime profiles, comparison, MobileSAM box
    slice, and Model Center contracts stable.
-6. Shared/network-storage profiling remains deferred until an approved source
+   Recommended model: `gpt-5.6-terra`
+   Reasoning effort: `low`
+9. Shared/network-storage profiling remains deferred until an approved source
    exists. Collaboration/workforce, video/3D/keypoints, broad cloud/platform
    work, and generic arbitrary-model execution remain out of scope.
+   Prerequisite: an approved representative network-storage source.
+   Recommended model: none until data is available
+   Reasoning effort: n/a
 
 The evidence-surface slice does not replace independent model data. It only makes the existing missing-data condition and integrity checks easier to discover.
 

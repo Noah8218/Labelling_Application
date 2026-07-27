@@ -40,8 +40,15 @@ namespace MvcVisionSystem
             CanvasPanelViewModel.ConfigureBrushSizeCommands(
                 ExecuteDecreaseBrushSizeCommand,
                 ExecuteIncreaseBrushSizeCommand);
-            CanvasPanelViewModel.ConfigureSmartMaskCommand(
-                ExecuteCreateSmartMaskCandidateCommand);
+            CanvasPanelViewModel.ConfigureSmartMaskCommands(
+                ExecuteCreateSmartMaskCandidateCommand,
+                () => ExecuteSetSmartMaskPointModeCommand(WpfSmartMaskPointInputMode.Positive),
+                () => ExecuteSetSmartMaskPointModeCommand(WpfSmartMaskPointInputMode.Negative),
+                ExecuteUndoSmartMaskPointCommand,
+                ExecuteClearSmartMaskPointsCommand,
+                ExecuteCancelSmartMaskGenerationCommand,
+                ExecuteNextSmartMaskInstanceCommand,
+                ExecuteSetSmartMaskPolygonDetailCommand);
             SyncCanvasBrushSizeFromWorkflow();
             RefreshCanvasAnnotationToolScope();
             RefreshCanvasWorkflowContext();

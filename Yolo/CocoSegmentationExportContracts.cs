@@ -17,6 +17,8 @@ namespace MvcVisionSystem.Yolo
         public int SkippedAnnotationCount { get; set; }
 
         public List<string> Splits { get; } = new List<string>();
+
+        public List<string> Warnings { get; } = new List<string>();
     }
 
     public sealed class CocoSegmentationDataset

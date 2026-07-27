@@ -139,6 +139,19 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="ObjectReviewMergeCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,7,0" />
+            <Setter Property="ToolTip" Value="&#xC138;&#xADF8;&#xBA3C;&#xD2B8; &#xBCD1;&#xD569; &#xB300;&#xC0C1; &#xC120;&#xD0DD;" />
+            <Setter Property="AutomationProperties.Name" Value="&#xC138;&#xADF8;&#xBA3C;&#xD2B8; &#xBCD1;&#xD569; &#xC120;&#xD0DD;" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsManualSegment}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="ObjectReviewLabelSaveBadgeStyle" TargetType="Border">
             <Setter Property="Background" Value="#1A2736" />
             <Setter Property="BorderBrush" Value="#46515F" />
@@ -485,6 +498,82 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                                IsEnabled="{Binding IsApplyClassEnabled}"
                                Command="{Binding ApplyObjectClassCommand}" />
                 </Grid>
+                <Grid Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="MergeSelectionText"
+                               AutomationProperties.AutomationId="MergeSelectionText"
+                               Text="{Binding MergeSelectionText}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               FontFamily="Segoe UI"
+                               FontSize="9.5"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+                    <ui:Button x:Name="MergeSelectedSegmentsButton"
+                               Grid.Column="1"
+                               AutomationProperties.AutomationId="MergeSelectedSegmentsButton"
+                               AutomationProperties.Name="&#xC120;&#xD0DD; &#xB9C8;&#xC2A4;&#xD06C; &#xBCD1;&#xD569;"
+                               Style="{StaticResource ObjectReviewButtonStyle}"
+                               MinWidth="96"
+                               Height="24"
+                               Padding="8,0"
+                               Margin="6,0,0,0"
+                               Content="&#xC120;&#xD0DD; &#xB9C8;&#xC2A4;&#xD06C; &#xBCD1;&#xD569;"
+                               ToolTip="&#xAC19;&#xC740; &#xD074;&#xB798;&#xC2A4; &#xC138;&#xADF8;&#xBA3C;&#xD2B8; 2&#xAC1C; &#xC774;&#xC0C1;&#xC744; &#xD558;&#xB098;&#xC758; &#xB9C8;&#xC2A4;&#xD06C; &#xAC1D;&#xCCB4;&#xB85C; &#xBCD1;&#xD569;"
+                               IsEnabled="{Binding IsMergeSelectedSegmentsEnabled}"
+                               Command="{Binding MergeSelectedSegmentsCommand}" />
+                </Grid>
+                <Grid Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ui:Button x:Name="BeginVerticalSplitButton"
+                               AutomationProperties.AutomationId="BeginVerticalSplitButton"
+                               AutomationProperties.Name="&#xC138;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58; &#xC120;&#xD0DD;"
+                               Style="{StaticResource ObjectReviewButtonStyle}"
+                               Height="24"
+                               Margin="0,0,3,0"
+                               Content="&#xC138;&#xB85C; &#xC808;&#xB2E8;"
+                               ToolTip="&#xC120;&#xD0DD;&#xD55C; &#xC138;&#xADF8;&#xBA3C;&#xD2B8;&#xC758; &#xC138;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58;&#xB97C; &#xCE94;&#xBC84;&#xC2A4;&#xC5D0;&#xC11C; &#xC120;&#xD0DD;"
+                               IsEnabled="{Binding IsSplitEnabled}"
+                               Command="{Binding BeginVerticalSplitCommand}" />
+                    <ui:Button x:Name="BeginHorizontalSplitButton"
+                               Grid.Column="1"
+                               AutomationProperties.AutomationId="BeginHorizontalSplitButton"
+                               AutomationProperties.Name="&#xAC00;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58; &#xC120;&#xD0DD;"
+                               Style="{StaticResource ObjectReviewButtonStyle}"
+                               Height="24"
+                               Margin="3,0"
+                               Content="&#xAC00;&#xB85C; &#xC808;&#xB2E8;"
+                               ToolTip="&#xC120;&#xD0DD;&#xD55C; &#xC138;&#xADF8;&#xBA3C;&#xD2B8;&#xC758; &#xAC00;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58;&#xB97C; &#xCE94;&#xBC84;&#xC2A4;&#xC5D0;&#xC11C; &#xC120;&#xD0DD;"
+                               IsEnabled="{Binding IsSplitEnabled}"
+                               Command="{Binding BeginHorizontalSplitCommand}" />
+                    <ui:Button x:Name="CancelSplitButton"
+                               Grid.Column="2"
+                               AutomationProperties.AutomationId="CancelSplitButton"
+                               AutomationProperties.Name="&#xC138;&#xADF8;&#xBA3C;&#xD2B8; &#xC808;&#xB2E8; &#xCDE8;&#xC18C;"
+                               Style="{StaticResource ObjectReviewButtonStyle}"
+                               MinWidth="44"
+                               Height="24"
+                               Margin="3,0,0,0"
+                               Padding="7,0"
+                               Content="&#xCDE8;&#xC18C;"
+                               ToolTip="&#xC808;&#xB2E8; &#xC704;&#xCE58; &#xC120;&#xD0DD; &#xCDE8;&#xC18C;"
+                               IsEnabled="{Binding IsSplitPending}"
+                               Command="{Binding CancelSplitCommand}" />
+                </Grid>
+                <TextBlock x:Name="SplitStatusText"
+                           AutomationProperties.AutomationId="SplitStatusText"
+                           Text="{Binding SplitStatusText}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           FontFamily="Segoe UI"
+                           FontSize="9.5"
+                           Margin="0,4,0,0"
+                           TextWrapping="Wrap" />
             </StackPanel>
         </Border>
         <ListBox x:Name="ObjectListBox"
@@ -504,10 +593,21 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                  mvvm:InputCommandBehaviors.PreviewKeyInputCommand="{Binding ObjectPreviewKeyDownCommand}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding DisplayText}"
-                               ToolTip="{Binding ToolTip}"
-                               TextTrimming="CharacterEllipsis"
-                               VerticalAlignment="Center" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox Style="{StaticResource ObjectReviewMergeCheckBoxStyle}"
+                                  IsChecked="{Binding IsMergeSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  Command="{Binding DataContext.MergeSelectionChangedCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                  CommandParameter="{Binding}" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding DisplayText}"
+                                   ToolTip="{Binding ToolTip}"
+                                   TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center" />
+                    </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

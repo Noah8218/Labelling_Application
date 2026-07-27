@@ -114,6 +114,10 @@ namespace MvcVisionSystem
             {
                 ClassName = source.ClassName ?? string.Empty,
                 ClassItem = CloneClassItem(source.ClassItem),
+                ObjectId = source.ObjectId ?? string.Empty,
+                ComponentIndex = source.ComponentIndex,
+                ZOrder = source.ZOrder,
+                LastStructuralOperation = source.LastStructuralOperation ?? string.Empty,
                 Points = source.Points?.ToList() ?? new List<Point>(),
                 CutoutPolygons = source.CutoutPolygons?
                     .Select(cutout => cutout?.ToList() ?? new List<Point>())
@@ -220,6 +224,10 @@ namespace MvcVisionSystem
                 var restored = new LabelingSegmentationObject(Array.Empty<Point>(), CloneClassItem(delta.ClassItem))
                 {
                     ClassName = delta.ClassName ?? string.Empty,
+                    ObjectId = delta.ObjectId ?? string.Empty,
+                    ComponentIndex = delta.ComponentIndex,
+                    ZOrder = delta.ZOrder,
+                    LastStructuralOperation = delta.LastStructuralOperation ?? string.Empty,
                     MaskData = new byte[Math.Max(0, delta.MaskSize.Width * delta.MaskSize.Height)],
                     MaskSize = delta.MaskSize,
                     MaskBounds = delta.MaskBounds,
@@ -269,6 +277,10 @@ namespace MvcVisionSystem
 
             segment.ClassName = delta.ClassName ?? segment.ClassName;
             segment.ClassItem = CloneClassItem(delta.ClassItem) ?? segment.ClassItem;
+            segment.ObjectId = delta.ObjectId ?? segment.ObjectId;
+            segment.ComponentIndex = delta.ComponentIndex;
+            segment.ZOrder = delta.ZOrder;
+            segment.LastStructuralOperation = delta.LastStructuralOperation ?? segment.LastStructuralOperation;
             segment.MaskBounds = delta.MaskBounds;
             segment.RenderVersion = Math.Max(segment.RenderVersion + 1, delta.RenderVersion + 1);
             segment.RenderDirtyBounds = delta.RestoreBounds;
@@ -343,6 +355,10 @@ namespace MvcVisionSystem
             Rectangle renderDirtyBounds,
             string className,
             CClassItem classItem,
+            string objectId,
+            int componentIndex,
+            int zOrder,
+            string lastStructuralOperation,
             bool selected,
             bool removeCreatedSegment = false,
             bool restoreRemovedSegment = false)
@@ -362,6 +378,10 @@ namespace MvcVisionSystem
                     Text = classItem.Text ?? string.Empty,
                     DrawColor = classItem.DrawColor
                 };
+            ObjectId = objectId ?? string.Empty;
+            ComponentIndex = componentIndex;
+            ZOrder = zOrder;
+            LastStructuralOperation = lastStructuralOperation ?? string.Empty;
             Selected = selected;
             RemoveCreatedSegment = removeCreatedSegment;
             RestoreRemovedSegment = restoreRemovedSegment;
@@ -384,6 +404,14 @@ namespace MvcVisionSystem
         public string ClassName { get; }
 
         public CClassItem ClassItem { get; }
+
+        public string ObjectId { get; }
+
+        public int ComponentIndex { get; }
+
+        public int ZOrder { get; }
+
+        public string LastStructuralOperation { get; }
 
         public bool Selected { get; }
 

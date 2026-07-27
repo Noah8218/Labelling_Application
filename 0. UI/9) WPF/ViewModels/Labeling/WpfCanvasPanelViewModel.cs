@@ -26,6 +26,18 @@ namespace MvcVisionSystem
         Both
     }
 
+    public sealed class WpfSmartMaskDetailItem
+    {
+        public WpfSmartMaskDetailItem(WpfSmartMaskPolygonDetail detail, string text)
+        {
+            Detail = detail;
+            Text = text ?? string.Empty;
+        }
+
+        public WpfSmartMaskPolygonDetail Detail { get; }
+        public string Text { get; }
+    }
+
     public sealed class WpfCanvasPanelViewModel : WpfObservableViewModel
     {
         private static readonly Action NoOpCommand = () => { };
@@ -104,14 +116,38 @@ namespace MvcVisionSystem
         private ICommand decreaseBrushSizeCommand = new RelayCommand(NoOpCommand);
         private ICommand increaseBrushSizeCommand = new RelayCommand(NoOpCommand);
         private ICommand createSmartMaskCommand = new RelayCommand(NoOpCommand);
+        private ICommand addPositiveSmartMaskPointCommand = new RelayCommand(NoOpCommand);
+        private ICommand addNegativeSmartMaskPointCommand = new RelayCommand(NoOpCommand);
+        private ICommand undoSmartMaskPointCommand = new RelayCommand(NoOpCommand);
+        private ICommand clearSmartMaskPointsCommand = new RelayCommand(NoOpCommand);
+        private ICommand cancelSmartMaskGenerationCommand = new RelayCommand(NoOpCommand);
+        private ICommand nextSmartMaskInstanceCommand = new RelayCommand(NoOpCommand);
+        private ICommand toggleShortcutHelpCommand;
         private System.Windows.Visibility smartMaskVisibility = System.Windows.Visibility.Collapsed;
+        private System.Windows.Visibility smartMaskSessionVisibility = System.Windows.Visibility.Collapsed;
+        private System.Windows.Visibility shortcutHelpVisibility = System.Windows.Visibility.Collapsed;
+        private WpfAnnotationTool? lastDrawingTool;
+        private string lastLabelClassName = string.Empty;
         private bool isSmartMaskEnabled;
         private string smartMaskActionText = "박스 → 스마트 마스크";
         private string smartMaskToolTip = "결함 둘레에 박스를 그린 뒤 MobileSAM 후보 마스크를 만듭니다.";
+        private string smartMaskPromptSummaryText = "박스를 그려 첫 후보를 만드세요.";
+        private bool isSmartMaskPointActionEnabled;
+        private bool isSmartMaskPointUndoEnabled;
+        private bool isSmartMaskCancelEnabled;
+        private bool isSmartMaskNextInstanceEnabled;
+        private bool isPositiveSmartMaskPointMode;
+        private bool isNegativeSmartMaskPointMode;
+        private WpfSmartMaskDetailItem selectedSmartMaskDetail;
+        private Action<WpfSmartMaskPolygonDetail> smartMaskDetailChanged = _ => { };
 
         public string ViewName => nameof(WpfCanvasPanel);
 
         public string FirstLabelLoopText => "\uC21C\uC11C: \uADF8\uB9AC\uAE30 -> \uB77C\uBCA8 \uC800\uC7A5 -> \uB2E4\uC74C \uC774\uBBF8\uC9C0";
+
+        public string ShortcutSummaryText => WpfAnnotationProductivityService.ShortcutSummaryText;
+
+        public string ShortcutHelpText => WpfAnnotationProductivityService.ShortcutHelpText;
 
         public ObservableCollection<WpfAnnotationToolItem> AnnotationTools { get; } = new ObservableCollection<WpfAnnotationToolItem>();
 
@@ -131,6 +167,13 @@ namespace MvcVisionSystem
                 WpfCanvasDisplayMode.Both,
                 "\uBE44\uAD50",
                 "\uC800\uC7A5 \uB77C\uBCA8\uACFC AI \uD6C4\uBCF4\uB97C \uACB9\uCCD0 \uBE44\uAD50\uD569\uB2C8\uB2E4.")
+        };
+
+        public ObservableCollection<WpfSmartMaskDetailItem> SmartMaskDetails { get; } = new ObservableCollection<WpfSmartMaskDetailItem>
+        {
+            new WpfSmartMaskDetailItem(WpfSmartMaskPolygonDetail.Fast, "빠름 · 48점"),
+            new WpfSmartMaskDetailItem(WpfSmartMaskPolygonDetail.Balanced, "균형 · 96점"),
+            new WpfSmartMaskDetailItem(WpfSmartMaskPolygonDetail.Detailed, "정밀 · 256점")
         };
 
         public ICommand FitCommand
@@ -230,9 +273,22 @@ namespace MvcVisionSystem
             {
                 if (SetProperty(ref selectedLabelClass, value))
                 {
+                    if (value != null)
+                    {
+                        lastLabelClassName = value.Text;
+                    }
                     RefreshActiveLabelClassPresentation();
                 }
             }
+        }
+
+        public ICommand ToggleShortcutHelpCommand
+            => toggleShortcutHelpCommand ??= new RelayCommand(ToggleShortcutHelp);
+
+        public System.Windows.Visibility ShortcutHelpVisibility
+        {
+            get => shortcutHelpVisibility;
+            private set => SetProperty(ref shortcutHelpVisibility, value);
         }
 
         public WpfCanvasDisplayModeItem SelectedDisplayMode
@@ -307,10 +363,77 @@ namespace MvcVisionSystem
             private set => SetProperty(ref createSmartMaskCommand, value);
         }
 
+        public ICommand AddPositiveSmartMaskPointCommand => addPositiveSmartMaskPointCommand;
+        public ICommand AddNegativeSmartMaskPointCommand => addNegativeSmartMaskPointCommand;
+        public ICommand UndoSmartMaskPointCommand => undoSmartMaskPointCommand;
+        public ICommand ClearSmartMaskPointsCommand => clearSmartMaskPointsCommand;
+        public ICommand CancelSmartMaskGenerationCommand => cancelSmartMaskGenerationCommand;
+        public ICommand NextSmartMaskInstanceCommand => nextSmartMaskInstanceCommand;
+
         public System.Windows.Visibility SmartMaskVisibility
         {
             get => smartMaskVisibility;
             private set => SetProperty(ref smartMaskVisibility, value);
+        }
+
+        public System.Windows.Visibility SmartMaskSessionVisibility
+        {
+            get => smartMaskSessionVisibility;
+            private set => SetProperty(ref smartMaskSessionVisibility, value);
+        }
+
+        public string SmartMaskPromptSummaryText
+        {
+            get => smartMaskPromptSummaryText;
+            private set => SetProperty(ref smartMaskPromptSummaryText, value ?? string.Empty);
+        }
+
+        public bool IsSmartMaskPointActionEnabled
+        {
+            get => isSmartMaskPointActionEnabled;
+            private set => SetProperty(ref isSmartMaskPointActionEnabled, value);
+        }
+
+        public bool IsSmartMaskPointUndoEnabled
+        {
+            get => isSmartMaskPointUndoEnabled;
+            private set => SetProperty(ref isSmartMaskPointUndoEnabled, value);
+        }
+
+        public bool IsSmartMaskCancelEnabled
+        {
+            get => isSmartMaskCancelEnabled;
+            private set => SetProperty(ref isSmartMaskCancelEnabled, value);
+        }
+
+        public bool IsSmartMaskNextInstanceEnabled
+        {
+            get => isSmartMaskNextInstanceEnabled;
+            private set => SetProperty(ref isSmartMaskNextInstanceEnabled, value);
+        }
+
+        public bool IsPositiveSmartMaskPointMode
+        {
+            get => isPositiveSmartMaskPointMode;
+            private set => SetProperty(ref isPositiveSmartMaskPointMode, value);
+        }
+
+        public bool IsNegativeSmartMaskPointMode
+        {
+            get => isNegativeSmartMaskPointMode;
+            private set => SetProperty(ref isNegativeSmartMaskPointMode, value);
+        }
+
+        public WpfSmartMaskDetailItem SelectedSmartMaskDetail
+        {
+            get => selectedSmartMaskDetail;
+            set
+            {
+                if (SetProperty(ref selectedSmartMaskDetail, value) && value != null)
+                {
+                    smartMaskDetailChanged(value.Detail);
+                }
+            }
         }
 
         public bool IsSmartMaskEnabled
@@ -643,16 +766,69 @@ namespace MvcVisionSystem
             CreateSmartMaskCommand = new RelayCommand(createSmartMask ?? NoOpCommand);
         }
 
-        public void SetSmartMaskState(bool isVisible, bool isEnabled, bool isBusy, string detail)
+        public void ConfigureSmartMaskCommands(
+            Action createSmartMask,
+            Action addPositivePoint,
+            Action addNegativePoint,
+            Action undoPoint,
+            Action clearPoints,
+            Action cancelGeneration,
+            Action nextInstance,
+            Action<WpfSmartMaskPolygonDetail> detailChanged)
+        {
+            ConfigureSmartMaskCommand(createSmartMask);
+            addPositiveSmartMaskPointCommand = new RelayCommand(addPositivePoint ?? NoOpCommand);
+            addNegativeSmartMaskPointCommand = new RelayCommand(addNegativePoint ?? NoOpCommand);
+            undoSmartMaskPointCommand = new RelayCommand(undoPoint ?? NoOpCommand);
+            clearSmartMaskPointsCommand = new RelayCommand(clearPoints ?? NoOpCommand);
+            cancelSmartMaskGenerationCommand = new RelayCommand(cancelGeneration ?? NoOpCommand);
+            nextSmartMaskInstanceCommand = new RelayCommand(nextInstance ?? NoOpCommand);
+            smartMaskDetailChanged = detailChanged ?? (_ => { });
+            SelectedSmartMaskDetail = SmartMaskDetails.First(item => item.Detail == WpfSmartMaskPolygonDetail.Balanced);
+            OnPropertyChanged(nameof(AddPositiveSmartMaskPointCommand));
+            OnPropertyChanged(nameof(AddNegativeSmartMaskPointCommand));
+            OnPropertyChanged(nameof(UndoSmartMaskPointCommand));
+            OnPropertyChanged(nameof(ClearSmartMaskPointsCommand));
+            OnPropertyChanged(nameof(CancelSmartMaskGenerationCommand));
+            OnPropertyChanged(nameof(NextSmartMaskInstanceCommand));
+        }
+
+        public void SetSmartMaskState(bool isVisible, bool isEnabled, bool isBusy, string detail, bool hasSession = false)
         {
             SmartMaskVisibility = isVisible
                 ? System.Windows.Visibility.Visible
                 : System.Windows.Visibility.Collapsed;
             IsSmartMaskEnabled = isVisible && isEnabled && !isBusy;
-            SmartMaskActionText = isBusy ? "마스크 생성 중..." : "박스 → 스마트 마스크";
+            SmartMaskActionText = isBusy
+                ? "마스크 생성 중..."
+                : hasSession
+                    ? "후보 다시 생성"
+                    : "박스 → 스마트 마스크";
             SmartMaskToolTip = string.IsNullOrWhiteSpace(detail)
                 ? "결함 둘레에 박스를 그린 뒤 MobileSAM 후보 마스크를 만듭니다. 결과는 확정 전 후보로만 표시됩니다."
                 : detail;
+        }
+
+        public void SetSmartMaskSessionState(
+            bool isVisible,
+            bool isBusy,
+            int positivePointCount,
+            int negativePointCount,
+            WpfSmartMaskPointInputMode inputMode,
+            bool canMoveToNextInstance)
+        {
+            SmartMaskSessionVisibility = isVisible
+                ? System.Windows.Visibility.Visible
+                : System.Windows.Visibility.Collapsed;
+            IsSmartMaskPointActionEnabled = isVisible && !isBusy;
+            IsSmartMaskPointUndoEnabled = isVisible && !isBusy && positivePointCount + negativePointCount > 0;
+            IsSmartMaskCancelEnabled = isVisible && isBusy;
+            IsSmartMaskNextInstanceEnabled = isVisible && !isBusy && canMoveToNextInstance;
+            IsPositiveSmartMaskPointMode = inputMode == WpfSmartMaskPointInputMode.Positive;
+            IsNegativeSmartMaskPointMode = inputMode == WpfSmartMaskPointInputMode.Negative;
+            SmartMaskPromptSummaryText = isVisible
+                ? $"+ 포함 {positivePointCount} · − 제외 {negativePointCount} · 점을 추가한 뒤 후보 다시 생성"
+                : "박스를 그려 첫 후보를 만드세요.";
         }
 
         public void SetBrushSize(int size)
@@ -777,11 +953,12 @@ namespace MvcVisionSystem
             WpfCanvasLabelClassItem selectedItem = null;
 
             LabelClasses.Clear();
+            int shortcutIndex = 1;
             foreach (CClassItem classItem in (classItems ?? Enumerable.Empty<CClassItem>())
                 .Where(item => item != null && !string.IsNullOrWhiteSpace(item.Text))
                 .OrderBy(item => item.Text, StringComparer.OrdinalIgnoreCase))
             {
-                var labelItem = new WpfCanvasLabelClassItem(classItem);
+                var labelItem = new WpfCanvasLabelClassItem(classItem, shortcutIndex++);
                 LabelClasses.Add(labelItem);
                 if (!string.IsNullOrWhiteSpace(normalizedSelectedName)
                     && string.Equals(labelItem.Text, normalizedSelectedName, StringComparison.OrdinalIgnoreCase))
@@ -809,6 +986,31 @@ namespace MvcVisionSystem
             {
                 SelectedLabelClass = labelItem;
             }
+        }
+
+        public bool TrySelectLabelClassByShortcut(int zeroBasedIndex)
+        {
+            if (zeroBasedIndex < 0 || zeroBasedIndex >= Math.Min(9, LabelClasses.Count))
+            {
+                return false;
+            }
+
+            SelectedLabelClass = LabelClasses[zeroBasedIndex];
+            return true;
+        }
+
+        public bool TryGetRepeatSelection(out WpfAnnotationTool tool, out string className)
+        {
+            tool = lastDrawingTool ?? WpfAnnotationTool.Select;
+            className = lastLabelClassName;
+            return lastDrawingTool.HasValue && !string.IsNullOrWhiteSpace(className);
+        }
+
+        public void ToggleShortcutHelp()
+        {
+            ShortcutHelpVisibility = ShortcutHelpVisibility == System.Windows.Visibility.Visible
+                ? System.Windows.Visibility.Collapsed
+                : System.Windows.Visibility.Visible;
         }
 
         public void ConfigureAnnotationCommands(Action undo, Action redo, Action delete)
@@ -899,6 +1101,10 @@ namespace MvcVisionSystem
             if (AnnotationTools.Contains(selectedTool))
             {
                 SelectedAnnotationTool = selectedTool;
+                if (WpfAnnotationProductivityService.IsRepeatableDrawingTool(selectedTool.Tool))
+                {
+                    lastDrawingTool = selectedTool.Tool;
+                }
                 RefreshMaskBrushControlVisibility();
             }
         }
@@ -1025,9 +1231,10 @@ namespace MvcVisionSystem
 
     public sealed class WpfCanvasLabelClassItem
     {
-        public WpfCanvasLabelClassItem(CClassItem classItem)
+        public WpfCanvasLabelClassItem(CClassItem classItem, int shortcutIndex = 0)
         {
             Text = ClassCatalogService.NormalizeClassName(classItem?.Text);
+            ShortcutIndex = shortcutIndex is >= 1 and <= 9 ? shortcutIndex : 0;
             DrawColor = classItem?.DrawColor ?? DrawingColor.LimeGreen;
             var brush = new MediaSolidColorBrush(MediaColor.FromRgb(DrawColor.R, DrawColor.G, DrawColor.B));
             brush.Freeze();
@@ -1036,9 +1243,13 @@ namespace MvcVisionSystem
 
         public string Text { get; }
 
-        public string DisplayText => Text;
+        public int ShortcutIndex { get; }
 
-        public string ToolTip => $"\uC774 \uB77C\uBCA8\uB85C \uBC15\uC2A4\uB97C \uADF8\uB9BD\uB2C8\uB2E4: {Text}";
+        public string DisplayText => ShortcutIndex > 0 ? $"{ShortcutIndex} {Text}" : Text;
+
+        public string ToolTip => ShortcutIndex > 0
+            ? $"단축키 {ShortcutIndex} · 다음 박스/마스크 클래스: {Text}"
+            : $"다음 박스/마스크 클래스: {Text} · 0 키로 클래스 관리를 엽니다.";
 
         public DrawingColor DrawColor { get; }
 

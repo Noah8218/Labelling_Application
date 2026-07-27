@@ -145,6 +145,11 @@ namespace MvcVisionSystem.Yolo
                 yield break;
             }
 
+            SegmentationInterchangeContractService.AppendDistinctWarnings(
+                result.Warnings,
+                SegmentationInterchangeContractService.AuditAnnotation(
+                    SegmentationInterchangeTarget.CocoPolygonSegmentation,
+                    annotation));
             foreach (SegmentationPolygonRecord record in annotation?.Polygons ?? new List<SegmentationPolygonRecord>())
             {
                 yield return record;

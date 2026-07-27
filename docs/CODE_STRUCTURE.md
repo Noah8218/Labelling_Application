@@ -62,12 +62,13 @@ navigation source로 사용합니다.
 
 | 영역 | 현재 판단 | 다음 판단 기준 |
 | --- | --- | --- |
-| 객체탐지 라벨링 | 실사용 베타 수준. ROI 성능, 저장, Candidate Review, 실제 EXE 랜덤 라벨링이 검증됨. | 객체탐지 MVP 완료 기준을 문서와 smoke gate로 고정. |
+| 집중형 로컬 워크플로 | 최신 감사 `4.0/5`. Recipe 설정부터 라벨링·학습·추론·후보 검토·모델 근거까지 연결됨. | 기능 유무를 반복하지 말고 실제 작업자 근거와 독립 데이터 gate로 판단. |
+| 객체탐지 라벨링 | MVP 완료 기준, ROI 성능, 저장, Candidate Review, Worklist, 실제 EXE 라벨링이 검증됨. | 독립 생산 카메라/session의 신뢰 가능한 box 데이터가 있을 때만 품질 비교. |
 | Viewer 성능 | 핵심 병목은 안정화됨. 50만 ROI, 브러시/지우개, 삭제 후 줌, texture pan 경로가 보호 대상. | `STABLE_VERIFIED_AREAS.md`의 focused gate 없이 변경하지 않음. |
-| MVVM 구조 | 주요 패널은 View/UserControl/ViewModel/Service로 분리됨. | shell orchestration을 더 줄이되 OpenGL/ImageCanvas는 별도 프로젝트화 전까지 보호. |
-| 초보자 UX | Guide, Dataset Dashboard, Candidate Review가 개선됨. | 첫 실행 후 10분 튜토리얼과 객체탐지 MVP 플로우를 실제 EXE 기준으로 더 고정. |
-| 세그멘테이션 | 브러시/지우개 기반은 확보됨. | 객체탐지 수준의 저장/검토/학습 UX 검증이 필요. |
-| 이상탐지 | 방향성 단계. | 데이터셋 목적, 라벨 타입, 학습/검증 플로우 설계 필요. |
+| MVVM 구조 | Core·Model·Yolo 계약 소유권과 navigation 정리 단계가 완료됨. | 파일 길이가 아니라 실제 혼합 소유권, 재사용 또는 테스트 경계 문제가 재현될 때만 구조 작업 재개. |
+| 초보자 UX | Dataset wizard, task 탭, Guide, Candidate Review, Worklist와 실제 EXE 3-purpose 흐름이 검증됨. | 상용 영상 근거에 따라 Dataset Health의 읽기 전용 시각적 라벨 QA를 다음 bounded slice로 구현. |
+| 세그멘테이션 | polygon/brush/eraser 저장·재열기·후보 검토·학습 경로와 MobileSAM box 보조가 검증됨. | point prompt나 merge/split은 실제 작업자 실패와 저장/export 계약이 있을 때만. |
+| 이상탐지 | image-level Normal/Abnormal 목적, intake, 학습/평가, 모델 비교와 hold guard가 연결됨. | 균형 잡힌 독립 생산 카메라/cross-session 데이터가 있을 때만 품질 판단. |
 
 ## 최상위 폴더
 
@@ -167,7 +168,7 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 
 | 경로 | 대표 파일 | 역할 |
 | --- | --- | --- |
-| `Services/Annotation` | `WpfAnnotation*`, `WpfMask*`, `WpfPolygonAnnotationService` | annotation/mask 편집 상태와 undo/redo. |
+| `Services/Annotation` | `WpfAnnotationProductivityService`, `WpfAnnotationProductivityContracts`, `WpfSmartMaskPromptSessionService`, `WpfAnnotationHistoryService`, `WpfMask*`, `WpfPolygonAnnotationService` | annotation 단축키/반복/안전한 복제 정책, Smart Mask prompt/generation session, mask 편집 상태와 undo/redo. |
 | `Services/Anomaly` | `WpfAnomaly*` | anomaly 평가와 dashboard 표시. |
 | `Services/CandidateReview` | `WpfCandidateReview*`, `WpfCandidateConfirmationService` | AI 후보 row/detail, review state, confirm/skip 정책. |
 | `Services/Dataset` | `WpfDataset*`, `WpfRecipeDatasetVersionPresentationService` | dataset setup, 상태, 품질, version 표시. |
@@ -526,6 +527,11 @@ Python worker 통신은 `3. Communication/TCP`가 담당합니다.
 `tests/LabelingApplication.Tests/Program.cs`는 단일 콘솔 테스트 러너와 기존 호출을 위한 얇은 전달 메서드만 둡니다. 공통 테스트 도구는 `TestSupport.cs`가, 도메인 검증은 `Program.<Domain>.cs`의 독립 테스트 클래스가 소유합니다. 일반 실행은 전체 회귀를, flag는 집중 smoke를 실행합니다.
 
 - WPF UI: `Program.WpfShellStructure.cs` (`WpfShellStructureTests`), `Program.WpfSettingsViewModels.cs` (`WpfSettingsViewModelTests`), `Program.WpfReviewServices.cs` (`ReviewServicesTests`), `Program.WpfTrainingDatasetReadiness.cs` (`WpfTrainingDatasetReadinessTests`)
+- 라벨링 생산성: `Program.LabelingProductivity.cs` (`LabelingProductivityTests`; tool/class 단축키, 마지막 tool+class 상태, box/polygon/raster-mask 복제 geometry, help UI 계약). 실제 shell key routing, 한 단계 undo/redo, canonical save 연결은 `--wpf-undo-redo-shortcuts`가 함께 검증합니다.
+- Smart Mask correction: `Program.SmartMaskPoint.cs` (actual EXE의 box,
+  positive/negative point, rerun, confirm, next-instance/new-box 흐름)와
+  `Program.MobileSamBoxPrompt.cs` (worker request/result, prompt session,
+  cancellation/replace/stale/no-autosave 계약).
 - Image Queue: `Program.ImageQueueWorklist.cs` (`ImageQueueWorklistTests`), `Program.ImageQueueOperatorProfile.cs` (`ImageQueueOperatorProfileTests`)
 - EXE workflow smoke: `Program.ExeImageQueueWorklistSmoke.cs` (`ExeImageQueueWorklistSmokeTests`), `Program.ExeLabelCreateQueueLocalitySmoke.cs` (`ExeLabelCreateQueueLocalitySmokeTests`), `Program.ExeYoloV8DetectRestartSmoke.cs` (`ExeYoloV8DetectRestartSmokeTests`), `Program.ExeYoloV8AnomalyRestartSmoke.cs` (`ExeYoloV8AnomalyRestartSmokeTests`), `Program.ExeExternalEvaluationDataAuditSmoke.cs` (`ExeExternalEvaluationDataAuditSmokeTests`), and `Program.ExeCircularSegmentationWorkflow.cs` (`ExeCircularSegmentationWorkflowTests`). The shared UI Automation surface remains an explicit internal harness contract in `Program`.
 - Recipe Dataset Version: `Program.RecipeDatasetVersion.cs` (`RecipeDatasetVersionTests`; deterministic identity/history contract, current-source visual capture, and actual-EXE visibility smoke)
@@ -569,6 +575,9 @@ dotnet run --no-build --project tests/LabelingApplication.Tests -- --texture-pan
 | ROI drawing/hit-test/move/resize 성능 | `OpenVisionLab.ImageCanvas/RoiInteraction`, `Engine/ImageCanvasControl.cs`, `RoiImageCanvasViewModel.cs` |
 | Brush/eraser 성능 | `WpfMaskAnnotationService`, `WpfMaskEditStateService`, `RoiImageCanvasViewModel` FBO preview 경로 |
 | Undo/redo | `WpfAnnotationHistoryService`, annotation history partial, mask history draft service |
+| 라벨링 단축키/반복/복제 | `WpfAnnotationProductivityService`, `WpfCanvasPanelViewModel`, `WpfLabelingShellWindow.ShellInputCommands`, `WpfLabelingShellWindow.AnnotationToolSelectionCommands` |
+| Smart Mask prompt/correction session | `WpfSmartMaskPromptSessionService`, `WpfMobileSamBoxPromptService`, `WpfCanvasPanelViewModel`, `WpfLabelingShellWindow.SmartMask`, `openvisionlab_mobile_sam_box_prompt.py` |
+| Segmentation interchange preservation/loss contract | `Yolo/SegmentationInterchangeContractService.cs`; COCO/CVAT/YOLO exporters append its warnings to their result contracts |
 | AI 후보 표시/확정 | `WpfCandidateReview*`, `DetectionResultApplicationService`, `WpfCandidateConfirmationService` |
 | 이미지 큐 | `WpfImageQueue*` ViewModel/service/partial |
 | YOLO txt/mask 저장 | `YoloAnnotationService`, `YoloSegmentationAnnotationService` |
@@ -587,25 +596,66 @@ dotnet run --no-build --project tests/LabelingApplication.Tests -- --texture-pan
 - 새 구조를 만들면 관련 focused test 또는 source assertion을 추가합니다.
 - 실제 UX 성능 이슈는 가능한 경우 EXE smoke로 확인합니다.
 
-## 현재 남은 구조적 과제
+## 현재 구조 상태와 다음 기능 소유권
 
-- 1순위: 객체탐지 MVP 완료 기준을 더 명확히 고정합니다.
-  - 프로젝트/데이터셋 생성, 이미지 큐, 박스 라벨링, 저장, 추론, Candidate Review, 완료 후 다음 이미지 이동이 한 플로우로 설명되고 검증되어야 합니다.
-  - 기준 문서는 `docs/OBJECT_DETECTION_MVP_COMPLETION.md`입니다.
-  - 관련 검증은 `STABLE_VERIFIED_AREAS.md`의 Object Detection Real-EXE Labeling Loop와 Candidate Review 항목을 우선 봅니다.
-- 2순위: `WpfLabelingShellWindow`의 남은 orchestration을 더 작은 service/ViewModel 경계로 줄입니다.
-  - 단, 이미 검증된 ROI/brush/delete/texture hot path는 구조 정리 명목으로 다시 쓰지 않습니다.
-- 3순위: 실제 YOLOv5 학습/결과 비교 플로우를 사용자 플로우로 정리합니다.
-  - 기준 문서는 `docs/YOLOV5_TRAINING_RESULT_WORKFLOW.md`입니다.
-  - 현재 smoke와 계약은 있으나, 초보자가 학습 결과를 보고 모델 적용 여부를 판단하는 UX는 더 다듬어야 합니다.
-- 4순위: 세그멘테이션 UX를 객체탐지 수준으로 올립니다.
-  - 기준 문서는 `docs/SEGMENTATION_UX_COMPLETION.md`입니다.
-  - 브러시/지우개 성능 기반은 안정화됐으므로 저장, 재열기, 후보 검토, 학습 준비 UX를 보강합니다.
-- 5순위: 이상탐지 플로우를 별도 목적/라벨 타입으로 설계합니다.
-  - 기준 문서는 `docs/ANOMALY_DETECTION_FLOW.md`입니다.
-  - 객체탐지/세그멘테이션 UI를 억지로 재사용하지 말고 dataset purpose와 학습 설명을 먼저 정의합니다.
-- `OpenVisionLab.ImageCanvas`는 성능상 핵심 경계이므로 별도 프로젝트화와 API 문서화가 필요합니다.
-- 남은 WinForms 의존성은 OpenGL 호환 경계 안에 제한되어야 합니다.
+현재 구조 리팩토링 단계는 완료되었습니다. 남은 기본 우선순위는 shell
+partial이나 공개 타입을 기계적으로 더 나누는 일이 아닙니다. 실제 혼합
+소유권, 탐색 오류, 재사용 또는 독립 test seam 문제가 확인될 때만 구조
+작업을 다시 엽니다.
+
+P0-A `Labeling Command and Productivity Foundation`, P0-B
+`Interactive Smart Mask Refinement`, P1-A segmentation interchange
+preservation/loss contract, P1-B canonical schema v3, P1-C merge/join과
+axis-aligned split/slice는 완료되었습니다. 다음 bounded 기능은
+`docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`의 P1-C
+manual hole editing 또는 z-order입니다.
+
+- Current owner:
+  - tool capability는 `WpfAnnotationToolCapabilityService`
+  - purpose별 tool 선택은 `WpfLearningWorkflowPanelViewModel`
+  - shell key bridge는 `WpfLabelingShellWindow.ShellInputCommands`
+  - geometry copy/move/resize와 hit-test는
+    `OpenVisionLab.ImageCanvas\RoiInteraction`
+  - 저장과 undo/redo는 기존 Annotation service/history owner
+- Intended owner:
+  - tool/class shortcut, repeat state, duplicate command, enablement,
+    tool/class 유지와 shortcut 표시 문구는 WPF `Annotation`
+    ViewModel/Service
+  - shell은 key/event-to-command bridge만 담당
+  - ImageCanvas는 geometry hit-test/move/resize와 필요한 저수준
+    duplicate primitive만 담당
+  - canonical save/history는 기존 owner를 재사용
+- Preserved behavior:
+  - Viewer/OpenGL/ROI/brush/eraser hot path 재작성 없음
+  - text input focus에서 drawing shortcut 실행 없음
+  - 후보 자동 저장/승인 없음
+  - Recipe source-of-truth와 canonical save/reopen 유지
+  - Preview/Run/학습은 계속 명시적 작업자 행동
+- Verification:
+  - deterministic key-routing과 10개 이상 class fallback test
+  - box/polygon/raster-mask repeat·duplicate와 history/save regression
+  - 기존 WPF labeling shell, ROI, brush/eraser performance regression
+  - 현재 EXE 1920x1080 before/after evidence
+
+완료된 P0-B는 기존 `WpfLabelingShellWindow.SmartMask`,
+`WpfMobileSamBoxPromptService`, MobileSAM worker와 Candidate
+Confirmation owner를 재사용하고, prompt/generation state를
+`WpfSmartMaskPromptSessionService`가 소유합니다. shell에는 canvas event,
+command, candidate mutation bridge만 남깁니다. P1-A의 canonical
+JSON/PNG/YOLO/COCO/CVAT preservation/loss 계약은
+`SegmentationInterchangeContractService`가 소유합니다. P1-B
+object/component identity와 v1/v2 fixture도 통과했습니다. P1-C
+merge/join geometry/validation은 `WpfSegmentationMergeService`, 선택
+상태는 `WpfObjectReviewPanelViewModel`, mutation/history bridge는
+`WpfLabelingShellWindow.ObjectReviewCommands`가 소유합니다.
+polygon/raster 공통 mask 변환은 `WpfSegmentationMaskGeometryService`,
+axis-aligned cut validation/component extraction은
+`WpfSegmentationSplitService`, point-input/mutation/history bridge는
+`WpfLabelingShellWindow.SegmentationSplitCommands`가 소유합니다. 이후
+hole/z-order도 각각 독립된 command/service와 focused test로 추가합니다.
+Dataset Health 시각 QA와 포맷/batch preflight는 핵심 라벨링 slice
+이후입니다. `OpenVisionLab.ImageCanvas`의 별도 프로젝트화와 남은
+WinForms 호환 경계는 현재 기능 우선순위가 아닙니다.
 
 ## 완료 보고 전 확인
 

@@ -262,6 +262,11 @@ namespace MvcVisionSystem.Yolo
                 return lines;
             }
 
+            SegmentationInterchangeContractService.AppendDistinctWarnings(
+                result.Warnings,
+                SegmentationInterchangeContractService.AuditAnnotation(
+                    SegmentationInterchangeTarget.YoloSegmentation,
+                    annotation));
             Size imageSize = ResolveImageSize(annotation, imagePath);
             if (imageSize.Width <= 0 || imageSize.Height <= 0)
             {

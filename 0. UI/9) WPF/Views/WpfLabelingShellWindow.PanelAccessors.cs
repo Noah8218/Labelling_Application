@@ -155,6 +155,12 @@ namespace MvcVisionSystem
         private Wpf.Ui.Controls.Button DeleteObjectButton => ObjectReviewPanelControl?.DeleteButton;
         private ComboBox ObjectClassBox => ObjectReviewPanelControl?.ClassBox;
         private Wpf.Ui.Controls.Button ApplyObjectClassButton => ObjectReviewPanelControl?.ApplyClassButton;
+        private TextBlock MergeSelectionText => ObjectReviewPanelControl?.MergeSelectionTextBlock;
+        private Wpf.Ui.Controls.Button MergeSelectedSegmentsButton => ObjectReviewPanelControl?.MergeSegmentsButton;
+        private Wpf.Ui.Controls.Button BeginVerticalSplitButton => ObjectReviewPanelControl?.VerticalSplitButton;
+        private Wpf.Ui.Controls.Button BeginHorizontalSplitButton => ObjectReviewPanelControl?.HorizontalSplitButton;
+        private Wpf.Ui.Controls.Button CancelSplitButton => ObjectReviewPanelControl?.SplitCancelButton;
+        private TextBlock SplitStatusText => ObjectReviewPanelControl?.SplitStatusTextBlock;
         private ListBox ObjectListBox => ObjectReviewPanelControl?.ObjectList;
         private Slider CandidateConfidenceSlider => CandidateReviewPanelControl?.ConfidenceSlider;
         private Grid CandidateReviewRoleSplitPanel => CandidateReviewPanelControl?.RoleSplitPanel;

@@ -23,6 +23,8 @@ namespace MvcVisionSystem
         public int? ClassId { get; init; }
         public string ClassName { get; init; } = string.Empty;
         public string Device { get; init; } = "cpu";
+        public IReadOnlyList<WpfSmartMaskPromptPoint> PromptPoints { get; init; } = Array.Empty<WpfSmartMaskPromptPoint>();
+        public int MaximumPolygonPoints { get; init; } = 96;
         public IReadOnlyList<string> Errors { get; init; } = Array.Empty<string>();
         public bool IsValid => Errors.Count == 0;
     }
@@ -47,7 +49,9 @@ namespace MvcVisionSystem
             string imagePath,
             Rectangle promptBounds,
             int? classId,
-            string className)
+            string className,
+            IReadOnlyList<WpfSmartMaskPromptPoint> promptPoints = null,
+            int maximumPolygonPoints = 96)
         {
             string normalizedImagePath = string.IsNullOrWhiteSpace(imagePath)
                 ? string.Empty
@@ -92,6 +96,8 @@ namespace MvcVisionSystem
                 ClassId = classId,
                 ClassName = string.IsNullOrWhiteSpace(className) ? "Defect" : className.Trim(),
                 Device = "cpu",
+                PromptPoints = promptPoints ?? Array.Empty<WpfSmartMaskPromptPoint>(),
+                MaximumPolygonPoints = Math.Clamp(maximumPolygonPoints, 16, 1024),
                 Errors = errors
             };
         }
@@ -202,7 +208,7 @@ namespace MvcVisionSystem
                 MaskArea = payload.Value<int?>("maskArea") ?? 0,
                 WeightsSha256 = payload.Value<string>("weightsSha256") ?? string.Empty,
                 RuntimeSummary = runtime,
-                Summary = $"스마트 마스크 후보 1개 생성 / 경계점 {polygon.Count}개 / {elapsed.ToString("N0", CultureInfo.CurrentCulture)}ms"
+                Summary = $"스마트 마스크 후보 1개 생성 / +{request.PromptPoints.Count(point => point.Kind == WpfSmartMaskPointKind.Positive)} -{request.PromptPoints.Count(point => point.Kind == WpfSmartMaskPointKind.Negative)} / 경계점 {polygon.Count}개 / {elapsed.ToString("N0", CultureInfo.CurrentCulture)}ms"
             };
         }
 
@@ -225,6 +231,18 @@ namespace MvcVisionSystem
             AddArgument(startInfo, "--width", request.PromptBounds.Width.ToString(CultureInfo.InvariantCulture));
             AddArgument(startInfo, "--height", request.PromptBounds.Height.ToString(CultureInfo.InvariantCulture));
             AddArgument(startInfo, "--device", request.Device);
+            AddArgument(startInfo, "--max-polygon-points", request.MaximumPolygonPoints.ToString(CultureInfo.InvariantCulture));
+            foreach (WpfSmartMaskPromptPoint point in request.PromptPoints)
+            {
+                AddArgument(
+                    startInfo,
+                    "--point",
+                    string.Join(
+                        ",",
+                        point.Position.X.ToString(CultureInfo.InvariantCulture),
+                        point.Position.Y.ToString(CultureInfo.InvariantCulture),
+                        point.Label.ToString(CultureInfo.InvariantCulture)));
+            }
             return new Process { StartInfo = startInfo };
         }
 
