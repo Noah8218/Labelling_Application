@@ -1,6 +1,6 @@
 # Next Thread Handoff
 
-Last updated: 2026-07-24 KST
+Last updated: 2026-07-27 KST
 
 This is the current operational handoff for C:\Git\Labelling_Application. It is intentionally shorter than the historical journal. Use it to choose the next task; use the linked records only for the detailed evidence behind a claim.
 
@@ -36,6 +36,24 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   CI evidence as current CI evidence.
 - The current focused passes directly verified Dataset Health, external native YOLO intake, model/anomaly comparison, the dedicated Model Center workspace, and the explicit model-adapter catalog slices. The image-queue slice also has a 50,081-image local warm-cache profile and a separate duplicate-file local 8K profile; neither is a network-share or production-camera result.
 - Never push unless the user explicitly says push. A commit request means local commit only.
+
+### Current uncommitted structural-refactor batch
+
+The current dirty worktree contains a behavior-preserving Yolo contract-ownership
+refactor. Public result/report/DTO types were moved from service implementations
+into responsibility-named `*Contracts.cs` files; the exact navigation map and
+per-slice verification records are in `docs/CODE_STRUCTURE.md` and
+`docs/WORK_TRACKING.md`.
+
+The final declaration audit found zero duplicate public type names. Outside
+`*Contracts.cs`, only `Yolo/CYolov5.cs` and
+`Yolo/YoloSegmentationAnnotationService.cs` intentionally retain multiple public
+types. They are documented co-location exceptions, not pending mechanical
+splits. Do not restructure the segmentation annotation/materialization path
+without a concrete requirement and focused evidence.
+
+The batch is not committed or pushed. Keep `.proofline/STATE.md` and
+`.proofline/dashboard/` outside this batch.
 
 ## 3. Product Identity and Direction
 
@@ -211,6 +229,11 @@ Committed files include:
 - tests/LabelingApplication.Tests/Program.DatasetHealth.cs
 
 Modified shell/XAML/ViewModel files wire the read-only Model Center entry.
+
+Current ownership after the 2026-07-26 structural refactor:
+
+- `Yolo/YoloDatasetHealthContracts.cs` owns the shared Dataset Health result types.
+- `Yolo/YoloDatasetHealthService.cs` owns purpose-aware aggregation.
 
 Recorded scope:
 

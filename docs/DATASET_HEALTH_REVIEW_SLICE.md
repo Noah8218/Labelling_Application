@@ -31,6 +31,7 @@ Excluded scope:
 
 ### New, slice-owned files
 
+- `Yolo/YoloDatasetHealthContracts.cs`
 - `Yolo/YoloDatasetHealthService.cs`
 - `0. UI/9) WPF/ViewModels/Dataset/WpfDatasetHealthViewModel.cs`
 - `0. UI/9) WPF/Views/WpfDatasetHealthWindow.xaml`

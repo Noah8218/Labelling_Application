@@ -16420,3 +16420,669 @@ Evidence: `Yolo\YoloDatasetValidationContracts.cs`,
 Boundary / next dependency: statistics 누적 메서드의 `internal` 접근성은
 validator와 같은 assembly에서 유지했습니다. 검증 규칙, 오류 문구, 통계 계산,
 UI 동작과 Viewer/OpenGL/ROI/brush/eraser 경로는 변경하지 않았습니다.
+
+
+## 2026-07-26 YOLO 이미지 검토 상태 계약 소유권 분리
+
+Status: Complete
+
+Scope: `YoloImageReviewStatusService.cs`에 있던 공개 detection review enum,
+quality review enum, 이미지별 status DTO를
+`YoloImageReviewStatusContracts.cs`로 이동했습니다. 이미지 catalog 동기화,
+JSON 저장/복원, label 상태 반영, detection/quality 상태 전환과 다음 미검토
+이미지 선택은 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 공개 review 계약 3개가 계약 파일에만 있고 서비스 파일에는 공개 서비스
+  타입만 남음: 선언 소유자 검색으로 통과.
+- 공개/internal 타입 본문, 기본값, namespace가 유지됨: 이전 커밋과 공백 제거
+  타입 본문 비교에서 불일치 0건.
+- label/candidate/confirmed/skipped/no-candidate와 다음 미검토 이미지 선택이
+  유지됨: image review focused gate로 통과.
+- quality review report와 WPF anomaly queue status 반영이 유지됨: focused
+  gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--yolo-image-review-status`, `--label-quality-review-report`,
+  `--wpf-anomaly-queue-focus`, `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교: `YOLO_IMAGE_REVIEW_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\YoloImageReviewStatusContracts.cs`,
+`Yolo\YoloImageReviewStatusService.cs`, `docs\CODE_STRUCTURE.md`,
+`docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: private persisted DTO, lock, JSON file IO와 상태 전환
+정책은 서비스에 유지했습니다. UI 표현 문구, queue navigation, Viewer/OpenGL/
+ROI/brush/eraser 경로는 변경하지 않았습니다.
+
+
+## 2026-07-26 YOLO dataset readiness 결과 계약 소유권 분리
+
+Status: Complete
+
+Scope: `YoloDatasetReadinessService.cs`에 있던 공개 readiness report를
+`YoloDatasetReadinessContracts.cs`로 이동했습니다. 선택된 dataset purpose의
+검증, 통계 수집, anomaly readiness 조합과 YAML refresh 정책은 기존 서비스가
+계속 소유합니다.
+
+Acceptance criteria:
+
+- 공개 readiness 결과 계약이 계약 파일에만 있고 서비스 파일에는 공개
+  서비스 타입만 남음: 선언 소유자 검색으로 통과.
+- 공개 타입 본문, 기본값, namespace가 유지됨: 이전 상태와 공백 제거 타입
+  본문 비교에서 불일치 0건.
+- detection/segmentation/anomaly 목적별 readiness와 summary가 유지됨:
+  dataset readiness focused gate로 통과.
+- Dataset Health와 WPF 학습 readiness 소비 경로가 같은 결과 계약을 계속
+  사용함: focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--dataset-readiness-purpose`, `--dataset-health`,
+  `--wpf-training-readiness-presentation`,
+  `--wpf-dataset-dashboard-presentation`, `--priority-workflow-docs`:
+  모두 통과.
+- 공개 타입 비교: `YOLO_READINESS_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\YoloDatasetReadinessContracts.cs`,
+`Yolo\YoloDatasetReadinessService.cs`, `docs\CODE_STRUCTURE.md`,
+`docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: readiness 계산 순서, validator 호출, 통계 계산,
+anomaly 변환, YAML 저장 여부와 UI 표현 동작은 변경하지 않았습니다.
+Viewer/OpenGL/ROI/brush/eraser 경로도 변경하지 않았습니다.
+
+
+## 2026-07-26 YOLO Dataset Health 결과 계약 소유권 분리
+
+Status: Complete
+
+Scope: `YoloDatasetHealthService.cs`에 있던 공개 quality 상태 enum, 종합
+report, split summary, class summary를 `YoloDatasetHealthContracts.cs`로
+이동했습니다. 목적별 readiness와 품질 감사 결과 조합, split/class 집계,
+issue 정규화는 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 공개 Dataset Health 계약 4개가 계약 파일에만 있고 서비스 파일에는 공개
+  서비스 타입만 남음: 선언 소유자 검색으로 통과.
+- 공개/internal 타입 본문, 파생 속성, 기본값, namespace가 유지됨: 이전
+  상태와 공백 제거 타입 본문 비교에서 불일치 0건.
+- detection/segmentation/anomaly 상태와 SEG missing/corrupt/not-evaluated
+  판정이 유지됨: Dataset Health focused gate로 통과.
+- WPF 분석 창이 같은 report/split/class 계약을 계속 소비함: WPF focused
+  gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--dataset-health`, `--wpf-dataset-health-window`,
+  `--dataset-readiness-purpose`, `--dataset-quality-audit`,
+  `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교: `YOLO_DATASET_HEALTH_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\YoloDatasetHealthContracts.cs`,
+`Yolo\YoloDatasetHealthService.cs`, `docs\CODE_STRUCTURE.md`,
+`docs\STABLE_VERIFIED_AREAS.md`, `docs\DATASET_HEALTH_REVIEW_SLICE.md`,
+`docs\NEXT_THREAD_HANDOFF.md`.
+
+Boundary / next dependency: Dataset Health의 판정 문구·상태 의미, readiness와
+audit 호출, WPF 레이아웃/동작, queue navigation과 annotation 저장은 변경하지
+않았습니다. Viewer/OpenGL/ROI/brush/eraser 경로도 변경하지 않았습니다.
+
+
+## 2026-07-26 COCO·Label Studio export 계약 소유권 일괄 분리
+
+Status: Complete
+
+Scope: COCO detection/segmentation과 Label Studio detection/segmentation
+서비스 파일에 있던 공개 export 결과 및 직렬화 DTO 24개를 대응하는 네
+`*ExportContracts.cs` 파일로 이동했습니다. dataset 탐색, 좌표 변환,
+invalid record 제외, 상대 경로 생성, JSON 저장은 기존 네 서비스가 계속
+소유합니다.
+
+Acceptance criteria:
+
+- 각 서비스 파일에는 대응하는 공개 service 타입만 남고 결과/직렬화 DTO는
+  포맷별 계약 파일에만 있음: 선언 소유자 검색으로 통과.
+- 공개 타입 본문, JSON property 이름, 기본값, namespace가 유지됨: 이전
+  상태와 공백 제거 타입 본문 비교에서 불일치 0건.
+- COCO detection/segmentation JSON의 image/category/annotation 구조가
+  유지됨: 두 COCO focused gate로 통과.
+- Label Studio detection/segmentation task, annotation, result/value 구조가
+  유지됨: 두 Label Studio focused gate로 통과.
+- 구현 포맷 inventory와 구조 문서가 현재 파일 소유권을 반영함: 문서 focused
+  gate와 참조 검색으로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--coco-detection-export`, `--coco-segmentation-export`,
+  `--label-studio-detection-export`, `--label-studio-segmentation-export`,
+  `--export-capability-inventory`, `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교:
+  `DATASET_INTERCHANGE_EXPORT_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\CocoDetectionExportContracts.cs`,
+`Yolo\CocoSegmentationExportContracts.cs`,
+`Yolo\LabelStudioDetectionExportContracts.cs`,
+`Yolo\LabelStudioSegmentationExportContracts.cs`, 대응하는 네
+`*ExportService.cs`, `docs\CODE_STRUCTURE.md`,
+`docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: 외부 JSON schema, 좌표/면적 계산, split 처리,
+빈 라벨 포함 정책과 skipped count는 변경하지 않았습니다. annotation
+save/reopen, queue, runtime, Viewer/OpenGL/ROI/brush/eraser 경로도 변경하지
+않았습니다.
+
+
+## 2026-07-27 segmentation 비교·historical audit 계약 소유권 분리
+
+Status: Complete
+
+Scope: `SegmentationMaskComparisonService.cs`의 공개 비교 요청·결과·run/class
+metric·prediction manifest 계약 6개를
+`SegmentationMaskComparisonContracts.cs`로 이동했습니다.
+`YoloSegmentationHistoricalRemediationAuditService.cs`의 공개
+report·image·record·export 결과 계약 4개는
+`YoloSegmentationHistoricalRemediationAuditContracts.cs`로 이동했습니다.
+mask 비교 계산과 read-only remediation 감사 실행은 기존 서비스가 계속
+소유합니다.
+
+Acceptance criteria:
+
+- 두 서비스 파일에는 대응하는 공개 service 타입만 남고 공개 계약 10개는
+  계약 파일에만 있음: 선언 소유자 검색으로 통과.
+- 공개/internal 타입 본문, 기본값, namespace가 유지됨: 이전 상태와 공백
+  제거 타입 본문 비교에서 불일치 0건.
+- canonical export identity 검증, Dice/IoU/component TP/FP/FN 계산과 report
+  출력이 유지됨: mask comparison focused gate로 통과.
+- historical remediation 감사가 dataset artifact를 변경하지 않고 legacy
+  제안·label diff를 보고함: audit 및 contour migration focused gate로 통과.
+- WPF segmentation adapter 비교가 같은 결과 계약을 계속 소비함: WPF
+  focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--segmentation-mask-comparison`,
+  `--wpf-segmentation-adapter-comparison`,
+  `--segmentation-historical-remediation-audit`,
+  `--segmentation-template-contour-migration`,
+  `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교:
+  `SEGMENTATION_COMPARISON_AUDIT_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\SegmentationMaskComparisonContracts.cs`,
+`Yolo\SegmentationMaskComparisonService.cs`,
+`Yolo\YoloSegmentationHistoricalRemediationAuditContracts.cs`,
+`Yolo\YoloSegmentationHistoricalRemediationAuditService.cs`,
+`docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: metric 공식·threshold, manifest identity gate, mask
+판독, legacy contour 제안과 Markdown 내용은 변경하지 않았습니다. audit의
+read-only 경계, WPF 레이아웃/동작, annotation 저장과 Viewer/OpenGL/ROI/
+brush/eraser 경로도 변경하지 않았습니다.
+
+
+## 2026-07-27 segmentation prediction·contour migration 계약 소유권 분리
+
+Status: Complete
+
+Scope: `SegmentationPredictionExportService.cs`의 공개 adapter request/result
+2개를 `SegmentationPredictionExportContracts.cs`로 이동했습니다.
+`YoloSegmentationTemplateContourMigrationService.cs`의 공개 plan/item/result
+3개는 `YoloSegmentationTemplateContourMigrationContracts.cs`로
+이동했습니다. Python process 검증·실행과 migration staging·backup·검증·
+rollback은 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 두 서비스 파일에는 대응하는 공개 service 타입만 남고 공개 계약 5개는
+  계약 파일에만 있음: 선언 소유자 검색으로 통과.
+- 공개/internal 타입 본문, 기본값, namespace와 migration transaction
+  state가 유지됨: 이전 상태와 공백 제거 타입 본문 비교에서 불일치 0건.
+- adapter request validation과 process argument 구성이 유지되고 WPF
+  comparison runner가 같은 결과 계약을 소비함: prediction/WPF focused
+  gate로 통과.
+- migration plan/apply의 source hash 확인, backup, artifact 검증과 rollback
+  계약이 유지됨: migration 및 read-only audit focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--segmentation-mask-comparison`,
+  `--wpf-segmentation-adapter-comparison`,
+  `--segmentation-template-contour-migration`,
+  `--segmentation-historical-remediation-audit`,
+  `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교:
+  `SEGMENTATION_PREDICTION_MIGRATION_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\SegmentationPredictionExportContracts.cs`,
+`Yolo\SegmentationPredictionExportService.cs`,
+`Yolo\YoloSegmentationTemplateContourMigrationContracts.cs`,
+`Yolo\YoloSegmentationTemplateContourMigrationService.cs`,
+`docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: Python 실행 인수, adapter/runtime 선택, output 안전
+검사, migration 대상·hash·backup·rollback 정책은 변경하지 않았습니다.
+실제 사용자 dataset migration은 실행하지 않았고 WPF UI, annotation 저장,
+Viewer/OpenGL/ROI/brush/eraser 경로도 변경하지 않았습니다.
+
+
+## 2026-07-27 Dataset Quality Audit 계약 소유권 분리
+
+Status: Complete
+
+Scope: `YoloDatasetQualityAuditService.cs`의 공개 audit report와 split
+summary를 `YoloDatasetQualityAuditContracts.cs`로 이동했습니다.
+`YoloDatasetQualityAuditExportService.cs`의 공개 export result는
+`YoloDatasetQualityAuditExportContracts.cs`로 이동했습니다. image/label
+artifact 검사와 Markdown 구성·저장은 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 두 서비스 파일에는 대응하는 공개 service 타입만 남고 공개 계약 3개는
+  계약 파일에만 있음: 선언 소유자 검색으로 통과.
+- 공개/internal 타입 본문, class-count 누적 상태, 기본값과 namespace가
+  유지됨: 이전 상태와 공백 제거 타입 본문 비교에서 불일치 0건.
+- split별 missing/empty/invalid/object 및 class 분포가 유지됨: quality audit
+  focused gate로 통과.
+- Markdown summary/table과 WPF 품질 보고서·Dataset Health 소비가 유지됨:
+  export, dashboard, health focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--dataset-quality-audit`, `--dataset-quality-audit-export`,
+  `--dataset-health`, `--wpf-training-dashboard-quality`,
+  `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교:
+  `YOLO_DATASET_QUALITY_AUDIT_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\YoloDatasetQualityAuditContracts.cs`,
+`Yolo\YoloDatasetQualityAuditService.cs`,
+`Yolo\YoloDatasetQualityAuditExportContracts.cs`,
+`Yolo\YoloDatasetQualityAuditExportService.cs`,
+`docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: missing/empty/invalid 판정, class/object 계산,
+Markdown 내용·기본 저장 위치와 WPF 표현 문구는 변경하지 않았습니다.
+annotation 저장, split 배정, runtime, Viewer/OpenGL/ROI/brush/eraser 경로도
+변경하지 않았습니다.
+
+
+## 2026-07-27 COCO·Label Studio·Pascal VOC interchange 결과 계약 분리
+
+Status: Complete
+
+Scope: COCO detection/segmentation import 결과 2개를
+`CocoImportContracts.cs`, Label Studio detection/segmentation import 결과
+2개를 `LabelStudioImportContracts.cs`, Pascal VOC detection export/import
+결과 2개를 `PascalVocDetectionInterchangeContracts.cs`로 이동했습니다.
+source parsing, class catalog 확장, 좌표 변환, 이미지 복사와 local artifact
+저장은 기존 여섯 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 여섯 서비스 파일에는 대응하는 공개 service 타입만 남고 공개 결과 계약
+  6개는 외부 포맷별 계약 파일에만 있음: 선언 소유자 검색으로 통과.
+- 공개 타입 본문, count/path 기본값과 namespace가 유지됨: 이전 상태와
+  공백 제거 타입 본문 비교에서 불일치 0건.
+- COCO detection/segmentation import가 box 또는 polygon artifact를 같은
+  규칙으로 생성함: 두 COCO import focused gate로 통과.
+- Label Studio detection/segmentation import의 percent 좌표와 skip 정책이
+  유지됨: 두 Label Studio import focused gate로 통과.
+- Pascal VOC detection export/import의 XML 좌표와 empty-label 정책이
+  유지됨: 두 Pascal VOC focused gate로 통과.
+- capability inventory와 구조 문서가 현재 소유권을 반영함: inventory와
+  문서 focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--coco-detection-import`, `--coco-segmentation-import`,
+  `--label-studio-detection-import`, `--label-studio-segmentation-import`,
+  `--pascal-voc-detection-export`, `--pascal-voc-detection-import`,
+  `--export-capability-inventory`, `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교:
+  `DATASET_INTERCHANGE_RESULT_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\CocoImportContracts.cs`,
+`Yolo\LabelStudioImportContracts.cs`,
+`Yolo\PascalVocDetectionInterchangeContracts.cs`, 대응하는 여섯
+`*Service.cs`, `docs\CODE_STRUCTURE.md`,
+`docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: 외부 JSON/XML schema, 좌표 변환, class catalog,
+이미지 복사, split 및 empty/skipped 정책은 변경하지 않았습니다. annotation
+editor, queue, training/runtime, Viewer/OpenGL/ROI/brush/eraser 경로도 변경하지
+않았습니다.
+
+
+## 2026-07-27 anomaly classification evaluation 계약 소유권 분리
+
+Status: Complete
+
+Scope: `AnomalyClassificationEvaluationService.cs`의 공개 held-out sample,
+threshold options, evaluation report를
+`AnomalyClassificationEvaluationContracts.cs`로 이동했습니다. summary JSON
+해석, low-confidence 처리, count/accuracy 계산, hold reason과 fail-closed
+adoption recommendation은 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 공개 evaluation 계약 3개가 계약 파일에만 있고 서비스 파일에는 공개
+  service 타입만 남음: 선언 소유자 검색으로 통과.
+- 공개 타입 본문, threshold 기본값, report 파생 판정과 namespace가 유지됨:
+  이전 상태와 공백 제거 타입 본문 비교에서 불일치 0건.
+- 최소 표본·전체/per-class accuracy·minimum confidence adoption guard와
+  summary JSON fail-closed 처리가 유지됨: evaluation focused gate로 통과.
+- WPF anomaly flow와 Model Center shell이 같은 options/report 계약을 계속
+  소비함: WPF focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--anomaly-classification-evaluation`, `--wpf-anomaly-purpose-flow`,
+  `--wpf-labeling-shell`, `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교:
+  `ANOMALY_CLASSIFICATION_EVALUATION_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\AnomalyClassificationEvaluationContracts.cs`,
+`Yolo\AnomalyClassificationEvaluationService.cs`,
+`docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: adoption threshold, confidence 처리, JSON schema,
+hold reason과 WPF 표현은 변경하지 않았습니다. evaluation 실행 script,
+training/inference, registry/adoption write, annotation과 Viewer/OpenGL/ROI/
+brush/eraser 경로도 변경하지 않았습니다.
+
+
+## 2026-07-27 model adapter catalog·외부 평가 audit 계약 소유권 분리
+
+Status: Complete
+
+Scope: `ModelAdapterCatalogService.cs`의 공개 adapter item을
+`ModelAdapterCatalogContracts.cs`로 이동했습니다.
+`YoloExternalEvaluationDataAuditService.cs`의 공개 overlap/error report는
+`YoloExternalEvaluationDataAuditContracts.cs`로 이동했습니다. 구현
+capability 기반 catalog 구성과 지원 이미지 SHA-256 audit는 기존 서비스가
+계속 소유합니다.
+
+Acceptance criteria:
+
+- 두 공개 계약이 각 계약 파일에만 있고 서비스 파일에는 대응하는 공개
+  service 타입만 남음: 선언 소유자 검색으로 통과.
+- 공개 타입 본문, init-only 항목, report 파생 판정과 namespace가 유지됨:
+  이전 상태와 공백 제거 타입 본문 비교에서 불일치 0건.
+- adapter catalog의 task/data/runtime/evidence/next-action 및 availability
+  경계가 유지됨: catalog와 WPF settings focused gate로 통과.
+- external folder의 name/content overlap과 fail-closed independent-content
+  판정이 유지됨: external audit focused gate로 통과.
+- WPF shell이 같은 계약을 계속 소비함: shell focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--model-adapter-catalog`, `--wpf-yolo-model-settings-panel`,
+  `--external-evaluation-data-audit`, `--wpf-labeling-shell`,
+  `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교:
+  `MODEL_CATALOG_EXTERNAL_AUDIT_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\ModelAdapterCatalogContracts.cs`,
+`Yolo\ModelAdapterCatalogService.cs`,
+`Yolo\YoloExternalEvaluationDataAuditContracts.cs`,
+`Yolo\YoloExternalEvaluationDataAuditService.cs`,
+`docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: adapter 목록·availability 의미, SHA-256/name overlap,
+error와 independent-content 판정은 변경하지 않았습니다. 모델 실행/선택,
+training/adoption, dataset write, annotation과 Viewer/OpenGL/ROI/brush/eraser
+경로도 변경하지 않았습니다.
+
+
+## 2026-07-27 image label status·quality report export 계약 소유권 분리
+
+Status: Complete
+
+Scope: `YoloImageLabelStatusService.cs`의 공개 image label status를
+`YoloImageLabelStatusContracts.cs`로 이동했습니다.
+`YoloImageQualityReviewReportExportService.cs`의 공개 export result는
+`YoloImageQualityReviewReportExportContracts.cs`로 이동했습니다.
+detection/segmentation artifact 탐색·count 계산과 quality 상태 집계·Markdown
+저장은 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 두 공개 계약이 각 계약 파일에만 있고 서비스 파일에는 대응하는 공개
+  service 타입만 남음: 선언 소유자 검색으로 통과.
+- 공개 타입 본문, 생성자, 파생 표시 상태와 count/path 기본값이 유지됨:
+  이전 상태와 공백 제거 타입 본문 비교에서 불일치 0건.
+- detection/segmentation image label lookup, object/invalid/empty 상태가
+  유지됨: label status 및 template storage focused gate로 통과.
+- quality review total/unreviewed/needs-fix/reviewed 집계와 Markdown 저장이
+  유지됨: report 및 WPF queue focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--yolo-label-status`, `--template-batch-autolabel-storage`,
+  `--label-quality-review-report`, `--wpf-image-queue-status`,
+  `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 비교:
+  `IMAGE_LABEL_QUALITY_REPORT_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\YoloImageLabelStatusContracts.cs`,
+`Yolo\YoloImageLabelStatusService.cs`,
+`Yolo\YoloImageQualityReviewReportExportContracts.cs`,
+`Yolo\YoloImageQualityReviewReportExportService.cs`,
+`docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: label/segment lookup, object/invalid count, 표시 문구,
+quality 상태 집계와 Markdown 내용은 변경하지 않았습니다. queue navigation,
+annotation 저장, Viewer/OpenGL/ROI/brush/eraser 경로도 변경하지 않았습니다.
+
+
+## 2026-07-27 CVAT 상호변환 결과 계약 소유권 분리
+
+Status: Complete
+
+Scope: `CvatImageTaskArchiveExportService.cs`와
+`CvatSegmentationArchiveExportService.cs`의 공개 export 결과를
+`CvatArchiveExportContracts.cs`로 이동했습니다.
+`CvatDetectionImportService.cs`와 `CvatSegmentationImportService.cs`의 공개
+import 결과를 `CvatImportContracts.cs`로 이동했습니다. XML/ZIP 처리,
+좌표 변환, 이미지 복사, class catalog 확장과 local artifact 저장은 기존
+서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 네 공개 결과 계약은 두 계약 파일에만 남고 각 서비스에는 공개 service
+  타입만 남음: 선언 소유권 검색으로 통과.
+- 공개 결과의 property, collection 초기화와 namespace가 이전과 동일함:
+  공백 제거 본문 비교에서 불일치 0건.
+- detection/segmentation export archive 내용과 import artifact 결과가 기존과
+  동일함: 네 CVAT focused gate로 통과.
+- export/import capability inventory와 구조 문서가 새 소유권을 반영함:
+  문서 및 inventory focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--cvat-image-export`, `--cvat-detection-import`,
+  `--cvat-segmentation-export`, `--cvat-segmentation-import`,
+  `--export-capability-inventory`, `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 본문 비교:
+  `CVAT_INTERCHANGE_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\CvatArchiveExportContracts.cs`,
+`Yolo\CvatImportContracts.cs`, 대응하는 네 `Cvat*Service.cs`,
+`docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: CVAT XML/ZIP schema, 좌표 변환, invalid record 처리,
+archive 내부 private DTO와 local dataset write 동작은 변경하지 않았습니다.
+annotation 편집, Viewer/OpenGL/ROI/brush/eraser 경로는 변경하지 않았습니다.
+
+
+## 2026-07-27 anomaly classification dataset export 계약 소유권 분리
+
+Status: Complete
+
+Scope: `AnomalyClassificationDatasetExportService.cs`에 있던 공개
+`AnomalyClassificationDatasetExportResult`를
+`AnomalyClassificationDatasetExportContracts.cs`로 이동했습니다. 검토
+상태 조회, split 선택, 생성 폴더 초기화, 이미지 복사와 중복 파일명 처리는
+기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 공개 export 결과는 계약 파일에만 남고 서비스 파일에는 공개 service
+  타입만 남음: 선언 소유권 검색으로 통과.
+- 결과 property와 계산 property 본문 및 namespace가 이전과 동일함:
+  공백 제거 본문 비교에서 불일치 0건.
+- normal/abnormal/skipped count와 반복 export 폴더 결과가 기존과 동일함:
+  dataset export focused gate로 통과.
+- anomaly training workflow와 목적별 readiness가 동일한 결과 계약을 소비함:
+  workflow/readiness focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--anomaly-classification-dataset-export`,
+  `--anomaly-classification-training-workflow`, `--dataset-readiness-purpose`,
+  `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 본문 비교:
+  `ANOMALY_CLASSIFICATION_DATASET_EXPORT_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\AnomalyClassificationDatasetExportContracts.cs`,
+`Yolo\AnomalyClassificationDatasetExportService.cs`,
+`docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: split 선택, classification 폴더 구조, 기존 폴더
+초기화, duplicate 이름 처리와 count 의미는 변경하지 않았습니다. training,
+inference, annotation, Viewer/OpenGL/ROI/brush/eraser 경로는 변경하지 않았습니다.
+
+
+## 2026-07-27 dataset export capability 계약 소유권 분리
+
+Status: Complete
+
+Scope: `DatasetExportCapabilityService.cs`에 있던 공개
+`DatasetExportCapability` 항목을 `DatasetExportCapabilityContracts.cs`로
+이동했습니다. 구현·계획 항목의 값과 순서, implemented filtering 및 단일
+추천 대상 선택 정책은 기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 공개 capability 항목은 계약 파일에만 남고 서비스 파일에는 공개 service
+  타입만 남음: 선언 소유권 검색으로 통과.
+- 항목 property와 기본값 및 namespace가 이전과 동일함: 공백 제거 본문
+  비교에서 불일치 0건.
+- 구현 목록, 검증 스위치와 단일 다음 추천 대상이 기존과 동일함:
+  capability inventory focused gate로 통과.
+- Model Adapter catalog와 WPF 설정 화면이 같은 implemented capability를
+  소비함: catalog와 WPF focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--export-capability-inventory`, `--model-adapter-catalog`,
+  `--wpf-yolo-model-settings-panel`, `--priority-workflow-docs`: 모두 통과.
+- 공개 타입 본문 비교:
+  `DATASET_EXPORT_CAPABILITY_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\DatasetExportCapabilityContracts.cs`,
+`Yolo\DatasetExportCapabilityService.cs`, `docs\CODE_STRUCTURE.md`,
+`docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: capability 항목 값·순서, implemented 판단, 현재
+Labelbox 추천과 verification switch는 변경하지 않았습니다. 실제
+export/import, model runtime, UI, Viewer/OpenGL/ROI/brush/eraser 경로는
+변경하지 않았습니다.
+
+
+## 2026-07-27 YOLO segmentation training label 계약 소유권 분리
+
+Status: Complete
+
+Scope: `YoloSegmentationTrainingLabelService.cs`에 있던 공개
+`YoloSegmentationTrainingLabelExportResult`를
+`YoloSegmentationTrainingLabelContracts.cs`로 이동했습니다. split별
+artifact 탐색, OK background 처리, polygon 변환, label 쓰기와 오류 수집은
+기존 서비스가 계속 소유합니다.
+
+Acceptance criteria:
+
+- 공개 export 결과는 계약 파일에만 남고 서비스 파일에는 공개 service
+  타입만 남음: 선언 소유권 검색으로 통과.
+- count/error/readiness property와 namespace가 이전과 동일함: 공백 제거
+  본문 비교에서 불일치 0건.
+- generated polygon/empty-background labels와 readiness 의미가 기존과 동일함:
+  training-label 및 dataset-readiness focused gate로 통과.
+- remediation audit와 contour migration의 read-only 변환 소비가 유지됨:
+  두 focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--yolov8-segmentation-app-dataset-fixture`, `--dataset-readiness-purpose`,
+  `--segmentation-historical-remediation-audit`,
+  `--segmentation-template-contour-migration`, `--priority-workflow-docs`:
+  모두 통과.
+- 공개 타입 본문 비교:
+  `YOLO_SEGMENTATION_TRAINING_LABEL_CONTRACT_BODY_MISMATCHES=0`.
+
+Evidence: `Yolo\YoloSegmentationTrainingLabelContracts.cs`,
+`Yolo\YoloSegmentationTrainingLabelService.cs`, `docs\CODE_STRUCTURE.md`,
+`docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency: polygon/raster contour 변환, split count, background
+복사·정리, 오류 문구와 `IsReady` 의미는 변경하지 않았습니다. annotation
+편집, mask materialization, training 실행, Viewer/OpenGL/ROI/brush/eraser
+경로는 변경하지 않았습니다.
+
+
+## 2026-07-27 Yolo 다중 공개 타입 구조 감사
+
+Status: Complete
+
+Scope: 누적 계약 분리 이후 `Yolo` 전체 공개 타입 선언과 비계약 파일의
+다중 공개 타입을 감사했습니다. `CYolov5.cs`와
+`YoloSegmentationAnnotationService.cs`는 새 책임·테스트 경계를 만들지 않는
+기계적 분리를 하지 않고 의도적 동거 예외로 기록했습니다. 코드 파일은
+변경하지 않았습니다.
+
+Acceptance criteria:
+
+- Yolo 공개 타입 이름 중복이 없음: 133개 선언, 중복 0개.
+- 공개 계약이 명시적 계약 파일로 탐색 가능함: 29개 계약 파일이 공개 타입
+  83개를 소유.
+- 비계약 다중 공개 파일이 모두 설명됨: `CYolov5.cs` 6개,
+  `YoloSegmentationAnnotationService.cs` 4개만 남고 각각 재검토 조건 기록.
+- legacy YOLOv5 설정 소비와 segmentation persisted-schema 저장 경로가
+  유지됨: 관련 focused gate로 통과.
+
+Verification:
+
+- 격리 빌드: 경고 0, 오류 0.
+- `--wpf-settings-viewmodels`, `--segmentation-annotation-storage`,
+  `--priority-workflow-docs`: 모두 통과.
+- 공개 선언 감사:
+  `DUPLICATE_PUBLIC_TYPE_NAMES=0`,
+  `NON_CONTRACT_MULTI_PUBLIC_FILES=2`.
+- `git diff --check`: 통과.
+
+Evidence: `docs\CODE_STRUCTURE.md`, `docs\STABLE_VERIFIED_AREAS.md`,
+`Yolo\CYolov5.cs`, `Yolo\YoloSegmentationAnnotationService.cs`.
+
+Boundary / next dependency: 이번 감사는 두 파일을 분리하지 않았으며 동작
+코드를 바꾸지 않았습니다. 다른 adapter가 계약을 공유하거나 독립
+serializer/schema owner가 생길 때만 예외를 재검토합니다. Viewer/OpenGL/
+ROI/brush/eraser와 segmentation materialization 경로는 변경하지 않았습니다.

@@ -239,26 +239,4 @@ namespace MvcVisionSystem.Yolo
         }
     }
 
-    public sealed class PascalVocDetectionImportResult
-    {
-        public string AnnotationDirectory { get; set; } = string.Empty;
-
-        public string ImageRoot { get; set; } = string.Empty;
-
-        public string TargetSplit { get; set; } = string.Empty;
-
-        public int ImportedImageCount { get; set; }
-
-        public int LabelFileCount { get; set; }
-
-        public int ImportedObjectCount { get; set; }
-
-        public int CategoryCount { get; set; }
-
-        public int SkippedXmlCount { get; set; }
-
-        public int SkippedObjectCount { get; set; }
-
-        public List<string> ImportedImagePaths { get; } = new List<string>();
-    }
 }

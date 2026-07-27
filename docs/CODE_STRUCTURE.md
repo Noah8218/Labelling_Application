@@ -193,28 +193,139 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | --- | --- |
 | `ClassCatalogService.cs` | 클래스 추가/삭제/정규화. |
 | `YoloAnnotationService.cs` | box 라벨 저장/로드, YOLO txt line 변환. |
-| `YoloSegmentationAnnotationService.cs` | polygon/mask segmentation 저장/로드. |
+| `YoloSegmentationAnnotationService.cs` | polygon/mask 저장·로드와 versioned annotation schema의 의도적 동거. |
 | `YoloDatasetSplitService.cs` | train/valid/test deterministic split. |
 | `YoloDatasetValidationContracts.cs` | dataset validation 오류와 split/class/annotation 통계 계약. |
 | `YoloDatasetValidator.cs` | dataset config/files/statistics 검증. |
-| `YoloDatasetReadinessService.cs` | 학습 readiness report 구성. |
+| `YoloDatasetReadinessContracts.cs` | 학습 readiness 결과와 목적별 요약 계약. |
+| `YoloDatasetReadinessService.cs` | 검증·통계를 조합해 학습 readiness report 구성. |
+| `YoloDatasetHealthContracts.cs` | 목적별 Dataset Health 상태·보고서·split/class 요약 계약. |
+| `YoloDatasetHealthService.cs` | readiness·품질 감사를 조합해 Dataset Health 결과 구성. |
+| `YoloDatasetQualityAuditContracts.cs` | detection dataset 품질 report와 split summary 계약. |
+| `YoloDatasetQualityAuditService.cs` | image/label artifact를 검사해 품질 통계와 class 분포 집계. |
+| `YoloDatasetQualityAuditExportContracts.cs` | 품질 감사 Markdown export 결과 계약. |
+| `YoloDatasetQualityAuditExportService.cs` | audit report를 Markdown으로 구성·저장. |
+| `AnomalyClassificationDatasetExportContracts.cs` | anomaly normal/abnormal classification dataset export 결과 계약. |
+| `AnomalyClassificationDatasetExportService.cs` | 검토 상태를 Ultralytics classification 폴더 dataset으로 export. |
+| `AnomalyClassificationEvaluationContracts.cs` | anomaly held-out sample·threshold options·adoption report 계약. |
+| `AnomalyClassificationEvaluationService.cs` | summary JSON 해석과 fail-closed accuracy/adoption 판정. |
+| `ModelAdapterCatalogContracts.cs` | Model Center adapter task/data/runtime/evidence 항목 계약. |
+| `ModelAdapterCatalogService.cs` | 구현 capability에서 read-only adapter catalog 구성. |
+| `YoloExternalEvaluationDataAuditContracts.cs` | 외부 평가 폴더와 active dataset의 content 중복 audit 결과 계약. |
+| `YoloExternalEvaluationDataAuditService.cs` | 지원 이미지 탐색과 SHA-256 name/content overlap 계산. |
 | `YoloDatasetDiagnosticsService.cs` | operator-facing 문제/경고 report. |
+| `YoloImageReviewStatusContracts.cs` | detection/quality review enum과 이미지별 status 계약. |
 | `YoloImageReviewStatusService.cs` | 이미지별 후보/확정/실패/스킵/검출없음 상태 저장. |
-| `YoloImageLabelStatusService.cs` | 이미지 라벨 개수/status 계산. |
+| `YoloImageLabelStatusContracts.cs` | 이미지별 label path·object/invalid count·표시 상태 계약. |
+| `YoloImageLabelStatusService.cs` | detection/segmentation artifact에서 이미지 label status 계산. |
+| `YoloImageQualityReviewReportExportContracts.cs` | 품질 검토 Markdown export 결과 계약. |
+| `YoloImageQualityReviewReportExportService.cs` | 이미지 quality 상태를 집계해 Markdown 구성·저장. |
 | `YoloExternalDatasetIntakeContracts.cs` | 외부 native YOLO 검증·source packet·runtime materialization 결과 계약. |
 | `YoloExternalDatasetIntakeService.cs` | 외부 data.yaml 검증, source identity, app-owned runtime copy 정책. |
+| `CocoDetectionExportContracts.cs` | COCO detection export 결과와 JSON document DTO 계약. |
+| `CocoDetectionExportService.cs` | YOLO box dataset을 COCO detection JSON으로 변환·저장. |
+| `CocoSegmentationExportContracts.cs` | COCO segmentation export 결과와 JSON document DTO 계약. |
+| `CocoSegmentationExportService.cs` | polygon artifact를 COCO segmentation JSON으로 변환·저장. |
+| `CocoImportContracts.cs` | COCO detection/segmentation import 결과 계약. |
+| `CocoDetectionImportService.cs` | COCO box annotation을 local image/YOLO label로 import. |
+| `CocoSegmentationImportService.cs` | COCO polygon을 local segment/mask artifact로 import. |
+| `LabelStudioDetectionExportContracts.cs` | Label Studio detection task/result/value DTO 계약. |
+| `LabelStudioDetectionExportService.cs` | YOLO box dataset을 Label Studio task JSON으로 변환·저장. |
+| `LabelStudioSegmentationExportContracts.cs` | Label Studio segmentation task/result/value DTO 계약. |
+| `LabelStudioSegmentationExportService.cs` | polygon artifact를 Label Studio task JSON으로 변환·저장. |
+| `LabelStudioImportContracts.cs` | Label Studio detection/segmentation import 결과 계약. |
+| `LabelStudioDetectionImportService.cs` | rectangle task를 local image/YOLO label로 import. |
+| `LabelStudioSegmentationImportService.cs` | polygon task를 local segment/mask artifact로 import. |
+| `PascalVocDetectionInterchangeContracts.cs` | Pascal VOC detection export/import 결과 계약. |
+| `PascalVocDetectionExportService.cs` | YOLO box dataset을 Pascal VOC XML로 export. |
+| `PascalVocDetectionImportService.cs` | Pascal VOC XML/image를 local YOLO dataset으로 import. |
+| `CvatArchiveExportContracts.cs` | CVAT detection/segmentation archive export 결과 계약. |
+| `CvatImageTaskArchiveExportService.cs` | YOLO box dataset을 CVAT image-task archive로 export. |
+| `CvatSegmentationArchiveExportService.cs` | polygon artifact를 CVAT image-task archive로 export. |
+| `CvatImportContracts.cs` | CVAT detection/segmentation import 결과 계약. |
+| `CvatDetectionImportService.cs` | CVAT box archive를 local image/YOLO label로 import. |
+| `CvatSegmentationImportService.cs` | CVAT polygon archive를 local segment/mask artifact로 import. |
+| `DatasetExportCapabilityContracts.cs` | 외부 형식별 방향·목적·구현·추천·검증 항목 계약. |
+| `DatasetExportCapabilityService.cs` | 구현된 상호변환 목록과 다음 추천 대상 정책 구성. |
+| `YoloSegmentationTrainingLabelContracts.cs` | segmentation training label export count·error·readiness 결과 계약. |
+| `YoloSegmentationTrainingLabelService.cs` | segment/mask artifact를 Ultralytics polygon label로 변환. |
 | `UnetSegmentationDatasetExportContracts.cs` | canonical U-Net export 결과, class contract, dataset manifest DTO. |
 | `UnetSegmentationDatasetExportService.cs` | recipe segmentation을 app-owned image/mask artifact로 export. |
-| `SegmentationPredictionExportService.cs` | U-Net/Ultralytics adapter의 canonical raster prediction export 요청·실행. |
+| `SegmentationPredictionExportContracts.cs` | U-Net/Ultralytics raster prediction export 요청·결과 계약. |
+| `SegmentationPredictionExportService.cs` | adapter별 Python 요청 검증·process 구성·실행. |
+| `SegmentationMaskComparisonContracts.cs` | mask 비교 요청·결과·run/class metric·prediction manifest 계약. |
 | `SegmentationMaskComparisonService.cs` | 호환되는 prediction manifest와 canonical mask의 Dice/IoU/component 비교. |
-| `CYolov5.cs` | data.yaml 생성과 YOLO path normalization. |
+| `YoloSegmentationHistoricalRemediationAuditContracts.cs` | legacy SEG dry-run report·image·record·export 결과 계약. |
+| `YoloSegmentationHistoricalRemediationAuditService.cs` | legacy mask 호환성을 읽어 변경 없는 remediation 감사 report 구성·저장. |
+| `YoloSegmentationTemplateContourMigrationContracts.cs` | 승인된 contour migration plan·item·result 계약. |
+| `YoloSegmentationTemplateContourMigrationService.cs` | migration 계획 구성, staging·backup·검증·적용/복구 정책. |
+| `CYolov5.cs` | legacy YOLOv5 YAML/training 호환 타입과 path helper의 의도적 동거. |
+
+segmentation training label의 image/label/polygon/background count와 오류 및
+readiness 결과는 `YoloSegmentationTrainingLabelContracts.cs`에서 찾습니다.
+split별 artifact 탐색, OK background 복사, polygon 정규화와 label 파일
+생성은 `YoloSegmentationTrainingLabelService.cs`가 소유합니다.
+
+### Yolo 다중 공개 타입 의도적 동거 예외
+
+2026-07-27 구조 감사 기준으로 `*Contracts.cs`가 아닌 Yolo 파일 중 공개
+타입이 둘 이상인 파일은 다음 두 개뿐입니다.
+
+- `CYolov5.cs`: 109줄의 legacy YOLOv5 adapter 호환 단위입니다.
+  `YamlData`, training parameter, `Cfg`/`Weight`와 `CYolov5` YAML helper가
+  같은 adapter 설정과 직렬화 규칙을 소유합니다. 다른 adapter가 이 계약을
+  재사용하거나 compatibility alias가 제거되기 전에는 파일 수만 늘리는
+  분리를 하지 않습니다.
+- `YoloSegmentationAnnotationService.cs`: versioned annotation file,
+  polygon/point record와 저장·로드/materialization이 하나의 persisted
+  schema를 소유합니다. 독립 serializer/schema package가 생기거나 서비스
+  없이 schema를 버전 관리해야 할 때만 별도 계약 파일을 검토합니다.
+
+두 파일 모두 줄 수나 공개 타입 개수만으로 분리하지 않습니다. 특히
+segmentation annotation 파일은 저장·mask materialization 성능 경로이므로
+구체적인 결함이나 독립 소유권 없이 구조만 변경하지 않습니다.
 
 segmentation adapter 비교는 두 독립 실행 경계를 파일명과 일치시킵니다.
-`SegmentationPredictionExportService.cs`는 Python exporter process와 그
-request/result 계약을 소유하고, `SegmentationMaskComparisonService.cs`는
-manifest/run/metric 계약과 mask 호환성 검증·채점·report 저장을 소유합니다.
-두 서비스는 공개 namespace를 공유하지만 private 상태나 실행 정책은 공유하지
-않습니다.
+prediction export request/result는
+`SegmentationPredictionExportContracts.cs`에서 찾고,
+`SegmentationPredictionExportService.cs`는 Python exporter process 검증과
+실행을 소유합니다. mask 비교 request/result와
+manifest/run/class metric은 `SegmentationMaskComparisonContracts.cs`에서
+찾고, 호환성 검증·채점·report 저장은
+`SegmentationMaskComparisonService.cs`가 소유합니다. 두 실행 서비스는 공개
+namespace를 공유하지만 private 상태나 실행 정책은 공유하지 않습니다.
+
+legacy SEG remediation dry-run의 report/image/record/export result는
+`YoloSegmentationHistoricalRemediationAuditContracts.cs`에서 찾습니다.
+legacy mask 판독, contour 제안, YOLO label diff와 Markdown 저장은
+`YoloSegmentationHistoricalRemediationAuditService.cs`가 소유합니다.
+승인된 실제 변경 단계의 plan/item/result는
+`YoloSegmentationTemplateContourMigrationContracts.cs`에서 찾고, 계획 생성,
+source hash 재검증, staging, backup, 적용 검증과 rollback은
+`YoloSegmentationTemplateContourMigrationService.cs`가 소유합니다.
+
+COCO와 Label Studio의 detection/segmentation export 결과 및 직렬화 DTO는
+각 포맷의 `*ExportContracts.cs`에서 찾습니다. dataset artifact 탐색, 좌표
+변환, invalid record 제외, 상대 경로 구성과 JSON 저장은 대응하는
+`*ExportService.cs`가 소유합니다. 서비스 API와 JSON property 이름은
+계약 파일 분리 전과 동일합니다.
+
+COCO와 Label Studio import 결과는 각각 `CocoImportContracts.cs`와
+`LabelStudioImportContracts.cs`에서 찾습니다. Pascal VOC detection의
+export/import 결과는 `PascalVocDetectionInterchangeContracts.cs`가 함께
+소유합니다. source 검증, 이미지 복사, class catalog 확장, 좌표 변환과 local
+artifact 저장은 대응하는 서비스가 소유합니다.
+
+CVAT detection/segmentation archive export 결과는
+`CvatArchiveExportContracts.cs`, detection/segmentation import 결과는
+`CvatImportContracts.cs`에서 찾습니다. XML/ZIP 구성과 해석, image copy,
+class catalog 확장, 좌표 변환, local artifact 저장은 대응하는 CVAT
+서비스가 소유합니다.
+
+외부 형식 capability 항목의 shape는
+`DatasetExportCapabilityContracts.cs`에서 찾습니다. 구현 여부, 검증
+스위치, 현재 단일 추천 대상과 목록 순서는
+`DatasetExportCapabilityService.cs`가 소유합니다.
 
 외부 native YOLO intake의 report, split summary, read-only source entry/packet,
 runtime dataset result는 `YoloExternalDatasetIntakeContracts.cs`에서 찾습니다.
@@ -236,6 +347,48 @@ dataset validation 오류와 통계는 `YoloDatasetValidationContracts.cs`에서
 검증과 통계 누적 정책은 `YoloDatasetValidator.cs`가 소유합니다. 이 계약은
 manifest, readiness, diagnostics, Dataset Health와 WPF presentation이 함께
 소비합니다.
+
+Dataset Health의 quality 상태, 종합 report, split/class summary는
+`YoloDatasetHealthContracts.cs`에서 찾습니다. 목적별 readiness와 품질 감사
+결과를 조합하고 issue를 정규화하는 정책은 `YoloDatasetHealthService.cs`가
+소유합니다. 이 계약은 Dataset Health WPF ViewModel과 관련 테스트가
+공유합니다.
+
+detection dataset 품질 report와 split summary는
+`YoloDatasetQualityAuditContracts.cs`에서 찾습니다. image/label artifact
+탐색, missing/empty/invalid 판정과 class 분포 집계는
+`YoloDatasetQualityAuditService.cs`가 소유합니다. Markdown export 결과는
+`YoloDatasetQualityAuditExportContracts.cs`, 문서 구성과 저장은 대응하는
+export 서비스가 소유합니다.
+
+anomaly classification dataset의 output root와 normal/abnormal/skipped count는
+`AnomalyClassificationDatasetExportContracts.cs`에서 찾습니다. 검토 상태
+조회, split 선택, 폴더 초기화, 이미지 복사와 중복 파일명 처리는
+`AnomalyClassificationDatasetExportService.cs`가 소유합니다.
+
+anomaly held-out evaluation의 sample, threshold options와 report는
+`AnomalyClassificationEvaluationContracts.cs`에서 찾습니다. summary JSON
+해석, confidence를 포함한 correct count, overall/per-class accuracy와
+fail-closed adoption 판정은 `AnomalyClassificationEvaluationService.cs`가
+소유합니다.
+
+Model Center의 adapter 항목은 `ModelAdapterCatalogContracts.cs`에서 찾고,
+실제 구현 export capability를 읽어 task/data/runtime/evidence/next action
+문구를 구성하는 정책은 `ModelAdapterCatalogService.cs`가 소유합니다. 외부
+평가 데이터 audit report는 `YoloExternalEvaluationDataAuditContracts.cs`,
+지원 이미지 탐색과 SHA-256 overlap 계산은 대응 서비스가 소유합니다.
+
+detection review 상태, quality review 상태와 이미지별 status DTO는
+`YoloImageReviewStatusContracts.cs`에서 찾습니다. 이미지 catalog 동기화,
+JSON 저장/복원, label 상태 반영, 후보·확정·스킵·품질 검수 전환과 다음
+미검토 이미지 선택은 `YoloImageReviewStatusService.cs`가 소유합니다. 이
+계약은 WPF queue/presenter, 품질 보고서와 학습 workflow가 함께 소비합니다.
+
+이미지별 label path/count/표시 상태는 `YoloImageLabelStatusContracts.cs`에서
+찾고, detection label 또는 segmentation artifact 탐색과 count 계산은
+`YoloImageLabelStatusService.cs`가 소유합니다. 품질 검토 Markdown export
+결과는 `YoloImageQualityReviewReportExportContracts.cs`, 상태 집계와 문서
+저장은 대응 서비스가 소유합니다.
 
 `1. Core`의 `Labeling/LabelingWorkflowService`, `Detection/DetectionResultApplicationService`, `Dataset/LabelingDatasetManifestService`, `ApplicationState/CData`, `ApplicationState/LabelingProjectSettings`는 UI와 YOLO/file system 사이의 application state를 묶습니다.
 

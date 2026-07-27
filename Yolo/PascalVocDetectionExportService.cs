@@ -212,25 +212,6 @@ namespace MvcVisionSystem.Yolo
         }
     }
 
-    public sealed class PascalVocDetectionExportResult
-    {
-        public string OutputDirectory { get; set; } = string.Empty;
-
-        public int ImageCount { get; set; }
-
-        public int XmlFileCount { get; set; }
-
-        public int ObjectCount { get; set; }
-
-        public int CategoryCount { get; set; }
-
-        public int SkippedAnnotationCount { get; set; }
-
-        public List<string> Splits { get; } = new List<string>();
-
-        public List<string> OutputPaths { get; } = new List<string>();
-    }
-
     internal sealed class PascalVocDetectionObject
     {
         public string ClassName { get; set; } = string.Empty;
