@@ -16,7 +16,7 @@ namespace LabelingApplication.Tests;
 
 using static TestSupport;
 
-internal static class MobileSamUsabilityMatrixTests
+internal static partial class MobileSamUsabilityMatrixTests
 {
     private const double MobileSamUsableIou = 0.50D;
     private const double MobileSamEditableIou = 0.25D;

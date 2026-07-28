@@ -7,6 +7,35 @@ namespace MvcVisionSystem
 {
     public partial class WpfLabelingShellWindow
     {
+        private void MainCanvasView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (activeImageBitmap == null
+                || activeImageSize.IsEmpty
+                || (!e.WidthChanged && !e.HeightChanged))
+            {
+                return;
+            }
+
+            int requestVersion = ++canvasLayoutAutoFitVersion;
+            Dispatcher.BeginInvoke(
+                System.Windows.Threading.DispatcherPriority.ContextIdle,
+                new System.Action(() =>
+                {
+                    if (requestVersion != canvasLayoutAutoFitVersion
+                        || activeImageBitmap == null
+                        || activeImageSize.IsEmpty
+                        || MainCanvasView == null
+                        || !MainCanvasView.IsVisible
+                        || MainCanvasView.ActualWidth <= 1D
+                        || MainCanvasView.ActualHeight <= 1D)
+                    {
+                        return;
+                    }
+
+                    MainCanvasViewModel.ImageViewer.ZoomToFit();
+                }));
+        }
+
         private void LeftWorkspaceSplitter_DragCompleted(object sender, DragCompletedEventArgs e)
         {
             ShellViewModel?.SetRightWorkflowExpandedPaneWidth(RightWorkflowColumn.ActualWidth);

@@ -1,5 +1,6 @@
 using MvcVisionSystem;
 using MvcVisionSystem._1._Core;
+using MvcVisionSystem._3._Communication.TCP;
 using MvcVisionSystem.Yolo;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -8,6 +9,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using OpenVisionLab.ImageCanvas.CanvasShapes;
 
 namespace LabelingApplication.Tests;
 
@@ -15,6 +17,139 @@ using static TestSupport;
 
 internal static class MobileSamBoxPromptTests
 {
+    internal static int RunSmartMaskCandidateCompareRestore(string[] args)
+    {
+        try
+        {
+            string artifactRoot = Path.GetFullPath(GetArgumentValue(
+                args,
+                "--artifact-root",
+                Path.Combine(FindRepositoryRoot(), "artifacts", "smart-mask-candidate-compare-restore")));
+            string runRoot = Path.Combine(artifactRoot, DateTime.Now.ToString("yyyyMMdd-HHmmss"));
+            Directory.CreateDirectory(runRoot);
+            string imagePath = Path.Combine(runRoot, "compare-source.png");
+            using (var source = new Bitmap(400, 300))
+            using (Graphics graphics = Graphics.FromImage(source))
+            {
+                graphics.Clear(Color.FromArgb(36, 42, 52));
+                using var brush = new SolidBrush(Color.FromArgb(210, 220, 225));
+                graphics.FillEllipse(brush, 60, 40, 200, 160);
+                source.Save(imagePath);
+            }
+
+            if (System.Windows.Application.Current == null)
+            {
+                _ = new System.Windows.Application
+                {
+                    ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown
+                };
+            }
+
+            CData previousData = CGlobal.Inst.Data;
+            var data = new CData();
+            data.ConfigureOutputRoot(runRoot);
+            data.LastSelectImageName = Path.GetFileNameWithoutExtension(imagePath);
+            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
+            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
+            data.ProjectSettings.YoloDataset.TestPercent = 0;
+            data.ClassNamedList.Add(new CClassItem { Text = "Defect", DrawColor = Color.DeepSkyBlue });
+            CGlobal.Inst.Data = data;
+
+            WpfLabelingShellWindow window = new WpfLabelingShellWindow();
+            Bitmap bitmap = new Bitmap(imagePath);
+            try
+            {
+                SetPrivateField(window, "activeImagePath", imagePath);
+                SetPrivateField(window, "activeImageSize", bitmap.Size);
+                SetPrivateField(window, "activeImageBitmap", bitmap);
+                SetPrivateField(window.MainCanvasViewModel, "_imageSize", bitmap.Size);
+
+                Rectangle promptBounds = new Rectangle(60, 40, 200, 160);
+                var initialCandidate = CreateVisualSmokeSmartMaskCandidate(promptBounds, inset: 0, index: 1);
+                var latestCandidate = CreateVisualSmokeSmartMaskCandidate(promptBounds, inset: 20, index: 2);
+                var session = GetPrivateField<WpfSmartMaskPromptSessionService>(window, "smartMaskPromptSession");
+                string recipeName = InvokePrivateResult<string>(window, "GetCurrentSmartMaskRecipeName");
+                session.Start(imagePath, recipeName, promptBounds, 0, "Defect");
+                AssertTrue(session.RecordCandidate(initialCandidate), "initial comparison candidate should be retained");
+                AssertTrue(session.RecordCandidate(latestCandidate), "latest comparison candidate should be retained");
+
+                InvokePrivateResult<object>(
+                    window,
+                    "ApplyDetectionCandidatesPreservingConfirmed",
+                    new[] { latestCandidate },
+                    true);
+                InvokePrivateResult<object>(
+                    window,
+                    "ExecuteSelectSmartMaskCandidateVersionCommand",
+                    WpfSmartMaskCandidateVersion.Initial);
+                PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
+
+                WpfCandidateReviewStateService candidateState =
+                    GetPrivateField<WpfCandidateReviewStateService>(window, "candidateReviewState");
+                AssertTrue(
+                    candidateState.PendingCount == 1
+                        && ReferenceEquals(candidateState.PendingCandidates[0], initialCandidate),
+                    "restoring the initial candidate should replace the one visible pending candidate");
+                string segmentDirectory = Path.Combine(runRoot, "data", "train", "segments");
+                AssertTrue(
+                    !Directory.Exists(segmentDirectory)
+                        || !Directory.EnumerateFiles(segmentDirectory, "*.json").Any(),
+                    "candidate comparison should not create canonical segment files before confirmation");
+
+                window.CandidateReviewViewModel.ConfirmSelectedCommand.Execute(null);
+                PumpWpfDispatcher(TimeSpan.FromMilliseconds(200));
+                AssertEqual(0, candidateState.PendingCount);
+                AssertEqual(1, candidateState.ConfirmedCount);
+                AssertTrue(
+                    ReferenceEquals(candidateState.ConfirmedCandidates[0], initialCandidate),
+                    "confirmation should adopt only the explicitly restored candidate");
+                AssertTrue(!session.HasCandidateComparison, "confirmation should clear session-only candidate history");
+
+                string segmentPath = Directory.EnumerateFiles(
+                    segmentDirectory,
+                    "*.json").Single();
+                JObject segment = JObject.Parse(File.ReadAllText(segmentPath));
+                JObject savedFirstPoint = (JObject)segment["Polygons"]?[0]?["Points"]?[0];
+                DetectionPolygonPoint expectedFirstPoint = initialCandidate.PolygonPoints[0];
+                AssertEqual((int)Math.Round(expectedFirstPoint.X), savedFirstPoint?.Value<int>("X") ?? int.MinValue);
+                AssertEqual((int)Math.Round(expectedFirstPoint.Y), savedFirstPoint?.Value<int>("Y") ?? int.MinValue);
+
+                string evidencePath = Path.Combine(runRoot, "candidate-compare-restore-evidence.json");
+                File.WriteAllText(
+                    evidencePath,
+                    new JObject
+                    {
+                        ["status"] = "Complete",
+                        ["scope"] = "Session-only Smart Mask initial/latest compare, restore, and selected canonical save",
+                        ["evidenceOrigin"] = "synthetic",
+                        ["fieldValidation"] = "Not evaluated",
+                        ["productionAccuracyClaimed"] = false,
+                        ["selectedVersion"] = WpfSmartMaskCandidateVersion.Initial.ToString(),
+                        ["confirmedCandidateIndex"] = candidateState.ConfirmedCandidates[0].Index,
+                        ["savedSegmentPath"] = segmentPath,
+                        ["savedFirstPoint"] = new JArray(
+                            savedFirstPoint?.Value<int>("X") ?? int.MinValue,
+                            savedFirstPoint?.Value<int>("Y") ?? int.MinValue),
+                        ["boundary"] = "Workflow and persistence safety evidence only; no model-accuracy claim."
+                    }.ToString(Formatting.Indented));
+                Console.WriteLine("SMART_MASK_COMPARE_RESTORE_EVIDENCE=" + evidencePath);
+                return 0;
+            }
+            finally
+            {
+                SetPrivateField(window, "activeImageBitmap", null);
+                window.Close();
+                bitmap.Dispose();
+                CGlobal.Inst.Data = previousData;
+            }
+        }
+        catch (Exception error)
+        {
+            Console.Error.WriteLine("SMART_MASK_COMPARE_RESTORE_FAILED=" + error);
+            return 1;
+        }
+    }
+
     internal static int RunRealMobileSamPointCorrection(string[] args)
     {
         try
@@ -373,6 +508,10 @@ internal static class MobileSamBoxPromptTests
         bool clearInvoked = false;
         bool cancelInvoked = false;
         bool nextInvoked = false;
+        bool showInitialInvoked = false;
+        bool showLatestInvoked = false;
+        int autoContourChangeCount = 0;
+        bool autoContourChangedValue = false;
         WpfSmartMaskPolygonDetail selectedDetail = WpfSmartMaskPolygonDetail.Balanced;
         viewModel.ConfigureSmartMaskCommands(
             () => invoked = true,
@@ -382,21 +521,70 @@ internal static class MobileSamBoxPromptTests
             () => clearInvoked = true,
             () => cancelInvoked = true,
             () => nextInvoked = true,
+            () => showInitialInvoked = true,
+            () => showLatestInvoked = true,
+            enabled =>
+            {
+                autoContourChangeCount++;
+                autoContourChangedValue = enabled;
+            },
             detail => selectedDetail = detail);
+        viewModel.SetSmartMaskState(isVisible: true, isEnabled: false, isBusy: false, "draw a box", hasSession: false);
+        AssertEqual(System.Windows.Visibility.Collapsed, viewModel.SmartMaskSessionActionVisibility);
+        AssertTrue(viewModel.IsSmartMaskAutoContourToggleEnabled, "automatic contour mode should be selectable before drawing a prompt box");
+        viewModel.ToggleSmartMaskAutoContourCommand.Execute(null);
+        AssertTrue(
+            viewModel.IsSmartMaskAutoContourEnabled
+                && autoContourChangeCount == 1
+                && autoContourChangedValue,
+            "automatic contour mode should cross the ViewModel command boundary and remain selected for repeated boxes");
+        viewModel.RestoreSmartMaskAutoContourMode(false);
+        AssertTrue(
+            !viewModel.IsSmartMaskAutoContourEnabled && autoContourChangeCount == 1,
+            "restoring a recipe option should not execute the automatic-contour action");
+        viewModel.RestoreSmartMaskAutoContourMode(true);
         viewModel.SetSmartMaskState(isVisible: true, isEnabled: true, isBusy: false, "candidate only", hasSession: true);
+        viewModel.SetSmartMaskSessionState(
+            isVisible: true,
+            isBusy: false,
+            positivePointCount: 0,
+            negativePointCount: 0,
+            WpfSmartMaskPointInputMode.Positive,
+            hasProducedCandidate: true,
+            canMoveToNextInstance: true);
+        AssertEqual(System.Windows.Visibility.Visible, viewModel.SmartMaskVisibility);
+        AssertEqual(System.Windows.Visibility.Visible, viewModel.SmartMaskSessionActionVisibility);
+        AssertEqual(System.Windows.Visibility.Visible, viewModel.SmartMaskSessionVisibility);
+        AssertTrue(viewModel.IsSmartMaskEnabled, "smart-mask command should be enabled only when its prompt/runtime gates pass");
+        AssertTrue(!viewModel.IsSmartMaskAutoContourToggleEnabled, "automatic contour mode should stay locked while one object session is active");
+        AssertEqual("후보 다시 생성", viewModel.SmartMaskActionText);
+        AssertEqual(System.Windows.Visibility.Collapsed, viewModel.SmartMaskCorrectionOptionsVisibility);
+        AssertEqual(System.Windows.Visibility.Collapsed, viewModel.SmartMaskCandidateComparisonVisibility);
+        AssertEqual("보정 옵션", viewModel.SmartMaskCorrectionOptionsText);
+        AssertTrue(
+            viewModel.SmartMaskPromptSummaryText.Contains("필요할 때만 보정", StringComparison.Ordinal),
+            "automatic Smart Mask candidates should lead with optional correction guidance");
+        viewModel.ToggleSmartMaskCorrectionOptionsCommand.Execute(null);
+        AssertEqual(System.Windows.Visibility.Visible, viewModel.SmartMaskCorrectionOptionsVisibility);
+        AssertEqual("보정 닫기", viewModel.SmartMaskCorrectionOptionsText);
         viewModel.SetSmartMaskSessionState(
             isVisible: true,
             isBusy: false,
             positivePointCount: 1,
             negativePointCount: 1,
             WpfSmartMaskPointInputMode.Positive,
-            canMoveToNextInstance: true);
-        AssertEqual(System.Windows.Visibility.Visible, viewModel.SmartMaskVisibility);
-        AssertEqual(System.Windows.Visibility.Visible, viewModel.SmartMaskSessionVisibility);
-        AssertTrue(viewModel.IsSmartMaskEnabled, "smart-mask command should be enabled only when its prompt/runtime gates pass");
-        AssertEqual("후보 다시 생성", viewModel.SmartMaskActionText);
+            hasProducedCandidate: true,
+            canMoveToNextInstance: true,
+            hasCandidateComparison: true,
+            selectedCandidateVersion: WpfSmartMaskCandidateVersion.Latest);
+        AssertTrue(
+            viewModel.SmartMaskPromptSummaryText.Contains("한 점씩", StringComparison.Ordinal),
+            "Smart Mask correction guidance should encourage incremental point-by-point comparison");
         AssertTrue(viewModel.IsPositiveSmartMaskPointMode && !viewModel.IsNegativeSmartMaskPointMode, "prompt mode should be explicit in the ViewModel");
         AssertTrue(viewModel.IsSmartMaskPointUndoEnabled && viewModel.IsSmartMaskNextInstanceEnabled, "point undo and next-instance enablement should be deterministic");
+        AssertEqual(System.Windows.Visibility.Visible, viewModel.SmartMaskCandidateComparisonVisibility);
+        AssertTrue(viewModel.IsShowInitialSmartMaskCandidateEnabled && !viewModel.IsShowLatestSmartMaskCandidateEnabled, "latest candidate selection should expose only the previous candidate action");
+        AssertTrue(viewModel.SmartMaskCandidateComparisonText.Contains("이 후보만 저장", StringComparison.Ordinal), "candidate comparison should disclose explicit-save ownership");
         viewModel.CreateSmartMaskCommand.Execute(null);
         viewModel.AddPositiveSmartMaskPointCommand.Execute(null);
         viewModel.AddNegativeSmartMaskPointCommand.Execute(null);
@@ -408,16 +596,43 @@ internal static class MobileSamBoxPromptTests
             positivePointCount: 1,
             negativePointCount: 1,
             WpfSmartMaskPointInputMode.Positive,
+            hasProducedCandidate: true,
             canMoveToNextInstance: false);
+        AssertTrue(
+            viewModel.SmartMaskCorrectionOptionsVisibility == System.Windows.Visibility.Visible,
+            "rerunning the same Smart Mask session should preserve an explicitly expanded correction panel");
         AssertTrue(viewModel.IsSmartMaskCancelEnabled, "running Smart Mask inference should expose deterministic cancellation");
         viewModel.CancelSmartMaskGenerationCommand.Execute(null);
         viewModel.NextSmartMaskInstanceCommand.Execute(null);
+        viewModel.ShowInitialSmartMaskCandidateCommand.Execute(null);
+        viewModel.ShowLatestSmartMaskCandidateCommand.Execute(null);
         viewModel.SelectedSmartMaskDetail = viewModel.SmartMaskDetails.Single(item => item.Detail == WpfSmartMaskPolygonDetail.Detailed);
         AssertTrue(invoked, "smart-mask command should cross the ViewModel command boundary");
-        AssertTrue(positiveInvoked && negativeInvoked && undoInvoked && clearInvoked && cancelInvoked && nextInvoked, "all Smart Mask session actions should cross the ViewModel command boundary");
+        AssertTrue(
+            positiveInvoked
+                && negativeInvoked
+                && undoInvoked
+                && clearInvoked
+                && cancelInvoked
+                && nextInvoked
+                && showInitialInvoked
+                && showLatestInvoked
+                && autoContourChangeCount == 1,
+            "all Smart Mask session actions should cross the ViewModel command boundary");
         AssertEqual(WpfSmartMaskPolygonDetail.Detailed, selectedDetail);
         viewModel.SetSmartMaskState(isVisible: true, isEnabled: true, isBusy: true, "running");
         AssertTrue(!viewModel.IsSmartMaskEnabled, "smart-mask command should disable while inference is running");
+        viewModel.SetSmartMaskSessionState(
+            isVisible: false,
+            isBusy: false,
+            positivePointCount: 0,
+            negativePointCount: 0,
+            WpfSmartMaskPointInputMode.None,
+            hasProducedCandidate: false,
+            canMoveToNextInstance: false);
+        AssertTrue(
+            viewModel.SmartMaskCorrectionOptionsVisibility == System.Windows.Visibility.Collapsed,
+            "ending a Smart Mask session should restore auto-first collapsed correction options");
 
         var session = new WpfSmartMaskPromptSessionService();
         WpfSmartMaskPromptSnapshot initial = session.Start(
@@ -444,6 +659,36 @@ internal static class MobileSamBoxPromptTests
         AssertEqual(256, session.MaximumPolygonPoints);
         AssertTrue(session.ClearPoints(), "clear should remove all correction points");
         AssertEqual(0, session.Points.Count);
+        var initialCandidate = new YoloWorkerSmokeCandidate { Index = 1, CandidateType = "smart-mask" };
+        var latestCandidate = new YoloWorkerSmokeCandidate { Index = 2, CandidateType = "smart-mask" };
+        AssertTrue(session.RecordCandidate(initialCandidate), "first Smart Mask candidate should enter session-only history");
+        AssertTrue(!session.HasCandidateComparison, "one Smart Mask candidate should not expose comparison");
+        AssertTrue(session.RecordCandidate(latestCandidate), "latest Smart Mask candidate should enter session-only history");
+        AssertTrue(session.HasCandidateComparison, "a rerun should expose initial/latest comparison");
+        AssertEqual(WpfSmartMaskCandidateVersion.Latest, session.SelectedCandidateVersion);
+        AssertTrue(
+            session.TrySelectCandidate(WpfSmartMaskCandidateVersion.Initial, out YoloWorkerSmokeCandidate restoredCandidate)
+                && ReferenceEquals(initialCandidate, restoredCandidate),
+            "initial Smart Mask candidate should be explicitly restorable");
+        AssertTrue(session.IsSelectedCandidate(initialCandidate), "restored initial candidate should become the selected pending version");
+        var candidateState = new WpfCandidateReviewStateService();
+        candidateState.LoadPendingCandidates(new[] { restoredCandidate }, clearConfirmed: false);
+        WpfCandidateConfirmationPlan selectedPlan = candidateState.BuildConfirmationPlan(
+            new[] { restoredCandidate },
+            _ => true,
+            _ => false);
+        candidateState.ApplyConfirmation(selectedPlan.ConfirmableCandidates);
+        AssertTrue(
+            candidateState.ConfirmedCount == 1
+                && ReferenceEquals(candidateState.ConfirmedCandidates[0], initialCandidate)
+                && !candidateState.ConfirmedCandidates.Contains(latestCandidate),
+            "Candidate Review confirmation should persist only the explicitly restored Smart Mask version");
+        AssertTrue(session.MatchesContext("fixture.png", "recipe-a"), "session candidate history should match its image and recipe context");
+        session.MarkCandidateResolved();
+        AssertTrue(!session.HasCandidateComparison, "confirm/skip resolution should clear session candidate comparison");
+        AssertTrue(
+            !session.TrySelectCandidate(WpfSmartMaskCandidateVersion.Latest, out _),
+            "resolved Smart Mask candidate history should not be restorable");
         AssertTrue(!session.Matches(session.Capture(), "other.png", "recipe-a"), "image changes should fail the stale-result guard");
         AssertTrue(!session.Matches(session.Capture(), "fixture.png", "recipe-b"), "recipe changes should fail the stale-result guard");
 
@@ -453,10 +698,78 @@ internal static class MobileSamBoxPromptTests
         AssertTrue(shellSource.Contains("프롬프트 박스가 변경되어 후보를 적용하지 않았습니다", StringComparison.Ordinal), "smart-mask result should fail closed when its prompt changes");
         AssertTrue(shellSource.Contains("smartMaskPromptSession.Matches", StringComparison.Ordinal), "smart-mask result should reject stale image, recipe, or prompt generations");
         AssertTrue(shellSource.Contains("ApplyDetectionCandidatesPreservingConfirmed(new[] { result.Candidate }", StringComparison.Ordinal), "rerun should replace the one pending candidate instead of accumulating candidates");
+        AssertTrue(shellSource.Contains("ExecuteSelectSmartMaskCandidateVersionCommand", StringComparison.Ordinal), "Smart Mask comparison commands should switch the one visible pending candidate");
+        AssertTrue(shellSource.Contains("MarkCandidateResolved", StringComparison.Ordinal), "confirm/skip should close Smart Mask candidate comparison history");
+        string canvasXaml = File.ReadAllText(Path.Combine(
+            root,
+            "0. UI",
+            "9) WPF",
+            "Views",
+            "WpfCanvasPanel.xaml"));
+        AssertTrue(
+            canvasXaml.Contains("CanvasSmartMaskShowInitialCandidateButton", StringComparison.Ordinal)
+                && canvasXaml.Contains("CanvasSmartMaskShowLatestCandidateButton", StringComparison.Ordinal),
+            "Smart Mask comparison should expose contextual previous/current candidate controls");
+        AssertTrue(
+            canvasXaml.Contains("CanvasSmartMaskLabelingOptions", StringComparison.Ordinal)
+                && canvasXaml.Contains("CanvasSmartMaskAutoContourToggle", StringComparison.Ordinal)
+                && canvasXaml.Contains("SmartMaskSessionActionVisibility", StringComparison.Ordinal),
+            "segmentation labeling options should expose one persistent automatic-contour mode and reserve the action button for active correction");
+        AssertTrue(
+            shellSource.Contains("TryStartAutoSmartMaskForNewRoi(e.RoiRect)", StringComparison.Ordinal)
+                && shellSource.Contains("ContinueAutoSmartMaskAfterResolvedCandidate", StringComparison.Ordinal),
+            "a new rectangle should start automatic contour inference and resolved candidates should return to the next-box loop");
         AssertTrue(shellSource.Contains("MainCanvasViewModel.IsTeachingMode =", StringComparison.Ordinal)
             && shellSource.Contains("activeAnnotationTool == WpfAnnotationTool.Rectangle", StringComparison.Ordinal),
             "ending a Smart Mask session should restore box teaching for the next instance");
+        TestSmartMaskAutoContourRecipePersistence();
         MobileSamUsabilityMatrixTests.TestMobileSamUsabilityMetric();
+    }
+
+    private static void TestSmartMaskAutoContourRecipePersistence()
+    {
+        string recipeName = "codex_smart_mask_auto_contour_" + Guid.NewGuid().ToString("N");
+        string recipeDirectory = Path.Combine(AppContext.BaseDirectory, "RECIPE", recipeName);
+        string outputRoot = Path.Combine(
+            Path.GetTempPath(),
+            "OpenVisionLab.LabelingStudio.Tests",
+            recipeName);
+        try
+        {
+            var data = new CData();
+            data.ConfigureOutputRoot(outputRoot);
+            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
+            data.ProjectSettings.SmartMaskAutoContourEnabled = true;
+            data.SaveConfig(recipeName, refreshDatasetVersion: false);
+
+            string configPath = Path.Combine(recipeDirectory, "VISION.xml");
+            AssertTrue(File.Exists(configPath), "automatic-contour recipe config should be saved");
+            AssertTrue(
+                File.ReadAllText(configPath).Contains(
+                    "<SmartMaskAutoContourEnabled>true</SmartMaskAutoContourEnabled>",
+                    StringComparison.OrdinalIgnoreCase),
+                "automatic-contour recipe option should be serialized explicitly");
+
+            CData loaded = new CData().LoadConfig(recipeName);
+            AssertTrue(
+                loaded.ProjectSettings.SmartMaskAutoContourEnabled,
+                "automatic-contour recipe option should survive save and reload");
+            AssertTrue(
+                !new LabelingProjectSettings().SmartMaskAutoContourEnabled,
+                "unconfigured recipes should retain the safe regular-box default");
+        }
+        finally
+        {
+            if (Directory.Exists(recipeDirectory))
+            {
+                Directory.Delete(recipeDirectory, recursive: true);
+            }
+
+            if (Directory.Exists(outputRoot))
+            {
+                Directory.Delete(outputRoot, recursive: true);
+            }
+        }
     }
 
     internal static void ApplyVisualSmokeSmartMaskCandidate(
@@ -488,6 +801,84 @@ internal static class MobileSamBoxPromptTests
         }
 
         throw new InvalidOperationException("smart-mask visual smoke did not produce a candidate within 50 seconds");
+    }
+
+    internal static void ApplyVisualSmokeSmartMaskCandidateComparison(
+        WpfLabelingShellWindow window,
+        Size imageSize,
+        string promptBoxText)
+    {
+        ApplyVisualSmokeSmartMaskPrompt(window, imageSize, promptBoxText);
+        List<Rectangle> prompts = GetPrivateField<List<Rectangle>>(window, "manualRois");
+        int promptIndex = prompts.Count - 1;
+        Rectangle promptBounds = prompts[promptIndex];
+        string imagePath = GetPrivateField<string>(window, "activeImagePath");
+        string recipeName = InvokePrivateResult<string>(window, "GetCurrentSmartMaskRecipeName");
+        var session = GetPrivateField<WpfSmartMaskPromptSessionService>(window, "smartMaskPromptSession");
+        session.Start(imagePath, recipeName, promptBounds, 0, "Defect");
+
+        var initialCandidate = CreateVisualSmokeSmartMaskCandidate(promptBounds, inset: 0, index: 1);
+        var latestCandidate = CreateVisualSmokeSmartMaskCandidate(promptBounds, inset: 8, index: 2);
+        AssertTrue(session.RecordCandidate(initialCandidate), "visual comparison should retain its initial candidate");
+        AssertTrue(session.RecordCandidate(latestCandidate), "visual comparison should retain its latest candidate");
+
+        prompts.RemoveAt(promptIndex);
+        RemoveVisualSmokePromptMetadata(GetPrivateField<List<string>>(window, "manualRoiClassNames"), promptIndex);
+        RemoveVisualSmokePromptMetadata(GetPrivateField<List<CanvasRoiShapeKind>>(window, "manualRoiShapeKinds"), promptIndex);
+        RemoveVisualSmokePromptMetadata(GetPrivateField<List<string>>(window, "manualRoiOverlayIds"), promptIndex);
+
+        InvokePrivateResult<object>(
+            window,
+            "ApplyDetectionCandidatesPreservingConfirmed",
+            new[] { latestCandidate },
+            true);
+        InvokePrivateResult<object>(
+            window,
+            "RefreshSmartMaskCommandState",
+            "보정 전후 후보를 비교하고 확정할 하나를 선택하세요.");
+        PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
+    }
+
+    private static void RemoveVisualSmokePromptMetadata<T>(IList<T> items, int index)
+    {
+        if (items != null && index >= 0 && index < items.Count)
+        {
+            items.RemoveAt(index);
+        }
+    }
+
+    private static YoloWorkerSmokeCandidate CreateVisualSmokeSmartMaskCandidate(
+        Rectangle promptBounds,
+        int inset,
+        int index)
+    {
+        int left = promptBounds.Left + inset;
+        int top = promptBounds.Top + inset;
+        int right = Math.Max(left + 3, promptBounds.Right - inset);
+        int bottom = Math.Max(top + 3, promptBounds.Bottom - inset);
+        return new YoloWorkerSmokeCandidate
+        {
+            Index = index,
+            ClassId = 0,
+            ClassName = "Defect",
+            Confidence = 1D,
+            X = left,
+            Y = top,
+            Width = right - left,
+            Height = bottom - top,
+            CandidateType = "smart-mask",
+            PredictionType = "segmentation-assist",
+            SegmentationType = "polygon",
+            PolygonPoints = new[]
+            {
+                new DetectionPolygonPoint { X = left, Y = top + ((bottom - top) * 0.2F) },
+                new DetectionPolygonPoint { X = left + ((right - left) * 0.18F), Y = top },
+                new DetectionPolygonPoint { X = right - ((right - left) * 0.12F), Y = top + ((bottom - top) * 0.08F) },
+                new DetectionPolygonPoint { X = right, Y = top + ((bottom - top) * 0.48F) },
+                new DetectionPolygonPoint { X = right - ((right - left) * 0.16F), Y = bottom },
+                new DetectionPolygonPoint { X = left + ((right - left) * 0.22F), Y = bottom - ((bottom - top) * 0.06F) }
+            }
+        };
     }
 
     private static void ApplyVisualSmokeSmartMaskPoints(

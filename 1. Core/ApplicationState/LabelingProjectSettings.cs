@@ -13,6 +13,8 @@ namespace MvcVisionSystem
     {
         public LabelingDatasetPurpose DatasetPurpose { get; set; } = LabelingDatasetPurpose.ObjectDetection;
 
+        public bool SmartMaskAutoContourEnabled { get; set; }
+
         public YoloDatasetSettings YoloDataset { get; set; } = new YoloDatasetSettings();
 
         // Native YOLO data.yaml inputs stay separate from the recipe-owned export root.

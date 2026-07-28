@@ -99,6 +99,9 @@ internal static partial class Program
                 GetArgumentValue(args, "--ffmpeg", "ffmpeg"));
             string ffprobePath = ResolveOperatorVideoExecutable(
                 GetArgumentValue(args, "--ffprobe", "ffprobe"));
+            bool verifyContextualCorrection = HasArgument(args, "--verify-contextual-correction");
+            bool verifyCandidateRestore = HasArgument(args, "--verify-candidate-restore");
+            bool verifyAutoContourMode = HasArgument(args, "--verify-auto-contour-mode");
 
             AssertTrue(File.Exists(exePath), "operator video EXE was not found; build the Debug app first");
             OperatorVideoDefectSource defect = ResolveOperatorVideoDefectSource(repositoryRoot);
@@ -119,7 +122,10 @@ internal static partial class Program
                 recipeDirectory,
                 dataDirectory,
                 defect,
-                paths);
+                paths,
+                verifyContextualCorrection || verifyCandidateRestore,
+                verifyCandidateRestore,
+                verifyAutoContourMode);
             FinalizeOperatorVideoEvidence(ffmpegPath, ffprobePath, paths, result);
 
             Console.WriteLine($"EXE_OPERATOR_VIDEO_MP4={paths.RawVideoPath}");
@@ -131,7 +137,9 @@ internal static partial class Program
                 + $"cursorMoves={result.CursorMoveCount} maskPixels={result.SavedArtifact.MaskPixels} "
                 + $"polygons={result.SavedArtifact.SegmentPolygons} points={result.SavedArtifact.SegmentPoints} "
                 + $"iou={result.MaskQuality.IntersectionOverUnion:F4} "
-                + $"precision={result.MaskQuality.Precision:F4} recall={result.MaskQuality.Recall:F4}");
+                + $"precision={result.MaskQuality.Precision:F4} recall={result.MaskQuality.Recall:F4} "
+                + $"autoContour={result.AutoContourVerified} "
+                + $"candidateRestore={result.CandidateRestoreVerified} reopen={result.ReopenVerified}");
             return 0;
         }
         catch (Exception error)
@@ -148,7 +156,10 @@ internal static partial class Program
         string recipeDirectory,
         string dataDirectory,
         OperatorVideoDefectSource defect,
-        OperatorVideoPaths paths)
+        OperatorVideoPaths paths,
+        bool verifyContextualCorrection,
+        bool verifyCandidateRestore,
+        bool verifyAutoContourMode)
     {
         Process appProcess = null;
         OperatorVideoRecorder recorder = null;
@@ -201,12 +212,6 @@ internal static partial class Program
                 "operator video active image did not become the intended defect");
 
             root = RefreshAutomationRoot(appProcess);
-            AssertTrue(
-                TryInvokeAutomationButtonByAutomationId(root, "FitCanvasButton")
-                    || TryInvokeAutomationButton(root, "\uB9DE\uCDA4"),
-                "operator video could not fit the defect image to the visible canvas");
-            Thread.Sleep(500);
-            root = RefreshAutomationRoot(appProcess);
             System.Windows.Automation.AutomationElement canvas =
                 FindOperatorVideoVisibleCanvas(root);
             AssertTrue(canvas != null, "operator video canvas was not found");
@@ -228,6 +233,14 @@ internal static partial class Program
                 root,
                 canvasRect);
             AssertTrue(imageRegion.Width > 120 && imageRegion.Height > 300, "operator video fitted defect image bounds were unusable");
+            AssertTrue(
+                Math.Abs(
+                    (imageRegion.Left + imageRegion.Width / 2D)
+                    - (canvasRect.Left + canvasRect.Width / 2D)) <= 18D
+                    && Math.Abs(
+                        (imageRegion.Top + imageRegion.Height / 2D)
+                        - (canvasRect.Top + canvasRect.Height / 2D)) <= 18D,
+                "operator video loaded image was not automatically fitted to the initial canvas");
 
             CaptureAutomationRoot(root, Path.Combine(paths.ScreenshotDirectory, "00_ready_defect.png"));
 
@@ -255,20 +268,55 @@ internal static partial class Program
                 + $"image={FormatOperatorVideoRect(imageRegion)}");
             Thread.Sleep(900);
 
-            System.Windows.Automation.AutomationElement boxTool = null;
-            AssertTrue(
-                WaitUntil(
-                    () =>
-                    {
-                        boxTool = FindAnnotationToolItem(
-                            RefreshAutomationRoot(appProcess, bringToFront: false),
-                            "\uBC15\uC2A4");
-                        return boxTool != null && boxTool.Current.IsEnabled;
-                    },
-                    TimeSpan.FromSeconds(4)),
-                "operator video box tool was unavailable");
-            cursorMoveCount += HumanClickAutomationElement(boxTool);
-            eventLog.Write("box-tool-selected", "Smart Mask start-box tool selected");
+            if (verifyAutoContourMode)
+            {
+                System.Windows.Automation.AutomationElement autoContourToggle = null;
+                AssertTrue(
+                    WaitUntil(
+                        () =>
+                        {
+                            autoContourToggle = FindAutomationElementByAutomationId(
+                                RefreshAutomationRoot(appProcess, bringToFront: false),
+                                "CanvasSmartMaskAutoContourToggle");
+                            return autoContourToggle != null && autoContourToggle.Current.IsEnabled;
+                        },
+                        TimeSpan.FromSeconds(4)),
+                    "operator video automatic contour labeling option was unavailable");
+                cursorMoveCount += HumanClickAutomationElement(autoContourToggle);
+                AssertTrue(
+                    WaitUntil(
+                        () =>
+                        {
+                            System.Windows.Automation.AutomationElement latest =
+                                RefreshAutomationRoot(appProcess, bringToFront: false);
+                            System.Windows.Automation.AutomationElement toggle =
+                                FindAutomationElementByAutomationId(latest, "CanvasSmartMaskAutoContourToggle");
+                            return toggle != null
+                                && toggle.Current.Name.Contains("켜짐", StringComparison.Ordinal);
+                        },
+                        TimeSpan.FromSeconds(3)),
+                    "operator video automatic contour mode did not remain selected");
+                eventLog.Write(
+                    "auto-contour-mode-enabled",
+                    "segmentation labeling option selected once before repeated box drawing");
+            }
+            else
+            {
+                System.Windows.Automation.AutomationElement boxTool = null;
+                AssertTrue(
+                    WaitUntil(
+                        () =>
+                        {
+                            boxTool = FindAnnotationToolItem(
+                                RefreshAutomationRoot(appProcess, bringToFront: false),
+                                "\uBC15\uC2A4");
+                            return boxTool != null && boxTool.Current.IsEnabled;
+                        },
+                        TimeSpan.FromSeconds(4)),
+                    "operator video box tool was unavailable");
+                cursorMoveCount += HumanClickAutomationElement(boxTool);
+                eventLog.Write("box-tool-selected", "Smart Mask start-box tool selected");
+            }
             AssertTrue(
                 WaitUntil(
                     () => string.Equals(
@@ -280,18 +328,42 @@ internal static partial class Program
                 "operator video box tool selection did not become active");
 
             root = RefreshAutomationRoot(appProcess);
-            System.Windows.Automation.AutomationElement fit =
-                FindAutomationElementByAutomationId(root, "FitCanvasButton")
-                    ?? FindEnabledAutomationButton(root, "\uB9DE\uCDA4");
-            AssertTrue(fit != null && fit.Current.IsEnabled, "operator video visible fit action was unavailable");
-            cursorMoveCount += HumanClickAutomationElement(fit);
-            eventLog.Write("image-fit-clicked", "visible fit action clicked after box-tool layout change");
-            Thread.Sleep(550);
+            AssertTrue(
+                WaitUntil(
+                    () =>
+                    {
+                        System.Windows.Automation.AutomationElement latest =
+                            RefreshAutomationRoot(appProcess, bringToFront: false);
+                        System.Windows.Automation.AutomationElement latestCanvas =
+                            FindOperatorVideoVisibleCanvas(latest);
+                        if (latestCanvas == null)
+                        {
+                            return false;
+                        }
+
+                        System.Windows.Rect latestCanvasRect =
+                            BuildOperatorVideoCanvasViewport(latest, latestCanvas);
+                        System.Windows.Rect latestImageRegion =
+                            FindOperatorVideoDisplayedImageBounds(latest, latestCanvasRect);
+                        return latestImageRegion.Width > 120D
+                            && latestImageRegion.Height > 300D
+                            && Math.Abs(
+                                (latestImageRegion.Left + latestImageRegion.Width / 2D)
+                                - (latestCanvasRect.Left + latestCanvasRect.Width / 2D)) <= 6D
+                            && Math.Abs(
+                                (latestImageRegion.Top + latestImageRegion.Height / 2D)
+                                - (latestCanvasRect.Top + latestCanvasRect.Height / 2D)) <= 18D;
+                    },
+                    TimeSpan.FromSeconds(5)),
+                "operator video viewer did not automatically fit after the workflow layout changed");
             root = RefreshAutomationRoot(appProcess);
             canvas = FindOperatorVideoVisibleCanvas(root);
-            AssertTrue(canvas != null, "operator video visible canvas disappeared after fit");
+            AssertTrue(canvas != null, "operator video visible canvas disappeared after automatic layout fit");
             canvasRect = BuildOperatorVideoCanvasViewport(root, canvas);
             imageRegion = FindOperatorVideoDisplayedImageBounds(root, canvasRect);
+            eventLog.Write(
+                "image-auto-fit-observed",
+                "viewer remained centered after the workflow layout changed; no Fit action was clicked");
             OperatorVideoPromptGeometry prompt = BuildOperatorVideoPromptGeometry(
                 imageRegion,
                 defect.ImageSize,
@@ -305,20 +377,199 @@ internal static partial class Program
             root = RefreshAutomationRoot(appProcess);
             CaptureAutomationRoot(root, Path.Combine(paths.ScreenshotDirectory, "01_defect_box.png"));
 
-            System.Windows.Automation.AutomationElement create =
-                FindAutomationElementByAutomationId(root, "CanvasCreateSmartMaskButton");
-            AssertTrue(create != null && create.Current.IsEnabled, "operator video Smart Mask action was unavailable");
-            cursorMoveCount += HumanClickAutomationElement(create);
-            eventLog.Write("candidate-requested", "real Smart Mask generation requested from the rough box");
+            System.Windows.Automation.AutomationElement create = null;
+            if (verifyAutoContourMode)
+            {
+                eventLog.Write(
+                    "candidate-auto-requested",
+                    "rough box completion started real Smart Mask generation without another action click");
+            }
+            else
+            {
+                create = FindAutomationElementByAutomationId(root, "CanvasCreateSmartMaskButton");
+                AssertTrue(create != null && create.Current.IsEnabled, "operator video Smart Mask action was unavailable");
+                cursorMoveCount += HumanClickAutomationElement(create);
+                eventLog.Write("candidate-requested", "real Smart Mask generation requested from the rough box");
+            }
             AssertTrue(
                 WaitForOperatorVideoSmartMaskReady(appProcess, TimeSpan.FromSeconds(55)),
                 "operator video initial Smart Mask candidate did not become reviewable");
             root = RestoreOperatorVideoWindow(appProcess);
             CaptureAutomationRoot(root, Path.Combine(paths.ScreenshotDirectory, "02_initial_candidate.png"));
             eventLog.Write("candidate-ready", "automatic filled-mask candidate and boundary visible");
+            if (verifyContextualCorrection)
+            {
+                System.Windows.Automation.AutomationElement correctionOptions =
+                    FindAutomationElementByAutomationId(root, "CanvasSmartMaskCorrectionOptionsButton");
+                System.Windows.Automation.AutomationElement positivePoint =
+                    FindAutomationElementByAutomationId(root, "CanvasSmartMaskPositivePointButton");
+                AssertTrue(
+                    correctionOptions != null && correctionOptions.Current.IsEnabled,
+                    "operator video contextual Smart Mask correction action was unavailable");
+                AssertTrue(
+                    positivePoint == null || positivePoint.Current.IsOffscreen,
+                    "operator video Smart Mask point correction should be hidden by default");
+                cursorMoveCount += HumanClickAutomationElement(correctionOptions);
+                AssertTrue(
+                    WaitUntil(
+                        () =>
+                        {
+                            System.Windows.Automation.AutomationElement latest =
+                                RefreshAutomationRoot(appProcess, bringToFront: false);
+                            System.Windows.Automation.AutomationElement point =
+                                FindAutomationElementByAutomationId(latest, "CanvasSmartMaskPositivePointButton");
+                            return point != null && !point.Current.IsOffscreen;
+                        },
+                        TimeSpan.FromSeconds(3)),
+                    "operator video Smart Mask correction controls did not expand");
+                root = RestoreOperatorVideoWindow(appProcess);
+                CaptureAutomationRoot(
+                    root,
+                    Path.Combine(paths.ScreenshotDirectory, "02b_contextual_correction_expanded.png"));
+                eventLog.Write(
+                    "contextual-correction-verified",
+                    "point/detail controls hidden by default and expanded only on request");
+                if (verifyCandidateRestore)
+                {
+                    root = RestoreOperatorVideoWindow(appProcess);
+                    System.Windows.Automation.AutomationElement correctionPositivePoint =
+                        FindAutomationElementByAutomationId(root, "CanvasSmartMaskPositivePointButton");
+                    AssertTrue(
+                        correctionPositivePoint != null
+                            && correctionPositivePoint.Current.IsEnabled
+                            && !correctionPositivePoint.Current.IsOffscreen,
+                        "operator video positive Smart Mask point action was unavailable");
+                    cursorMoveCount += HumanClickAutomationElement(correctionPositivePoint);
+                    cursorMoveCount += HumanClickPoint(prompt.PositivePoint);
+
+                    root = RestoreOperatorVideoWindow(appProcess);
+                    System.Windows.Automation.AutomationElement negativePoint =
+                        FindAutomationElementByAutomationId(root, "CanvasSmartMaskNegativePointButton");
+                    AssertTrue(
+                        negativePoint != null
+                            && negativePoint.Current.IsEnabled
+                            && !negativePoint.Current.IsOffscreen,
+                        "operator video negative Smart Mask point action was unavailable");
+                    cursorMoveCount += HumanClickAutomationElement(negativePoint);
+                    cursorMoveCount += HumanClickPoint(prompt.NegativePoint);
+
+                    root = RestoreOperatorVideoWindow(appProcess);
+                    AssertTrue(
+                        ContainsAutomationText(root, "+ 포함 1")
+                            && ContainsAutomationText(root, "− 제외 1"),
+                        "operator video correction prompt did not retain one positive and one negative point");
+                    create = FindAutomationElementByAutomationId(root, "CanvasCreateSmartMaskButton");
+                    AssertTrue(
+                        create != null && create.Current.IsEnabled,
+                        "operator video corrected Smart Mask rerun action was unavailable");
+                    cursorMoveCount += HumanClickAutomationElement(create);
+                    eventLog.Write(
+                        "corrected-candidate-requested",
+                        "one positive and one negative point submitted in one real MobileSAM rerun");
+
+                    bool observedRerunBusy = false;
+                    AssertTrue(
+                        WaitUntil(
+                            () =>
+                            {
+                                System.Windows.Automation.AutomationElement latest =
+                                    RefreshAutomationRoot(appProcess, bringToFront: false);
+                                System.Windows.Automation.AutomationElement rerun =
+                                    FindAutomationElementByAutomationId(latest, "CanvasCreateSmartMaskButton");
+                                if (rerun != null && !rerun.Current.IsEnabled)
+                                {
+                                    observedRerunBusy = true;
+                                }
+
+                                System.Windows.Automation.AutomationElement previous =
+                                    FindAutomationElementByAutomationId(
+                                        latest,
+                                        "CanvasSmartMaskShowInitialCandidateButton");
+                                return observedRerunBusy
+                                    && rerun != null
+                                    && rerun.Current.IsEnabled
+                                    && previous != null
+                                    && previous.Current.IsEnabled;
+                            },
+                            TimeSpan.FromSeconds(55)),
+                        "operator video corrected Smart Mask candidate did not become comparable");
+
+                    root = RestoreOperatorVideoWindow(appProcess);
+                    CaptureAutomationRoot(
+                        root,
+                        Path.Combine(paths.ScreenshotDirectory, "02c_corrected_candidate.png"));
+                    eventLog.Write(
+                        "corrected-candidate-ready",
+                        "latest corrected candidate visible with previous-candidate recovery enabled");
+
+                    System.Windows.Automation.AutomationElement previousCandidate =
+                        FindAutomationElementByAutomationId(
+                            root,
+                            "CanvasSmartMaskShowInitialCandidateButton");
+                    AssertTrue(
+                        previousCandidate != null
+                            && previousCandidate.Current.IsEnabled
+                            && !previousCandidate.Current.IsOffscreen,
+                        "operator video previous Smart Mask candidate action was unavailable");
+                    cursorMoveCount += HumanClickAutomationElement(previousCandidate);
+                    AssertTrue(
+                        WaitUntil(
+                            () =>
+                            {
+                                System.Windows.Automation.AutomationElement latest =
+                                    RefreshAutomationRoot(appProcess, bringToFront: false);
+                                System.Windows.Automation.AutomationElement previous =
+                                    FindAutomationElementByAutomationId(
+                                        latest,
+                                        "CanvasSmartMaskShowInitialCandidateButton");
+                                System.Windows.Automation.AutomationElement current =
+                                    FindAutomationElementByAutomationId(
+                                        latest,
+                                        "CanvasSmartMaskShowLatestCandidateButton");
+                                return previous != null
+                                    && !previous.Current.IsEnabled
+                                    && current != null
+                                    && current.Current.IsEnabled;
+                            },
+                            TimeSpan.FromSeconds(5)),
+                        "operator video previous Smart Mask candidate was not restored as the selected version");
+                    root = RestoreOperatorVideoWindow(appProcess);
+                    CaptureAutomationRoot(
+                        root,
+                        Path.Combine(paths.ScreenshotDirectory, "02d_previous_candidate_restored.png"));
+                    eventLog.Write(
+                        "previous-candidate-restored",
+                        "initial candidate selected again; latest candidate remains available and no save has occurred");
+                }
+                else
+                {
+                    correctionOptions = FindAutomationElementByAutomationId(
+                        root,
+                        "CanvasSmartMaskCorrectionOptionsButton");
+                    cursorMoveCount += HumanClickAutomationElement(correctionOptions);
+                    AssertTrue(
+                        WaitUntil(
+                            () =>
+                            {
+                                System.Windows.Automation.AutomationElement latest =
+                                    RefreshAutomationRoot(appProcess, bringToFront: false);
+                                System.Windows.Automation.AutomationElement point =
+                                    FindAutomationElementByAutomationId(latest, "CanvasSmartMaskPositivePointButton");
+                                return point == null || point.Current.IsOffscreen;
+                            },
+                            TimeSpan.FromSeconds(3)),
+                        "operator video Smart Mask correction controls did not collapse");
+                    root = RestoreOperatorVideoWindow(appProcess);
+                    eventLog.Write(
+                        "contextual-correction-collapsed",
+                        "point/detail controls returned to auto-first review");
+                }
+            }
             eventLog.Write(
                 "candidate-reviewed",
-                "box-only candidate accepted because optional point correction did not improve this sample");
+                verifyCandidateRestore
+                    ? "corrected candidate rejected; restored automatic candidate selected for explicit confirmation"
+                    : "box-only candidate accepted because optional point correction did not improve this sample");
             Thread.Sleep(1400);
 
             System.Windows.Automation.AutomationElement confirm = FindSmartMaskConfirmButton(root);
@@ -361,6 +612,7 @@ internal static partial class Program
             CaptureAutomationRoot(root, Path.Combine(paths.ScreenshotDirectory, "03_confirmed_label.png"));
             Thread.Sleep(1200);
 
+            bool reopenVerified = false;
             System.Windows.Automation.AutomationElement nextImage =
                 FindAutomationElementByAutomationId(root, "NextUnlabeledPrimaryButton");
             if (nextImage != null && nextImage.Current.IsEnabled)
@@ -368,6 +620,46 @@ internal static partial class Program
                 cursorMoveCount += HumanClickAutomationElement(nextImage);
                 eventLog.Write("next-incomplete-opened", "worklist advanced after explicit save");
                 Thread.Sleep(900);
+            }
+
+            if (verifyCandidateRestore)
+            {
+                AssertTrue(
+                    SelectImageQueueItemBySearch(
+                        appProcess,
+                        OperatorVideoDefectStem,
+                        TimeSpan.FromSeconds(8)),
+                    "operator video could not reopen the saved Smart Mask image");
+                root = RestoreOperatorVideoWindow(appProcess);
+                AssertTrue(
+                    SelectAutomationTabByAutomationId(root, "ObjectsReviewTab")
+                        || SelectTabItemByName(root, "저장 라벨"),
+                    "operator video saved-label tab was unavailable for reopen verification");
+                reopenVerified = WaitUntil(
+                    () =>
+                    {
+                        System.Windows.Automation.AutomationElement latest =
+                            RefreshAutomationRoot(appProcess, bringToFront: false);
+                        return ContainsAutomationText(latest, OperatorVideoDefectStem)
+                            && GetObjectReviewSummaryCount(latest) == 1
+                            && FindSmartMaskConfirmButton(latest)?.Current.IsEnabled != true;
+                    },
+                    TimeSpan.FromSeconds(8));
+                AssertTrue(
+                    reopenVerified,
+                    "operator video restored candidate did not reopen as exactly one saved label");
+                ExeSmokeSavedArtifactDiagnostics reopenedArtifact =
+                    ValidateExeSmokeSavedArtifactContents(savedArtifacts);
+                AssertEqual(savedArtifact.MaskPixels, reopenedArtifact.MaskPixels);
+                AssertEqual(savedArtifact.SegmentPolygons, reopenedArtifact.SegmentPolygons);
+                AssertEqual(savedArtifact.SegmentPoints, reopenedArtifact.SegmentPoints);
+                root = RestoreOperatorVideoWindow(appProcess);
+                CaptureAutomationRoot(
+                    root,
+                    Path.Combine(paths.ScreenshotDirectory, "04_reopened_saved_label.png"));
+                eventLog.Write(
+                    "saved-label-reopened",
+                    "original image reopened with exactly one saved label and no pending Smart Mask confirmation");
             }
 
             root = RefreshAutomationRoot(appProcess);
@@ -384,7 +676,10 @@ internal static partial class Program
                 eventLog.Elapsed.TotalMilliseconds,
                 cursorMoveCount,
                 savedArtifact,
-                maskQuality);
+                maskQuality,
+                verifyAutoContourMode,
+                verifyCandidateRestore,
+                reopenVerified);
         }
         catch
         {
@@ -436,10 +731,15 @@ internal static partial class Program
                 TimeSpan.FromSeconds(5)),
             "operator video dataset setup action did not become visible");
         root = RefreshAutomationRoot(process);
+        System.Windows.Automation.AutomationElement setup =
+            FindAutomationElementByAutomationId(root, "DatasetSetupStartButton");
         AssertTrue(
-            TryInvokeAutomationButtonByAutomationId(root, "DatasetSetupStartButton")
-                || TryInvokeAutomationButton(root, "\uB370\uC774\uD130\uC14B \uC0DD\uC131 \uC2DC\uC791"),
-            "operator video could not open dataset setup");
+            setup != null && setup.Current.IsEnabled && !setup.Current.IsOffscreen,
+            "operator video dataset setup action was not operable");
+        if (!TryInvokeAutomationButtonByAutomationId(root, "DatasetSetupStartButton"))
+        {
+            NativeClick(GetAutomationCenter(setup));
+        }
 
         System.Windows.Automation.AutomationElement wizard = WaitForProcessWindowByName(
             process,
@@ -1029,6 +1329,9 @@ internal static partial class Program
             + $"- saved mask non-zero pixels: {result.SavedArtifact.MaskPixels}\n"
             + $"- saved segment polygons: {result.SavedArtifact.SegmentPolygons}\n"
             + $"- saved segment points: {result.SavedArtifact.SegmentPoints}\n"
+            + $"- automatic-contour box completion verified: {result.AutoContourVerified}\n"
+            + $"- previous-candidate restore verified: {result.CandidateRestoreVerified}\n"
+            + $"- saved-label reopen verified: {result.ReopenVerified}\n"
             + $"- ground-truth mask IoU: {result.MaskQuality.IntersectionOverUnion:F4}\n"
             + $"- ground-truth precision / recall: {result.MaskQuality.Precision:F4} / {result.MaskQuality.Recall:F4}\n"
             + $"- recorded interaction duration: {result.DurationMilliseconds / 1000D:F1}s\n\n"
@@ -1340,7 +1643,10 @@ internal static partial class Program
         double DurationMilliseconds,
         int CursorMoveCount,
         ExeSmokeSavedArtifactDiagnostics SavedArtifact,
-        OperatorVideoMaskQuality MaskQuality);
+        OperatorVideoMaskQuality MaskQuality,
+        bool AutoContourVerified,
+        bool CandidateRestoreVerified,
+        bool ReopenVerified);
 
     private readonly record struct OperatorVideoMaskQuality(
         int GroundTruthPixels,

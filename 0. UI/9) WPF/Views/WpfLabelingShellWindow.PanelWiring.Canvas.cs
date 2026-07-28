@@ -50,6 +50,9 @@ namespace MvcVisionSystem
                 ExecuteClearSmartMaskPointsCommand,
                 ExecuteCancelSmartMaskGenerationCommand,
                 ExecuteNextSmartMaskInstanceCommand,
+                () => ExecuteSelectSmartMaskCandidateVersionCommand(WpfSmartMaskCandidateVersion.Initial),
+                () => ExecuteSelectSmartMaskCandidateVersionCommand(WpfSmartMaskCandidateVersion.Latest),
+                ExecuteSetSmartMaskAutoContourMode,
                 ExecuteSetSmartMaskPolygonDetailCommand);
             SyncCanvasBrushSizeFromWorkflow();
             RefreshCanvasAnnotationToolScope();

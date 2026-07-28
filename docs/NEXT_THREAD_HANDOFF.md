@@ -4,6 +4,121 @@ Last updated: 2026-07-28 KST
 
 This is the current operational handoff for C:\Git\Labelling_Application. It is intentionally shorter than the historical journal. Use it to choose the next task; use the linked records only for the detailed evidence behind a claim.
 
+## 0. 2026-07-28 Current Source-of-Truth Capsule
+
+This section supersedes older priority wording later in this file when the two
+conflict.
+
+Current product:
+
+- local Windows, single-operator industrial image labeling, training,
+  inference, review, and model-evidence workstation;
+- focused-workstation maturity `4.0/5`;
+- labeling-editor depth `3.4/5`;
+- neither score is a model-accuracy or commercial-parity claim.
+
+Current Git/worktree:
+
+- live HEAD at this handoff: `f7751c5 feat: advance labeling QA and smart mask workflow`;
+- `main` and `origin/main` are `0/0` at that commit; only the current uncommitted
+  worktree is ahead in behavior;
+- the worktree contains verified but uncommitted Smart Mask contextual
+  correction, real correction-effectiveness evidence, candidate
+  compare/restore, Recipe-scoped automatic-contour, and canvas layout auto-fit
+  changes;
+- preserve all tracked changes and the untracked project documents/tests;
+- `.proofline/STATE.md` and `.proofline/dashboard/` are local/user-owned and
+  must remain untouched;
+- no commit or push was requested after the latest implementation.
+
+Latest completed Smart Mask slices:
+
+1. Auto-first contextual controls: correction points, point undo/clear,
+   cancellation, and detail stay behind `보정 옵션`.
+2. Real correction response: positive direction `6/6`, negative direction
+   `4/4` applicable, combined held-out improvement `3/4`, held-out median IoU
+   delta `+0.0988`; two worsening combinations remain disclosed.
+3. Candidate recovery: first/latest session candidates can be switched with
+   `이전 후보 보기` and `현재 후보 보기`; switching does not save and explicit
+   confirmation writes only the displayed candidate.
+4. Actual Debug EXE recovery replay: Kolektor `kos14/Part7` completed automatic
+   candidate -> positive/negative correction rerun -> previous candidate
+   restore -> explicit Confirm -> save -> next image -> saved-image reopen.
+   The reopened image contained exactly one saved 96-point polygon and a
+   7,931-pixel mask with no pending Smart Mask confirmation. Full-duration
+   visual review found no P0/P1/P2 issue. Evidence:
+   `artifacts\operator-video\20260728-smartmask-restore-save-retry1`.
+5. Automatic-contour normal flow and layout recovery: the operator selects
+   `라벨링 옵션 · 자동 윤곽` once per Recipe, a new rectangle starts MobileSAM
+   without another action click, confirm/skip returns to the next box, and
+   Recipe reopen restores the option without running inference. Canvas
+   viewport size changes now auto-fit after layout settles, so the actual EXE
+   completed the full run without a `맞춤` click. Evidence:
+   `artifacts\operator-video\20260728-smart-contour-auto-fit`.
+
+Read before reopening these slices:
+
+- `docs/SMART_MASK_CONTEXTUAL_CORRECTION_UX_20260728.md`;
+- `docs/SMART_MASK_CORRECTION_EFFECTIVENESS_20260728.md`;
+- `docs/SMART_MASK_CANDIDATE_COMPARE_RESTORE_20260728.md`.
+- `docs/SMART_CONTOUR_AUTO_MODE_AND_LAYOUT_FIT_20260728.md`.
+
+Immediate next priority:
+
+1. Define the four-point-box geometry/export contract before implementation.
+   Decide whether the interaction creates an axis-aligned rectangle, rotated
+   rectangle, or quadrilateral; define canonical storage, supported exports,
+   editing behavior, and backward compatibility. Do not silently change the
+   existing Rectangle contract.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+
+Commercial-video priority ledger after that:
+
+2. Persistent `occluded`/tag/group metadata remains contract-dependent.
+   Prerequisite: name the operator workflow and at least one Recipe/export/
+   training/review consumer. Session-only hide/full-lock/movement-pin is
+   already complete and must not be converted into persistent metadata by
+   assumption.
+   Recommended model: none until the consumer contract is chosen
+   Reasoning effort: n/a
+3. Exact polygon/raster cross-family z-order remains a renderer gap, but the
+   Viewer/OpenGL path is protected. Reopen only with a reproduced visual-order
+   defect and focused performance evidence.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+4. Object-detection and anomaly model adoption remain blocked on newly
+   approved independent production-camera/cross-session data with provenance
+   and content-separated ground truth.
+   Recommended model: none until data is available
+   Reasoning effort: n/a
+
+Completed commercial-video roadmap items that must not be repeated without a
+regression or changed contract:
+
+- P0-A command/repeat productivity;
+- P0-B interactive Smart Mask, contextual correction, real correction
+  response, and candidate restore;
+- P1 mask preservation/schema/merge/split/hole/z-order/remove-underlying;
+- P2 session object state, polygon vertex edit, intelligent scissors;
+- P3 display-only image aids;
+- P4 Dataset Health visual QA;
+- P5-A interchange preflight and P5-B batch-AI preflight;
+- actual-EXE Smart Mask promotional GIF publication.
+- actual-EXE real Smart Mask correction-rerun, previous-candidate restore,
+  selected save, and saved-label reopen regression.
+- Recipe-scoped automatic-contour box flow and canvas layout auto-fit without a
+  manual Fit click.
+
+Still out of scope:
+
+- video tracking/interpolation/propagation productization;
+- comments, assignment, multi-reviewer history, accounts, cloud sync, hosting,
+  and deployment;
+- 3D, keypoint, arbitrary model marketplace;
+- camera, lighting, PLC, and I/O control;
+- automatic candidate approval/save.
+
 ## 1. Mandatory Start Sequence
 
 1. Run git status --short before any other project command.
@@ -13,14 +128,17 @@ This is the current operational handoff for C:\Git\Labelling_Application. It is 
 5. Inspect the live branch, status, and diff directly. Git state is more authoritative than this handoff.
 6. Before editing, state the immediate priority, remaining product priority, assumptions, and verification plan.
 
-There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapshot. AGENTS.md in this repository is the available project instruction source.
+The global instruction source is `C:\Users\user\.codex\AGENTS.md`; the
+repository instruction source is `C:\Git\Labelling_Application\AGENTS.md`.
+Read both. There is no separate `C:\AGENTS.md` or `C:\Git\AGENTS.md` in this
+workstation snapshot.
 
 ## 2. Repository Checkpoint
 
 - Workspace: C:\Git\Labelling_Application
-- Branch: main. The structural-refactor implementation through
-  `889abdf refactor: clarify yolo contract ownership` was explicitly pushed to
-  `origin/main` on 2026-07-27. Always verify the live hashes before new work.
+- Branch: main. Live HEAD at this handoff is
+  `f7751c5 feat: advance labeling QA and smart mask workflow`. Always verify
+  the live hashes before new work.
 - The labeling-editor structure workflow through P0-A/P0-B, P1-A/P1-B,
   merge/join, and axis-aligned split/slice was committed and pushed as
   `9b2160a feat: advance labeling editor structure workflows` on 2026-07-28.
@@ -29,8 +147,9 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   remove-underlying, P2 precision/state, and P3 display-only aids were
   committed and pushed as
   `ed0f826 feat: complete labeling precision and display aids`.
-  P4 Dataset Health visual QA and P5-A dataset-interchange preflight follow in
-  current uncommitted source.
+  P4 Dataset Health visual QA, P5-A dataset-interchange preflight, P5-B batch
+  AI preflight, field-data intake contracts, and the approved Smart Mask
+  promotional media were then committed in `f7751c5`.
 - The structural-refactor sequence is `3351abd` (Core contract ownership),
   `5ed829c` (Model/Yolo ownership), and `889abdf` (Yolo contract ownership and
   final declaration audit). This phase is complete; do not reopen mechanical
@@ -45,9 +164,10 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   `C:\새 폴더\OpenVisionLab-Labeling-Studio_TEST` was deleted after the original
   path independently passed the Dataset wizard, Worklist, and YOLOv8 restart
   EXE smokes. Use only `C:\Git\Labelling_Application` for development.
-- Tracked project files were clean immediately after the structural-refactor
-  push. Local `.proofline/STATE.md` and `.proofline/dashboard/` remain untracked
-  and outside project commits. Verify live state with `git status --short`.
+- Tracked project files are currently dirty with the verified Smart Mask
+  contextual/effectiveness/compare-restore follow-up. Local
+  `.proofline/STATE.md` and `.proofline/dashboard/` remain untracked and outside
+  project commits. Verify live state with `git status --short`.
 - GitHub Actions has not been rechecked for the current structural-refactor and
   closure documentation commits. Do not cite older CI evidence as current CI
   evidence.
@@ -77,14 +197,16 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   `docs\BATCH_AI_PREFLIGHT_P5B_20260728.md`; focused gate:
   `--wpf-batch-detection-preflight`.
   The actual-EXE operator video runner and promotional-media candidate are also
-  complete. The accepted `20260728-175240` run uses the real KolektorSDD
-  `kos48/Part5.jpg` defect, human-path cursor motion, exact application-window
-  capture, explicit polygon save, and achieves mask IoU `0.9555`. The candidate
-  GIF is 1024x718, 12fps, 15.91s, and 706,201 bytes. A rejected Smart Mask run
-  is retained as thin-crack over-segmentation evidence at IoU `0.3306`; do not
-  present it as successful AI labeling. Read
+  complete. The approved public media is the superseding automatic Smart Mask
+  run `20260728-smartmask-final4` on KolektorSDD `kos14/Part7.jpg`, with
+  human-path cursor motion, exact application-window capture, explicit
+  confirmation, and canonical save. It wrote one 96-point polygon and 7,931
+  mask pixels; broad source-label precision was `0.9861`, IoU `0.3927`, and
+  recall `0.3948`. The 1024x576, 10fps, 18.7-second GIF and poster are published
+  under `docs/tutorial/images/github/`. The older manual-polygon candidate and
+  rejected Smart Mask runs are historical evidence only. Read
   `docs\ACTUAL_EXE_VIDEO_AND_GITHUB_GIF_PLAN_20260728.md`. README/public media
-  remain unchanged until explicit user visual approval.
+  must remain unchanged unless the user explicitly approves replacement.
   The labeling-only estimate is `3.4/5`; persistent object metadata, video
   propagation, and collaboration still prevent CVAT/V7 parity.
   This remains separate from the focused local-workstation estimate of `4.0/5`.
@@ -97,17 +219,16 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   unrelated untracked state and must remain untouched.
 - Never push unless the user explicitly says push. A commit request means local commit only.
 
-### Current next dependency after P5
+### Current model-quality dependency after P5
 
-P5-A and P5-B are complete. The remaining product priority is independently
-acquired production-camera/cross-session data for detection, segmentation, and
-anomaly model-quality gates. This is an external prerequisite, not another UI
-implementation slice. Do not recommend model-token spending until the data is
+P5-A and P5-B are complete. Independently acquired production-camera/
+cross-session data remains the prerequisite for detection, segmentation, and
+anomaly model-quality adoption. This is separate from the ready actual-EXE
+Smart Mask restore/save regression and contract-dependent editor backlog in
+section 0/10. Do not recommend model-quality token spending until the data is
 available. Use `docs\FIELD_DATA_INTAKE_PREREQUISITE_20260728.md` as the exact
 manifest, directory, content-separation, label-review, and approval checklist.
-The 2026-07-28 bounded audit found no newly approved eligible packet in the
-checked scope; the GoPxL commercial-reference folder contains videos and
-subtitles only and is not model-quality data.
+The GoPxL commercial-reference folder contains videos, not model-quality data.
 
 ### Completed P1-A/P1-B development checkpoint (2026-07-27)
 
@@ -415,9 +536,10 @@ Full development sequence:
 6. P4 Dataset Health visual label QA: `Complete`; read-only problem-first
    discovery, selected-image saved overlay, and navigation back to the
    canonical editor.
-7. P5 interchange and batch preflight: `Next`; dry-run/Apply validation for existing
-   formats and explicit batch AI scope, model, class mapping, confidence, and
-   existing-label policy.
+7. P5 interchange and batch preflight: `Complete`; dry-run/Apply validation
+   for existing formats and explicit batch AI scope, model, class mapping,
+   confidence, and existing-label policy are verified. Reopen only for a
+   regression or changed contract.
 
 Data-dependent gates remain separate: production claims for detection,
 segmentation, and anomaly quality require independent provenance-confirmed
@@ -903,52 +1025,61 @@ external YOLO11 runtimes and production accuracy remain unverified.
 
 ## 10. Next Priorities
 
-The 2026-07-23 Recipe/anomaly/model-adapter truth-alignment, Recipe Dataset
-Version v2, and recorded local YOLO11 anomaly runtime priorities are complete
-and committed in `ad569dc`. Keep them protected unless a focused regression
-fails.
+The authoritative ordering is:
 
-P0-A command/productivity and P0-B interactive Smart Mask are complete in the
-current worktree. Preserve P0-A's
-purpose-filtered shortcuts, numbered class order, one-step duplicate history,
-canonical save path, and separate-row help card unless a focused regression is
-reproduced. Preserve P0-B's box-only compatibility, point session,
-rerun-replace, cancellation, stale guard, confirm-only save, provenance, and
-next-instance behavior.
+1. Documentation source-of-truth synchronization. Align current operator
+   instructions, release notes, code-structure navigation, Smart Mask guidance,
+   and dated superseded priority wording with the completed P0-P5 and actual
+   EXE restore/save evidence. Keep historical evidence but remove ambiguity
+   about the current queue.
+   Recommended model: `gpt-5.6-terra`
+   Reasoning effort: `low`
 
-1. P2 object-state and precision-edit slices are complete for contextual
-   hide/full-lock/movement-pin, polygon vertex insert/delete, and bounded
-   intelligent scissors. Persistent occluded/tags/groups and 4-point box remain
-   separate contract-dependent gaps; do not reopen P2 without changed evidence.
+2. Four-point box product contract. The commercial video shows a higher-
+   productivity box path, but the current product has no agreed rotated-box or
+   four-click canonical/export meaning. First decide exact geometry,
+   interaction, undo/redo, save/reopen, YOLO/COCO/CVAT loss behavior, and
+   whether this is axis-aligned only. Implement only after that contract is
+   explicit.
    Recommended model: `gpt-5.6-sol`
    Reasoning effort: `high`
 
-2. P3 display-only brightness, contrast, gamma, invert, and
-   histogram/equalization is complete with canonical source/file/history/
-   overlay invariants and current-build 1920/1366 evidence.
-   Recommended model: `gpt-5.6-terra`
-   Reasoning effort: `medium`
-
-3. Implement P5 dry-run-first interchange and batch-AI preflight next. Reuse
-   existing COCO/Pascal VOC/Label Studio/CVAT import/export and batch services;
-   expose source/scope, class mapping, model/weight, confidence, and
-   existing-label policy before explicit Apply/Start. Preserve Candidate
-   Review/no-autosave and source immutability.
-   Recommended model: `gpt-5.6-terra`
-   Reasoning effort: `medium`
-
-4. Acquire a new, approved NG-rich object-detection camera/session source, define its object classes and box rules, create a content-separated held-out test split, and rerun the unchanged controlled engine comparison. This remains the next object-detection quality priority because current synthetic comparisons prove runtime/format behavior but not field generalization. It includes provenance, label audit, SHA-256 non-overlap, fixed thresholds, and error review; it excludes treating folder-level OK/NG names as boxes or tuning on the held-out test. The operator-excluded `D:\기타이미지\2022.11.16_SIT 이미지` path must not be inspected or used.
-   Prerequisite: a newly approved source with trustworthy bounding boxes and enough NG examples.
-   Recommended model: none until the data is available
+3. Persistent object metadata contract. `occluded`, tags, and groups remain
+   unimplemented. They are not justified as decorative row icons. Name a
+   consumer in Recipe persistence, export, training, filtering, or review
+   before implementation. Existing hide/full-lock/movement-pin stays
+   session-only.
+   Prerequisite: explicit consumer and persistence/export semantics.
+   Recommended model: none until the contract is chosen
    Reasoning effort: n/a
 
-5. Acquire balanced independent production-camera/cross-session normal and abnormal anomaly data, keep it outside training initially, and rerun the unchanged anomaly evaluation guard. This remains the next anomaly-quality priority and distinguishes a repeatable classifier runtime from generalizable anomaly quality; it includes provenance, content-overlap checks, confidence-gated errors, and an adopt/hold decision, and excludes tuning against the preserved circular or MultiIndustry synthetic evaluation sets.
-   On the same 104-image circular synthetic test at confidence `0.8`, YOLOv8
-   remains `hold` at `90/104` and YOLO11 remains `hold` at `82/104`. Do not tune
-   either model against that test or substitute it for new acquisition evidence.
-   Prerequisite: new normal and abnormal images with provenance and representative operating conditions.
-   Recommended model: none until the data is available
+4. Polygon/raster cross-family z-order. Current canonical order and each
+   overlay family's order are verified, but exact cross-family composition is
+   not. Because this touches a protected renderer path, require a reproduced
+   visual-order defect, before/after current-build evidence, and focused
+   performance gates.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+
+5. Independent object-detection field evaluation.
+   Prerequisite: a newly approved NG-rich camera/session source with
+   trustworthy boxes, provenance, and content-separated held-out data. The
+   operator-excluded `D:\기타이미지\2022.11.16_SIT 이미지` path must not be
+   inspected or used.
+   Recommended model: none until data is available
    Reasoning effort: n/a
+
+6. Independent anomaly field evaluation.
+   Prerequisite: balanced normal/abnormal production-camera and cross-session
+   data kept outside training initially. YOLOv8 `90/104` and YOLO11 `82/104`
+   on the same circular synthetic test both remain `hold`; do not tune against
+   that test.
+   Recommended model: none until data is available
+   Reasoning effort: n/a
+
+Do not list P3, P4, P5-A, or P5-B as future implementation. They are complete.
+Do not reopen P0-A/P0-B/P1/P2 for general polish. Use the explicit contract-
+dependent gaps above.
 
 The detailed current contract is
 `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`. Keep the task
@@ -1466,6 +1597,114 @@ Next priority: make Smart Mask correction contextual. Default to Box ->
 automatic candidate, collapse positive/negative/detail controls, and reveal
 them only when the operator chooses to correct a poor result. Preserve
 explicit confirmation and no pending-candidate autosave.
+
+Recommended model: `gpt-5.6-sol`
+
+Reasoning effort: `high`
+
+## 34. 2026-07-28 Latest Checkpoint: Smart Mask Candidate Compare/Restore
+
+Status: `Complete`. Field validation: `Not evaluated`.
+
+- A Smart Mask session retains only the initial and latest candidate
+  references after a rerun.
+- Candidate Review still owns exactly one visible pending candidate.
+- `이전 후보 보기` and `현재 후보 보기` switch that pending candidate without
+  changing dirty state or writing canonical files.
+- The compact row states that confirmation saves only the displayed version.
+- Confirm/skip resolves comparison history. Image, Recipe, and session changes
+  reset it through the existing Smart Mask context boundary.
+- Focused integration proved no segment JSON before confirmation and proved
+  the restored initial candidate's first point is the point written after
+  confirmation.
+- Evidence:
+  `docs\SMART_MASK_CANDIDATE_COMPARE_RESTORE_20260728.md` and
+  `artifacts\smart-mask-candidate-compare-restore\20260728-210121`.
+- Current-source 1920x1080 selected/restored states:
+  `artifacts\ui\smart-mask-candidate-compare-restore-20260728`.
+
+Boundary / next dependency:
+
+- the focused integration uses deterministic synthetic candidates, while the
+  actual Debug EXE replay under
+  `artifacts\operator-video\20260728-smartmask-restore-save-retry1` uses real
+  MobileSAM on Kolektor `kos14/Part7`;
+- that actual replay completed corrected rerun -> previous candidate restore
+  -> explicit Confirm -> canonical save -> saved-image reopen, with exactly
+  one saved 96-point polygon and a 7,931-pixel mask;
+- this proves workflow and persistence safety, not MobileSAM field accuracy;
+- the next maintenance priority is documentation source-of-truth
+  synchronization, followed by the four-point box contract;
+- the approved public GitHub GIF remains unchanged.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `low`
+
+## 33. 2026-07-28 Latest Checkpoint: Real Smart Mask Correction Effectiveness
+
+Status: `Complete`. Field validation: `Not evaluated`.
+
+- A fixed evaluator now replays two development and four held-out KolektorSDD
+  defect samples.
+- Every baseline is poor (`IoU < 0.50`) and is preserved before correction.
+- Positive-only correction reduces false negatives in `6/6`.
+- Negative-only correction reduces false positives in `4/4` applicable cases.
+- Combined correction improves held-out `3/4`; held-out median IoU delta is
+  `+0.0988`.
+- Two combined runs worsen and remain in the evidence. In particular,
+  `kos14_Part7` improves from `0.3749` to `0.4620` with positive-only but falls
+  to `0.3260` with positive+negative.
+- Product guidance now says to add one point, rerun/compare, and add another
+  only if needed.
+- The 798-file dataset tree SHA-256 remains
+  `F09D09AA1A1EC9AB7866087361CF1B48C6E6D32F5C0CC239CE619D39FB9A0474`.
+- Detailed record:
+  `docs\SMART_MASK_CORRECTION_EFFECTIVENESS_20260728.md`.
+
+Boundary / next dependency:
+
+- click selection uses ground truth as an evaluation oracle;
+- this proves real-sample correction response, not unaided operator click
+  quality, independent camera evidence, production accuracy, or parity;
+- next priority is session-only previous/current pending-candidate
+  compare/restore so a worse rerun can be rejected safely before confirmation.
+
+Recommended model: `gpt-5.6-sol`
+
+Reasoning effort: `high`
+
+## 32. 2026-07-28 Latest Checkpoint: Auto-First Contextual Smart Mask Correction
+
+Status: `Complete`. Field validation: `Not evaluated`.
+
+- The Smart Mask session now defaults to the automatic filled candidate and a
+  single `보정 옵션` action.
+- Positive/negative points, undo/clear, generation cancel, and 48/96/256-point
+  boundary detail appear only after explicit expansion.
+- Expansion persists across reruns of the same object. Session end, image
+  change, and next-object reset return it to collapsed.
+- Explicit confirm/skip, pending no-autosave, MobileSAM execution, and canonical
+  save behavior are unchanged.
+- Current-source compact/expanded evidence:
+  `artifacts\ui\smart-mask-contextual-correction-20260728`.
+- Actual Debug EXE run
+  `artifacts\operator-video\20260728-smartmask-contextual-correction`
+  verified default hidden -> expand -> collapse -> confirm -> canonical save on
+  KolektorSDD `kos14/Part7.jpg`.
+- Saved evidence remains one polygon, 96 points, and 7,931 mask pixels.
+- Detailed contract:
+  `docs\SMART_MASK_CONTEXTUAL_CORRECTION_UX_20260728.md`.
+
+Boundary / next dependency:
+
+- this closes contextual disclosure, not correction effectiveness or
+  commercial parity;
+- labeling-editor depth remains `3.4/5`; focused workstation maturity remains
+  `4.0/5`;
+- next priority is to preserve a genuinely poor automatic candidate, prove
+  positive/negative correction improves it in the requested direction, and
+  replay that result on held-out samples.
 
 Recommended model: `gpt-5.6-sol`
 

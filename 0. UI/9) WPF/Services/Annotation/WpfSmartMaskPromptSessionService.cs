@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using MvcVisionSystem._1._Core;
 
 namespace MvcVisionSystem
 {
@@ -24,6 +25,12 @@ namespace MvcVisionSystem
         Detailed
     }
 
+    public enum WpfSmartMaskCandidateVersion
+    {
+        Initial,
+        Latest
+    }
+
     public sealed class WpfSmartMaskPromptPoint
     {
         public Point Position { get; init; }
@@ -44,13 +51,16 @@ namespace MvcVisionSystem
     }
 
     /// <summary>
-    /// Owns one operator-driven Smart Mask instance. It contains prompts only;
-    /// candidate review and canonical annotation persistence remain with their existing owners.
+    /// Owns one operator-driven Smart Mask instance, including its prompt and
+    /// session-only initial/latest candidate references. Candidate review and
+    /// canonical annotation persistence remain with their existing owners.
     /// </summary>
     public sealed class WpfSmartMaskPromptSessionService
     {
         private readonly List<WpfSmartMaskPromptPoint> points = new List<WpfSmartMaskPromptPoint>();
         private long generation;
+        private YoloWorkerSmokeCandidate initialCandidate;
+        private YoloWorkerSmokeCandidate latestCandidate;
 
         public bool HasSession { get; private set; }
         public string ImagePath { get; private set; } = string.Empty;
@@ -61,6 +71,11 @@ namespace MvcVisionSystem
         public WpfSmartMaskPointInputMode InputMode { get; private set; }
         public WpfSmartMaskPolygonDetail PolygonDetail { get; private set; } = WpfSmartMaskPolygonDetail.Balanced;
         public bool HasProducedCandidate { get; private set; }
+        public bool HasCandidateComparison
+            => initialCandidate != null
+                && latestCandidate != null
+                && !ReferenceEquals(initialCandidate, latestCandidate);
+        public WpfSmartMaskCandidateVersion SelectedCandidateVersion { get; private set; }
         public IReadOnlyList<WpfSmartMaskPromptPoint> Points => points;
         public int PositivePointCount => points.FindAll(point => point.Kind == WpfSmartMaskPointKind.Positive).Count;
         public int NegativePointCount => points.FindAll(point => point.Kind == WpfSmartMaskPointKind.Negative).Count;
@@ -87,6 +102,9 @@ namespace MvcVisionSystem
             ClassName = string.IsNullOrWhiteSpace(className) ? "Defect" : className.Trim();
             InputMode = WpfSmartMaskPointInputMode.None;
             HasProducedCandidate = false;
+            initialCandidate = null;
+            latestCandidate = null;
+            SelectedCandidateVersion = WpfSmartMaskCandidateVersion.Latest;
             points.Clear();
             return Capture();
         }
@@ -102,6 +120,9 @@ namespace MvcVisionSystem
             ClassName = string.Empty;
             InputMode = WpfSmartMaskPointInputMode.None;
             HasProducedCandidate = false;
+            initialCandidate = null;
+            latestCandidate = null;
+            SelectedCandidateVersion = WpfSmartMaskCandidateVersion.Latest;
             points.Clear();
         }
 
@@ -119,8 +140,65 @@ namespace MvcVisionSystem
             generation++;
         }
 
-        public void MarkCandidateProduced()
-            => HasProducedCandidate = HasSession;
+        public bool RecordCandidate(YoloWorkerSmokeCandidate candidate)
+        {
+            if (!HasSession || candidate == null)
+            {
+                return false;
+            }
+
+            if (initialCandidate == null)
+            {
+                initialCandidate = candidate;
+            }
+
+            latestCandidate = candidate;
+            SelectedCandidateVersion = WpfSmartMaskCandidateVersion.Latest;
+            HasProducedCandidate = true;
+            return true;
+        }
+
+        public bool TrySelectCandidate(
+            WpfSmartMaskCandidateVersion version,
+            out YoloWorkerSmokeCandidate candidate)
+        {
+            candidate = version == WpfSmartMaskCandidateVersion.Initial
+                ? initialCandidate
+                : latestCandidate;
+            if (!HasSession || !HasCandidateComparison || candidate == null)
+            {
+                candidate = null;
+                return false;
+            }
+
+            SelectedCandidateVersion = version;
+            return true;
+        }
+
+        public bool IsSelectedCandidate(YoloWorkerSmokeCandidate candidate)
+        {
+            if (candidate == null)
+            {
+                return false;
+            }
+
+            YoloWorkerSmokeCandidate selected = SelectedCandidateVersion == WpfSmartMaskCandidateVersion.Initial
+                ? initialCandidate
+                : latestCandidate;
+            return ReferenceEquals(selected, candidate);
+        }
+
+        public void MarkCandidateResolved()
+        {
+            initialCandidate = null;
+            latestCandidate = null;
+            SelectedCandidateVersion = WpfSmartMaskCandidateVersion.Latest;
+        }
+
+        public bool MatchesContext(string currentImagePath, string currentRecipeName)
+            => HasSession
+                && string.Equals(ImagePath, currentImagePath ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(RecipeName, currentRecipeName ?? string.Empty, StringComparison.OrdinalIgnoreCase);
 
         public bool TryAddPoint(Point point, Size imageSize)
         {

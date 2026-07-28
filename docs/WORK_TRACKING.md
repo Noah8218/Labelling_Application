@@ -101,6 +101,75 @@ Recommended model: `gpt-5.6-terra`
 
 Reasoning effort: `low`
 
+## 2026-07-28 Recipe-Scoped Automatic Contour and Layout Auto-Fit
+
+Status: Complete
+
+Scope:
+
+- add a visible segmentation labeling option that persists once per Recipe;
+- start the existing MobileSAM box-prompt flow immediately after each newly
+  drawn rectangle when the option is enabled;
+- keep correction, candidate comparison, confirmation, and save explicit;
+- restore the option on Recipe reload without running inference or mutating
+  labels;
+- automatically call the existing image-fit behavior after a real canvas
+  viewport-size change caused by workspace layout changes;
+- leave direct viewer zoom/pan, ROI, OpenGL, brush, and eraser paths unchanged.
+
+Acceptance criteria:
+
+- one option selection supports repeated rectangle-to-candidate flow: pass;
+- regular rectangle labeling remains the safe default for a new Recipe: pass;
+- editing an existing object does not start Smart Mask: pass;
+- Recipe XML save/load restores the option without invoking its action
+  callback: pass;
+- no automatic candidate confirmation or label save: pass;
+- side-panel layout change recovers the fitted image without a Fit click:
+  pass;
+- actual Debug EXE confirm/save/next-image/reopen still preserves exactly one
+  saved object and no pending confirmation: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- current app Debug build: warning 0, error 0;
+- `--mobile-sam-box-prompt`: pass;
+- `--smart-mask-candidate-compare-restore`: pass;
+- `--smart-mask-auto-boundary-presentation`: pass;
+- `--wpf-labeling-shell`: pass;
+- actual EXE
+  `--exe-operator-video-smoke --verify-auto-contour-mode
+  --verify-candidate-restore`: pass;
+- final documentation, workspace-layout, and diff checks are recorded in this
+  turn's final report.
+
+Evidence:
+
+- contract: `docs/SMART_CONTOUR_AUTO_MODE_AND_LAYOUT_FIT_20260728.md`;
+- current-source UI:
+  `artifacts/ui/smart-contour-auto-mode-20260728`;
+- pre-change actual-EXE auto-fit failure:
+  `artifacts/operator-video/20260728-layout-auto-fit-before`;
+- passing current Debug EXE:
+  `artifacts/operator-video/20260728-smart-contour-auto-fit`;
+- passing MP4 SHA-256:
+  `9DFA553C58AD50D9FCA2A78D3851D87386BED47E214A676BEABCF47BCDE23C4A`;
+- reopened canonical mask SHA-256:
+  `16E8A6DEBC3BAE592C3938F8DE2A648190356A0BEE9E5D3B367C62530E343D82`;
+- reopened segment JSON SHA-256:
+  `763847AB826AD9095D9E5AF0D58904F8B34EA16B4CEE4A47DD3802A13C89A4F2`.
+
+Boundary / next dependency:
+
+- this proves interaction flow and persistence safety, not automatic contour
+  accuracy or field-model adoption;
+- no automatic approval/save, commit, push, or public GIF replacement is
+  included;
+- the next ready product item is the four-point-box geometry/export contract,
+  after the remaining dated-document cleanup is treated as maintenance rather
+  than feature work.
+
 ## 2026-07-28 Field Data Intake Prerequisite Audit
 
 Status: Complete
@@ -17995,6 +18064,143 @@ depth is `3.1/5`; focused workstation maturity remains `4.0/5`.
 Polygon vertex insert/delete is the next bounded P2 slice.
 Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
 
+## 2026-07-28 Smart Mask Candidate Compare/Restore
+
+Status: Complete
+
+Scope:
+
+- retain only the initial/latest Smart Mask candidates in the current object
+  session;
+- show contextual previous/current candidate actions only after a rerun;
+- keep exactly one selected version in Candidate Review;
+- make candidate switching presentation-only and unsaved;
+- clear comparison on confirm, skip, image/Recipe mismatch, or session reset;
+- save only the explicitly selected version through existing confirmation.
+
+Acceptance criteria:
+
+- initial/latest session state and deterministic selection: pass;
+- previous/current ViewModel commands and compact status: pass;
+- one pending Candidate Review candidate after each switch: pass;
+- no canonical segment before confirmation: pass;
+- restored initial candidate is the only confirmed/saved version: pass;
+- 1920x1080 current/restored state captures: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--mobile-sam-box-prompt`: pass;
+- `--smart-mask-candidate-compare-restore`: pass;
+- two current-source 1920x1080 comparison visual smokes: pass.
+
+Evidence:
+
+- `docs\SMART_MASK_CANDIDATE_COMPARE_RESTORE_20260728.md`;
+- `artifacts\smart-mask-candidate-compare-restore\20260728-210121`;
+- `artifacts\ui\smart-mask-candidate-compare-restore-20260728`.
+
+Boundary / next dependency:
+
+- deterministic candidates prove session/persistence safety, not real-model
+  quality;
+- next bounded evidence is an actual Debug EXE real-candidate restore and
+  selected-save replay; do not replace the approved public GIF.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
+## 2026-07-28 Actual Debug EXE Smart Mask Restore/Save/Reopen
+
+Status: Complete
+
+Scope:
+
+- reuse the existing actual-EXE operator-video runner without changing product
+  behavior or the approved public GIF;
+- create a real MobileSAM automatic candidate on Kolektor `kos14/Part7`;
+- add one positive and one negative point and perform one real rerun;
+- restore the previous automatic candidate, explicitly confirm it, save it,
+  move to the next incomplete image, and reopen the saved image;
+- verify canonical segment JSON/mask PNG and the reopened saved-label state;
+- retain application-only MP4, event log, checkpoint screenshots, 1fps visual
+  evidence, saved artifacts, hashes, and a severity review.
+
+Implementation:
+
+- Added the opt-in `--verify-candidate-restore` path to the existing
+  `--exe-operator-video-smoke` runner.
+- The path drives only existing UI commands and uses the existing human-path
+  cursor motion.
+- The first attempt stopped before Smart Mask generation because the visible
+  queue search control did not expose the expected AutomationId through the
+  current EXE automation tree. The shared search helper now retains the
+  AutomationId path and falls back to the exact accessible name plus writable
+  ValuePattern. No product UI or queue behavior changed.
+- The rerun passed with the current Debug EXE SHA-256
+  `E957AFFCE56D595C9B1E920FA62B85CBF9A255BF03E811AA84A456E796FEF74F`.
+
+Acceptance criteria:
+
+- current test runner and Debug EXE build with warning 0/error 0: pass;
+- automatic candidate becomes reviewable before correction controls are
+  expanded: pass;
+- one positive and one negative point trigger one real MobileSAM rerun: pass;
+- corrected candidate enables previous-candidate recovery: pass;
+- previous candidate becomes selected while current candidate remains
+  recoverable and no save has occurred: pass;
+- explicit Confirm writes one polygon, 96 points, and a 7,931-pixel mask:
+  pass;
+- another image opens after save and `kos14_Part7` reopens with exactly one
+  saved label and no pending confirmation: pass;
+- saved mask/segment content remains valid after reopen: pass;
+- application-only 1920x1080 MP4, event log, full-duration 1fps contact sheet,
+  screenshots, saved artifacts, ffprobe, and SHA-256 exist: pass;
+- visual review finds no P0/P1/P2 issue: pass.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\`
+  — warning 0, error 0;
+- `dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\run\Debug\`
+  — warning 0, error 0;
+- `--exe-operator-video-smoke --verify-candidate-restore --run-id 20260728-smartmask-restore-save-retry1`
+  — pass, `candidateRestore=True`, `reopen=True`;
+- saved canonical validation — one polygon, 96 points, mask size `500x1264`,
+  7,931 non-zero pixels;
+- ground-truth comparison — IoU `0.3927`, precision `0.9861`, recall `0.3948`;
+- MP4 — 1920x1080, 78.5 seconds, SHA-256
+  `D92CAEBCDF5D5391211EA459AFB19B2DFADF00132AB9455711CCD353266D7B86`;
+- full-duration visual review — no desktop exposure, hidden failure,
+  discontinuity, automatic save, P0, P1, or P2 issue.
+
+Evidence:
+
+- `docs\SMART_MASK_CANDIDATE_COMPARE_RESTORE_20260728.md`;
+- `tests\LabelingApplication.Tests\Program.OperatorVideo.cs`;
+- `artifacts\operator-video\20260728-smartmask-restore-save-retry1`;
+- saved mask SHA-256:
+  `16E8A6DEBC3BAE592C3938F8DE2A648190356A0BEE9E5D3B367C62530E343D82`;
+- saved segment JSON SHA-256:
+  `A2E850E8C4134E742863B3D64D42176D9AEAA2D70EA40D03023F1E4D8918934E`.
+
+Boundary / next dependency:
+
+- this closes real-EXE candidate recovery, selected confirmation, canonical
+  save, and saved-label reopen safety;
+- the low IoU/recall remains disclosed, so this does not prove production
+  accuracy, unaided operator point quality, or commercial parity;
+- two P3 presentation observations remain in the artifact review and do not
+  block the workflow;
+- the approved public GIF remains unchanged;
+- next priority is source-of-truth/operator-document synchronization, followed
+  by the four-point box product contract.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `low`
+
 ## 2026-07-28 Smart Mask Automatic Boundary Presentation And Actual-EXE Hero
 
 Status: Complete
@@ -18045,6 +18251,114 @@ Boundary / next dependency:
   `docs/tutorial/images/github/` and linked from the README;
 - next labeling priority is auto-first contextual correction UX: keep the
   correction bar collapsed until the user elects to refine a poor candidate.
+
+Recommended model: `gpt-5.6-sol`
+
+Reasoning effort: `high`
+
+## 2026-07-28 Smart Mask Auto-First Contextual Correction
+
+Status: Complete
+
+Scope:
+
+- keep Box -> automatic filled candidate as the default Smart Mask path;
+- replace the always-visible correction bar with one compact automatic-candidate
+  row and an explicit `보정 옵션` disclosure;
+- retain positive/negative points, undo/clear, generation cancel, and boundary
+  detail inside the expanded panel;
+- preserve expansion during the same-object rerun and collapse it at session
+  end/next object;
+- preserve explicit confirm/skip, pending no-autosave, worker, and canonical
+  save contracts.
+
+Acceptance criteria:
+
+- default correction controls hidden: pass;
+- explicit expand/collapse and accessible automation identity: pass;
+- same-session state retention and new-session reset: pass;
+- current-source 1920x1080 compact and expanded layouts: pass;
+- actual Debug EXE compact -> expanded -> collapsed -> confirm -> save: pass;
+- saved result remains one polygon, 96 points, 7,931 mask pixels: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--mobile-sam-box-prompt`: pass;
+- `--smart-mask-auto-boundary-presentation`: pass;
+- current app solution build: warning 0, error 0;
+- `--exe-operator-video-smoke --verify-contextual-correction`: pass;
+- 473 human-path cursor moves; precision `0.9861`, IoU `0.3927`, recall
+  `0.3948`.
+
+Evidence:
+
+- `docs\SMART_MASK_CONTEXTUAL_CORRECTION_UX_20260728.md`;
+- `artifacts\ui\smart-mask-contextual-correction-20260728`;
+- ignored local actual-EXE run
+  `artifacts\operator-video\20260728-smartmask-contextual-correction`.
+
+Boundary / next dependency:
+
+- this improves option density and default flow; it does not prove general
+  point-correction accuracy, field accuracy, or CVAT/V7 parity;
+- labeling-editor depth remains `3.4/5`; focused workstation maturity remains
+  `4.0/5`;
+- next priority is a genuine poor-candidate -> point correction -> measured
+  improvement -> held-out replay gate.
+
+Recommended model: `gpt-5.6-sol`
+
+Reasoning effort: `high`
+
+## 2026-07-28 Smart Mask Real Correction Effectiveness
+
+Status: Complete
+
+Scope:
+
+- add a fixed real-sample evaluator over two development and four held-out
+  KolektorSDD defect samples;
+- preserve every poor box-only candidate;
+- replay deterministic positive-only, negative-only, and combined corrections;
+- record IoU/Dice, error-direction changes, masks, comparisons, runtime,
+  weights, and source-tree identity;
+- change in-product guidance to one point -> rerun/compare -> next point only
+  when needed.
+
+Acceptance criteria:
+
+- all six baselines below IoU `0.50`: pass;
+- at least one development improvement: pass (`1/2`);
+- held-out majority improvement: pass (`3/4`);
+- held-out median IoU delta >= `+0.05`: pass (`+0.0988`);
+- positive-only false-negative reduction: pass (`6/6`);
+- negative-only false-positive reduction when applicable: pass (`4/4`);
+- source 798-file tree SHA-256 unchanged: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--real-mobile-sam-correction-effectiveness`: pass,
+  `MOBILE_SAM_CORRECTION_GATE=True`;
+- runtime MobileSAM / Ultralytics `8.4.101` / Torch `2.12.1+cpu` / CPU;
+- weights SHA-256
+  `6DBB90523A35330FEDD7F1D3DFC66F995213D81B29A5CA8108DBCDD4E37D6C2F`.
+
+Evidence:
+
+- `docs\SMART_MASK_CORRECTION_EFFECTIVENESS_20260728.md`;
+- ignored local artifact root
+  `artifacts\mobile-sam-correction-effectiveness\20260728-202434`.
+
+Boundary / next dependency:
+
+- combined correction worsened two of six candidates; this is intentionally
+  retained;
+- ground-truth-guided clicks prove response, not unaided operator click quality,
+  field accuracy, production readiness, or CVAT/V7 parity;
+- next priority is session-only previous/current pending-candidate
+  compare/restore before explicit confirmation.
 
 Recommended model: `gpt-5.6-sol`
 
@@ -18329,3 +18643,82 @@ edge following. Labeling-editor depth is `3.2/5`; focused workstation maturity
 remains `4.0/5`. The next bounded P2 slice is edge-aware intelligent scissors
 after a latency/accuracy fixture is defined.
 Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
+
+## 2026-07-28 Next-Conversation Documentation Synchronization
+
+Status: Complete
+
+Scope:
+
+- synchronize the current Git/worktree checkpoint, all completed commercial-
+  video roadmap items, latest Smart Mask safety work, remaining contract/data
+  backlog, and out-of-scope platform breadth;
+- make `docs/NEXT_THREAD_HANDOFF.md` section 0 and section 10 the operational
+  next-session source of truth;
+- prevent stale P3/P4/P5 wording from being selected as future work;
+- preserve the current uncommitted implementation and local `.proofline`
+  boundary.
+
+Current completed state:
+
+- P0-A through P5-B: Complete;
+- Smart Mask auto-first contextual controls: Complete;
+- real six-sample correction-effectiveness gate: Complete;
+- initial/latest candidate compare/restore and selected-only save: Complete;
+- labeling-editor depth: `3.4/5`;
+- focused local workstation: `4.0/5`.
+
+Ordered remaining queue:
+
+1. synchronize the remaining operator/source-of-truth documents with the
+   verified Smart Mask restore/save/reopen result;
+2. four-point box only after geometry/export contract;
+3. persistent occluded/tag/group only after a named consumer contract;
+4. cross-family polygon/raster z-order only after a reproduced renderer defect;
+5. independent detection/anomaly evaluation only after approved field data.
+
+Explicit exclusions:
+
+- video propagation/tracking;
+- team review, comments, assignment, account/cloud/deployment;
+- 3D/keypoint, arbitrary model marketplace;
+- camera/lighting/PLC/I/O control;
+- automatic candidate approval/save.
+
+Acceptance criteria:
+
+- current HEAD and dirty-worktree state recorded: pass;
+- Smart Mask contextual/effectiveness/restore evidence linked: pass;
+- all video-derived P0-P5 items classified Complete/backlog/blocked/out of
+  scope: pass;
+- every remaining priority includes model/effort or an explicit prerequisite:
+  pass;
+- next chat has one unambiguous immediate action: pass.
+
+Verification:
+
+- documentation source comparison against live `git status --short` and
+  `git log --oneline -5`;
+- `--priority-workflow-docs`;
+- `git diff --check`.
+
+Evidence:
+
+- `docs\NEXT_THREAD_HANDOFF.md`;
+- `CODEX_NEXT_PROMPT.md`;
+- `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`;
+- `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`;
+- `docs\LABELING_STUDIO_COMPLETENESS_AUDIT.md`;
+- `docs\STABLE_VERIFIED_AREAS.md`.
+
+Boundary / next dependency:
+
+- this synchronizes documentation only and does not commit or push;
+- the actual Debug EXE Smart Mask restore/save/reopen replay is complete at
+  `artifacts\operator-video\20260728-smartmask-restore-save-retry1`;
+- the next ready action is the remaining operator/source-of-truth document
+  synchronization.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `low`

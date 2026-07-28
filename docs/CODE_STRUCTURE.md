@@ -730,6 +730,35 @@ history, dirty state, and selection restoration are owned by
 enablement and status are owned by `WpfObjectReviewPanelViewModel`.
 Focused coverage is in `Program.PolygonVertex.cs`.
 
+### Smart Mask automatic-contour and canvas layout-fit ownership
+
+`LabelingProjectSettings.SmartMaskAutoContourEnabled` owns the persisted
+Recipe-scoped preference. `WpfCanvasPanelViewModel` owns the visible option
+state, command enablement, and the separation between the always-available
+labeling option and active-session correction actions.
+
+`WpfLabelingShellWindow.SmartMask` persists the option, starts the existing
+MobileSAM box-prompt path only after a newly drawn rectangle, and returns to
+rectangle drawing after explicit confirm or skip. It does not approve or save
+a candidate automatically. `WpfLabelingShellWindow.AnnotationCanvas` only
+bridges a newly created rectangle into that policy; edits to existing objects
+do not start inference. Recipe restoration uses
+`RestoreSmartMaskAutoContourMode`, which restores visible state without
+selecting a tool, starting inference, confirming, or saving.
+
+`WpfLabelingShellWindow.WorkspaceLayout` owns shell-level recovery from an
+actual canvas viewport-size change. It coalesces layout notifications until
+`DispatcherPriority.ContextIdle` and calls the existing viewer
+`ZoomToFit()` only when an image is loaded and the viewport dimensions really
+changed. The protected viewer zoom, pan, ROI, OpenGL, brush, and eraser
+implementations remain unchanged; ordinary operator zoom and pan do not resize
+the viewport and therefore do not trigger this policy.
+
+Focused coverage is in `Program.MobileSamBoxPrompt.cs`,
+`Program.WpfShellStructure.cs`, and the actual-EXE operator smoke in
+`Program.OperatorVideo.cs`. The durable behavior and evidence record is
+`docs/SMART_CONTOUR_AUTO_MODE_AND_LAYOUT_FIT_20260728.md`.
+
 ### Dataset interchange preflight ownership
 
 `Yolo/DatasetInterchangePreflightService.cs` owns the shared preflight request,

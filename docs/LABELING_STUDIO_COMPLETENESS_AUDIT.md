@@ -76,6 +76,59 @@ prerequisite. Collaboration, comments, accounts, cloud sync, deployment, video
 tracking, 3D, camera/PLC/I/O, and generic arbitrary-model execution remain out
 of scope.
 
+## Smart Mask Safety Follow-up (2026-07-28)
+
+Status: `Complete` in the current uncommitted worktree. Field validation:
+`Not evaluated`.
+
+- The default Smart Mask session presents the automatic filled candidate and
+  hides include/exclude points, undo/clear, cancel, and boundary detail behind
+  `보정 옵션`.
+- A fixed two-development/four-held-out KolektorSDD evaluator records real
+  correction behavior: positive direction `6/6`, negative direction `4/4`
+  applicable, combined held-out improvement `3/4`, median held-out IoU delta
+  `+0.0988`.
+- Two worsening combined corrections remain disclosed. The product therefore
+  instructs one point -> rerun/compare -> next point only when needed.
+- The session retains only the initial/latest candidates after a rerun.
+  `이전 후보 보기` and `현재 후보 보기` switch the one Candidate Review pending
+  candidate without saving. Confirmation persists only the displayed version.
+- Focused selected-save evidence:
+  `artifacts\smart-mask-candidate-compare-restore\20260728-210121`.
+
+Detailed records:
+
+- `docs\SMART_MASK_CONTEXTUAL_CORRECTION_UX_20260728.md`;
+- `docs\SMART_MASK_CORRECTION_EFFECTIVENESS_20260728.md`;
+- `docs\SMART_MASK_CANDIDATE_COMPARE_RESTORE_20260728.md`.
+
+The actual current Debug EXE real-candidate restore/save/reopen replay is now
+Complete under
+`artifacts\operator-video\20260728-smartmask-restore-save-retry1`. It used real
+MobileSAM on Kolektor `kos14/Part7`, restored the automatic candidate after a
+positive/negative rerun, explicitly confirmed it, and reopened exactly one
+saved 96-point polygon and a 7,931-pixel mask. This closes workflow safety, not
+field accuracy; the saved mask IoU remains `0.3927`.
+
+Recipe-scoped `자동 윤곽` and canvas layout auto-fit are also Complete in the
+current uncommitted worktree. Enabling the option once makes each newly drawn
+rectangle start the existing MobileSAM candidate path; confirm/save remain
+explicit. Recipe load restores the visible setting without starting inference.
+After a side-panel or other shell layout change, the settled canvas viewport
+uses the existing Fit behavior automatically, while direct operator zoom/pan
+is unchanged. The current Debug EXE completed the flow without a separate
+Smart Mask start click or Fit click. Evidence:
+`artifacts\operator-video\20260728-smart-contour-auto-fit`.
+
+Source-of-truth/operator-document synchronization is Complete in the current
+worktree. The next ready feature is the four-point-box geometry/export
+contract. Other remaining video-derived gaps are consumer-backed persistent
+object metadata and conditional polygon/raster cross-family z-order.
+Independent detection/anomaly adoption is blocked on new
+production-camera/cross-session data. P0-A through P5-B and the current Smart
+Mask safety/efficiency slices are not future priorities unless their contracts
+regress.
+
 ## P0-A/P0-B Labeling Editor Implementation Update (2026-07-27)
 
 Status: `Complete`. Field validation: `Not evaluated`.
@@ -709,39 +762,26 @@ Approved direction as of 2026-07-15:
 ## Next Development Recommendation
 
 The bounded shell, `Evaluation data evidence` surface, controlled Test01 engine
-comparison, 10K review Worklist, Recipe Dataset Version v2, and the declared
-YOLO11 runtime slices are complete. The 2026-07-27 V7/CVAT review establishes
-this current sequence:
+comparison, 10K review Worklist, Recipe Dataset Version v2, P0-A through P5-B,
+Smart Mask correction/recovery, Recipe-scoped automatic contour, canvas layout
+auto-fit, and the declared YOLO11 runtime slices are complete. The current
+sequence is:
 
-1. Implement P0-A labeling command/productivity foundation: tool/class
-   shortcuts, repeat, duplicate, retained tool/class, shortcut help, and
-   deterministic text-entry exclusion. Keep Viewer/OpenGL/ROI/brush/eraser
-   behavior protected.
-   Recommended model: `gpt-5.6-terra`
-   Reasoning effort: `medium`
-2. After P0-A passes, implement P0-B positive/negative-point Smart Mask
-   refinement with clear/rerun replacement, confirm/skip, no-autosave, stale
-   result rejection, and current-EXE evidence.
+1. Define the four-point-box geometry/export contract before implementation.
+   Specify axis-aligned, rotated, or quadrilateral semantics, canonical
+   storage, supported exports, editing behavior, and backward compatibility.
+   Keep Viewer/OpenGL/ROI/brush/eraser behavior protected.
    Recommended model: `gpt-5.6-sol`
    Reasoning effort: `high`
-3. P1-C merge/split/hole/saved-object z-order/remove-underlying is complete
-   after the P1-A/P1-B preservation and canonical identity contracts. The P2
-   contextual hide/full-lock/movement-pin correction and polygon vertex
-   insert/delete plus bounded intelligent scissors are complete. P3
-   display-only image aids are also complete with source/file/history/overlay
-   immutability.
-   Recommended model: `gpt-5.6-terra`
-   Reasoning effort: `medium`
-4. P4 Dataset Health visual label QA is complete with problem-first discovery,
-   selected-image saved overlays, filtering, existing-editor navigation,
-   source immutability, and current-build 1920/1366 evidence.
-   Recommended model: `gpt-5.6-terra`
-   Reasoning effort: `medium`
-5. P5-A format-conversion preflight and P5-B batch AI preflight are complete.
-   Keep their dry-run/explicit-action/no-autosave contracts protected.
-   Recommended model: `gpt-5.6-terra`
-   Reasoning effort: `low` for regression-only maintenance
-6. When an approved NG-rich object-detection camera/session source with
+2. Persistent occluded/tag/group metadata remains blocked until an operator
+   workflow and at least one Recipe/export/training/review consumer are named.
+   Recommended model: none until the consumer contract exists
+   Reasoning effort: n/a
+3. Polygon/raster cross-family z-order remains blocked until a renderer defect
+   is reproduced with focused performance evidence.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+4. When an approved NG-rich object-detection camera/session source with
    trustworthy boxes becomes available, create a content-separated held-out
    split and rerun the frozen fingerprint/comparison/error-review path.
    Prerequisite: provenance-confirmed images and trustworthy boxes.

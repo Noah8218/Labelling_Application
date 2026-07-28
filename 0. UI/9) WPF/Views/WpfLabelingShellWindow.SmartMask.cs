@@ -58,7 +58,7 @@ namespace MvcVisionSystem
                 string error = string.Join(" ", request.Errors);
                 if (isStartingSession)
                 {
-                    smartMaskPromptSession.Reset();
+                    ResetSmartMaskPromptSession();
                 }
                 RefreshSmartMaskCommandState(error);
                 AppendLog("스마트 마스크 준비 실패: " + error);
@@ -66,6 +66,10 @@ namespace MvcVisionSystem
             }
 
             isCreatingSmartMask = true;
+            if (MainCanvasViewModel != null)
+            {
+                MainCanvasViewModel.IsTeachingMode = false;
+            }
             smartMaskCancellation?.Dispose();
             var cancellation = new CancellationTokenSource();
             smartMaskCancellation = cancellation;
@@ -132,14 +136,14 @@ namespace MvcVisionSystem
                 RegisterAnnotationHistoryBeforeChange("스마트 마스크 후보 다시 생성", markDirty: false);
             }
 
-            // One Smart Mask session owns one pending candidate. Re-running replaces it
-            // while already confirmed candidates remain under candidate-review ownership.
+            // Candidate Review still owns the one visible pending candidate. The Smart Mask
+            // session retains only the initial/latest alternatives until the object is resolved.
             ApplyDetectionCandidatesPreservingConfirmed(new[] { result.Candidate }, succeeded: true);
-            smartMaskPromptSession.MarkCandidateProduced();
+            smartMaskPromptSession.RecordCandidate(result.Candidate);
             RefreshPolygonOverlays();
             SetYoloCommandStatus(result.Summary + " / 확정 전 후보", isBusy: false);
             AppendLog($"{result.Summary} / {result.RuntimeSummary} / mask area {result.MaskArea}");
-            RefreshSmartMaskCommandState("포함점/제외점을 추가해 다시 생성하거나, 후보를 확정 또는 스킵하세요. 확정 전에는 저장되지 않습니다.");
+            RefreshSmartMaskCommandState("자동 후보가 부족할 때 보정 옵션에서 한 점을 추가하고 다시 생성해 비교하세요. 확정 전에는 저장되지 않습니다.");
         }
 
         private void ExecuteSetSmartMaskPointModeCommand(WpfSmartMaskPointInputMode mode)
@@ -155,9 +159,7 @@ namespace MvcVisionSystem
             smartMaskPromptSession.SetInputMode(nextMode);
             if (MainCanvasViewModel != null)
             {
-                MainCanvasViewModel.IsTeachingMode = nextMode == WpfSmartMaskPointInputMode.None
-                    && (activeAnnotationTool == WpfAnnotationTool.Rectangle
-                        || activeAnnotationTool == WpfAnnotationTool.Ellipse);
+                MainCanvasViewModel.IsTeachingMode = false;
                 MainCanvasViewModel.IsImagePointInputMode = nextMode != WpfSmartMaskPointInputMode.None;
                 MainCanvasViewModel.ImageViewer.SetViewMode(
                     activeAnnotationTool == WpfAnnotationTool.PanZoom
@@ -220,8 +222,97 @@ namespace MvcVisionSystem
 
             ResetSmartMaskPromptSession();
             SelectAnnotationTool(WpfAnnotationTool.Rectangle);
-            RefreshSmartMaskCommandState("다음 객체 둘레에 사각형 박스를 그린 뒤 스마트 마스크를 실행하세요.");
+            string nextDetail = CanvasPanelViewModel?.IsSmartMaskAutoContourEnabled == true
+                ? "다음 객체를 사각형으로 감싸면 자동 윤곽 후보가 바로 생성됩니다."
+                : "다음 객체 둘레에 사각형 박스를 그린 뒤 자동 윤곽 옵션을 켜세요.";
+            RefreshSmartMaskCommandState(nextDetail);
             SetYoloCommandStatus("스마트 마스크: 다음 객체 박스를 기다립니다.", isBusy: false);
+        }
+
+        private void ExecuteSetSmartMaskAutoContourMode(bool enabled)
+        {
+            EnsureProjectSettings();
+            global.Data.ProjectSettings.SmartMaskAutoContourEnabled = enabled;
+            string recipeName = GetCurrentRecipeName();
+            if (!string.IsNullOrWhiteSpace(recipeName))
+            {
+                try
+                {
+                    global.Data.SaveConfig(recipeName, refreshDatasetVersion: false);
+                }
+                catch (Exception error)
+                {
+                    AppendLog("자동 윤곽 옵션 저장 실패: " + error.Message);
+                }
+            }
+
+            if (enabled)
+            {
+                SelectAnnotationTool(WpfAnnotationTool.Rectangle);
+                RefreshSmartMaskCommandState("자동 윤곽 켜짐 · 새 사각형을 완성하면 MobileSAM 후보를 바로 만듭니다.");
+                SetYoloCommandStatus("라벨링 옵션: 자동 윤곽 켜짐", isBusy: false);
+                AppendLog("자동 윤곽 켜짐: 새 사각형마다 검토용 윤곽 후보를 자동 생성합니다.");
+                return;
+            }
+
+            RefreshSmartMaskCommandState("자동 윤곽 꺼짐 · 사각형은 일반 박스 라벨로 유지됩니다.");
+            SetYoloCommandStatus("라벨링 옵션: 일반 박스", isBusy: false);
+            AppendLog("자동 윤곽 꺼짐: 새 사각형을 일반 박스 라벨로 유지합니다.");
+        }
+
+        private void TryStartAutoSmartMaskForNewRoi(CanvasRect<float> roiRect)
+        {
+            if (roiRect == null
+                || roiRect.ShapeKind != CanvasRoiShapeKind.Rectangle
+                || CanvasPanelViewModel?.IsSmartMaskAutoContourEnabled != true
+                || global.Data.ProjectSettings?.DatasetPurpose != LabelingDatasetPurpose.Segmentation
+                || activeAnnotationTool != WpfAnnotationTool.Rectangle
+                || smartMaskPromptSession.HasSession
+                || candidateReviewState.HasPendingCandidates
+                || isCreatingSmartMask)
+            {
+                return;
+            }
+
+            AppendLog("자동 윤곽: 새 사각형을 MobileSAM 프롬프트로 사용합니다.");
+            ExecuteCreateSmartMaskCandidateCommand();
+        }
+
+        private void ContinueAutoSmartMaskAfterResolvedCandidate(string resolution)
+        {
+            if (CanvasPanelViewModel?.IsSmartMaskAutoContourEnabled != true
+                || candidateReviewState.HasPendingCandidates)
+            {
+                return;
+            }
+
+            ResetSmartMaskPromptSession();
+            SelectAnnotationTool(WpfAnnotationTool.Rectangle);
+            RefreshSmartMaskCommandState($"{resolution} 완료 · 다음 객체를 사각형으로 감싸세요.");
+            SetYoloCommandStatus($"자동 윤곽: {resolution} 완료 · 다음 박스 대기", isBusy: false);
+        }
+
+        private void ExecuteSelectSmartMaskCandidateVersionCommand(WpfSmartMaskCandidateVersion version)
+        {
+            if (isCreatingSmartMask
+                || !candidateReviewState.HasPendingCandidates
+                || !smartMaskPromptSession.TrySelectCandidate(version, out YoloWorkerSmokeCandidate candidate))
+            {
+                RefreshSmartMaskCommandState("비교할 Smart Mask 후보가 없습니다.");
+                return;
+            }
+
+            candidateReviewState.LoadPendingCandidates(new[] { candidate }, clearConfirmed: false);
+            ApplyCanvasDisplayMode(WpfCanvasDisplayMode.InferenceOnly, redraw: false, logChange: false);
+            RefreshCandidateListWithPreferred(candidate);
+            RefreshObjectList();
+            RedrawReviewRois();
+            RefreshCanvasWorkflowContext();
+            string versionText = version == WpfSmartMaskCandidateVersion.Initial ? "이전" : "현재";
+            AddCandidateReviewHistory($"Smart Mask {versionText} 후보 보기 · 확정 전");
+            SetYoloCommandStatus($"Smart Mask {versionText} 후보 선택 / 확정 전", isBusy: false);
+            AppendLog($"Smart Mask {versionText} 후보로 전환했습니다. 확정 전에는 저장되지 않습니다.");
+            RefreshSmartMaskCommandState($"{versionText} 후보를 보고 있습니다. 확정하면 이 후보만 저장됩니다.");
         }
 
         private bool TryApplySmartMaskPointInput(CanvasImagePointEventArgs e)
@@ -248,7 +339,7 @@ namespace MvcVisionSystem
             }
 
             RefreshPolygonOverlays();
-            RefreshSmartMaskCommandState("보정점을 추가했습니다. 필요한 점을 더 찍거나 후보 다시 생성을 누르세요.");
+            RefreshSmartMaskCommandState("보정점을 추가했습니다. 후보 다시 생성으로 효과를 비교한 뒤 부족할 때 다음 점을 추가하세요.");
             return true;
         }
 
@@ -296,6 +387,11 @@ namespace MvcVisionSystem
             }
 
             bool isVisible = global.Data.ProjectSettings?.DatasetPurpose == LabelingDatasetPurpose.Segmentation;
+            if (smartMaskPromptSession.HasSession
+                && !smartMaskPromptSession.MatchesContext(activeImagePath, GetCurrentSmartMaskRecipeName()))
+            {
+                ResetSmartMaskPromptSession();
+            }
             bool hasSession = isVisible && smartMaskPromptSession.HasSession;
             int promptIndex = isVisible && !hasSession ? FindSmartMaskPromptIndex() : -1;
             string effectiveDetail = detail;
@@ -333,7 +429,7 @@ namespace MvcVisionSystem
             if (string.IsNullOrWhiteSpace(effectiveDetail))
             {
                 effectiveDetail = hasSession
-                    ? "포함점/제외점으로 후보를 보정할 수 있습니다. 다시 생성하면 대기 후보 하나를 교체합니다."
+                    ? "포함점/제외점을 한 점씩 추가하고 다시 생성해 비교하세요. 다시 생성하면 대기 후보 하나를 교체합니다."
                     : promptIndex < 0
                         ? "결함 둘레에 사각형 박스를 그리면 MobileSAM 후보 마스크를 만들 수 있습니다."
                         : "마지막 사각형을 시작 박스로 사용합니다. 결과는 확정 전 후보로만 표시됩니다.";
@@ -351,7 +447,12 @@ namespace MvcVisionSystem
                 smartMaskPromptSession.PositivePointCount,
                 smartMaskPromptSession.NegativePointCount,
                 smartMaskPromptSession.InputMode,
-                smartMaskPromptSession.HasProducedCandidate && !candidateReviewState.HasPendingCandidates);
+                smartMaskPromptSession.HasProducedCandidate,
+                smartMaskPromptSession.HasProducedCandidate && !candidateReviewState.HasPendingCandidates,
+                smartMaskPromptSession.HasCandidateComparison
+                    && candidateReviewState.PendingCandidates.Count == 1
+                    && smartMaskPromptSession.IsSelectedCandidate(candidateReviewState.PendingCandidates[0]),
+                smartMaskPromptSession.SelectedCandidateVersion);
         }
     }
 }

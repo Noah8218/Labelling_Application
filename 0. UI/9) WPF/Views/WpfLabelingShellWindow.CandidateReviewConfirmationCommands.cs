@@ -50,10 +50,19 @@ namespace MvcVisionSystem
 
             YoloWorkerSmokeCandidate nextCandidate = FindNextVisibleCandidateAfter(candidate, new[] { candidate });
             RegisterAnnotationHistoryBeforeChange("Skip AI candidate", markDirty: false);
+            bool resolvedSmartMaskCandidate = smartMaskPromptSession.IsSelectedCandidate(candidate);
             candidateReviewState.SkipCandidate(candidate);
+            if (resolvedSmartMaskCandidate)
+            {
+                smartMaskPromptSession.MarkCandidateResolved();
+            }
             if (!candidateReviewState.HasPendingCandidates)
             {
                 ApplyCanvasDisplayMode(WpfCanvasDisplayMode.LabelsOnly, redraw: false, logChange: false);
+            }
+            if (resolvedSmartMaskCandidate && !candidateReviewState.HasPendingCandidates)
+            {
+                ContinueAutoSmartMaskAfterResolvedCandidate("스킵");
             }
 
             RefreshCandidateListWithPreferred(nextCandidate);
@@ -156,11 +165,16 @@ namespace MvcVisionSystem
             }
 
             WpfCandidateConfirmationPlan plan = attempt.Plan;
+            bool resolvesSmartMaskCandidate = plan.ConfirmableCandidates.Any(smartMaskPromptSession.IsSelectedCandidate);
             YoloWorkerSmokeCandidate selectedBeforeConfirm = GetSelectedCandidate();
             YoloWorkerSmokeCandidate nextCandidate = FindNextVisibleCandidateAfter(selectedBeforeConfirm, plan.ConfirmableCandidates);
             RegisterAnnotationHistoryBeforeChange($"Confirm {scope}");
             EnsureConfirmedCandidateClassItems(plan.ConfirmableCandidates);
             candidateConfirmationService.ApplyConfirmation(candidateReviewState, plan);
+            if (resolvesSmartMaskCandidate)
+            {
+                smartMaskPromptSession.MarkCandidateResolved();
+            }
             if (!candidateReviewState.HasPendingCandidates)
             {
                 ApplyCanvasDisplayMode(WpfCanvasDisplayMode.LabelsOnly, redraw: false, logChange: false);
@@ -182,6 +196,10 @@ namespace MvcVisionSystem
             if (saved)
             {
                 MarkActiveImageConfirmed();
+                if (resolvesSmartMaskCandidate && !candidateReviewState.HasPendingCandidates)
+                {
+                    ContinueAutoSmartMaskAfterResolvedCandidate("확정");
+                }
             }
             if (candidateReviewState.HasPendingCandidates)
             {

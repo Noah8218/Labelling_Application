@@ -513,6 +513,16 @@ internal static partial class Program
             return MobileSamBoxPromptTests.RunRealMobileSamPointCorrection(args);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--smart-mask-candidate-compare-restore", StringComparison.OrdinalIgnoreCase)))
+        {
+            return MobileSamBoxPromptTests.RunSmartMaskCandidateCompareRestore(args);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--real-mobile-sam-correction-effectiveness", StringComparison.OrdinalIgnoreCase)))
+        {
+            return MobileSamUsabilityMatrixTests.RunRealMobileSamCorrectionEffectiveness(args);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--real-mobile-sam-usability-matrix", StringComparison.OrdinalIgnoreCase)
             || string.Equals(arg, "--real-mobile-sam-box-jitter-matrix", StringComparison.OrdinalIgnoreCase)))
         {
@@ -1906,7 +1916,11 @@ internal static partial class Program
         bool labelsOnly = HasArgument(args, "--labels-only");
         bool segmentationCandidates = HasArgument(args, "--segmentation-candidates");
         bool smartMaskCandidate = HasArgument(args, "--smart-mask-candidate");
+        bool smartMaskCandidateComparison = HasArgument(args, "--smart-mask-candidate-comparison");
+        bool smartMaskShowInitialCandidate = HasArgument(args, "--smart-mask-show-initial-candidate");
         bool smartMaskPromptOnly = HasArgument(args, "--smart-mask-prompt-only");
+        bool smartMaskCorrectionExpanded = HasArgument(args, "--smart-mask-correction-expanded");
+        bool smartMaskAutoContourEnabled = HasArgument(args, "--smart-mask-auto-contour-enabled");
         string smartMaskPromptBox = GetArgumentValue(args, "--smart-mask-prompt-box", string.Empty);
         string smartMaskPositivePoint = GetArgumentValue(args, "--smart-mask-positive-point", string.Empty);
         string smartMaskNegativePoint = GetArgumentValue(args, "--smart-mask-negative-point", string.Empty);
@@ -2283,7 +2297,25 @@ internal static partial class Program
                     }
                     ApplyVisualSmokeAnnotationTool(window, annotationTool, imageSize);
                     PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
-                    if (smartMaskCandidate)
+                    if (smartMaskAutoContourEnabled
+                        && !window.CanvasPanelViewModel.IsSmartMaskAutoContourEnabled)
+                    {
+                        window.CanvasPanelViewModel.ToggleSmartMaskAutoContourCommand.Execute(null);
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
+                    }
+                    if (smartMaskCandidateComparison)
+                    {
+                        MobileSamBoxPromptTests.ApplyVisualSmokeSmartMaskCandidateComparison(
+                            window,
+                            imageSize,
+                            smartMaskPromptBox);
+                        if (smartMaskShowInitialCandidate)
+                        {
+                            window.CanvasPanelViewModel.ShowInitialSmartMaskCandidateCommand.Execute(null);
+                            PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
+                        }
+                    }
+                    else if (smartMaskCandidate)
                     {
                         MobileSamBoxPromptTests.ApplyVisualSmokeSmartMaskCandidate(
                             window,
@@ -2291,6 +2323,10 @@ internal static partial class Program
                             smartMaskPromptBox,
                             smartMaskPositivePoint,
                             smartMaskNegativePoint);
+                        if (smartMaskCorrectionExpanded)
+                        {
+                            window.CanvasPanelViewModel.ToggleSmartMaskCorrectionOptionsCommand.Execute(null);
+                        }
                     }
                     else if (smartMaskPromptOnly)
                     {
@@ -7590,6 +7626,63 @@ internal static partial class Program
             TimeSpan.FromSeconds(2));
     }
 
+    private static bool TryPasteAutomationValueByName(
+        System.Windows.Automation.AutomationElement root,
+        string name,
+        string value)
+    {
+        System.Windows.Automation.AutomationElement element = EnumerateAutomationDescendants(root)
+            .FirstOrDefault(candidate =>
+            {
+                try
+                {
+                    return candidate.Current.IsEnabled
+                        && string.Equals(candidate.Current.Name, name, StringComparison.Ordinal)
+                        && candidate.TryGetCurrentPattern(
+                            System.Windows.Automation.ValuePattern.Pattern,
+                            out object pattern)
+                        && pattern is System.Windows.Automation.ValuePattern valuePattern
+                        && !valuePattern.Current.IsReadOnly;
+                }
+                catch (System.Windows.Automation.ElementNotAvailableException)
+                {
+                    return false;
+                }
+            });
+        if (element == null)
+        {
+            return false;
+        }
+
+        string text = value ?? string.Empty;
+        NativeClick(GetAutomationCenter(element));
+        Thread.Sleep(60);
+        SendKeys.SendWait("^a");
+        Thread.Sleep(30);
+        Clipboard.SetText(text);
+        SendKeys.SendWait("^v");
+        return WaitUntil(
+            () =>
+            {
+                try
+                {
+                    return element.TryGetCurrentPattern(
+                            System.Windows.Automation.ValuePattern.Pattern,
+                            out object pattern)
+                        && pattern is System.Windows.Automation.ValuePattern valuePattern
+                        && string.Equals(
+                            valuePattern.Current.Value ?? string.Empty,
+                            text,
+                            StringComparison.Ordinal);
+                }
+                catch (System.Windows.Automation.ElementNotAvailableException)
+                {
+                    return false;
+                }
+            },
+            TimeSpan.FromSeconds(2));
+    }
+
     internal static string GetAutomationValueByAutomationId(
         System.Windows.Automation.AutomationElement root,
         string automationId)
@@ -7994,7 +8087,8 @@ internal static partial class Program
     private static bool SelectImageQueueItemBySearch(Process process, string imageId, TimeSpan timeout)
     {
         System.Windows.Automation.AutomationElement root = RefreshAutomationRoot(process);
-        if (!TryPasteAutomationValueByAutomationId(root, "ImageQueueSearchBox", imageId))
+        if (!TryPasteAutomationValueByAutomationId(root, "ImageQueueSearchBox", imageId)
+            && !TryPasteAutomationValueByName(root, "이미지 큐 검색", imageId))
         {
             Console.Error.WriteLine("IMAGE_QUEUE_SEARCH_BOX_NOT_FOUND " + BuildAutomationTextSample(root, 80));
             return false;
@@ -16160,11 +16254,13 @@ internal static partial class Program
             var data = new CData();
             data.ConfigureOutputRoot(datasetRoot);
             data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.Segmentation;
+            data.ProjectSettings.SmartMaskAutoContourEnabled = true;
             data.SaveConfig(recipeName);
 
             AssertTrue(File.Exists(configPath), $"recipe config was not saved: {configPath}");
             string xml = File.ReadAllText(configPath);
             AssertTrue(xml.Contains("<DatasetPurpose>Segmentation</DatasetPurpose>", StringComparison.Ordinal), "dataset purpose should be serialized as a stable text value");
+            AssertTrue(xml.Contains("<SmartMaskAutoContourEnabled>true</SmartMaskAutoContourEnabled>", StringComparison.OrdinalIgnoreCase), "automatic-contour labeling preference should be serialized at recipe scope");
             AssertTrue(File.Exists(manifestPath), $"dataset manifest was not saved: {manifestPath}");
 
             LabelingDatasetManifest manifest = JsonConvert.DeserializeObject<LabelingDatasetManifest>(File.ReadAllText(manifestPath));
@@ -16182,6 +16278,7 @@ internal static partial class Program
 
             CData loaded = new CData().LoadConfig(recipeName);
             AssertEqual(LabelingDatasetPurpose.Segmentation, loaded.ProjectSettings.DatasetPurpose);
+            AssertTrue(loaded.ProjectSettings.SmartMaskAutoContourEnabled, "automatic-contour labeling preference should survive recipe reopen");
         }
         finally
         {
@@ -23831,6 +23928,7 @@ internal static partial class Program
                 AssertEqual(512D, window.ShellViewModel.RightWorkflowExpandedPaneWidth);
                 AssertEqual(432D, imageQueueColumn.Width.Value);
                 window.ShellViewModel.SetRightWorkflowExpandedPaneWidth(500D);
+                window.ShellViewModel.SetImageQueueExpandedPaneWidth(420D);
                 imageQueueColumn.Width = new System.Windows.GridLength(420D);
                 window.ShellViewModel.ClosedCommand.Execute(null);
             }

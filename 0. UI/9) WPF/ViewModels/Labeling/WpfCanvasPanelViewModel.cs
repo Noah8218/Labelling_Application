@@ -133,23 +133,37 @@ namespace MvcVisionSystem
         private ICommand clearSmartMaskPointsCommand = new RelayCommand(NoOpCommand);
         private ICommand cancelSmartMaskGenerationCommand = new RelayCommand(NoOpCommand);
         private ICommand nextSmartMaskInstanceCommand = new RelayCommand(NoOpCommand);
+        private ICommand showInitialSmartMaskCandidateCommand = new RelayCommand(NoOpCommand);
+        private ICommand showLatestSmartMaskCandidateCommand = new RelayCommand(NoOpCommand);
+        private ICommand toggleSmartMaskAutoContourCommand;
+        private ICommand toggleSmartMaskCorrectionOptionsCommand;
         private ICommand toggleShortcutHelpCommand;
         private System.Windows.Visibility smartMaskVisibility = System.Windows.Visibility.Collapsed;
+        private System.Windows.Visibility smartMaskSessionActionVisibility = System.Windows.Visibility.Collapsed;
         private System.Windows.Visibility smartMaskSessionVisibility = System.Windows.Visibility.Collapsed;
+        private System.Windows.Visibility smartMaskCorrectionOptionsVisibility = System.Windows.Visibility.Collapsed;
+        private System.Windows.Visibility smartMaskCandidateComparisonVisibility = System.Windows.Visibility.Collapsed;
         private System.Windows.Visibility shortcutHelpVisibility = System.Windows.Visibility.Collapsed;
         private WpfAnnotationTool? lastDrawingTool;
         private string lastLabelClassName = string.Empty;
         private bool isSmartMaskEnabled;
+        private bool isSmartMaskAutoContourEnabled;
+        private bool isSmartMaskAutoContourToggleEnabled;
         private string smartMaskActionText = "박스 → 스마트 마스크";
         private string smartMaskToolTip = "결함 둘레에 박스를 그린 뒤 MobileSAM 후보 마스크를 만듭니다.";
         private string smartMaskPromptSummaryText = "박스를 그려 첫 후보를 만드세요.";
+        private string smartMaskCandidateComparisonText = string.Empty;
         private bool isSmartMaskPointActionEnabled;
         private bool isSmartMaskPointUndoEnabled;
         private bool isSmartMaskCancelEnabled;
         private bool isSmartMaskNextInstanceEnabled;
+        private bool isShowInitialSmartMaskCandidateEnabled;
+        private bool isShowLatestSmartMaskCandidateEnabled;
+        private bool isSmartMaskCorrectionOptionsExpanded;
         private bool isPositiveSmartMaskPointMode;
         private bool isNegativeSmartMaskPointMode;
         private WpfSmartMaskDetailItem selectedSmartMaskDetail;
+        private Action<bool> smartMaskAutoContourChanged = _ => { };
         private Action<WpfSmartMaskPolygonDetail> smartMaskDetailChanged = _ => { };
 
         public string ViewName => nameof(WpfCanvasPanel);
@@ -468,11 +482,29 @@ namespace MvcVisionSystem
         public ICommand ClearSmartMaskPointsCommand => clearSmartMaskPointsCommand;
         public ICommand CancelSmartMaskGenerationCommand => cancelSmartMaskGenerationCommand;
         public ICommand NextSmartMaskInstanceCommand => nextSmartMaskInstanceCommand;
+        public ICommand ShowInitialSmartMaskCandidateCommand => showInitialSmartMaskCandidateCommand;
+        public ICommand ShowLatestSmartMaskCandidateCommand => showLatestSmartMaskCandidateCommand;
+        public ICommand ToggleSmartMaskAutoContourCommand
+            => toggleSmartMaskAutoContourCommand ??= new RelayCommand(
+                () =>
+                {
+                    IsSmartMaskAutoContourEnabled = !IsSmartMaskAutoContourEnabled;
+                    smartMaskAutoContourChanged(IsSmartMaskAutoContourEnabled);
+                });
+        public ICommand ToggleSmartMaskCorrectionOptionsCommand
+            => toggleSmartMaskCorrectionOptionsCommand ??= new RelayCommand(
+                () => IsSmartMaskCorrectionOptionsExpanded = !IsSmartMaskCorrectionOptionsExpanded);
 
         public System.Windows.Visibility SmartMaskVisibility
         {
             get => smartMaskVisibility;
             private set => SetProperty(ref smartMaskVisibility, value);
+        }
+
+        public System.Windows.Visibility SmartMaskSessionActionVisibility
+        {
+            get => smartMaskSessionActionVisibility;
+            private set => SetProperty(ref smartMaskSessionActionVisibility, value);
         }
 
         public System.Windows.Visibility SmartMaskSessionVisibility
@@ -481,10 +513,50 @@ namespace MvcVisionSystem
             private set => SetProperty(ref smartMaskSessionVisibility, value);
         }
 
+        public System.Windows.Visibility SmartMaskCorrectionOptionsVisibility
+        {
+            get => smartMaskCorrectionOptionsVisibility;
+            private set => SetProperty(ref smartMaskCorrectionOptionsVisibility, value);
+        }
+
+        public System.Windows.Visibility SmartMaskCandidateComparisonVisibility
+        {
+            get => smartMaskCandidateComparisonVisibility;
+            private set => SetProperty(ref smartMaskCandidateComparisonVisibility, value);
+        }
+
+        public bool IsSmartMaskCorrectionOptionsExpanded
+        {
+            get => isSmartMaskCorrectionOptionsExpanded;
+            private set
+            {
+                if (SetProperty(ref isSmartMaskCorrectionOptionsExpanded, value))
+                {
+                    SmartMaskCorrectionOptionsVisibility = value
+                        ? System.Windows.Visibility.Visible
+                        : System.Windows.Visibility.Collapsed;
+                    OnPropertyChanged(nameof(SmartMaskCorrectionOptionsText));
+                    OnPropertyChanged(nameof(SmartMaskCorrectionOptionsGlyph));
+                }
+            }
+        }
+
+        public string SmartMaskCorrectionOptionsText
+            => IsSmartMaskCorrectionOptionsExpanded ? "보정 닫기" : "보정 옵션";
+
+        public string SmartMaskCorrectionOptionsGlyph
+            => IsSmartMaskCorrectionOptionsExpanded ? "⌃" : "⌄";
+
         public string SmartMaskPromptSummaryText
         {
             get => smartMaskPromptSummaryText;
             private set => SetProperty(ref smartMaskPromptSummaryText, value ?? string.Empty);
+        }
+
+        public string SmartMaskCandidateComparisonText
+        {
+            get => smartMaskCandidateComparisonText;
+            private set => SetProperty(ref smartMaskCandidateComparisonText, value ?? string.Empty);
         }
 
         public bool IsSmartMaskPointActionEnabled
@@ -509,6 +581,18 @@ namespace MvcVisionSystem
         {
             get => isSmartMaskNextInstanceEnabled;
             private set => SetProperty(ref isSmartMaskNextInstanceEnabled, value);
+        }
+
+        public bool IsShowInitialSmartMaskCandidateEnabled
+        {
+            get => isShowInitialSmartMaskCandidateEnabled;
+            private set => SetProperty(ref isShowInitialSmartMaskCandidateEnabled, value);
+        }
+
+        public bool IsShowLatestSmartMaskCandidateEnabled
+        {
+            get => isShowLatestSmartMaskCandidateEnabled;
+            private set => SetProperty(ref isShowLatestSmartMaskCandidateEnabled, value);
         }
 
         public bool IsPositiveSmartMaskPointMode
@@ -539,6 +623,38 @@ namespace MvcVisionSystem
         {
             get => isSmartMaskEnabled;
             private set => SetProperty(ref isSmartMaskEnabled, value);
+        }
+
+        public bool IsSmartMaskAutoContourEnabled
+        {
+            get => isSmartMaskAutoContourEnabled;
+            private set
+            {
+                if (SetProperty(ref isSmartMaskAutoContourEnabled, value))
+                {
+                    OnPropertyChanged(nameof(SmartMaskAutoContourText));
+                    OnPropertyChanged(nameof(SmartMaskAutoContourToolTip));
+                }
+            }
+        }
+
+        public bool IsSmartMaskAutoContourToggleEnabled
+        {
+            get => isSmartMaskAutoContourToggleEnabled;
+            private set => SetProperty(ref isSmartMaskAutoContourToggleEnabled, value);
+        }
+
+        public string SmartMaskAutoContourText
+            => IsSmartMaskAutoContourEnabled ? "자동 윤곽: 켜짐" : "자동 윤곽: 꺼짐";
+
+        public string SmartMaskAutoContourToolTip
+            => IsSmartMaskAutoContourEnabled
+                ? "새 사각형을 완성하면 MobileSAM 윤곽 후보를 바로 만듭니다. 후보는 확인 전까지 저장되지 않습니다."
+                : "한 번 켜 두면 새 사각형을 완성할 때마다 MobileSAM 윤곽 후보를 바로 만듭니다.";
+
+        public void RestoreSmartMaskAutoContourMode(bool enabled)
+        {
+            IsSmartMaskAutoContourEnabled = enabled;
         }
 
         public string SmartMaskActionText
@@ -922,6 +1038,9 @@ namespace MvcVisionSystem
             Action clearPoints,
             Action cancelGeneration,
             Action nextInstance,
+            Action showInitialCandidate,
+            Action showLatestCandidate,
+            Action<bool> autoContourChanged,
             Action<WpfSmartMaskPolygonDetail> detailChanged)
         {
             ConfigureSmartMaskCommand(createSmartMask);
@@ -931,6 +1050,9 @@ namespace MvcVisionSystem
             clearSmartMaskPointsCommand = new RelayCommand(clearPoints ?? NoOpCommand);
             cancelSmartMaskGenerationCommand = new RelayCommand(cancelGeneration ?? NoOpCommand);
             nextSmartMaskInstanceCommand = new RelayCommand(nextInstance ?? NoOpCommand);
+            showInitialSmartMaskCandidateCommand = new RelayCommand(showInitialCandidate ?? NoOpCommand);
+            showLatestSmartMaskCandidateCommand = new RelayCommand(showLatestCandidate ?? NoOpCommand);
+            smartMaskAutoContourChanged = autoContourChanged ?? (_ => { });
             smartMaskDetailChanged = detailChanged ?? (_ => { });
             SelectedSmartMaskDetail = SmartMaskDetails.First(item => item.Detail == WpfSmartMaskPolygonDetail.Balanced);
             OnPropertyChanged(nameof(AddPositiveSmartMaskPointCommand));
@@ -939,6 +1061,8 @@ namespace MvcVisionSystem
             OnPropertyChanged(nameof(ClearSmartMaskPointsCommand));
             OnPropertyChanged(nameof(CancelSmartMaskGenerationCommand));
             OnPropertyChanged(nameof(NextSmartMaskInstanceCommand));
+            OnPropertyChanged(nameof(ShowInitialSmartMaskCandidateCommand));
+            OnPropertyChanged(nameof(ShowLatestSmartMaskCandidateCommand));
         }
 
         public void SetSmartMaskState(bool isVisible, bool isEnabled, bool isBusy, string detail, bool hasSession = false)
@@ -946,7 +1070,11 @@ namespace MvcVisionSystem
             SmartMaskVisibility = isVisible
                 ? System.Windows.Visibility.Visible
                 : System.Windows.Visibility.Collapsed;
+            SmartMaskSessionActionVisibility = isVisible && hasSession
+                ? System.Windows.Visibility.Visible
+                : System.Windows.Visibility.Collapsed;
             IsSmartMaskEnabled = isVisible && isEnabled && !isBusy;
+            IsSmartMaskAutoContourToggleEnabled = isVisible && !hasSession && !isBusy;
             SmartMaskActionText = isBusy
                 ? "마스크 생성 중..."
                 : hasSession
@@ -963,20 +1091,49 @@ namespace MvcVisionSystem
             int positivePointCount,
             int negativePointCount,
             WpfSmartMaskPointInputMode inputMode,
-            bool canMoveToNextInstance)
+            bool hasProducedCandidate,
+            bool canMoveToNextInstance,
+            bool hasCandidateComparison = false,
+            WpfSmartMaskCandidateVersion selectedCandidateVersion = WpfSmartMaskCandidateVersion.Latest)
         {
             SmartMaskSessionVisibility = isVisible
                 ? System.Windows.Visibility.Visible
                 : System.Windows.Visibility.Collapsed;
+            if (!isVisible)
+            {
+                IsSmartMaskCorrectionOptionsExpanded = false;
+            }
             IsSmartMaskPointActionEnabled = isVisible && !isBusy;
             IsSmartMaskPointUndoEnabled = isVisible && !isBusy && positivePointCount + negativePointCount > 0;
             IsSmartMaskCancelEnabled = isVisible && isBusy;
             IsSmartMaskNextInstanceEnabled = isVisible && !isBusy && canMoveToNextInstance;
+            SmartMaskCandidateComparisonVisibility = isVisible && hasCandidateComparison
+                ? System.Windows.Visibility.Visible
+                : System.Windows.Visibility.Collapsed;
+            IsShowInitialSmartMaskCandidateEnabled = isVisible
+                && !isBusy
+                && hasCandidateComparison
+                && selectedCandidateVersion != WpfSmartMaskCandidateVersion.Initial;
+            IsShowLatestSmartMaskCandidateEnabled = isVisible
+                && !isBusy
+                && hasCandidateComparison
+                && selectedCandidateVersion != WpfSmartMaskCandidateVersion.Latest;
+            SmartMaskCandidateComparisonText = !isVisible || !hasCandidateComparison
+                ? string.Empty
+                : selectedCandidateVersion == WpfSmartMaskCandidateVersion.Initial
+                    ? "이전 후보를 보고 있음 · 확정하면 이 후보만 저장"
+                    : "현재 후보를 보고 있음 · 확정하면 이 후보만 저장";
             IsPositiveSmartMaskPointMode = inputMode == WpfSmartMaskPointInputMode.Positive;
             IsNegativeSmartMaskPointMode = inputMode == WpfSmartMaskPointInputMode.Negative;
-            SmartMaskPromptSummaryText = isVisible
-                ? $"+ 포함 {positivePointCount} · − 제외 {negativePointCount} · 점을 추가한 뒤 후보 다시 생성"
-                : "박스를 그려 첫 후보를 만드세요.";
+            SmartMaskPromptSummaryText = !isVisible
+                ? "박스를 그려 첫 후보를 만드세요."
+                : isBusy
+                    ? "자동 후보를 계산하고 있습니다."
+                    : positivePointCount + negativePointCount > 0
+                        ? $"+ 포함 {positivePointCount} · − 제외 {negativePointCount} · 한 점씩 다시 생성해 비교"
+                        : hasProducedCandidate
+                            ? "자동 후보 준비 · 그대로 확정하거나 필요할 때만 보정"
+                            : "시작 박스로 자동 후보를 준비합니다.";
         }
 
         public void SetBrushSize(int size)

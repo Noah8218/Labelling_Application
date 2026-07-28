@@ -234,6 +234,11 @@ internal static class WpfShellStructureTests
         AssertNamedXamlBinding(shellXaml, xName, "RightWorkspaceSplitter", "Visibility", "ShellViewModel.IsWorkspaceSplitterVisible");
         AssertTrue(shellXamlSource.Contains("LeftWorkspaceSplitter_DragCompleted", StringComparison.Ordinal), "left workspace resize should preserve the dock width binding after dragging");
         AssertTrue(shellXamlSource.Contains("RightWorkspaceSplitter_DragCompleted", StringComparison.Ordinal), "image queue resize should persist after dragging");
+        AssertTrue(
+            shellSource.Contains("MainCanvasView.SizeChanged += MainCanvasView_SizeChanged", StringComparison.Ordinal)
+                && shellSource.Contains("DispatcherPriority.ContextIdle", StringComparison.Ordinal)
+                && shellSource.Contains("MainCanvasViewModel.ImageViewer.ZoomToFit()", StringComparison.Ordinal),
+            "canvas viewport layout changes should automatically fit the image after the layout settles");
         AssertNamedXamlElement(shellXaml, xName, "Button", "ResetWorkspaceLayoutButton");
         AssertNamedXamlBinding(shellXaml, xName, "ResetWorkspaceLayoutButton", "Command", "ShellViewModel.ResetWorkspaceLayoutCommand");
         AssertNamedXamlBinding(shellXaml, xName, "RightWorkflowExpandedContent", "Visibility", "ShellViewModel.IsRightWorkflowDockExpanded");

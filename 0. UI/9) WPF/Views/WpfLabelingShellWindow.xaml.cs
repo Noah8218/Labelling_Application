@@ -230,6 +230,7 @@ namespace MvcVisionSystem
         private bool suppressAnnotationHistory;
         private string annotationDirtyReason = string.Empty;
         private string activeRoiEditHistoryOverlayId = string.Empty;
+        private int canvasLayoutAutoFitVersion;
         private readonly WpfLabelingShellViewModels viewModels;
 
         public WpfLabelingShellWindow()
@@ -301,6 +302,7 @@ namespace MvcVisionSystem
             MainCanvasViewModel.ImagePointReleased += MainCanvasViewModel_ImagePointReleased;
             MainCanvasViewModel.RenderDiagnosticsCaptured += MainCanvasViewModel_RenderDiagnosticsCaptured;
             MainCanvasView.DataContext = MainCanvasViewModel;
+            MainCanvasView.SizeChanged += MainCanvasView_SizeChanged;
             InitializeImageQueuePanel();
             InitializeYoloEditorPanel();
             TryRestoreLastOpenedDatasetOnStartup();

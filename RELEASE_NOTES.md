@@ -13,6 +13,11 @@ Current focus:
 
 Recent verified areas:
 
+- Recipe-scoped segmentation `자동 윤곽` mode: enable it once, then each new
+  rectangle starts a Smart Mask candidate automatically. Candidate approval
+  and label save remain explicit.
+- Canvas layout auto-fit after side-panel collapse, expansion, or other
+  viewport-size changes; ordinary operator zoom and pan remain unchanged.
 - Local YOLOv5/YOLOv8 Detect comparison with separate runtimes, test-preferred/validation-reference split handling, and Candidate Review metrics/Takt presentation.
 - Dataset-purpose-aware YOLOv8 Detect/SEG/Classification weight selection when connecting a local runtime folder.
 - Segmentation brush/polygon save, reopen, and training-export paths.
@@ -24,6 +29,8 @@ Recent verified areas:
 
 Not a release claim:
 
+- Automatic contour is an assisted-labeling workflow, not automatic candidate
+  approval or model-accuracy evidence.
 - The current object-detection comparison uses validation with one NG object because the test split is empty; it is not model-adoption evidence.
 - Production YOLOv8 segmentation accuracy still requires held-out evaluation on real labeled datasets.
 - Anomaly detection remains an active workflow area, not a completed product mode.

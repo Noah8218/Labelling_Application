@@ -86,6 +86,7 @@ namespace MvcVisionSystem
 
             string overlayId = e.RoiRect.UniqueId ?? string.Empty;
             int existingIndex = FindManualRoiIndexByOverlayId(overlayId);
+            bool addedNewManualRoi = existingIndex < 0;
             if (existingIndex >= 0)
             {
                 if (manualRois[existingIndex] != bounds || GetManualRoiShapeKind(existingIndex) != e.RoiRect.ShapeKind)
@@ -116,6 +117,10 @@ namespace MvcVisionSystem
             SetModelStatus($"라벨 추가: {shapeName} {WpfCandidateReviewPresenter.FormatBoundsCompact(bounds)}");
             AppendLog($"라벨 추가({shapeName}): {bounds.X},{bounds.Y},{bounds.Width},{bounds.Height}");
             RefreshSmartMaskCommandState();
+            if (addedNewManualRoi)
+            {
+                TryStartAutoSmartMaskForNewRoi(e.RoiRect);
+            }
         }
 
         private void MainCanvasViewModel_RoiEditingCompleted(object sender, OpenVisionLab.ImageCanvas.Model.RoiChangedEventArgs e)

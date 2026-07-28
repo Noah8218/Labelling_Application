@@ -64,6 +64,8 @@ namespace MvcVisionSystem
         private void ApplyProjectDatasetPurposeToWorkflow()
         {
             EnsureProjectSettings();
+            CanvasPanelViewModel?.RestoreSmartMaskAutoContourMode(
+                global.Data.ProjectSettings.SmartMaskAutoContourEnabled);
             LearningWorkflowViewModel?.ApplyDatasetPurpose(global.Data.ProjectSettings.DatasetPurpose);
             RefreshCanvasAnnotationToolScope();
             ApplyAnnotationToolSelection(LearningWorkflowViewModel?.SelectedTool);
@@ -124,6 +126,8 @@ namespace MvcVisionSystem
         {
             EnsureProjectSettings();
             global.Data.ProjectSettings.DatasetPurpose = purpose;
+            CanvasPanelViewModel?.RestoreSmartMaskAutoContourMode(
+                global.Data.ProjectSettings.SmartMaskAutoContourEnabled);
             LearningWorkflowViewModel?.ApplyDatasetPurpose(purpose);
 
             // Recipe creation can run while the dataset-purpose ListBox still

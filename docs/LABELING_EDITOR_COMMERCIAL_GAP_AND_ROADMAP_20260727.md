@@ -4,6 +4,24 @@ Date: 2026-07-27
 Status: Complete
 Scope: V7/CVAT 영상 근거와 현재 Labeling Studio 이미지 라벨링 편집기
 
+Latest update (2026-07-28):
+
+- interactive Smart Mask and automatic filled-boundary presentation are
+  complete;
+- correction controls are now contextual: the automatic candidate is the
+  default and point/detail controls appear only through `보정 옵션`;
+- actual Debug EXE evidence is recorded in
+  `docs\SMART_MASK_CONTEXTUAL_CORRECTION_UX_20260728.md`;
+- real correction response is recorded in
+  `docs\SMART_MASK_CORRECTION_EFFECTIVENESS_20260728.md`: positive direction
+  `6/6`, negative direction `4/4` applicable, combined held-out improvement
+  `3/4`;
+- because two combined corrections worsened, contextual previous/current
+  candidate comparison and restoration are now complete in
+  `docs\SMART_MASK_CANDIDATE_COMPARE_RESTORE_20260728.md`;
+- one selected candidate remains pending and unsaved until the existing
+  Candidate Review confirmation saves it.
+
 ## 1. 작성 이유
 
 기존 상용 영상 비교는 Dataset Health 시각 QA를 첫 개발 항목으로
@@ -238,11 +256,11 @@ segmentation의 주 생산 도구 목록에 포함되지 않으므로 상용 비
 | 기본 shape와 직접 편집 | `3.5/5` | 15% | 저장 가능한 box/polygon/brush/eraser와 선택 폴리곤 정점 추가·삭제 |
 | 반복·고처리량 생산성 | `2.8/5` | 15% | P0-A shortcut/repeat/duplicate/help 완료; batch propagation은 제외 |
 | mask/geometry 구조 편집 | `3.8/5` | 20% | P1-A/P1-B 계약과 merge/join, axis-aligned split/slice, enclosed hole add/fill, saved-object z-order, remove-underlying 완료 |
-| 대화형 AI correction | `3.5/5` | 20% | P0-B box+positive/negative correction, rerun-replace, 상세도, 다음 객체 완료 |
+| 대화형 AI correction | `3.7/5` | 20% | P0-B box+positive/negative correction, rerun, 이전/현재 후보 복원, 선택 후보만 확정 저장 |
 | 객체 상태·metadata | `2.0/5` | 10% | P2 session-only hide/full-lock/movement-pin, compact state icons, contextual segment options 완료; 영속 tag/group/occlusion은 미구현 |
 | 이미지·overlay 가시성 | `3.5/5` | 10% | compact display-only brightness/contrast/gamma/invert/equalization과 overlay 좌표 불변 검증 |
 | 저장·검토 안정성 | `4.0/5` | 10% | Recipe/no-autosave/canonical save/provenance |
-| 가중 합계 | **`3.4/5`** | 100% | contextual Object Review, precision geometry, compact display-only aids를 검증한 구조적 워크플로 추정 |
+| 가중 합계 | **`3.4/5`** | 100% | contextual Object Review, Smart Mask 복원, precision geometry, compact display-only aids를 검증한 구조적 워크플로 추정 |
 
 이 점수는 제품 전체 완성도나 모델 정확도가 아닙니다. 현재 제품 전체의
 집중형 로컬 워크플로 평가는 `4.0/5`로 유지하되, 라벨링 편집기 깊이는
@@ -270,7 +288,7 @@ video propagation, collaboration이 남아 있으므로 CVAT/V7 parity로
 | 항목 | 상태 | 현재 근거 | 완료 전 남은 증거 |
 | --- | --- | --- | --- |
 | P0-A command/productivity | **Complete** | 단축키·반복·복제·도움말 구현, focused 회귀, current-source 및 actual-EXE 1920x1080 증거 통과 | 상용 parity는 아니며 이후 회귀 시에만 재개 |
-| P0-B interactive Smart Mask | **Complete** | 실제 box+positive+negative worker, session/stale/replace/no-autosave 계약, actual-EXE confirm/next-instance 통과 | field validation은 `Not evaluated`; 이후 회귀 시에만 재개 |
+| P0-B interactive Smart Mask | **Complete** | 실제 box+positive+negative worker, auto-first 문맥형 보정, real correction gate, 최초/최신 후보 복원, 선택 후보만 저장, actual Debug EXE restore/save/reopen 통과 | field validation은 `Not evaluated`; 회귀나 계약 변경 시에만 재개 |
 | P1 mask structure | **Complete** | preservation/loss, canonical v3 identity, merge, axis-aligned split, enclosed hole add/fill, explicit saved-object stack order, two-step remove-underlying, undo/redo와 save/load/re-save 통과 | polygon/raster exact visual interleaving은 renderer 후속 |
 | P2 object state/precision | **Complete** | session-only hide/full-lock/movement-pin, contextual options, zoom-aware polygon vertex insert/delete, bounded edge-aware intelligent scissors, protected/canonical 회귀와 1920/1366 증거 완료 | 임의 자연영상/field 정확도와 CVAT/V7 parity는 주장하지 않으며 회귀 시에만 재개 |
 | P3 display aids | **Complete** | compact `보기 보정`, source/file/history/overlay 불변 test, 1920/1366 current-build 증거 | production-camera usefulness와 CVAT/V7 parity는 주장하지 않음 |
@@ -417,6 +435,7 @@ session으로 확장하되, 자동 저장하지 않습니다.
 - point undo/clear
 - rerun
 - rerun 시 pending candidate replace
+- rerun 후 최초/최신 pending candidate 보기·복원
 - polygon detail/point-density 선택
 - current instance confirm/skip
 - confirm 후 next instance 시작
@@ -451,6 +470,8 @@ Intended owner:
 
 - Recipe 또는 image가 바뀌면 이전 generation 결과를 무시합니다.
 - rerun은 후보를 쌓지 않고 현재 pending candidate를 교체합니다.
+- 최초/최신 후보는 현재 Smart Mask session 안에서만 유지하고, 한 번에
+  하나만 Candidate Review의 pending candidate로 표시합니다.
 - candidate는 confirm 전 JSON/PNG/YOLO label에 기록하지 않습니다.
 - source image와 external dataset은 변경하지 않습니다.
 - worker/model/weight/runtime provenance를 기록합니다.
@@ -633,6 +654,75 @@ Reasoning effort: `medium`
 
 한 단계가 acceptance criteria와 현재 EXE 증거를 통과하기 전에 다음
 단계를 자동으로 시작하지 않습니다.
+
+## 9.1 다음 대화 실행 대기열
+
+### Ready now
+
+1. Source-of-truth/operator-document synchronization
+   - why: the actual Debug EXE Smart Mask restore/save/reopen gate is Complete,
+     but dated queue, Release Notes, Code Structure, and Smart Mask priority
+     wording can still direct a later session to completed work;
+   - included: current operating instructions, release/status summaries,
+     superseded markers, and Smart Mask operator guidance;
+   - excluded: public GIF replacement, feature implementation, model training;
+   - completion evidence: no contradictory current priority wording,
+     `--priority-workflow-docs`, local-link check, and `git diff --check`.
+   Recommended model: `gpt-5.6-terra`
+   Reasoning effort: `low`
+
+### Contract-dependent backlog
+
+2. Four-point box creation
+   - commercial evidence: CVAT bounding-box overview;
+   - prerequisite contract: axis-aligned versus rotated meaning, four-click
+     interaction, cancellation, undo/redo, canonical save, YOLO/COCO/CVAT
+     representation and loss warnings;
+   - safety boundary: do not change the existing Rectangle contract or
+     introduce rotated geometry implicitly.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+
+3. Persistent object metadata (`occluded`, tag, group)
+   - commercial evidence: CVAT/V7/Encord object-property workflows;
+   - prerequisite: at least one explicit Recipe/export/training/filter/review
+     consumer and persistence semantics;
+   - safety boundary: existing hide/full-lock/movement-pin stays session-only.
+   Recommended model: none until the consumer contract is selected
+   Reasoning effort: n/a
+
+4. Exact polygon/raster cross-family z-order
+   - current state: canonical global order and each overlay family's order are
+     verified; exact cross-family composition is not;
+   - prerequisite: reproduced operator-visible order defect;
+   - safety boundary: Viewer/OpenGL is performance-sensitive and requires
+     focused render/performance gates.
+   Recommended model: `gpt-5.6-sol`
+   Reasoning effort: `high`
+
+### Data-blocked quality work
+
+5. Independent object-detection field comparison
+   - prerequisite: approved NG-rich camera/session data, trustworthy boxes,
+     provenance, and content-separated held-out split;
+   - do not use the operator-excluded SIT path.
+   Recommended model: none until data is available
+   Reasoning effort: n/a
+
+6. Independent anomaly field comparison
+   - prerequisite: balanced normal/abnormal production-camera and cross-session
+     data kept outside training initially;
+   - existing synthetic YOLOv8/YOLO11 results remain `hold`.
+   Recommended model: none until data is available
+   Reasoning effort: n/a
+
+### Explicitly not future priorities
+
+- P0-A, P0-B, P1, P2, P3, P4, P5-A, and P5-B are Complete.
+- video interpolation/tracking/propagation, comments, assignment,
+  multi-reviewer history, account/cloud/deployment, 3D/keypoint, arbitrary
+  model marketplace, and camera/PLC/I/O remain out of scope.
+- general UI polish is not a priority without a reproduced operator defect.
 
 ## 10. Completion Record
 

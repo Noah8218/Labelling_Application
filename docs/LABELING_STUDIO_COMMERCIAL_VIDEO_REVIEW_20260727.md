@@ -4,6 +4,22 @@ Date: 2026-07-27
 Status: Complete
 Source: `C:\Git\GoPxL_Video\새 폴더`
 
+Latest implementation synchronization: 2026-07-28
+
+- P0-A through P5-B are complete and verified as bounded local-workstation
+  slices.
+- Smart Mask is now auto-first and contextual; a real six-sample correction
+  evaluator records both improvement and failure, and initial/latest candidate
+  restore protects the operator from a worse rerun.
+- Current scores are labeling-editor depth `3.4/5` and focused local
+  workstation `4.0/5`.
+- Actual Debug EXE restore/save/reopen replay is complete under
+  `artifacts\operator-video\20260728-smartmask-restore-save-retry1`.
+  Documentation source-of-truth synchronization is the next maintenance item.
+  Four-point box, persistent object metadata, and polygon/raster cross-family
+  z-order remain contract-dependent backlog; independent model adoption
+  remains data-blocked.
+
 ## 1. 목적과 정정 사항
 
 이 문서는 제공된 상용 프로그램 연동 영상 10개를 현재
@@ -62,10 +78,12 @@ source/UI를 항목별로 대조한 구조적 워크플로 추정치입니다. �
 추론, 검토, 모델 근거까지 포함하지만 `2.1/5`는 라벨링 편집기만
 평가합니다.
 
-현재 상태 주의: `2.1/5`는 P0-A/P0-B 구현 전 영상 재검토 기준선입니다.
-두 slice 완료 후 현재 라벨링 편집기 평가는 `2.5/5`이며, 계산과 완료
-증거는 `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`가
-source of truth입니다.
+현재 상태 주의: `2.1/5`는 P0-A/P0-B 구현 전 영상 재검토 기준선이고
+`2.5/5`는 두 slice 직후의 역사적 점수입니다. P1~P5와 정밀 편집,
+문맥형 Smart Mask 후속까지 반영한 현재 라벨링 편집기 평가는 `3.4/5`입니다.
+계산과 완료 증거는
+`docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`가 source of
+truth입니다.
 
 ## 4. 검토 방법과 증거 한계
 
@@ -142,7 +160,12 @@ CVAT의 우위는 도구 수보다 고빈도 편집 조작이 서로 연결된 �
 라벨링 편집기의 현재 격차가 “단축키 힌트가 조금 부족한 정도”는 아님을
 보여 줍니다.
 
-## 6. 현재 프로그램의 검증된 라벨링 기준선
+## 6. 2026-07-27 구현 전 검증 기준선
+
+아래 표는 상용 영상 재검토 당시 P0-A~P5 및 Smart Mask 후속 구현 전
+기준선입니다. 현재 상태로 사용하지 않습니다. 최신 완료 상태와 남은
+항목은 9.1 상태표 및
+`LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`를 따릅니다.
 
 | 영역 | 현재 근거 | 판단 |
 | --- | --- | --- |
@@ -160,7 +183,7 @@ CVAT의 우위는 도구 수보다 고빈도 편집 조작이 서로 연결된 �
 prompt 허용 오차가 유효함을 증명합니다. 이는 point correction이
 불필요하다는 증거도, V7/CVAT 상호작용과 동등하다는 증거도 아닙니다.
 
-## 7. 라벨링 편집기 세부 평가
+## 7. 2026-07-27 구현 전 라벨링 편집기 세부 평가
 
 | 평가 축 | 점수 | 가중치 | 근거 |
 | --- | ---: | ---: | --- |
@@ -274,8 +297,15 @@ Reasoning effort: n/a
 4. P2와 P3는 각각 객체 상태와 display-only 상태를 Recipe label
    source-of-truth와 분리합니다.
 5. P4, P5-A format-conversion preflight, P5-B batch AI preflight는
-   완료되었습니다. 다음 제품 선행조건은 독립 production-camera/
-   cross-session 데이터입니다.
+   완료되었습니다.
+6. Smart Mask auto-first contextual correction, real correction-effectiveness,
+   previous/current candidate restore, and actual Debug EXE real-candidate
+   restore/save/reopen are complete.
+7. Four-point box, persistent object metadata, and exact polygon/raster
+   cross-family z-order remain contract-dependent backlog, not permission for
+   speculative implementation.
+8. Detection/anomaly model adoption requires independent production-camera/
+   cross-session data.
 
 다음 항목은 계속 범위 밖입니다.
 
@@ -284,6 +314,30 @@ Reasoning effort: n/a
 - 3D, keypoint, arbitrary model marketplace
 - source image 자동 변경, AI 후보 자동 저장/자동 승인
 - camera/PLC/I/O/deployment 플랫폼
+
+### 9.1 영상 우선순위 최신 상태표
+
+| 영상에서 도출한 항목 | 현재 상태 | 다음 행동 |
+| --- | --- | --- |
+| tool/class 단축키, 반복, duplicate, help | Complete | 회귀 때만 재개 |
+| Smart Mask box/point/rerun/next instance | Complete | 회귀 때만 재개 |
+| Smart Mask 자동 우선·문맥형 보정 | Complete | 기본 접힘 유지 |
+| 실제 correction 방향성과 실패 보존 | Complete | 정확도 과장 금지 |
+| 이전/현재 후보 비교·복원 | Complete | 실제 EXE 저장 replay가 다음 |
+| mask merge/split/hole/multi-component | Complete | canonical v3 보호 |
+| saved-object z-order/remove-underlying | Complete | cross-family renderer는 별도 |
+| hide/full-lock/movement-pin | Complete, session-only | persistent 의미로 확대 금지 |
+| polygon vertex insert/delete | Complete | 회귀 때만 재개 |
+| intelligent scissors | Complete, bounded | 자연영상 정확도 주장 금지 |
+| brightness/contrast/gamma/invert/equalization | Complete, display-only | source 불변 보호 |
+| Dataset Health visual QA | Complete | read-only 유지 |
+| interchange dry-run/Apply | Complete | 새 포맷 추가보다 기존 계약 보호 |
+| batch AI preflight | Complete | Candidate Review/no-autosave 보호 |
+| 4-point box | Contract-dependent backlog | geometry/export 계약부터 정의 |
+| occluded/tag/group persistence | Blocked by consumer contract | Recipe/export/training/review 소비자 지정 |
+| polygon/raster exact cross-family z-order | Conditional backlog | 재현 defect와 renderer 성능 gate 필요 |
+| production detection/anomaly adoption | Blocked by data | 독립 camera/session 정답 데이터 확보 |
+| video propagation/tracking, team/cloud | Out of scope | 개발하지 않음 |
 
 ## 10. 구현 공통 검증 계약
 

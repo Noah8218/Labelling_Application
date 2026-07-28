@@ -5,11 +5,13 @@ Copy the text below into the next Codex chat when continuing C:\Git\Labelling_Ap
 ~~~text
 Continue work in C:\Git\Labelling_Application.
 
-Read and follow AGENTS.md first.
+Read and follow both instruction files first:
+- C:\Users\user\.codex\AGENTS.md
+- C:\Git\Labelling_Application\AGENTS.md
 
 Required start order:
 1. Run git status --short first.
-2. Read AGENTS.md.
+2. Read the global and repository AGENTS.md files listed above.
 3. Read docs/NEXT_THREAD_HANDOFF.md. It is the current project handoff and source-of-truth summary.
 4. Read docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md for current product scope, maturity, and commercial comparison.
 5. Read this CODEX_NEXT_PROMPT.md, docs/WORK_TRACKING.md, and docs/STABLE_VERIFIED_AREAS.md for the bounded next action and durable evidence.
@@ -24,7 +26,10 @@ Required start order:
 
 Current checkpoint:
 - Workspace: C:\Git\Labelling_Application
-- Branch: main. The labeling-editor structure workflow through P1-C
+- Branch: main. Live HEAD at the latest handoff is
+  `f7751c5 feat: advance labeling QA and smart mask workflow`; `main` and
+  `origin/main` are `0/0` at that commit. The
+  labeling-editor structure workflow through P1-C
   merge/join and axis-aligned split/slice is committed and pushed as
   `9b2160a feat: advance labeling editor structure workflows`. Enclosed hole
   add/fill is committed and pushed as
@@ -32,9 +37,17 @@ Current checkpoint:
   remove-underlying, P2 precision/state, and P3 display-only aids are committed
   and pushed as
   `ed0f826 feat: complete labeling precision and display aids`. P4 Dataset
-  Health visual QA and P5-A dataset-interchange preflight follow in current
-  uncommitted source. Verify live hashes before work and do not push again
-  without a new explicit request.
+  Health visual QA, P5-A dataset-interchange preflight, P5-B batch-AI
+  preflight, field-data intake contracts, and approved Smart Mask public media
+  are committed in `f7751c5`.
+- The current worktree intentionally contains uncommitted Smart Mask
+  auto-first contextual correction, real correction-effectiveness evaluation,
+  previous/current candidate compare/restore, Recipe-scoped automatic contour,
+  and canvas layout auto-fit. Preserve these changes.
+  `.proofline/STATE.md` and `.proofline/dashboard/` are local/user-owned and
+  must remain untouched. No commit or push is authorized by this handoff.
+  Verify live hashes before work and do not push without a new explicit
+  request.
 - The temporary `C:\새 폴더\OpenVisionLab-Labeling-Studio_TEST` clone was deleted
   after the original path independently passed Dataset wizard, Worklist, and
   YOLOv8 restart/inference EXE smokes. Develop only in
@@ -69,6 +82,43 @@ Product direction:
 - The supplied circular-disk 500 OK / 500 NG package is complete synthetic workflow evidence: exact metadata-backed 5-class detection data, YOLOv5/YOLOv8 one-epoch connectivity, a controlled 20-epoch 150-image test benchmark, and a new 20-epoch anomaly candidate. The anomaly candidate remains `hold`; the detection benchmark favors YOLOv8n (`mAP50/mAP50-95 0.955/0.678`, 27.575ms) over YOLOv5s (`0.900/0.567`, 52.45ms) but is explicitly `engine-benchmark`, not adoption. The fixed comparison cleanup preserves the exact source-tree SHA-256. The package is derived from one earlier OK source image; do not present it as independent camera evidence. Read `docs/CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
 
 Current immediate priority:
+- The operator/source-of-truth synchronization is Complete in the current
+  worktree. It corrects the one-click queue rule, updates Release Notes and
+  Code Structure ownership, removes completed Dataset Health/P5/Smart Mask
+  work from active `Next` wording, and refreshes the Smart Mask operator guide
+  without replacing the approved public GIF. Treat older dated alternatives
+  as historical when they conflict with `docs/NEXT_THREAD_HANDOFF.md`
+  section 0.
+- The next ready product priority is the four-point-box geometry/export
+  contract. Define exact axis-aligned or rotated semantics, canonical storage,
+  supported exports, editing behavior, and backward compatibility before
+  implementation. Do not silently change the existing Rectangle contract.
+  Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
+- Recipe-scoped automatic contour and canvas layout auto-fit are Complete in
+  the current worktree. The current Debug EXE completed the workflow without
+  a Fit click and without a separate Smart Mask start click after drawing the
+  rectangle. Evidence:
+  `artifacts\operator-video\20260728-smart-contour-auto-fit`. Recipe
+  persistence is covered by focused XML save/load/reopen tests; restoration
+  does not start inference, confirm, or save.
+- The actual Debug EXE Smart Mask restore/save priority is Complete.
+  `artifacts\operator-video\20260728-smartmask-restore-save-retry1` records
+  automatic candidate -> positive/negative correction rerun -> previous
+  candidate restore -> explicit Confirm -> save -> next image -> saved-image
+  reopen on Kolektor `kos14/Part7`. The reopened image contains exactly one
+  saved 96-point polygon and a 7,931-pixel mask, with no pending confirmation.
+  Full-duration visual review found no P0/P1/P2 issue. Do not repeat this gate
+  unless its source, runtime, selection/persistence contract, or evidence
+  validity changes.
+- After that, the remaining commercial-video backlog is not another broad
+  P0-P5 pass:
+  1. four-point box requires an explicit geometry/export contract;
+  2. persistent occluded/tag/group requires a named Recipe/export/training/
+     review consumer;
+  3. polygon/raster cross-family z-order requires a reproduced renderer defect;
+  4. detection/anomaly adoption requires independent camera/session data.
+  Read `docs/NEXT_THREAD_HANDOFF.md` section 0 and section 10. P3, P4, P5-A,
+  and P5-B are Complete and must not be selected as future work.
 - The 2026-07-27 review of ten user-provided commercial integration videos is
   new workflow evidence. A denser V7/CVAT pass corrects the initial
   visual-QA-first conclusion: the current editor has a stable basic
@@ -92,7 +142,9 @@ Current immediate priority:
   `--exe-labeling-productivity-smoke` against the latest Debug EXE. The help
   card stays in a separate Auto row above the WinForms/OpenGL canvas so actual
   EXE airspace cannot hide it.
-- P0-B interactive Smart Mask is also complete in committed source.
+- P0-B interactive Smart Mask core is complete in committed source; the
+  contextual/effectiveness/compare-restore follow-up is complete in the current
+  uncommitted worktree.
   It adds box+positive/negative-point correction, point undo/clear,
   48/96/256 detail, async cancellation, rerun-replace, confirm/skip, and
   next-instance box restoration. It preserves no-autosave, stale-result guards,
@@ -196,9 +248,13 @@ Current immediate priority:
   Candidate Review/no-auto-approval/no-autosave destination. Read
   `docs\BATCH_AI_PREFLIGHT_P5B_20260728.md`; focused gate:
   `--wpf-batch-detection-preflight`.
-- P1-C, P2, P3, P4, P5-A, and P5-B are complete. The next product dependency
-  is independently acquired production-camera/cross-session evidence; do not
-  spend implementation tokens pretending UI work can satisfy it.
+- P1-C, P2, P3, P4, P5-A, and P5-B are complete. The next model-adoption
+  dependency is independently acquired production-camera/cross-session
+  evidence; do not spend implementation tokens pretending UI work can satisfy
+  it. The actual-EXE Smart Mask restore/save and automatic-contour/layout-fit
+  regressions are also complete; reopen them only if their source, contract,
+  runtime, or evidence validity changes. The four-point-box contract remains
+  the next ready editor priority.
   The reusable intake manifest, directory layouts, leakage rules, approval
   checklist, and execution order are in
   `docs\FIELD_DATA_INTAKE_PREREQUISITE_20260728.md`.
@@ -303,19 +359,42 @@ Read docs/NEXT_THREAD_HANDOFF.md sections 7 through 11 before selecting focused 
 Final report must include changed files, command results, screenshot requirement, remaining risk/unverified status, and the next priority with recommended model and reasoning effort.
 
 Latest labeling checkpoint:
-- Smart Mask auto-boundary presentation is complete in the current worktree.
-- Actual EXE run `20260728-smartmask-final4` proved Box -> automatic filled
-  mask -> `자동 경계 96점` -> Confirm -> canonical save -> Next Incomplete on
-  KolektorSDD `kos14/Part7.jpg`.
-- Saved result: one polygon, 96 points, 7,931 pixels; precision `0.9861`.
-  IoU/recall are low because the source label is a broad rectangle while the
-  candidate tightly follows the visible crack; do not claim field accuracy.
-- The current promotional review candidate is
-  `artifacts\operator-video\20260728-smartmask-final4\publish\smart-mask-auto-boundary-hero.gif`
-  (1024x576, 10fps, 18.7s, 1,021,823 bytes). The old manual-polygon GIF is
-  superseded. User approval was received; the public GIF/poster are under
-  `docs/tutorial/images/github/` and README embeds the actual-EXE demo.
-- Next priority: auto-first contextual Smart Mask correction UX. Keep Box ->
-  auto as default and collapse point/detail controls until correction is
-  requested. Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
+- Auto-first contextual Smart Mask correction is complete.
+- The default session shows the automatic filled candidate, compact guidance,
+  `보정 옵션`, and the applicable next-object action. Positive/negative points,
+  undo/clear, generation cancel, and boundary detail are hidden until requested.
+- Expansion persists for the same-object rerun and resets at session end/next
+  object. Confirm/skip, pending no-autosave, worker, and canonical save contracts
+  are unchanged.
+- Actual Debug EXE run
+  `artifacts\operator-video\20260728-smartmask-contextual-correction` proved
+  hidden -> expanded -> collapsed -> Confirm -> canonical save on KolektorSDD
+  `kos14/Part7.jpg`; saved result remained one polygon, 96 points, and 7,931
+  mask pixels.
+- The approved public GIF remains
+  `docs/tutorial/images/github/labeling-studio-smart-mask-workflow.gif`; the
+  longer correction-options run is regression evidence only.
+- Read `docs/SMART_MASK_CONTEXTUAL_CORRECTION_UX_20260728.md`.
+- Real correction effectiveness is complete:
+  `docs/SMART_MASK_CORRECTION_EFFECTIVENESS_20260728.md`.
+- Fixed KolektorSDD replay: positive direction `6/6`, negative direction `4/4`
+  applicable, combined held-out improvement `3/4`, held-out median IoU delta
+  `+0.0988`, source 798-file tree unchanged.
+- Do not hide the failures: two combined runs worsened. `kos14_Part7`
+  positive-only improved `0.3749 -> 0.4620`, while positive+negative worsened to
+  `0.3260`. Product guidance is one point -> rerun/compare -> next point.
+- Previous/current pending Smart Mask candidate comparison and restoration are
+  complete. The session retains only initial/latest references, Candidate
+  Review displays one selected pending version, switching does not save, and
+  confirmation writes only that selected version. Read
+  `docs/SMART_MASK_CANDIDATE_COMPARE_RESTORE_20260728.md`.
+- Focused evidence:
+  `artifacts/smart-mask-candidate-compare-restore/20260728-210121`; current-source
+  1920x1080 states:
+  `artifacts/ui/smart-mask-candidate-compare-restore-20260728`.
+- Next bounded evidence priority: use the actual Debug EXE and real MobileSAM
+  output on the retained Kolektor failure sample to rerun, restore the previous
+  candidate, confirm it, and verify the saved artifact. Keep this as regression
+  evidence; do not replace the approved public GIF.
+  Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
 ~~~

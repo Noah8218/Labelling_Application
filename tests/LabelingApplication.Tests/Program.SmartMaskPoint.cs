@@ -189,6 +189,26 @@ internal static partial class Program
             }
 
             root = RefreshAutomationRoot(process);
+            System.Windows.Automation.AutomationElement correctionOptions =
+                FindAutomationElementByAutomationId(root, "CanvasSmartMaskCorrectionOptionsButton");
+            AssertTrue(
+                correctionOptions != null && correctionOptions.Current.IsEnabled,
+                "Smart Mask correction options button was unavailable");
+            AssertTrue(
+                TryInvokeAutomationButtonByAutomationId(root, "CanvasSmartMaskCorrectionOptionsButton"),
+                "Smart Mask correction options could not be expanded");
+            AssertTrue(
+                WaitUntil(
+                    () =>
+                    {
+                        System.Windows.Automation.AutomationElement latest = RefreshAutomationRoot(process, bringToFront: false);
+                        System.Windows.Automation.AutomationElement pointButton =
+                            FindAutomationElementByAutomationId(latest, "CanvasSmartMaskPositivePointButton");
+                        return pointButton != null && !pointButton.Current.IsOffscreen;
+                    },
+                    TimeSpan.FromSeconds(3)),
+                "Smart Mask correction controls did not become visible after expansion");
+            root = RefreshAutomationRoot(process);
             System.Windows.Automation.AutomationElement positive =
                 FindAutomationElementByAutomationId(root, "CanvasSmartMaskPositivePointButton");
             AssertTrue(positive != null && positive.Current.IsEnabled, "positive-point button was unavailable");
