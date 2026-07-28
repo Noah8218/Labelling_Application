@@ -11,7 +11,9 @@ namespace MvcVisionSystem
         {
             if (datasetHealthWindow == null)
             {
-                datasetHealthWindow = new WpfDatasetHealthWindow(new WpfDatasetHealthViewModel(global.Data))
+                var viewModel = new WpfDatasetHealthViewModel(global.Data);
+                viewModel.ConfigureVisualQaOpen(ExecuteOpenDatasetHealthImageInEditor);
+                datasetHealthWindow = new WpfDatasetHealthWindow(viewModel)
                 {
                     Owner = this
                 };
@@ -30,6 +32,34 @@ namespace MvcVisionSystem
             }
 
             datasetHealthWindow.Activate();
+        }
+
+        private void ExecuteOpenDatasetHealthImageInEditor(string imagePath)
+        {
+            if (string.IsNullOrWhiteSpace(imagePath))
+            {
+                return;
+            }
+
+            EnterLabelingWorkbenchStartView();
+            if (!TryLoadImage(
+                imagePath,
+                populateQueue: false,
+                refreshQueueDetails: false,
+                refreshActiveStatus: true,
+                appendLoadLog: true))
+            {
+                return;
+            }
+
+            datasetHealthWindow?.Close();
+            if (WindowState == WindowState.Minimized)
+            {
+                WindowState = WindowState.Normal;
+            }
+
+            Activate();
+            AppendLog($"Dataset Health 시각 QA에서 편집기로 이동: {imagePath}");
         }
 
         private void DatasetHealthWindow_Closed(object sender, EventArgs e)

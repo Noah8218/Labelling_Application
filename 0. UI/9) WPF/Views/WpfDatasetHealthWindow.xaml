@@ -35,6 +35,7 @@
             <SolidColorBrush x:Key="SelectedRowBrush" Color="#26384F" />
             <SolidColorBrush x:Key="SuccessBrush" Color="#22C55E" />
             <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B" />
+            <SolidColorBrush x:Key="ProblemBrush" Color="#EF4444" />
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
             <Style x:Key="DatasetHealthActionButtonStyle" TargetType="{x:Type ui:Button}">
@@ -60,7 +61,7 @@
                 <Setter Property="FocusVisualStyle" Value="{x:Null}" />
                 <Style.Triggers>
                     <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                        <Setter Property="Foreground" Value="#151515" />
                         <Setter Property="Background" Value="{DynamicResource PanelBrush}" />
                         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                         <Setter Property="FontWeight" Value="SemiBold" />
@@ -231,6 +232,7 @@
                     Grid.Row="2"
                     Background="Transparent"
                     BorderThickness="0"
+                    SelectionChanged="DatasetHealthTabs_SelectionChanged"
                     ItemContainerStyle="{StaticResource DatasetHealthTabStyle}">
             <TabItem x:Name="DatasetHealthOverviewTab" Header="개요">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -451,6 +453,248 @@
                                        Margin="0,10,0,0" />
                         </StackPanel>
                     </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem x:Name="DatasetHealthVisualQaTab" Header="시각 QA">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="이미지별 저장 라벨 확인"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       FontFamily="Segoe UI"
+                                       FontSize="12"
+                                       FontWeight="SemiBold" />
+                            <TextBlock x:Name="DatasetHealthVisualQaStatusText"
+                                       Text="{Binding VisualQaStatusText}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       FontFamily="Segoe UI"
+                                       FontSize="9.5"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
+                        <CheckBox x:Name="DatasetHealthVisualQaProblemsOnlyCheckBox"
+                                  Grid.Column="1"
+                                  Content="문제만"
+                                  IsChecked="{Binding ShowOnlyVisualQaProblems}"
+                                  Foreground="{DynamicResource SecondaryTextBrush}"
+                                  FontFamily="Segoe UI"
+                                  FontSize="10.5"
+                                  VerticalAlignment="Center"
+                                  AutomationProperties.Name="문제 이미지만 표시"
+                                  ToolTip="라벨 누락, 손상 또는 미검토 이미지로 목록을 좁힙니다." />
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="340" MinWidth="280" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{DynamicResource PanelBrush}"
+                                BorderBrush="{DynamicResource BorderBrushDark}"
+                                BorderThickness="1"
+                                CornerRadius="5"
+                                Padding="6"
+                                Margin="0,0,12,0">
+                            <ListBox x:Name="DatasetHealthVisualQaList"
+                                     ItemsSource="{Binding VisualQaItems}"
+                                     SelectedItem="{Binding SelectedVisualQaItem}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="{x:Type ListBoxItem}">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="Margin" Value="0,0,0,4" />
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="9,8"
+                                                Background="Transparent"
+                                                BorderBrush="{DynamicResource GridLineBrush}"
+                                                BorderThickness="0,0,0,1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="8"
+                                                         Height="8"
+                                                         VerticalAlignment="Top"
+                                                         Margin="0,5,0,0">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="{x:Type Ellipse}">
+                                                            <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsProblem}" Value="True">
+                                                                    <Setter Property="Fill" Value="{DynamicResource ProblemBrush}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding ImageName}"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                                               FontFamily="Segoe UI"
+                                                               FontSize="10.5"
+                                                               FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding ImagePath}" />
+                                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                        <TextBlock Text="{Binding SplitText}"
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                   FontFamily="Segoe UI"
+                                                                   FontSize="9.5" />
+                                                        <TextBlock Text=" · "
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                   FontFamily="Segoe UI"
+                                                                   FontSize="9.5" />
+                                                        <TextBlock Text="{Binding StatusText}"
+                                                                   FontFamily="Segoe UI"
+                                                                   FontSize="9.5">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="{x:Type TextBlock}">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsProblem}" Value="True">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource ProblemBrush}" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <TextBlock Text=" · "
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                   FontFamily="Segoe UI"
+                                                                   FontSize="9.5" />
+                                                        <TextBlock Text="{Binding ObjectCountText}"
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                   FontFamily="Segoe UI"
+                                                                   FontSize="9.5" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding DetailText}"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               FontFamily="Segoe UI"
+                                                               FontSize="9"
+                                                               TextWrapping="Wrap"
+                                                               MaxHeight="31"
+                                                               Margin="0,3,0,0" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource CanvasBrush}"
+                                BorderBrush="{DynamicResource BorderBrushDark}"
+                                BorderThickness="1"
+                                CornerRadius="5"
+                                Padding="12">
+                            <Grid>
+                                <Grid x:Name="DatasetHealthVisualQaPreviewPanel"
+                                      Visibility="{Binding HasVisualQaItems, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Border Background="#090D12"
+                                            BorderBrush="{DynamicResource GridLineBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="3"
+                                            Padding="6">
+                                        <Image x:Name="DatasetHealthVisualQaPreviewImage"
+                                               Source="{Binding SelectedVisualQaItem.PreviewSource}"
+                                               Stretch="Uniform"
+                                               SnapsToDevicePixels="True"
+                                               AutomationProperties.Name="선택 이미지와 저장 라벨 오버레이 미리보기" />
+                                    </Border>
+                                    <Grid Grid.Row="1" Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding SelectedVisualQaItem.ImageName}"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                       FontFamily="Segoe UI"
+                                                       FontSize="11.5"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding SelectedVisualQaItem.DetailText}"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       FontFamily="Segoe UI"
+                                                       FontSize="9.5"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,4,0,0" />
+                                            <TextBlock Text="읽기 전용 · 수정은 기존 라벨링 편집기에서 수행합니다."
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       FontFamily="Segoe UI"
+                                                       FontSize="9"
+                                                       Margin="0,4,0,0" />
+                                        </StackPanel>
+                                        <ui:Button x:Name="DatasetHealthOpenInEditorButton"
+                                                   Grid.Column="1"
+                                                   Style="{StaticResource DatasetHealthActionButtonStyle}"
+                                                   Command="{Binding OpenSelectedVisualQaImageCommand}"
+                                                   Margin="12,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   AutomationProperties.Name="선택 이미지를 기존 라벨링 편집기에서 열기"
+                                                   ToolTip="Dataset Health를 닫고 선택 이미지를 기존 라벨링 작업 화면에서 엽니다.">
+                                            <StackPanel Orientation="Horizontal">
+                                                <iconPacks:PackIconMaterial Kind="OpenInNew" Width="14" Height="14" Margin="0,0,5,0" />
+                                                <TextBlock Text="편집기에서 열기" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </ui:Button>
+                                    </Grid>
+                                </Grid>
+                                <StackPanel HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+                                    <StackPanel.Style>
+                                        <Style TargetType="{x:Type StackPanel}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasVisualQaItems}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <iconPacks:PackIconMaterial Kind="ImageSearchOutline"
+                                                                Width="30"
+                                                                Height="30"
+                                                                Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                HorizontalAlignment="Center" />
+                                    <TextBlock Text="표시할 저장 이미지가 없습니다."
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               FontFamily="Segoe UI"
+                                               FontSize="10.5"
+                                               Margin="0,8,0,0" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
                 </Grid>
             </TabItem>
 

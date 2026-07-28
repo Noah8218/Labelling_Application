@@ -1,13 +1,6 @@
-using MvcVisionSystem._1._Core;
 using MvcVisionSystem.Yolo;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Threading;
 
 namespace MvcVisionSystem
 {
@@ -23,7 +16,7 @@ namespace MvcVisionSystem
 
             if (ImageQueueGrid.SelectedItem is not WpfImageQueueItem item)
             {
-                AppendLog("먼저 이미지를 선택하세요.");
+                AppendLog("\uBA3C\uC800 \uC774\uBBF8\uC9C0\uB97C \uC120\uD0DD\uD558\uC138\uC694.");
                 return;
             }
 
@@ -37,7 +30,13 @@ namespace MvcVisionSystem
                 return;
             }
 
-            await RunBatchDetectionAsync(GetVisibleQueueItems(), "표시 행").ConfigureAwait(true);
+            WpfBatchDetectionPlan plan = ShowBatchDetectionPreflight(
+                GetVisibleQueueItems(),
+                "\uD45C\uC2DC \uD589");
+            if (plan != null)
+            {
+                await RunBatchDetectionAsync(plan.Items, plan.ScopeText).ConfigureAwait(true);
+            }
         }
 
         private async void ExecuteRetryFailedQueueCommand()
@@ -47,18 +46,43 @@ namespace MvcVisionSystem
                 return;
             }
 
-            await RunBatchDetectionAsync(
+            WpfBatchDetectionPlan plan = ShowBatchDetectionPreflight(
                 imageQueueItems.Where(item => item.ReviewState == YoloImageReviewState.Failed).ToList(),
-                "실패 재시도").ConfigureAwait(true);
+                "\uC2E4\uD328 \uC7AC\uC2DC\uB3C4");
+            if (plan != null)
+            {
+                await RunBatchDetectionAsync(plan.Items, plan.ScopeText).ConfigureAwait(true);
+            }
+        }
+
+        private WpfBatchDetectionPlan ShowBatchDetectionPreflight(
+            IReadOnlyList<WpfImageQueueItem> items,
+            string scopeText)
+        {
+            var viewModel = new WpfBatchDetectionPreflightViewModel(global.Data, items, scopeText);
+            var window = new WpfBatchDetectionPreflightWindow(viewModel)
+            {
+                Owner = this
+            };
+            window.ApplyThemeFrom(this);
+            bool? accepted = window.ShowDialog();
+            if (accepted != true || window.SelectedPlan == null)
+            {
+                AppendLog($"AI \uBC30\uCE58 \uAC80\uC0AC \uCDE8\uC18C: {scopeText}");
+                return null;
+            }
+
+            AppendLog(
+                $"AI \uBC30\uCE58 \uC0AC\uC804\uC810\uAC80 \uD1B5\uACFC: {scopeText} \u00B7 "
+                + $"\uC2E4\uD589 {window.SelectedPlan.Items.Count}\uAC1C \u00B7 "
+                + "\uACB0\uACFC\uB294 Candidate Review \uB300\uAE30, \uC790\uB3D9 \uC800\uC7A5 \uC5C6\uC74C");
+            return window.SelectedPlan;
         }
 
         private void ExecuteStopBatchQueueCommand()
         {
             batchDetectionCts?.Cancel();
-            AppendLog("일괄 검사 중지를 요청했습니다.");
+            AppendLog("\uC77C\uAD04 \uAC80\uC0AC \uC911\uC9C0\uB97C \uC694\uCCAD\uD588\uC2B5\uB2C8\uB2E4.");
         }
-
-
-
     }
 }

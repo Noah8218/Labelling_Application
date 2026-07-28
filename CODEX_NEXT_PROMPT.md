@@ -28,8 +28,12 @@ Current checkpoint:
   merge/join and axis-aligned split/slice is committed and pushed as
   `9b2160a feat: advance labeling editor structure workflows`. Enclosed hole
   add/fill is committed and pushed as
-  `d669b64 feat: add segmentation hole editing`. Saved-object z-order and
-  remove-underlying follow it in current uncommitted source. Verify live hashes before work and do not push again
+  `d669b64 feat: add segmentation hole editing`. Saved-object z-order,
+  remove-underlying, P2 precision/state, and P3 display-only aids are committed
+  and pushed as
+  `ed0f826 feat: complete labeling precision and display aids`. P4 Dataset
+  Health visual QA and P5-A dataset-interchange preflight follow in current
+  uncommitted source. Verify live hashes before work and do not push again
   without a new explicit request.
 - The temporary `C:\새 폴더\OpenVisionLab-Labeling-Studio_TEST` clone was deleted
   after the original path independently passed Dataset wizard, Worklist, and
@@ -172,13 +176,41 @@ Current immediate priority:
   coordinates remain unchanged. Read
   `docs\DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md`; focused gate:
   `--image-display-adjustment`.
-- The next bounded implementation is P4 Dataset Health visual label QA:
-  read-only dataset-level issue discovery with explicit navigation back to the
-  existing editor. It must not edit labels inside the gallery, auto-approve
-  candidates, duplicate the image queue, or preload all 10K images at full
-  resolution.
-- Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
-- P1-C, P2, and P3 are complete. Dataset Health visual QA is now P4.
+- P4 Dataset Health visual label QA is complete as a fourth read-only analysis
+  tab. It prioritizes missing/corrupt/unreviewed rows, keeps a bounded text
+  worklist, decodes only the selected preview, renders saved geometry, filters
+  to problems, and returns to the existing editor without mutation. Read
+  `docs\DATASET_HEALTH_VISUAL_QA_P4_20260728.md`; focused gates:
+  `--dataset-health` and `--wpf-dataset-health-window`.
+- P5-A format-conversion preflight is complete for existing COCO, Pascal VOC,
+  Label Studio, and CVAT detection/segmentation import/export. It uses one
+  contextual `변환` entry, isolated dry-run, source/requested-target
+  fingerprints, skipped-record blocking, segmentation-loss warnings, stale
+  input invalidation, and explicit Apply. Read
+  `docs\DATASET_INTERCHANGE_PREFLIGHT_P5A_20260728.md`; focused gates:
+  `--dataset-interchange-preflight` and `--export-capability-inventory`.
+- P5-B batch AI preflight is complete. Visible-row and failed-item retry
+  commands now open a contextual fail-closed preflight before the existing
+  worker loop. It shows scope, model/weight, task, confidence, Recipe
+  class-name mapping, exact existing-label policy/counts, and the
+  Candidate Review/no-auto-approval/no-autosave destination. Read
+  `docs\BATCH_AI_PREFLIGHT_P5B_20260728.md`; focused gate:
+  `--wpf-batch-detection-preflight`.
+- P1-C, P2, P3, P4, P5-A, and P5-B are complete. The next product dependency
+  is independently acquired production-camera/cross-session evidence; do not
+  spend implementation tokens pretending UI work can satisfy it.
+  The reusable intake manifest, directory layouts, leakage rules, approval
+  checklist, and execution order are in
+  `docs\FIELD_DATA_INTAKE_PREREQUISITE_20260728.md`.
+- The actual operation video and GitHub promotional-media candidate are
+  complete. `--exe-operator-video-smoke` recorded the real Debug EXE with
+  human-path cursor motion and exact application-window capture on the
+  KolektorSDD `kos14/Part7.jpg` defect. The superseding automatic Smart Mask
+  run `20260728-smartmask-final4` saved one 96-point polygon at precision
+  `0.9861`; its 1024x576, 10fps, 18.7s GIF is 1,021,823 bytes. User approval
+  was received and the GIF/poster are published under
+  `docs/tutorial/images/github/` and linked from README. Read
+  `docs\ACTUAL_EXE_VIDEO_AND_GITHUB_GIF_PLAN_20260728.md`.
   Collaboration, video,
   account/cloud/platform scope and automatic candidate save remain excluded.
 - The approved YOLO11 anomaly-classification runtime slice is complete. The
@@ -269,4 +301,21 @@ Read docs/NEXT_THREAD_HANDOFF.md sections 7 through 11 before selecting focused 
 - ordered next priorities and matching verification commands.
 
 Final report must include changed files, command results, screenshot requirement, remaining risk/unverified status, and the next priority with recommended model and reasoning effort.
+
+Latest labeling checkpoint:
+- Smart Mask auto-boundary presentation is complete in the current worktree.
+- Actual EXE run `20260728-smartmask-final4` proved Box -> automatic filled
+  mask -> `자동 경계 96점` -> Confirm -> canonical save -> Next Incomplete on
+  KolektorSDD `kos14/Part7.jpg`.
+- Saved result: one polygon, 96 points, 7,931 pixels; precision `0.9861`.
+  IoU/recall are low because the source label is a broad rectangle while the
+  candidate tightly follows the visible crack; do not claim field accuracy.
+- The current promotional review candidate is
+  `artifacts\operator-video\20260728-smartmask-final4\publish\smart-mask-auto-boundary-hero.gif`
+  (1024x576, 10fps, 18.7s, 1,021,823 bytes). The old manual-polygon GIF is
+  superseded. User approval was received; the public GIF/poster are under
+  `docs/tutorial/images/github/` and README embeds the actual-EXE demo.
+- Next priority: auto-first contextual Smart Mask correction UX. Keep Box ->
+  auto as default and collapse point/detail controls until correction is
+  requested. Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
 ~~~

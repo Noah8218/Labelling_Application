@@ -341,6 +341,18 @@ internal static partial class Program
             return RunExeSmartMaskPointSmoke(args);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--exe-operator-video-smoke", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunExeOperatorVideoSmoke(args);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--smart-mask-auto-boundary-presentation", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Smart Mask pending candidates expose a filled automatic boundary",
+                TestSmartMaskAutoBoundaryPresentation);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--exe-label-create-queue-locality-smoke", StringComparison.OrdinalIgnoreCase)))
         {
             return ExeLabelCreateQueueLocalitySmokeTests.RunExeLabelCreateQueueLocalitySmoke(args);
@@ -848,6 +860,13 @@ internal static partial class Program
             return RunSingleSmoke("Dataset export capability inventory declares current and next targets", DatasetInterchangeCapabilityTests.TestDatasetExportCapabilityInventory);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--dataset-interchange-preflight", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Dataset interchange dry-run preserves sources until explicit Apply",
+                DatasetInterchangeCapabilityTests.TestDatasetInterchangeDryRunAndApply);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--wpf-anomaly-purpose-flow", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("WPF anomaly purpose flow persists image-level review state", AnomalyClassificationTests.TestWpfAnomalyPurposeFlow);
@@ -988,6 +1007,13 @@ internal static partial class Program
         if (args.Any(arg => string.Equals(arg, "--wpf-batch-detection-progress", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("WPF batch detection progress service owns status text", TestWpfBatchDetectionProgressService);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--wpf-batch-detection-preflight", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "WPF batch detection requires an explicit non-destructive preflight",
+                BatchDetectionPreflightTests.TestBatchDetectionPreflightContract);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-ultralytics-current-image-smoke", StringComparison.OrdinalIgnoreCase)))
@@ -1370,6 +1396,7 @@ internal static partial class Program
             ("CVAT segmentation archive export writes polygon annotations and images", CvatTests.TestCvatSegmentationArchiveExportService),
             ("CVAT segmentation import writes local segmentation artifacts", CvatTests.TestCvatSegmentationImportService),
             ("Dataset export capability inventory declares current and next targets", DatasetInterchangeCapabilityTests.TestDatasetExportCapabilityInventory),
+            ("Dataset interchange dry-run preserves sources until explicit Apply", DatasetInterchangeCapabilityTests.TestDatasetInterchangeDryRunAndApply),
             ("WPF anomaly purpose flow persists image-level review state", AnomalyClassificationTests.TestWpfAnomalyPurposeFlow),
             ("WPF anomaly decisions keep queue focus on the active image", AnomalyQueueFocusSmokeTests.TestWpfAnomalyQueueFocusFollowsActiveImage),
             ("Anomaly classification decision maps configured image-level classes", AnomalyClassificationTests.TestAnomalyClassificationDecisionService),
@@ -1848,6 +1875,9 @@ internal static partial class Program
         bool showQualityNeedsFix = HasArgument(args, "--show-quality-needs-fix");
         bool openModelBenchmark = HasArgument(args, "--open-model-benchmark");
         bool openDatasetHealth = HasArgument(args, "--open-dataset-health");
+        bool openDatasetInterchange = HasArgument(args, "--open-dataset-interchange");
+        bool openBatchDetectionPreflight = HasArgument(args, "--open-batch-detection-preflight");
+        bool showDatasetHealthVisualQa = HasArgument(args, "--dataset-health-visual-qa");
         bool includeAnomalyInModelBenchmark = HasArgument(args, "--model-benchmark-include-anomaly");
         bool anomalyReviewOnly = HasArgument(args, "--anomaly-review-only");
         bool showModelBenchmarkConditions = HasArgument(args, "--model-benchmark-conditions");
@@ -1965,6 +1995,56 @@ internal static partial class Program
                                 }
                             });
                         }
+                    }
+                }
+
+                if (openDatasetInterchange)
+                {
+                    string interchangeDatasetRoot = CGlobal.Inst.Data.OutputRootPath;
+                    bool hasInterchangeImages = !string.IsNullOrWhiteSpace(datasetOutputRoot)
+                        && Directory.Exists(interchangeDatasetRoot)
+                        && Directory.EnumerateFiles(
+                            interchangeDatasetRoot,
+                            "*",
+                            SearchOption.AllDirectories)
+                            .Any(path => ExeSmokeImageArtifactExtensions.Contains(
+                                Path.GetExtension(path),
+                                StringComparer.OrdinalIgnoreCase));
+                    if (!hasInterchangeImages)
+                    {
+                        interchangeDatasetRoot = Path.Combine(
+                            Path.GetTempPath(),
+                            "ovl-interchange-source-" + Guid.NewGuid().ToString("N"));
+                        temporaryVisualSmokeRoots.Add(interchangeDatasetRoot);
+                        CGlobal.Inst.Data.ConfigureOutputRoot(interchangeDatasetRoot);
+                        CGlobal.Inst.Data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.ObjectDetection;
+                        CGlobal.Inst.Data.ProjectSettings.YoloDataset.ValidationPercent = 0;
+                        CGlobal.Inst.Data.ProjectSettings.YoloDataset.TestPercent = 0;
+                        CGlobal.Inst.Data.ClassNamedList.Clear();
+                        var visualClass = new CClassItem
+                        {
+                            Text = "Defect",
+                            DrawColor = Color.FromArgb(239, 68, 68)
+                        };
+                        CGlobal.Inst.Data.ClassNamedList.Add(visualClass);
+                        using Bitmap interchangeImage = CreateSolidBitmap(320, 220, Color.FromArgb(35, 42, 52));
+                        var visualRois = new Dictionary<string, List<CRectangleObject>>
+                        {
+                            ["Defect"] = new List<CRectangleObject>
+                            {
+                                new CRectangleObject
+                                {
+                                    Roi = new Rectangle(72, 48, 116, 92),
+                                    cClassItem = visualClass
+                                }
+                            }
+                        };
+                        YoloAnnotationService.SaveAnnotations(
+                            "interchange-sample.png",
+                            interchangeImage,
+                            visualRois,
+                            CGlobal.Inst.Data.ClassNamedList,
+                            CGlobal.Inst.Data);
                     }
                 }
 
@@ -2483,6 +2563,8 @@ internal static partial class Program
 
                     WpfModelBenchmarkWindow modelBenchmarkWindow = null;
                     WpfDatasetHealthWindow datasetHealthWindow = null;
+                    WpfDatasetInterchangeWindow datasetInterchangeWindow = null;
+                    WpfBatchDetectionPreflightWindow batchDetectionPreflightWindow = null;
                     if (openModelBenchmark)
                     {
                         window.ShellViewModel.OpenModelBenchmarkCommand.Execute(null);
@@ -2538,12 +2620,95 @@ internal static partial class Program
                         datasetHealthWindow.Top = screenCapture ? 0 : 24;
                         datasetHealthWindow.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
                         datasetHealthWindow.Topmost = true;
+                        if (showDatasetHealthVisualQa
+                            && datasetHealthWindow.FindName("DatasetHealthTabs") is System.Windows.Controls.TabControl healthTabs
+                            && datasetHealthWindow.FindName("DatasetHealthVisualQaTab") is System.Windows.Controls.TabItem visualQaTab)
+                        {
+                            healthTabs.SelectedItem = visualQaTab;
+                        }
                         datasetHealthWindow.UpdateLayout();
                         datasetHealthWindow.Activate();
                         PumpWpfDispatcher(TimeSpan.FromMilliseconds(500));
                     }
 
-                    System.Windows.Window captureTarget = (System.Windows.Window)datasetHealthWindow
+                    if (openDatasetInterchange)
+                    {
+                        window.ShellViewModel.OpenDatasetInterchangeCommand.Execute(null);
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(500));
+                        datasetInterchangeWindow = System.Windows.Application.Current.Windows
+                            .OfType<WpfDatasetInterchangeWindow>()
+                            .FirstOrDefault(candidate => ReferenceEquals(candidate.Owner, window));
+                        AssertTrue(datasetInterchangeWindow != null, "WPF visual smoke did not open the Dataset Interchange window");
+                        string interchangeOutputRoot = Path.Combine(
+                            Path.GetTempPath(),
+                            "ovl-interchange-visual-" + Guid.NewGuid().ToString("N"));
+                        temporaryVisualSmokeRoots.Add(interchangeOutputRoot);
+                        datasetInterchangeWindow.ViewModel.TargetPath = Path.Combine(
+                            interchangeOutputRoot,
+                            "coco-detection.json");
+                        datasetInterchangeWindow.ViewModel.DryRunCommand.Execute(null);
+                        datasetInterchangeWindow.Width = Math.Max(1040, windowWidth);
+                        datasetInterchangeWindow.Height = Math.Max(680, windowHeight);
+                        datasetInterchangeWindow.Left = screenCapture ? 0 : 24;
+                        datasetInterchangeWindow.Top = screenCapture ? 0 : 24;
+                        datasetInterchangeWindow.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
+                        datasetInterchangeWindow.Topmost = true;
+                        datasetInterchangeWindow.UpdateLayout();
+                        datasetInterchangeWindow.Activate();
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(500));
+                    }
+
+                    if (openBatchDetectionPreflight)
+                    {
+                        string preflightModelRoot = Path.Combine(
+                            Path.GetTempPath(),
+                            "ovl-batch-preflight-visual-" + Guid.NewGuid().ToString("N"));
+                        temporaryVisualSmokeRoots.Add(preflightModelRoot);
+                        Directory.CreateDirectory(preflightModelRoot);
+                        string clientPath = Path.Combine(preflightModelRoot, "worker.py");
+                        string weightsPath = Path.Combine(preflightModelRoot, "best.pt");
+                        File.WriteAllText(clientPath, "# visual smoke worker");
+                        File.WriteAllText(weightsPath, "visual smoke weights");
+                        CGlobal.Inst.Data.ProjectSettings.PythonModel = new PythonModelSettings
+                        {
+                            ModelEngine = PythonModelSettings.EngineYolo11,
+                            ProjectRootPath = preflightModelRoot,
+                            ClientScriptPath = clientPath,
+                            WeightsPath = weightsPath,
+                            MinimumDetectionConfidence = 0.35F
+                        };
+                        if (CGlobal.Inst.Data.ClassNamedList.Count == 0)
+                        {
+                            CGlobal.Inst.Data.ClassNamedList.Add(new CClassItem { Text = "OK" });
+                            CGlobal.Inst.Data.ClassNamedList.Add(new CClassItem { Text = "NG" });
+                            CGlobal.Inst.Data.ClassNamedList.Add(new CClassItem { Text = "Defect" });
+                        }
+
+                        var preflightItem = WpfImageQueueItem.CreateShell(imagePath);
+                        var preflightViewModel = new WpfBatchDetectionPreflightViewModel(
+                            CGlobal.Inst.Data,
+                            new[] { preflightItem },
+                            "\uD45C\uC2DC \uD589");
+                        batchDetectionPreflightWindow = new WpfBatchDetectionPreflightWindow(preflightViewModel)
+                        {
+                            Owner = window,
+                            Width = Math.Max(1040, windowWidth),
+                            Height = Math.Max(620, windowHeight),
+                            Left = screenCapture ? 0 : 24,
+                            Top = screenCapture ? 0 : 24,
+                            WindowStartupLocation = System.Windows.WindowStartupLocation.Manual,
+                            Topmost = true
+                        };
+                        batchDetectionPreflightWindow.ApplyThemeFrom(window);
+                        batchDetectionPreflightWindow.Show();
+                        batchDetectionPreflightWindow.UpdateLayout();
+                        batchDetectionPreflightWindow.Activate();
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(500));
+                    }
+
+                    System.Windows.Window captureTarget = (System.Windows.Window)batchDetectionPreflightWindow
+                        ?? (System.Windows.Window)datasetInterchangeWindow
+                        ?? (System.Windows.Window)datasetHealthWindow
                         ?? (System.Windows.Window)modelBenchmarkWindow
                         ?? window;
                     if (screenCapture)
@@ -25237,9 +25402,9 @@ internal static partial class Program
         AssertTrue(canvasSource.Contains("DetectionOverlayReviewAccentBrush", StringComparison.Ordinal), "WPF detection result overlay should expose review-needed candidate styling");
         AssertTrue(canvasSource.Contains("DetectionOverlayActionButtonStyle", StringComparison.Ordinal), "WPF detection result overlay should expose candidate action buttons on the canvas card");
         AssertTrue(canvasSource.Contains("<Border x:Name=\"DetectionResultOverlay\"", StringComparison.Ordinal)
-            && canvasSource.Contains("Grid.Row=\"4\"", StringComparison.Ordinal),
+            && canvasSource.Contains("Grid.Row=\"5\"", StringComparison.Ordinal),
             "WPF detection result card should use a separate auto row above the WindowsFormsHost canvas so it is visible in the real EXE");
-        AssertTrue(canvasSource.Contains("<Grid Grid.Row=\"5\">", StringComparison.Ordinal), "WPF main canvas should stay in the star-sized row below the result card");
+        AssertTrue(canvasSource.Contains("<Grid Grid.Row=\"7\">", StringComparison.Ordinal), "WPF main canvas should stay in the star-sized row below the Smart Mask, result-card, and shortcut-help rows");
         AssertEqual("1", (string)mainCanvas.Attribute("Grid.Column"));
         AssertTrue(!canvasSource.Contains("Panel.ZIndex=\"10\"", StringComparison.Ordinal), "WPF detection result card should not rely on WPF-over-WinFormsHost z-ordering");
         AssertTrue(canvasCodeBehind.Contains("DetectionOverlayTitleText.SetBinding", StringComparison.Ordinal)
@@ -25254,7 +25419,7 @@ internal static partial class Program
             && canvasSource.Contains("DockPanel.Dock=\"Right\"", StringComparison.Ordinal),
             "WPF detection result overlay actions should stay in the compact HUD command area");
         AssertTrue(canvasSource.Contains("Visibility=\"Collapsed\"", StringComparison.Ordinal), "WPF detection result overlay should not render the long detail list over the image");
-        AssertTrue(!canvasSource.Contains("<canvas:RoiImageCanvasView x:Name=\"MainCanvasView\" Grid.Row=\"4\"", StringComparison.Ordinal), "WPF main canvas should not share the result-card row");
+        AssertTrue(!canvasSource.Contains("<canvas:RoiImageCanvasView x:Name=\"MainCanvasView\" Grid.Row=\"5\"", StringComparison.Ordinal), "WPF main canvas should not share the result-card row");
         AssertTrue(!canvasSource.Contains("HorizontalAlignment=\"Stretch\"", StringComparison.Ordinal), "WPF detection result overlay should not stretch across the image inspection area");
 
         string shellXaml = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.xaml"));

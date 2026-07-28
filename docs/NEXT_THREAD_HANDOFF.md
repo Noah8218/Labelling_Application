@@ -25,8 +25,12 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   merge/join, and axis-aligned split/slice was committed and pushed as
   `9b2160a feat: advance labeling editor structure workflows` on 2026-07-28.
   Enclosed hole add/fill was committed and pushed as
-  `d669b64 feat: add segmentation hole editing`; saved-object z-order and
-  remove-underlying follow it in current uncommitted source.
+  `d669b64 feat: add segmentation hole editing`. Saved-object z-order,
+  remove-underlying, P2 precision/state, and P3 display-only aids were
+  committed and pushed as
+  `ed0f826 feat: complete labeling precision and display aids`.
+  P4 Dataset Health visual QA and P5-A dataset-interchange preflight follow in
+  current uncommitted source.
 - The structural-refactor sequence is `3351abd` (Core contract ownership),
   `5ed829c` (Model/Yolo ownership), and `889abdf` (Yolo contract ownership and
   final declaration audit). This phase is complete; do not reopen mechanical
@@ -58,6 +62,29 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   hide/full-lock/movement-pin and contextual Object Review correction are
   complete, and polygon vertex insert/delete plus bounded edge-aware intelligent
   scissors are complete. P3 compact display-only image aids are also complete.
+  P4 Dataset Health visual QA is complete in current source with a
+  problem-first text worklist, selected-image saved-overlay preview,
+  `문제만`, and an explicit route to the existing editor.
+  P5-A format-conversion preflight is also complete in current source for
+  existing COCO/Pascal VOC/Label Studio/CVAT import/export. It uses isolated
+  dry-run, source/requested-target fingerprints, skipped-record blocking, and
+  explicit Apply in a separate contextual window.
+  P5-B batch AI preflight is complete in current source. Visible-row and
+  failed-item retry commands now require a contextual preflight and explicit
+  Start; scope, model/weight/task, confidence, Recipe class-name mapping,
+  existing-label policy/counts, and Candidate Review/no-auto-approval/no-
+  autosave are visible. Read
+  `docs\BATCH_AI_PREFLIGHT_P5B_20260728.md`; focused gate:
+  `--wpf-batch-detection-preflight`.
+  The actual-EXE operator video runner and promotional-media candidate are also
+  complete. The accepted `20260728-175240` run uses the real KolektorSDD
+  `kos48/Part5.jpg` defect, human-path cursor motion, exact application-window
+  capture, explicit polygon save, and achieves mask IoU `0.9555`. The candidate
+  GIF is 1024x718, 12fps, 15.91s, and 706,201 bytes. A rejected Smart Mask run
+  is retained as thin-crack over-segmentation evidence at IoU `0.3306`; do not
+  present it as successful AI labeling. Read
+  `docs\ACTUAL_EXE_VIDEO_AND_GITHUB_GIF_PLAN_20260728.md`. README/public media
+  remain unchanged until explicit user visual approval.
   The labeling-only estimate is `3.4/5`; persistent object metadata, video
   propagation, and collaboration still prevent CVAT/V7 parity.
   This remains separate from the focused local-workstation estimate of `4.0/5`.
@@ -69,6 +96,18 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   later closures. Local `.proofline/STATE.md` and `.proofline/dashboard/` are
   unrelated untracked state and must remain untouched.
 - Never push unless the user explicitly says push. A commit request means local commit only.
+
+### Current next dependency after P5
+
+P5-A and P5-B are complete. The remaining product priority is independently
+acquired production-camera/cross-session data for detection, segmentation, and
+anomaly model-quality gates. This is an external prerequisite, not another UI
+implementation slice. Do not recommend model-token spending until the data is
+available. Use `docs\FIELD_DATA_INTAKE_PREREQUISITE_20260728.md` as the exact
+manifest, directory, content-separation, label-review, and approval checklist.
+The 2026-07-28 bounded audit found no newly approved eligible packet in the
+checked scope; the GoPxL commercial-reference folder contains videos and
+subtitles only and is not model-quality data.
 
 ### Completed P1-A/P1-B development checkpoint (2026-07-27)
 
@@ -126,9 +165,10 @@ Boundary / next dependency:
   protected/canonical, and 1920/1366 gates; P3 display-only aids then passed
   source/file/history/overlay invariants and current-build 1920/1366 evidence;
   the editor estimate is `3.4/5`.
-- P2 object state/precision and P3 display-only aids are Complete. P4 Dataset
-  Health visual label QA is next.
-- Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
+- P2 object state/precision, P3 display-only aids, P4 Dataset Health visual QA,
+  P5-A format-conversion preflight, and P5-B batch AI preflight are Complete.
+  Independent production-camera/cross-session data is now the prerequisite.
+- Recommended model: no model tokens until the prerequisite exists.
 
 ### Completed P2 intelligent-scissors checkpoint (2026-07-28)
 
@@ -149,10 +189,11 @@ Boundary / next dependency:
 - Boundary: one adjacent polygon edge only, fixed 24-source-pixel corridor,
   180,000-pixel maximum search, no autonomous whole-object segmentation, no
   field accuracy or CVAT/V7 parity claim.
-- P3 display-only brightness/contrast/gamma/invert and histogram/equalization
-  is complete in the following checkpoint. Next priority is P4 Dataset Health
-  visual label QA.
-- Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
+- P3 display-only brightness/contrast/gamma/invert and histogram/equalization,
+  P4 Dataset Health visual QA, P5-A format-conversion preflight, and P5-B batch
+  AI preflight are complete in later checkpoints. Independent field data is the
+  next prerequisite.
+- Recommended model: no model tokens until the prerequisite exists.
 
 ### Completed P1-C merge/join checkpoint (2026-07-27)
 
@@ -371,9 +412,10 @@ Full development sequence:
 5. P3 display-only aids: `Complete`; brightness, contrast, gamma, invert,
    histogram/equalization, and overlay alignment preserve canonical source,
    disk file, history, and training pixels.
-6. P4 Dataset Health visual label QA: `Next`; read-only dataset-level issue discovery
-   with navigation back to the canonical editor.
-7. P5 interchange and batch preflight: dry-run/Apply validation for existing
+6. P4 Dataset Health visual label QA: `Complete`; read-only problem-first
+   discovery, selected-image saved overlay, and navigation back to the
+   canonical editor.
+7. P5 interchange and batch preflight: `Next`; dry-run/Apply validation for existing
    formats and explicit batch AI scope, model, class mapping, confidence, and
    existing-label policy.
 
@@ -406,9 +448,11 @@ P0-B durable status: `Complete`. Field validation: `Not evaluated`.
 - Existing 24-call exact-box and 96-call box-jitter results remain protected
   regression evidence, not field accuracy.
 
-The immediate product priority is now P4 Dataset Health visual label QA.
-P3 display-only image aids, P2 bounded intelligent scissors, and polygon vertex
-insert/delete are complete.
+P5-A format-conversion preflight and P5-B batch AI preflight are complete.
+The immediate product dependency is independent production-camera/cross-session
+data.
+P4 Dataset Health visual QA, P3 display-only image aids, P2 bounded intelligent
+scissors, and polygon vertex insert/delete are complete.
 Session-only hide/lock/pin is complete. P1-A
 JSON/mask-PNG/YOLO/COCO/CVAT preservation/loss semantics and P1-B canonical
 v3 object/component identity are complete, and P1-C merge/join plus
@@ -479,9 +523,54 @@ Status: `Complete`. Field validation: `Not evaluated`.
 - Labeling-editor depth is `3.4/5`; focused workstation maturity remains
   `4.0/5`.
 
-Next bounded priority: implement P4 Dataset Health visual label QA as a
-read-only dataset-level issue gallery with explicit navigation to the existing
-editor. Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
+### Completed P4 Dataset Health visual QA (2026-07-28)
+
+Status: `Complete`. Field validation: `Not evaluated`.
+
+- The separate Dataset Health window has a fourth `시각 QA` tab.
+- Detection/segmentation/anomaly rows are classified read-only; missing,
+  corrupt, or unreviewed rows appear before at most 48 healthy samples.
+- The text worklist is bounded to 500 rows and does not preload thumbnails.
+  Only the selected image is decoded, at a maximum width of 800 pixels.
+- Saved box, polygon, and raster-boundary overlays are composed without
+  changing the image or annotation source.
+- `문제만` narrows the worklist. `편집기에서 열기` closes Dataset Health and
+  reuses the existing labeling workbench and image-loading path.
+- Isolated build, focused Dataset Health tests, documentation gate,
+  `git diff --check`, and current-build 1920x1080/1366x768 before/after
+  evidence pass.
+- Evidence: `docs\DATASET_HEALTH_VISUAL_QA_P4_20260728.md` and
+  `artifacts\ui\dataset-health-visual-qa-p4-20260728`.
+- The labeling-editor depth remains `3.4/5`; focused workstation maturity
+  remains `4.0/5`.
+
+### Completed P5-A dataset-interchange preflight (2026-07-28)
+
+Status: `Complete`. Field validation: `Not applicable`; this is data
+transformation safety, not model accuracy.
+
+- One contextual `변환` action in Model Center > Data opens a separate window;
+  the fourteen supported operations are not added to the permanent labeling
+  rail.
+- Existing COCO, Pascal VOC, Label Studio, and CVAT detection/segmentation
+  converters remain the serialization owners.
+- Dry-run executes the selected real converter only against an isolated
+  temporary destination.
+- Source SHA-256 and requested-target fingerprints must remain unchanged.
+  Import source identity includes the annotation/archive and external image
+  root where applicable.
+- Image/annotation/class/skipped counts and segmentation loss warnings are
+  shown. Skipped malformed/unsupported records block Apply.
+- Apply is enabled only for the unchanged request signature that passed
+  dry-run; no automatic conversion or save occurs.
+- Focused build, `--dataset-interchange-preflight`,
+  `--export-capability-inventory`, documentation gate, `git diff --check`, and
+  current-build 1920x1080/1366x768 before/after evidence pass.
+- Evidence: `docs\DATASET_INTERCHANGE_PREFLIGHT_P5A_20260728.md` and
+  `artifacts\ui\interchange-preflight-p5a-20260728`.
+
+Next dependency: independently acquired production-camera/cross-session data.
+Recommended model: no model tokens until the prerequisite exists.
 
 ## 3. Product Identity and Direction
 
@@ -840,11 +929,11 @@ next-instance behavior.
    Recommended model: `gpt-5.6-terra`
    Reasoning effort: `medium`
 
-3. Implement the previously designed read-only Dataset Health visual-label-QA
-   gallery next, followed by dry-run-first
-   interchange and batch-AI preflight slices. The gallery still must not edit
-   labels, auto-approve candidates, create a new queue, or preload all 10K
-   images at full resolution.
+3. Implement P5 dry-run-first interchange and batch-AI preflight next. Reuse
+   existing COCO/Pascal VOC/Label Studio/CVAT import/export and batch services;
+   expose source/scope, class mapping, model/weight, confidence, and
+   existing-label policy before explicit Apply/Start. Preserve Candidate
+   Review/no-autosave and source immutability.
    Recommended model: `gpt-5.6-terra`
    Reasoning effort: `medium`
 
@@ -1338,3 +1427,46 @@ Boundary / next dependency: P0-B completes one local single-operator
 correction session, not V7/CVAT parity. P1 must define canonical
 JSON/mask-PNG/YOLO/COCO/CVAT structure semantics before merge/split/hole,
 multi-component, z-order, or remove-underlying implementation.
+
+## 31. 2026-07-28 Latest Checkpoint: Smart Mask Auto-Boundary Hero
+
+Status: `Complete`. Field validation: `Not evaluated`.
+
+- The requested CVAT/V7-like base behavior already existed: a drawn Rectangle
+  is sent to MobileSAM and returns a polygon candidate. The missing visible
+  parity was pending-mask presentation.
+- The selected pending Smart Mask candidate is now rasterized into a
+  translucent blue fill while the existing contour remains visible.
+- Candidate Review now says `자동 경계 N점`; the accepted real candidate showed
+  96 points before confirmation.
+- Actual current Debug EXE run `20260728-smartmask-final4` used
+  KolektorSDD `kos14/Part7.jpg` and completed Box -> automatic filled mask ->
+  review -> Confirm -> canonical save -> Next Incomplete.
+- Saved output: one polygon, 96 points, 7,931 mask pixels; broad source-label
+  precision `0.9861`, IoU `0.3927`, recall `0.3948`.
+- The source label is a broad rectangular defect cover while the candidate
+  tightly follows the visible Y-shaped crack. Do not convert this mismatch
+  into a production-accuracy claim.
+- Final local review candidate:
+  `artifacts\operator-video\20260728-smartmask-final4\publish\smart-mask-auto-boundary-hero.gif`;
+  1024x576, 10fps, 18.7 seconds, 1,021,823 bytes.
+- User approval was received on 2026-07-28. The GIF and poster are now copied
+  to `docs/tutorial/images/github/` and the README embeds the actual-EXE demo.
+
+Rejected/historical boundary:
+
+- `20260728-175240` manual-polygon GIF is no longer the representative
+  promotional candidate;
+- optional point-correction attempts on this sample reduced precision, so the
+  accepted auto-first flow confirms the stronger initial candidate;
+- this closes automatic candidate presentation for one sample, not general
+  field accuracy or CVAT/V7 parity.
+
+Next priority: make Smart Mask correction contextual. Default to Box ->
+automatic candidate, collapse positive/negative/detail controls, and reveal
+them only when the operator chooses to correct a poor result. Preserve
+explicit confirmation and no pending-candidate autosave.
+
+Recommended model: `gpt-5.6-sol`
+
+Reasoning effort: `high`

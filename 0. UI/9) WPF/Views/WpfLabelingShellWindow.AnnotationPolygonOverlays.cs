@@ -144,7 +144,66 @@ namespace MvcVisionSystem
             }
 
             AppendSmartMaskPromptOverlays(overlays);
+            AppendPendingSmartMaskCandidateMask(maskOverlays, maskOpacity);
             MainCanvasViewModel.SetSegmentationOverlays(overlays, maskOverlays);
+        }
+
+        private void AppendPendingSmartMaskCandidateMask(
+            List<RoiImageCanvasMaskOverlay> maskOverlays,
+            float configuredOpacity)
+        {
+            if (!smartMaskPromptSession.HasSession || activeImageSize.IsEmpty)
+            {
+                return;
+            }
+
+            YoloWorkerSmokeCandidate candidate = GetSelectedCandidate();
+            IReadOnlyList<System.Drawing.PointF> contour = GetCandidateContourPoints(candidate);
+            if (candidate == null || contour.Count < 3)
+            {
+                return;
+            }
+
+            List<System.Drawing.Point> points = SegmentationGeometry.NormalizePolygon(
+                contour.Select(point => new System.Drawing.Point(
+                    Math.Clamp((int)Math.Round(point.X), 0, activeImageSize.Width - 1),
+                    Math.Clamp((int)Math.Round(point.Y), 0, activeImageSize.Height - 1))),
+                activeImageSize,
+                minimumDistance: 1,
+                simplificationTolerance: 0D);
+            var source = new LabelingSegmentationObject
+            {
+                Points = points,
+                ClassName = FirstNonEmpty(candidate.ClassName, "Defect")
+            };
+            if (!WpfSegmentationMaskGeometryService.TryRasterize(
+                    source,
+                    activeImageSize,
+                    out byte[] maskData,
+                    out DrawingRectangle maskBounds))
+            {
+                return;
+            }
+
+            int renderVersion = 17;
+            foreach (System.Drawing.Point point in points)
+            {
+                renderVersion = unchecked((renderVersion * 31) + point.X);
+                renderVersion = unchecked((renderVersion * 31) + point.Y);
+            }
+
+            float candidateOpacity = Math.Clamp(configuredOpacity * 0.62F, 0.34F, 0.46F);
+            maskOverlays.Add(new RoiImageCanvasMaskOverlay(
+                $"smart-mask-candidate:{candidate.Index}",
+                maskData,
+                activeImageSize,
+                maskBounds,
+                System.Drawing.Color.FromArgb(80, 180, 255),
+                candidateOpacity,
+                renderVersion,
+                isSelected: false,
+                label: string.Empty,
+                showMarker: false));
         }
 
         private void AppendSmartMaskPromptOverlays(List<RoiImageCanvasPolygonOverlay> overlays)

@@ -609,9 +609,10 @@ preservation/loss contract, P1-B canonical schema v3, P1-C merge/join과
 axis-aligned split/slice, enclosed hole add/fill, saved-object z-order,
 remove-underlying, P2 session-only hide/full-lock/movement-pin contextual UI
 정정, polygon vertex insert/delete, bounded intelligent scissors, P3
-display-only image aids는 완료되었습니다. 다음 bounded 기능은
-`docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`의 P4 Dataset
-Health visual label QA입니다.
+display-only image aids, P4 Dataset Health visual label QA는
+완료되었습니다. 다음 bounded 기능은
+`docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`의 P5
+interchange/batch preflight입니다.
 
 - Current owner:
   - tool capability는 `WpfAnnotationToolCapabilityService`
@@ -682,9 +683,28 @@ confirmation/안내는 `WpfObjectReviewPanelViewModel`이 소유합니다.
 `AnnotationPolygonOverlays`는 각 polygon/raster overlay family 안에서 해당
 순서를 사용합니다. 두 renderer family의 정확한 교차 합성은 별도 Viewer
 경계이며 이 bounded slice의 완료 주장에 포함하지 않습니다.
-Dataset Health 시각 QA와 포맷/batch preflight는 핵심 라벨링 slice
-이후입니다. `OpenVisionLab.ImageCanvas`의 별도 프로젝트화와 남은
+Dataset Health 시각 QA는 완료되었고 포맷/batch preflight가 다음 핵심
+라벨링 slice입니다. `OpenVisionLab.ImageCanvas`의 별도 프로젝트화와 남은
 WinForms 호환 경계는 현재 기능 우선순위가 아닙니다.
+
+### Dataset Health visual-QA ownership
+
+`Services/Dataset/WpfDatasetVisualQaService.cs` owns read-only image-level
+classification and selected-preview composition. It reuses canonical
+detection, segmentation, raster-boundary, and anomaly-review services and does
+not write labels. `ViewModels/Dataset/WpfDatasetVisualQaItems.cs` owns the
+bounded catalog rows and one-shot lazy `PreviewSource`.
+`WpfDatasetHealthViewModel` owns filtering, selection, status, and the
+navigation command. `WpfDatasetHealthWindow` remains presentation-only, while
+`WpfLabelingShellWindow.DatasetHealth` adapts the command to the existing
+labeling workbench and `TryLoadImage`.
+
+The window selection adapter calls `EnsureVisualQaLoaded` only when the
+operator first opens `시각 QA`, so the default Dataset Health overview does not
+pay for the additional catalog scan. The catalog contains no row thumbnails.
+It is capped at 500 rows with at most 48 healthy samples; only the selected
+image is decoded at a maximum width of 800 pixels. Dataset Health does not own
+annotation mutation, approval, save, history, or a second image queue.
 
 ### Display-only image-aid ownership
 
@@ -709,6 +729,37 @@ history, dirty state, and selection restoration are owned by
 `WpfLabelingShellWindow.PolygonVertexCommands`. Polygon-only contextual
 enablement and status are owned by `WpfObjectReviewPanelViewModel`.
 Focused coverage is in `Program.PolygonVertex.cs`.
+
+### Dataset interchange preflight ownership
+
+`Yolo/DatasetInterchangePreflightService.cs` owns the shared preflight request,
+isolated dry-run, normalized result counts, source/requested-target
+fingerprints, and explicit Apply routing. Existing COCO, Pascal VOC, Label
+Studio, and CVAT services remain the actual serialization/import owners.
+
+`ViewModels/Dataset/WpfDatasetInterchangeViewModel.cs` owns operation/input
+state, stale dry-run invalidation, result presentation, and Apply enablement.
+`WpfDatasetInterchangeWindow` remains presentation-only.
+`WpfLabelingShellWindow.DatasetInterchange.cs` owns only auxiliary-window
+lifecycle and file/folder dialog adaptation. It does not own conversion policy
+or data mutation.
+
+The entry is one contextual Model Center > Data action rather than a permanent
+labeling rail. P5-A does not own batch inference, candidate approval, label
+save, collaboration, or video workflows.
+
+### Batch AI preflight ownership
+
+`Services/Detection/WpfBatchDetectionPreflightService.cs` owns read-only batch
+request validation and produces the exact filtered execution plan.
+`ViewModels/Labeling/WpfBatchDetectionPreflightViewModel.cs` owns contextual
+existing-label policy, results, and Start enablement.
+`WpfBatchDetectionPreflightWindow` is the modal presentation adapter.
+`WpfLabelingShellWindow.BatchDetection` passes an approved plan to the existing
+`RunBatchDetectionAsync` loop; it does not duplicate worker, progress,
+cancellation, queue review-state, Candidate Review, or label-save behavior.
+P5-B does not own checkpoint-metadata extraction, model quality, cloud/team, or
+video workflows.
 
 ## 완료 보고 전 확인
 

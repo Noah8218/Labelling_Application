@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using Wpf.Ui.Appearance;
 using FluentWindow = Wpf.Ui.Controls.FluentWindow;
@@ -7,7 +6,7 @@ using MediaBrush = System.Windows.Media.Brush;
 
 namespace MvcVisionSystem
 {
-    public partial class WpfDatasetHealthWindow : FluentWindow
+    public partial class WpfDatasetInterchangeWindow : FluentWindow
     {
         private static readonly string[] ThemeBrushKeys =
         {
@@ -21,25 +20,17 @@ namespace MvcVisionSystem
             "ToolbarButtonBrush",
             "ToolbarButtonBorderBrush",
             "GridLineBrush",
-            "GridHeaderBrush",
-            "SelectedRowBrush"
+            "GridHeaderBrush"
         };
 
-        public WpfDatasetHealthWindow(WpfDatasetHealthViewModel viewModel = null)
+        public WpfDatasetInterchangeWindow(WpfDatasetInterchangeViewModel viewModel = null)
         {
             InitializeComponent();
-            DataContext = viewModel ?? new WpfDatasetHealthViewModel();
+            DataContext = viewModel ?? new WpfDatasetInterchangeViewModel();
         }
 
-        public WpfDatasetHealthViewModel ViewModel => DataContext as WpfDatasetHealthViewModel;
-
-        private void DatasetHealthTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (ReferenceEquals(DatasetHealthTabs.SelectedItem, DatasetHealthVisualQaTab))
-            {
-                ViewModel?.EnsureVisualQaLoaded();
-            }
-        }
+        public WpfDatasetInterchangeViewModel ViewModel =>
+            DataContext as WpfDatasetInterchangeViewModel;
 
         public void ApplyThemeFrom(FrameworkElement source)
         {

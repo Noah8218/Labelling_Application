@@ -2,6 +2,10 @@
 
 산업용 이미지 데이터셋을 만들고, 라벨링하고, 여러 모델로 학습·검증·비교하는 Windows 데스크톱 작업대입니다.
 
+![실제 Windows EXE에서 결함 박스를 자동 세그멘테이션 후보로 변환하고 확인·저장하는 Smart Mask 흐름](docs/tutorial/images/github/labeling-studio-smart-mask-workflow.gif)
+
+> 실제 Windows EXE에서 결함 주위에 박스를 그리면 MobileSAM이 채워진 마스크와 자동 경계를 만들고, 작업자가 확인한 결과만 라벨로 저장합니다. [정지 이미지 보기](docs/tutorial/images/github/labeling-studio-smart-mask-workflow-poster.png)
+
 ![객체탐지 라벨링 화면](docs/tutorial/images/workflows-20260722/object-detection-labeling-1920x1080.png)
 
 위 화면은 결함이 없는 이미지에 임의 도형을 그린 예가 아닙니다. 눈에 보이는 대각선 `scratch_crack` 결함을 원본 정답 좌표대로 박스로 다시 연 화면입니다.

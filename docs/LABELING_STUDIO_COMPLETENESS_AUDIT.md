@@ -130,8 +130,22 @@ Status: `Complete`. Field validation: `Not evaluated`.
   an owned display copy. Canonical source/file hashes, dirty/history state, and
   overlay image coordinates remain unchanged. Current-build 1920/1366 evidence
   passes; see `docs\DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md`.
-- The next product-development priority is P4 Dataset Health visual label QA.
-- P4 visual QA and P5 interchange/batch preflight remain ordered follow-ups.
+- P4 Dataset Health visual QA is complete as a fourth read-only analysis tab.
+  It prioritizes missing/corrupt/unreviewed images, keeps a bounded text
+  worklist, decodes only the selected preview, renders saved geometry, filters
+  to problems, and returns to the existing editor without mutation. See
+  `docs\DATASET_HEALTH_VISUAL_QA_P4_20260728.md`.
+- P5-A format-conversion preflight is complete for the existing COCO,
+  Pascal VOC, Label Studio, and CVAT import/export services. It requires an
+  isolated dry-run, source/requested-target immutability, skipped-record
+  correction, and explicit Apply. See
+  `docs\DATASET_INTERCHANGE_PREFLIGHT_P5A_20260728.md`.
+- P5-B batch AI preflight is complete: visible-row and failed-item runs now
+  require a contextual dry-run and explicit Start, show scope/model/weight/task/
+  confidence/Recipe class-name mapping/existing-label policy, and route results
+  to Candidate Review without automatic approval or label save.
+- The next product dependency is independently acquired
+  production-camera/cross-session evidence for model-quality gates.
 
 The current `3.4/5` labeling-editor score is still
 materially below CVAT/V7 editor
@@ -718,18 +732,22 @@ this current sequence:
    immutability.
    Recommended model: `gpt-5.6-terra`
    Reasoning effort: `medium`
-4. Implement P4 Dataset Health visual label QA as a read-only dataset-level
-   issue gallery with explicit navigation back to the existing editor. Keep
-   existing interchange/batch preflight exposure behind that bounded slice.
+4. P4 Dataset Health visual label QA is complete with problem-first discovery,
+   selected-image saved overlays, filtering, existing-editor navigation,
+   source immutability, and current-build 1920/1366 evidence.
    Recommended model: `gpt-5.6-terra`
    Reasoning effort: `medium`
-5. When an approved NG-rich object-detection camera/session source with
+5. P5-A format-conversion preflight and P5-B batch AI preflight are complete.
+   Keep their dry-run/explicit-action/no-autosave contracts protected.
+   Recommended model: `gpt-5.6-terra`
+   Reasoning effort: `low` for regression-only maintenance
+6. When an approved NG-rich object-detection camera/session source with
    trustworthy boxes becomes available, create a content-separated held-out
    split and rerun the frozen fingerprint/comparison/error-review path.
    Prerequisite: provenance-confirmed images and trustworthy boxes.
    Recommended model: none until data is available
    Reasoning effort: n/a
-6. When balanced independent normal/abnormal camera-session data becomes
+7. When balanced independent normal/abnormal camera-session data becomes
    available, keep it outside training initially and rerun the unchanged
    anomaly evaluation guard. The fixed 104-image synthetic test already places
    YOLOv8 at `90/104` and YOLO11 at `82/104`; both remain `hold` and must not be
@@ -737,13 +755,13 @@ this current sequence:
    Prerequisite: provenance-confirmed balanced normal/abnormal images.
    Recommended model: none until data is available
    Reasoning effort: n/a
-7. Use independent mask evidence for any future segmentation production claim.
+8. Use independent mask evidence for any future segmentation production claim.
    The fixed same-source comparison is regression evidence only: U-Net
    `0.243091` Dice, YOLOv8-seg `0.721702`, and YOLO11-seg `0.773711`.
    Prerequisite: provenance-confirmed images and trustworthy masks.
    Recommended model: none until data is available
    Reasoning effort: n/a
-8. Keep the verified compact shell, task tabs, annotation rail, splitters,
+9. Keep the verified compact shell, task tabs, annotation rail, splitters,
    queue/Worklist, Viewer/OpenGL, runtime profiles, comparison, MobileSAM box
    slice, and Model Center contracts stable.
    Recommended model: `gpt-5.6-terra`

@@ -1,6 +1,197 @@
 # Work Tracking
 
-Last updated: 2026-07-26
+Last updated: 2026-07-28
+
+## 2026-07-28 Actual EXE Video and GitHub GIF Design
+
+Status: Complete
+
+Scope:
+
+- design a real EXE mouse/keyboard operation recording;
+- separate uncut self-evaluation MP4 from the promotional GIF;
+- reuse existing actual-EXE Smart Mask and labeling-productivity automation;
+- define event logs, contact sheets, self-review rubric, defect severity,
+  repair/rerun gate, GIF budget, and README publication boundary.
+
+Acceptance criteria:
+
+- current EXE must be operated through visible UI input: pass in design;
+- internal state seeding after launch is prohibited: pass;
+- raw evidence cannot be replaced by an edited promotional clip: pass;
+- promotion requires a clean rerun with no P0/P1 or visible unresolved P2:
+  pass;
+- README change waits for user review: pass.
+
+Verification:
+
+- existing actual-EXE runner and capture helpers inspected;
+- local FFmpeg availability confirmed;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `docs\ACTUAL_EXE_VIDEO_AND_GITHUB_GIF_PLAN_20260728.md`.
+
+Boundary / next dependency: implement `--exe-operator-video-smoke`, record the
+first uncut run, and perform timestamped self-evaluation before creating a GIF.
+
+Recommended model: `gpt-5.6-sol`
+
+Reasoning effort: `high`
+
+## 2026-07-28 Actual EXE Defect Labeling Video and GIF Execution
+
+Status: Complete
+
+Scope:
+
+- add `--exe-operator-video-smoke` for the actual current Debug EXE;
+- create a temporary segmentation Recipe through visible UI;
+- use the real KolektorSDD `kos48/Part5.jpg` crack sample and `Defect` class;
+- capture the exact Labeling Studio window with a visible human-path cursor;
+- draw, close, review, and explicitly save a four-point defect polygon;
+- preserve event, screenshot, key-frame, saved-artifact, ffprobe, SHA-256,
+  contact-sheet, self-review, GIF, and poster evidence.
+
+Acceptance criteria:
+
+- actual EXE and visible UI input: pass;
+- no desktop or unrelated application in the final recording: pass;
+- 424 human-path cursor movement samples and visible recorded cursor: pass;
+- saved one-polygon/four-point mask: pass;
+- ground-truth IoU threshold `>=0.85`: pass (`0.9555`);
+- precision / recall: `0.9904 / 0.9644`;
+- explicit save and Next Incomplete transition: pass;
+- 1024x718, 12fps, 15.91s, 706,201-byte promotional GIF candidate: pass.
+
+Rejected evidence:
+
+- Smart Mask run `20260728-174414` is preserved, not promoted: IoU `0.3306`,
+  precision `0.4148`, recall `0.6195`; broad normal-surface over-segmentation
+  is a P1 promotional-truth defect.
+- run `20260728-173853` is preserved, not promoted: another OpenVisionLab
+  window covered the app and intercepted Confirm. Exact window-title capture
+  and foreground restoration prevent that contamination in the final run.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--exe-operator-video-smoke`: pass;
+- ffprobe: 1920x1080, H.264, 30fps, 31.47s;
+- contact sheet, 1fps key frames, checkpoint screenshots, saved mask/segment,
+  quantitative mask comparison, GIF contact sheet, and poster: pass.
+
+Evidence:
+
+- `tests\LabelingApplication.Tests\Program.OperatorVideo.cs`;
+- `docs\ACTUAL_EXE_VIDEO_AND_GITHUB_GIF_PLAN_20260728.md`;
+- ignored local run `artifacts\operator-video\20260728-175240`.
+
+Boundary / next dependency:
+
+- this proves one correct manual-polygon Defect workflow, not Smart Mask
+  accuracy, production-camera quality, CVAT/V7 parity, or model adoption;
+- the thin-crack Smart Mask gap remains documented product evidence;
+- README and public tutorial media remain unchanged until the user explicitly
+  approves the GIF/poster.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `low`
+
+## 2026-07-28 Field Data Intake Prerequisite Audit
+
+Status: Complete
+
+Scope:
+
+- check the current handoff/status evidence and immediately identifiable
+  `C:\Git` candidates without scanning prohibited or unapproved data;
+- distinguish the GoPxL commercial-reference videos from labeled camera data;
+- define reusable detection, segmentation, and anomaly packet layouts,
+  provenance fields, content-separation rules, visual label-review gates, and
+  approval boundaries.
+
+Acceptance criteria:
+
+- no existing synthetic/same-source package is promoted to field evidence:
+  pass;
+- no prohibited path is inspected: pass;
+- a manifest template and task-specific checklist are reusable by the next
+  operator: pass;
+- real training/comparison remains opt-in after source and runtime-cost
+  approval: pass.
+
+Verification:
+
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `docs\FIELD_DATA_INTAKE_PREREQUISITE_20260728.md`;
+- read-only extension inventory: 10 MP4, 13 SRT, and 4 VTT files in the
+  commercial-reference folder.
+
+Boundary / next dependency: provide and explicitly approve one eligible field
+packet.
+
+Recommended model: no model tokens until an eligible packet is available.
+
+Reasoning effort: not applicable until the prerequisite exists.
+
+## 2026-07-28 P5-B Batch AI Preflight
+
+Status: Complete
+
+Scope:
+
+- Gate visible-row batch detection and failed-item retry behind one contextual
+  preflight and explicit Start.
+- Show exact scope/counts, model engine, task, weight, confidence, Recipe
+  class-name mapping, and existing-label policy.
+- Default to skipping saved labels; optionally include them without overwriting
+  or saving.
+- Keep all results pending in Candidate Review with no automatic approval or
+  label save.
+- Reuse the existing worker/progress/stop/result loop.
+
+Acceptance criteria:
+
+- valid plan enables explicit Start: pass;
+- missing image/runtime/weight/class ambiguity blocks Start: pass;
+- default skip and include/keep policies produce exact filtered counts: pass;
+- Candidate Review/no-autosave contract is visible and tested: pass;
+- batch progress/result regressions: pass;
+- current-build 1920x1080 and 1366x768 layout: pass.
+
+Verification:
+
+- isolated build: warning 0, error 0;
+- `--wpf-batch-detection-preflight`: pass;
+- `--wpf-batch-detection-progress`: pass;
+- `--wpf-batch-detection-result`: pass;
+- shell/docs gates and `git diff --check`: pass.
+
+Evidence:
+
+- `docs\BATCH_AI_PREFLIGHT_P5B_20260728.md`;
+- `tests\LabelingApplication.Tests\Program.BatchDetectionPreflight.cs`;
+- `artifacts\ui\batch-ai-preflight-p5b-20260728`.
+
+Boundary / next dependency:
+
+- the worker protocol does not expose common checkpoint class-metadata
+  extraction; preflight validates same-name runtime class mapping and keeps all
+  results in review;
+- P5 is complete. Independent production-camera/cross-session data is required
+  before model-quality work can progress.
+
+Recommended model: no model tokens until independent data is available.
+
+Reasoning effort: not applicable until the prerequisite exists.
 
 ## 2026-07-26 bound status state ownership
 
@@ -17804,6 +17995,164 @@ depth is `3.1/5`; focused workstation maturity remains `4.0/5`.
 Polygon vertex insert/delete is the next bounded P2 slice.
 Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
 
+## 2026-07-28 Smart Mask Automatic Boundary Presentation And Actual-EXE Hero
+
+Status: Complete
+
+Scope:
+
+- preserve the existing MobileSAM rough-box inference and canonical save path;
+- render the selected pending Smart Mask polygon as an accurate translucent
+  raster fill instead of relying on contour-only presentation;
+- show `자동 경계 N점` in Candidate Review;
+- drive a real Kolektor defect through box, automatic candidate, confirmation,
+  save, and next-image transition with a human-path cursor;
+- replace the historical manual-polygon promotional candidate with an honest
+  automatic Smart Mask GIF/poster candidate.
+
+Acceptance criteria:
+
+- current Debug EXE creates one filled pending candidate from one rough box:
+  pass;
+- candidate exposes 96 automatic boundary points before confirmation: pass;
+- canonical save contains one polygon, 96 points, and 7,931 mask pixels: pass;
+- saved candidate precision against the broad source label: pass (`0.9861`);
+- exact-window MP4 contains no desktop/unrelated app exposure: pass;
+- GIF is 1024x576, 10fps, 18.7 seconds, and 1,021,823 bytes: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- current app build to `artifacts\run\Debug`: warning 0, error 0;
+- `--exe-operator-video-smoke --run-id 20260728-smartmask-final4`: pass;
+- ffprobe, source SHA-256, saved mask/segment validation, contact sheet,
+  checkpoint screenshots, 1fps key frames, and visual self-review: pass.
+
+Evidence:
+
+- `docs\ACTUAL_EXE_VIDEO_AND_GITHUB_GIF_PLAN_20260728.md`;
+- `tests\LabelingApplication.Tests\Program.OperatorVideo.cs`;
+- ignored local artifact root
+  `artifacts\operator-video\20260728-smartmask-final4`.
+
+Boundary / next dependency:
+
+- one local industrial sample proves workflow usability, not model adoption,
+  CVAT/V7 parity, or production accuracy;
+- low IoU/recall reflects a broad rectangular source label versus a tight
+  visible-crack candidate and must not be advertised as accuracy;
+- user visual approval was received; the GIF/poster are published under
+  `docs/tutorial/images/github/` and linked from the README;
+- next labeling priority is auto-first contextual correction UX: keep the
+  correction bar collapsed until the user elects to refine a poor candidate.
+
+Recommended model: `gpt-5.6-sol`
+
+Reasoning effort: `high`
+
+## 2026-07-28 P5-A Dataset Interchange Preflight
+
+Status: Complete
+
+Scope:
+
+- reuse existing COCO, Pascal VOC, Label Studio, and CVAT
+  detection/segmentation import/export services;
+- expose one contextual Model Center > Data `변환` entry and a separate
+  preflight window;
+- require isolated Dry-run before explicit Apply;
+- validate purpose, paths, target split, counts, skipped records, format-loss
+  warnings, source immutability, and requested-target non-mutation;
+- exclude new formats, batch AI execution, autosave/approval, video, and
+  cloud/team scope.
+
+Acceptance criteria:
+
+- fourteen existing external interchange operations remain available: pass;
+- COCO export Dry-run and explicit Apply preserve source identity: pass;
+- COCO import Dry-run leaves the current dataset target absent and preserves
+  annotation plus image source identity: pass;
+- explicit import Apply writes the target dataset: pass;
+- changed input invalidates a prior passing Dry-run: pass;
+- current-build 1920x1080 and 1366x768 layouts: pass.
+
+Verification:
+
+- isolated build: warning 0, error 0;
+- `--dataset-interchange-preflight`: pass;
+- `--export-capability-inventory`: pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass;
+- current-build 1920x1080 and 1366x768 visual smoke: pass.
+
+Evidence:
+
+- `docs\DATASET_INTERCHANGE_PREFLIGHT_P5A_20260728.md`;
+- `tests\LabelingApplication.Tests\Program.DatasetInterchangeCapability.cs`;
+- `artifacts\ui\interchange-preflight-p5a-20260728`.
+
+Boundary / next dependency:
+
+- P5-A proves format-conversion safety, not model or production-data quality.
+- P5-B batch AI preflight remains next: scope, model/weight, class mapping,
+  confidence, existing-label policy, explicit Start, and Candidate
+  Review/no-autosave.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
+## 2026-07-28 P4 Dataset Health Visual QA
+
+Status: `Complete`
+
+Scope:
+
+- add a fourth read-only `시각 QA` tab to the existing Dataset Health window;
+- classify detection/segmentation/anomaly rows and place missing, corrupt, or
+  unreviewed items before bounded healthy samples;
+- keep a text-only catalog capped at 500 rows and 48 healthy samples;
+- decode only the selected image at maximum preview width 800 and compose its
+  saved box/polygon/raster-boundary overlay;
+- expose `문제만` and an explicit route to the existing labeling editor;
+- preserve source images, annotations, Recipe, dirty/history, and no-autosave.
+
+Acceptance criteria:
+
+- detection/segmentation/anomaly classification and problem ordering: pass;
+- missing and corrupt canonical segmentation fixtures: pass;
+- selected-preview lazy rendering and source SHA-256 invariance: pass;
+- filter and existing-editor navigation: pass;
+- current-build 1920x1080 and 1366x768 before/after evidence: pass.
+
+Verification:
+
+- isolated Debug test build: warning 0, error 0;
+- `--dataset-health`: pass;
+- `--wpf-dataset-health-window`: pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass;
+- current-build visual smoke at 1920x1080 and 1366x768: pass.
+
+Evidence:
+
+- `docs\DATASET_HEALTH_VISUAL_QA_P4_20260728.md`;
+- `tests\LabelingApplication.Tests\Program.DatasetHealth.cs`;
+- `artifacts\ui\dataset-health-visual-qa-p4-20260728`.
+
+Boundary / next dependency:
+
+- P4 is an analysis surface, not a second editor, queue, approval system, or
+  full-resolution gallery.
+- Labeling-editor depth remains `3.4/5`; focused workstation maturity remains
+  `4.0/5`.
+- P5-A format-conversion preflight is complete in the later record. Current
+  next priority is P5-B batch AI preflight.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
 ## 2026-07-28 P2 edge-aware intelligent scissors
 
 Status: Complete
@@ -17927,8 +18276,9 @@ Boundary / next dependency:
   production-camera images or CVAT/V7 parity.
 - Labeling-editor depth is `3.4/5`; focused workstation maturity remains
   `4.0/5`.
-- Next priority is P4 Dataset Health visual label QA: read-only dataset-level
-  issue discovery and explicit editor navigation.
+- The historical next priority was P4 Dataset Health visual label QA; it is
+  complete in the later P4 record. Current next priority is P5
+  interchange/batch preflight.
 
 Recommended model: `gpt-5.6-terra`
 

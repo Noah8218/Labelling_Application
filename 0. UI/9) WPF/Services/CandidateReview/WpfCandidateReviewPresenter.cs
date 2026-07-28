@@ -156,7 +156,10 @@ namespace MvcVisionSystem
             string scoreText = IsSmartMask(candidate)
                 ? $"\uC0DD\uC131 \uBC29\uC2DD {confidence} / \uC2E0\uB8B0\uB3C4 \uC810\uC218 \uC5C6\uC74C"
                 : $"\uC2E0\uB8B0\uB3C4 {confidence} / \uAE30\uC900 {threshold}";
-            return $"{GetClassName(candidate)} / {scoreText}\n\uC88C\uD45C: {boundsText}\n\uC0C1\uD0DC: {status}\n{BuildCurrentObjectComparison(bounds, overlap)}";
+            string boundaryText = IsSmartMask(candidate)
+                ? $"\n\uC790\uB3D9 \uACBD\uACC4: {GetBoundaryPointCount(candidate)}\uC810"
+                : string.Empty;
+            return $"{GetClassName(candidate)} / {scoreText}\n\uC88C\uD45C: {boundsText}{boundaryText}\n\uC0C1\uD0DC: {status}\n{BuildCurrentObjectComparison(bounds, overlap)}";
         }
 
         public static WpfCandidateComparisonPresentation BuildComparison(
@@ -278,10 +281,18 @@ namespace MvcVisionSystem
                     ? "\uC911\uBCF5 \uAC00\uB2A5"
                     : "\uAC80\uD1A0 \uD544\uC694";
 
+            string geometry = IsSmartMask(candidate)
+                ? $"\uC790\uB3D9 \uACBD\uACC4 {GetBoundaryPointCount(candidate)}\uC810"
+                : FormatBoundsCompact(bounds);
             return bounds.IsEmpty
                 ? $"\uC774\uBBF8\uC9C0 \uBC16 / {status}"
-                : $"{FormatBoundsCompact(bounds)} / {status}";
+                : $"{geometry} / {status}";
         }
+
+        private static int GetBoundaryPointCount(YoloWorkerSmokeCandidate candidate)
+            => candidate?.PolygonPoints?.Count >= 3
+                ? candidate.PolygonPoints.Count
+                : candidate?.NormalizedPolygonPoints?.Count ?? 0;
 
         public static string BuildCurrentObjectComparison(Rectangle bounds, WpfCandidateOverlapInfo overlap)
         {

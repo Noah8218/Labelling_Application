@@ -130,4 +130,91 @@ internal static class DatasetInterchangeCapabilityTests
         AssertTrue(capabilities.Count(item => item.IsRecommendedNext) == 1, "export capability inventory should have exactly one recommended next target");
         AssertTrue(DatasetExportCapabilityService.BuildImplementedCapabilities().All(item => item.IsImplemented), "implemented capability helper should return only implemented targets");
     }
+
+    internal static void TestDatasetInterchangeDryRunAndApply()
+    {
+        string root = CreateTempRoot();
+        try
+        {
+            string sourceRoot = Path.Combine(root, "source-dataset");
+            CData sourceData = DatasetReadinessTestFixtures.CreatePurposeReadinessData(
+                sourceRoot,
+                LabelingDatasetPurpose.ObjectDetection,
+                includeBoxes: true,
+                includeSegments: false);
+            string sourceBefore = CaptureExternalSourceSnapshot(sourceRoot);
+            string exportPath = Path.Combine(root, "external-export", "annotations.json");
+            var service = new DatasetInterchangePreflightService();
+            AssertEqual(14, service.BuildSupportedCapabilities().Count);
+            var exportRequest = new DatasetInterchangeRequest
+            {
+                Data = sourceData,
+                FormatKey = "coco-detection-json",
+                TargetPath = exportPath
+            };
+
+            DatasetInterchangePreflightReport exportDryRun = service.DryRun(exportRequest);
+            AssertTrue(exportDryRun.CanApply, string.Join(Environment.NewLine, exportDryRun.Issues));
+            AssertTrue(exportDryRun.IsDryRun, "export preflight should be marked as dry-run");
+            AssertTrue(exportDryRun.SourceUnchanged, "export dry-run should preserve the source tree");
+            AssertTrue(exportDryRun.RequestedTargetUnchanged, "export dry-run should preserve the requested target");
+            AssertEqual(2, exportDryRun.ImageCount);
+            AssertEqual(2, exportDryRun.AnnotationCount);
+            AssertEqual(1, exportDryRun.CategoryCount);
+            AssertTrue(!File.Exists(exportPath), "export dry-run must not create the requested output");
+            AssertEqual(sourceBefore, CaptureExternalSourceSnapshot(sourceRoot));
+
+            DatasetInterchangePreflightReport exportApply = service.Apply(exportRequest);
+            AssertTrue(exportApply.WasApplied, "explicit export apply should report applied state");
+            AssertTrue(exportApply.Issues.Count == 0, string.Join(Environment.NewLine, exportApply.Issues));
+            AssertTrue(File.Exists(exportPath), "explicit export apply should create the requested output");
+            AssertEqual(sourceBefore, CaptureExternalSourceSnapshot(sourceRoot));
+
+            string importRoot = Path.Combine(root, "imported-dataset");
+            var importData = new CData();
+            importData.ConfigureOutputRoot(importRoot);
+            importData.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.ObjectDetection;
+            var importRequest = new DatasetInterchangeRequest
+            {
+                Data = importData,
+                FormatKey = "coco-detection-import",
+                SourcePath = exportPath,
+                ImageRoot = sourceRoot,
+                TargetPath = importRoot,
+                TargetSplit = YoloDatasetSplitService.TrainMode
+            };
+            string exportHashBeforeImport = ComputeFileSha256(exportPath);
+
+            DatasetInterchangePreflightReport importDryRun = service.DryRun(importRequest);
+            AssertTrue(importDryRun.CanApply, string.Join(Environment.NewLine, importDryRun.Issues));
+            AssertTrue(importDryRun.SourceUnchanged, "import dry-run should preserve the external annotation source");
+            AssertTrue(importDryRun.RequestedTargetUnchanged, "import dry-run should preserve the current dataset target");
+            AssertTrue(!Directory.Exists(importRoot), "import dry-run must not create the current dataset target");
+            AssertEqual(2, importDryRun.ImageCount);
+            AssertEqual(2, importDryRun.AnnotationCount);
+            AssertEqual(1, importDryRun.CategoryCount);
+            AssertEqual(exportHashBeforeImport, ComputeFileSha256(exportPath));
+
+            DatasetInterchangePreflightReport importApply = service.Apply(importRequest);
+            AssertTrue(importApply.WasApplied, "explicit import apply should report applied state");
+            AssertTrue(importApply.Issues.Count == 0, string.Join(Environment.NewLine, importApply.Issues));
+            AssertTrue(File.Exists(Path.Combine(importRoot, "data.yaml")), "explicit import apply should write the target dataset");
+            AssertEqual(exportHashBeforeImport, ComputeFileSha256(exportPath));
+
+            string viewModelExportPath = Path.Combine(root, "view-model-export", "annotations.json");
+            var viewModel = new WpfDatasetInterchangeViewModel(sourceData, service);
+            WpfDatasetInterchangeOption cocoExport = viewModel.Operations.Single(item =>
+                item.Capability.FormatKey == "coco-detection-json");
+            viewModel.SelectedOperation = cocoExport;
+            viewModel.TargetPath = viewModelExportPath;
+            viewModel.DryRunCommand.Execute(null);
+            AssertTrue(viewModel.CanApply, "view model should enable Apply only after a passing dry-run");
+            viewModel.TargetPath = Path.Combine(root, "view-model-export", "changed.json");
+            AssertTrue(!viewModel.CanApply, "changing an input should invalidate the previous dry-run");
+        }
+        finally
+        {
+            DeleteTempRoot(root);
+        }
+    }
 }

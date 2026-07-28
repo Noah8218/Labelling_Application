@@ -274,8 +274,8 @@ video propagation, collaboration이 남아 있으므로 CVAT/V7 parity로
 | P1 mask structure | **Complete** | preservation/loss, canonical v3 identity, merge, axis-aligned split, enclosed hole add/fill, explicit saved-object stack order, two-step remove-underlying, undo/redo와 save/load/re-save 통과 | polygon/raster exact visual interleaving은 renderer 후속 |
 | P2 object state/precision | **Complete** | session-only hide/full-lock/movement-pin, contextual options, zoom-aware polygon vertex insert/delete, bounded edge-aware intelligent scissors, protected/canonical 회귀와 1920/1366 증거 완료 | 임의 자연영상/field 정확도와 CVAT/V7 parity는 주장하지 않으며 회귀 시에만 재개 |
 | P3 display aids | **Complete** | compact `보기 보정`, source/file/history/overlay 불변 test, 1920/1366 current-build 증거 | production-camera usefulness와 CVAT/V7 parity는 주장하지 않음 |
-| P4 visual QA | **다음** | Dataset Health 숫자/표 기반 분석 존재 | read-only dataset-level 시각 문제 탐색과 editor 이동 |
-| P5 interchange/batch preflight | 대기 | 기존 import/export와 batch detection 서비스 존재 | dry-run/Apply 및 명시적 실행 정책 |
+| P4 visual QA | **Complete** | 문제 우선 목록, 선택 이미지 저장-overlay, 문제 필터, 기존 editor 이동, 1920/1366 증거 | 회귀 시에만 재개 |
+| P5 interchange/batch preflight | **Complete** | P5-A는 포맷 변환 격리 Dry-run/명시적 Apply, P5-B는 scope/model/weight/task/confidence/Recipe class-name mapping/existing-label policy와 명시적 Start를 제공 | production-camera/cross-session 모델 품질 근거는 별도 외부 선행조건 |
 
 P0-A 개발 시작 기준:
 
@@ -568,6 +568,20 @@ Reasoning effort: `medium`
 gallery는 편집기가 아니라 데이터 전체에서 문제 항목을 찾고 기존
 라벨링 화면으로 이동하는 분석 surface입니다.
 
+Status update (2026-07-28): `Complete`.
+
+- detection/segmentation/anomaly 저장 상태를 이미지별로 분류하고 문제를
+  먼저 표시합니다.
+- worklist는 text metadata만 가지며 선택한 한 장만 최대 800px로
+  지연 디코딩합니다.
+- 저장된 box, polygon, raster boundary를 읽기 전용으로 합성합니다.
+- `문제만` 필터와 `편집기에서 열기`를 제공하되 Dataset Health 안에서
+  수정·승인·저장하지 않습니다.
+- 누락/손상 fixture, source SHA-256 불변, 기존 editor route,
+  current-build 1920/1366 근거가 통과했습니다.
+- 상세 계약과 증거:
+  `docs\DATASET_HEALTH_VISUAL_QA_P4_20260728.md`.
+
 Recommended model: `gpt-5.6-terra`
 Reasoning effort: `medium`
 
@@ -614,8 +628,8 @@ Reasoning effort: `medium`
 3. P1 mask structure contract와 editor — **Complete; merge/join·split/slice·hole·saved-object z-order·remove-underlying 완료**
 4. P2 object state/precision — **Complete; contextual UI, movement-pin, polygon vertex insert/delete, bounded edge-aware scissors 완료**
 5. P3 display-only aids — **Complete**
-6. P4 visual QA — **Next**
-7. P5 interchange/batch preflight
+6. P4 visual QA — **Complete**
+7. P5 interchange/batch preflight — **Complete; P5-A format conversion and P5-B batch AI**
 
 한 단계가 acceptance criteria와 현재 EXE 증거를 통과하기 전에 다음
 단계를 자동으로 시작하지 않습니다.
@@ -643,6 +657,8 @@ Acceptance criteria:
 - P0-A/P0-B의 owner, included/excluded scope, state safety, 완료 기준이
   구현 가능한 수준으로 정의됨: pass
 - protected behavior와 out-of-scope가 명시됨: pass
+- P4 문제 우선 visual QA, 선택 이미지 지연 overlay, 기존 editor 이동과
+  source 불변이 focused/visual evidence로 완료됨: pass
 
 Verification:
 
@@ -661,8 +677,12 @@ Evidence:
 Boundary / next dependency: P0-A/P0-B와 P1-C merge/join·split/slice·hole·saved-object z-order·remove-underlying,
 P2 session-only hide/full-lock/movement-pin의 상용 영상 기반 의미/UI
 정정, polygon vertex insert/delete, bounded edge-aware intelligent scissors와
-P3 display-only aids는 protected regression과 1920/1366 current-build
-증거를 통과했습니다. 다음 구현은 P4 Dataset Health visual label QA입니다.
+P3 display-only aids, P4 Dataset Health visual QA와 P5-A format-conversion
+preflight는 protected/focused regression과 1920/1366 current-build 증거를
+통과했습니다. P5-B batch AI preflight도 scope/model/weight/task/confidence,
+Recipe class-name mapping, 기존 라벨 정책, 명시적 Start,
+Candidate Review/no-autosave 계약과 1920/1366 증거를 통과했습니다.
+다음 제품 선행조건은 독립 production-camera/cross-session 데이터입니다.
 saved-object z-order는 canonical 전역 순서와
 polygon/raster 각 overlay family 내부 표시 순서를 보장하지만 두
 family의 정확한 교차 합성 순서까지 보장하지 않습니다. 현재

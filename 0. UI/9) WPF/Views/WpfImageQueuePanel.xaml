@@ -733,7 +733,7 @@
                     <ui:Button x:Name="DetectSelectedQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC120;&#xD0DD; &#xC774;&#xBBF8;&#xC9C0; &#xAC80;&#xC0AC;" AutomationProperties.Name="&#xC120;&#xD0DD; &#xAC80;&#xC0AC;" IsEnabled="{Binding IsDetectSelectedEnabled}" Command="{Binding DetectSelectedQueueCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="ImageSearch" />
                     </ui:Button>
-                    <ui:Button x:Name="BatchDetectQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xD45C;&#xC2DC; &#xBAA9;&#xB85D; &#xC77C;&#xAD04; &#xAC80;&#xC0AC;" AutomationProperties.Name="&#xC77C;&#xAD04; &#xAC80;&#xC0AC;" IsEnabled="{Binding IsBatchDetectEnabled}" Command="{Binding BatchDetectQueueCommand}">
+                    <ui:Button x:Name="BatchDetectQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xD45C;&#xC2DC; &#xBAA9;&#xB85D; AI &#xBC30;&#xCE58; &#xC0AC;&#xC804;&#xC810;&#xAC80;" AutomationProperties.Name="AI &#xBC30;&#xCE58; &#xC0AC;&#xC804;&#xC810;&#xAC80;" IsEnabled="{Binding IsBatchDetectEnabled}" Command="{Binding BatchDetectQueueCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="PlaylistPlay" />
                     </ui:Button>
                     <ui:Button x:Name="TemplateBatchQueueButton" Style="{StaticResource QueuePrimaryActionButtonStyle}" MinWidth="104" ToolTip="전체 이미지를 템플릿으로 한 번씩 검사하고 라벨 없는 이미지에만 바로 저장" AutomationProperties.AutomationId="TemplateBatchQueueButton" AutomationProperties.Name="전체 이미지 자동 저장" IsEnabled="{Binding IsTemplateBatchEnabled}" Command="{Binding TemplateBatchQueueCommand}">
@@ -742,7 +742,7 @@
                             <TextBlock x:Name="TemplateBatchQueueText" Text="전체 자동 저장" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </ui:Button>
-                    <ui:Button x:Name="RetryFailedQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC2E4;&#xD328; &#xD56D;&#xBAA9; &#xC7AC;&#xC2DC;&#xB3C4;" AutomationProperties.Name="&#xC7AC;&#xC2DC;&#xB3C4;" IsEnabled="{Binding IsRetryFailedEnabled}" Command="{Binding RetryFailedQueueCommand}">
+                    <ui:Button x:Name="RetryFailedQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC2E4;&#xD328; &#xD56D;&#xBAA9; AI &#xBC30;&#xCE58; &#xC0AC;&#xC804;&#xC810;&#xAC80;" AutomationProperties.Name="&#xC2E4;&#xD328; &#xC7AC;&#xC2DC;&#xB3C4; &#xC0AC;&#xC804;&#xC810;&#xAC80;" IsEnabled="{Binding IsRetryFailedEnabled}" Command="{Binding RetryFailedQueueCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="Reload" />
                     </ui:Button>
                     <ui:Button x:Name="StopBatchQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC77C;&#xAD04; &#xAC80;&#xC0AC; &#xC911;&#xC9C0;" AutomationProperties.Name="&#xC911;&#xC9C0;" IsEnabled="{Binding IsStopBatchEnabled}" Command="{Binding StopBatchQueueCommand}">

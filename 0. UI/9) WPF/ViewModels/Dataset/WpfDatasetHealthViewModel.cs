@@ -13,7 +13,10 @@ namespace MvcVisionSystem
     public sealed class WpfDatasetHealthViewModel : WpfObservableViewModel
     {
         private static readonly Action NoOpCommand = () => { };
+        private readonly WpfDatasetVisualQaService visualQaService = new WpfDatasetVisualQaService();
+        private readonly List<WpfDatasetVisualQaItem> visualQaCatalogItems = new List<WpfDatasetVisualQaItem>();
         private CData data;
+        private Action<string> openVisualQaImage = _ => { };
         private string datasetName = "데이터셋 미선택";
         private string purposeText = "목적 미확인";
         private string outputRootText = "저장 폴더를 확인하세요.";
@@ -24,12 +27,19 @@ namespace MvcVisionSystem
         private bool isAnomalyDataset;
         private bool hasIssues;
         private bool hasClasses;
+        private bool hasVisualQaItems;
+        private bool isVisualQaLoaded;
+        private bool showOnlyVisualQaProblems;
+        private string visualQaStatusText = "저장된 이미지를 점검하면 문제 후보와 표본이 표시됩니다.";
+        private WpfDatasetVisualQaItem selectedVisualQaItem;
         private ICommand refreshCommand = new RelayCommand(NoOpCommand);
+        private ICommand openSelectedVisualQaImageCommand = new RelayCommand(NoOpCommand);
 
         public WpfDatasetHealthViewModel(CData data = null)
         {
             this.data = data;
             RefreshCommand = new RelayCommand(() => Refresh(this.data));
+            OpenSelectedVisualQaImageCommand = new RelayCommand(OpenSelectedVisualQaImage);
             Refresh(data);
         }
 
@@ -40,6 +50,8 @@ namespace MvcVisionSystem
         public ObservableCollection<WpfDatasetHealthClassRow> ClassRows { get; } = new ObservableCollection<WpfDatasetHealthClassRow>();
 
         public ObservableCollection<WpfDatasetHealthIssueItem> Issues { get; } = new ObservableCollection<WpfDatasetHealthIssueItem>();
+
+        public ObservableCollection<WpfDatasetVisualQaItem> VisualQaItems { get; } = new ObservableCollection<WpfDatasetVisualQaItem>();
 
         public string DatasetName
         {
@@ -113,14 +125,65 @@ namespace MvcVisionSystem
             private set => SetProperty(ref hasClasses, value);
         }
 
+        public bool HasVisualQaItems
+        {
+            get => hasVisualQaItems;
+            private set => SetProperty(ref hasVisualQaItems, value);
+        }
+
+        public bool ShowOnlyVisualQaProblems
+        {
+            get => showOnlyVisualQaProblems;
+            set
+            {
+                if (SetProperty(ref showOnlyVisualQaProblems, value))
+                {
+                    RefreshVisibleVisualQaItems();
+                }
+            }
+        }
+
+        public string VisualQaStatusText
+        {
+            get => visualQaStatusText;
+            private set => SetProperty(ref visualQaStatusText, value ?? string.Empty);
+        }
+
+        public WpfDatasetVisualQaItem SelectedVisualQaItem
+        {
+            get => selectedVisualQaItem;
+            set
+            {
+                if (SetProperty(ref selectedVisualQaItem, value))
+                {
+                    OnPropertyChanged(nameof(HasSelectedVisualQaItem));
+                }
+            }
+        }
+
+        public bool HasSelectedVisualQaItem => SelectedVisualQaItem != null;
+
         public ICommand RefreshCommand
         {
             get => refreshCommand;
             private set => SetProperty(ref refreshCommand, value);
         }
 
+        public ICommand OpenSelectedVisualQaImageCommand
+        {
+            get => openSelectedVisualQaImageCommand;
+            private set => SetProperty(ref openSelectedVisualQaImageCommand, value);
+        }
+
+        public void ConfigureVisualQaOpen(Action<string> openImage)
+        {
+            openVisualQaImage = openImage ?? (_ => { });
+        }
+
         public void Refresh(CData sourceData)
         {
+            bool reloadVisualQa = isVisualQaLoaded;
+            isVisualQaLoaded = false;
             data = sourceData;
             try
             {
@@ -143,6 +206,76 @@ namespace MvcVisionSystem
                 Issues.Add(new WpfDatasetHealthIssueItem("분석 중 오류가 발생했습니다. 저장 폴더와 이미지 파일을 확인하세요.", isBlocking: true));
                 HasIssues = true;
                 HasClasses = false;
+            }
+
+            if (reloadVisualQa)
+            {
+                RefreshVisualQa();
+            }
+            else
+            {
+                ResetVisualQa();
+            }
+        }
+
+        public void EnsureVisualQaLoaded()
+        {
+            if (!isVisualQaLoaded)
+            {
+                RefreshVisualQa();
+            }
+        }
+
+        private void RefreshVisualQa()
+        {
+            isVisualQaLoaded = true;
+            try
+            {
+                WpfDatasetVisualQaCatalog catalog = visualQaService.BuildCatalog(data);
+                visualQaCatalogItems.Clear();
+                visualQaCatalogItems.AddRange(catalog.Items);
+                string truncationText = catalog.IsTruncated
+                    ? $" · 최대 {WpfDatasetVisualQaService.MaximumCatalogItemCount}개 표시"
+                    : string.Empty;
+                VisualQaStatusText =
+                    $"검사 {catalog.ScannedImageCount}장 · 문제 {catalog.ProblemCount}장 · 표본 포함 {catalog.Items.Count}장{truncationText}";
+            }
+            catch (Exception ex)
+            {
+                visualQaCatalogItems.Clear();
+                VisualQaStatusText = "시각 QA 목록 생성 실패: " + ex.Message;
+            }
+
+            RefreshVisibleVisualQaItems();
+        }
+
+        private void ResetVisualQa()
+        {
+            visualQaCatalogItems.Clear();
+            VisualQaStatusText = "시각 QA 탭을 열면 저장 라벨 문제와 표본을 읽습니다.";
+            RefreshVisibleVisualQaItems();
+        }
+
+        private void RefreshVisibleVisualQaItems()
+        {
+            WpfDatasetVisualQaItem previous = SelectedVisualQaItem;
+            VisualQaItems.Clear();
+            foreach (WpfDatasetVisualQaItem item in visualQaCatalogItems.Where(item => !ShowOnlyVisualQaProblems || item.IsProblem))
+            {
+                VisualQaItems.Add(item);
+            }
+
+            HasVisualQaItems = VisualQaItems.Count > 0;
+            SelectedVisualQaItem = previous != null && VisualQaItems.Contains(previous)
+                ? previous
+                : VisualQaItems.FirstOrDefault(item => item.IsProblem) ?? VisualQaItems.FirstOrDefault();
+        }
+
+        private void OpenSelectedVisualQaImage()
+        {
+            if (!string.IsNullOrWhiteSpace(SelectedVisualQaItem?.ImagePath))
+            {
+                openVisualQaImage(SelectedVisualQaItem.ImagePath);
             }
         }
 

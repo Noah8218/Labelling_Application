@@ -1,13 +1,12 @@
+using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using Wpf.Ui.Appearance;
 using FluentWindow = Wpf.Ui.Controls.FluentWindow;
 using MediaBrush = System.Windows.Media.Brush;
 
 namespace MvcVisionSystem
 {
-    public partial class WpfDatasetHealthWindow : FluentWindow
+    public partial class WpfBatchDetectionPreflightWindow : FluentWindow
     {
         private static readonly string[] ThemeBrushKeys =
         {
@@ -21,25 +20,18 @@ namespace MvcVisionSystem
             "ToolbarButtonBrush",
             "ToolbarButtonBorderBrush",
             "GridLineBrush",
-            "GridHeaderBrush",
-            "SelectedRowBrush"
+            "GridHeaderBrush"
         };
 
-        public WpfDatasetHealthWindow(WpfDatasetHealthViewModel viewModel = null)
+        public WpfBatchDetectionPreflightWindow(WpfBatchDetectionPreflightViewModel viewModel)
         {
             InitializeComponent();
-            DataContext = viewModel ?? new WpfDatasetHealthViewModel();
+            DataContext = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+            viewModel.StartRequested += ViewModel_StartRequested;
+            Closed += Window_Closed;
         }
 
-        public WpfDatasetHealthViewModel ViewModel => DataContext as WpfDatasetHealthViewModel;
-
-        private void DatasetHealthTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (ReferenceEquals(DatasetHealthTabs.SelectedItem, DatasetHealthVisualQaTab))
-            {
-                ViewModel?.EnsureVisualQaLoaded();
-            }
-        }
+        public WpfBatchDetectionPlan SelectedPlan { get; private set; }
 
         public void ApplyThemeFrom(FrameworkElement source)
         {
@@ -61,6 +53,27 @@ namespace MvcVisionSystem
             {
                 Background = background;
             }
+        }
+
+        private void ViewModel_StartRequested(object sender, WpfBatchDetectionPlan plan)
+        {
+            SelectedPlan = plan;
+            DialogResult = true;
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            if (DataContext is WpfBatchDetectionPreflightViewModel viewModel)
+            {
+                viewModel.StartRequested -= ViewModel_StartRequested;
+            }
+
+            Closed -= Window_Closed;
         }
     }
 }

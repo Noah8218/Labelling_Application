@@ -913,7 +913,7 @@ namespace OpenVisionLab.ImageCanvas.ViewModels
 				}
 
 				RoiImageCanvasMaskOverlay overlay = _maskOverlays[overlayIndex];
-				if (overlay?.IsValid != true)
+				if (overlay?.IsValid != true || !overlay.ShowMarker)
 				{
 					continue;
 				}

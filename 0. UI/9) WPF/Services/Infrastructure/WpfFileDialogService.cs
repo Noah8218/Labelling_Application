@@ -2,6 +2,7 @@ using Microsoft.Win32;
 using System.IO;
 using System.Windows;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace MvcVisionSystem
 {
@@ -43,6 +44,34 @@ namespace MvcVisionSystem
             }
 
             selectedPath = dialog.FolderName;
+            return true;
+        }
+
+        public bool TryPickSaveFile(
+            Window owner,
+            string title,
+            string filter,
+            string currentPath,
+            string defaultExtension,
+            out string selectedPath)
+        {
+            selectedPath = string.Empty;
+            var dialog = new SaveFileDialog
+            {
+                Title = title,
+                Filter = filter,
+                AddExtension = true,
+                DefaultExt = defaultExtension ?? string.Empty,
+                InitialDirectory = ResolveInitialDirectory(currentPath),
+                FileName = File.Exists(currentPath) ? Path.GetFileName(currentPath) : string.Empty
+            };
+
+            if (dialog.ShowDialog(owner) != true || string.IsNullOrWhiteSpace(dialog.FileName))
+            {
+                return false;
+            }
+
+            selectedPath = dialog.FileName;
             return true;
         }
 

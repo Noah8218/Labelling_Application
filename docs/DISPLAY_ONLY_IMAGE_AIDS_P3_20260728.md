@@ -120,9 +120,10 @@ Evidence: this document, focused test output, and
 `artifacts\ui\display-aids-p3-20260728`.
 
 Boundary / next dependency: this proves a bounded display-only image workflow,
-not production-camera usefulness or CVAT/V7 parity. The next project priority is
-P4 Dataset Health visual label QA: read-only dataset-level issue discovery and
-explicit navigation back to the existing editor.
+not production-camera usefulness or CVAT/V7 parity. The historical next
+priority, P4 Dataset Health visual label QA, is complete in
+`docs\DATASET_HEALTH_VISUAL_QA_P4_20260728.md`. The current next priority is P5
+interchange/batch preflight.
 
 Recommended model: `gpt-5.6-terra`
 Reasoning effort: `medium`

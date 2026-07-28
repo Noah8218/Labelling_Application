@@ -31,6 +31,15 @@ internal static class DatasetHealthTests
             AssertTrue(detection.Classes.Single(item => item.ClassName == "Defect").Count == 2,
                 "detection health should use YOLO box-object counts for the class distribution");
             AssertEqual(0, detection.QualityProblemCount);
+            WpfDatasetVisualQaCatalog detectionVisualQa = new WpfDatasetVisualQaService().BuildCatalog(detectionData);
+            AssertEqual(2, detectionVisualQa.ScannedImageCount);
+            AssertEqual(0, detectionVisualQa.ProblemCount);
+            AssertEqual(2, detectionVisualQa.Items.Count);
+            WpfDatasetVisualQaItem detectionPreviewItem = detectionVisualQa.Items.First();
+            string detectionImageHash = ComputeFileSha256(detectionPreviewItem.ImagePath);
+            AssertTrue(detectionPreviewItem.PreviewSource != null,
+                "visual QA should lazily render the selected image with its saved box overlay");
+            AssertEqual(detectionImageHash, ComputeFileSha256(detectionPreviewItem.ImagePath));
 
             CData segmentationData = DatasetReadinessTestFixtures.CreatePurposeReadinessData(
                 Path.Combine(root, "segmentation"),
@@ -68,9 +77,13 @@ internal static class DatasetHealthTests
             AssertEqual(1, missingValidSplit.MissingLabelCount);
             AssertEqual(0, missingValidSplit.InvalidLabelLineCount);
             var missingViewModel = new WpfDatasetHealthViewModel(missingSegmentationData);
+            missingViewModel.EnsureVisualQaLoaded();
             WpfDatasetHealthMetricItem missingQualityMetric = missingViewModel.Metrics.Single(item => item.Title == "라벨 품질");
             AssertEqual("1", missingQualityMetric.Value);
             AssertTrue(missingQualityMetric.IsProblem, "missing SEG annotation must not be presented as healthy");
+            AssertEqual(1, missingViewModel.VisualQaItems.Count(item => item.IsProblem));
+            AssertTrue(missingViewModel.VisualQaItems.First().IsProblem,
+                "visual QA should prioritize a missing canonical segmentation annotation");
 
             CData corruptSegmentationData = DatasetReadinessTestFixtures.CreatePurposeReadinessData(
                 Path.Combine(root, "segmentation-corrupt"),
@@ -87,6 +100,10 @@ internal static class DatasetHealthTests
             YoloDatasetHealthSplitSummary corruptTrainSplit = corruptSegmentation.Splits.Single(item => item.Split == YoloDatasetSplitService.TrainMode);
             AssertEqual(0, corruptTrainSplit.MissingLabelCount);
             AssertEqual(1, corruptTrainSplit.InvalidLabelLineCount);
+            WpfDatasetVisualQaCatalog corruptVisualQa = new WpfDatasetVisualQaService().BuildCatalog(corruptSegmentationData);
+            AssertEqual(1, corruptVisualQa.ProblemCount);
+            AssertTrue(corruptVisualQa.Items.First().IsProblem,
+                "visual QA should prioritize a corrupt canonical segmentation annotation");
 
             var unevaluatedSegmentationData = new CData();
             unevaluatedSegmentationData.ConfigureOutputRoot(Path.Combine(root, "segmentation-unevaluated"));
@@ -181,16 +198,39 @@ internal static class DatasetHealthTests
                 AssertTrue(healthWindow.GetType().BaseType?.FullName == "Wpf.Ui.Controls.FluentWindow",
                     "Dataset Health window should use the existing WPF-UI window library");
                 AssertTrue(healthWindow.ViewModel?.Metrics.Count == 4, "Dataset Health should show four compact overview metrics");
-                AssertTrue(healthWindow.FindName("DatasetHealthTabs") is System.Windows.Controls.TabControl tabs && tabs.Items.Count == 3,
-                    "Dataset Health should separate overview, split/label, and class distribution tabs");
+                var tabs = healthWindow.FindName("DatasetHealthTabs") as System.Windows.Controls.TabControl;
+                AssertTrue(tabs != null && tabs.Items.Count == 4,
+                    "Dataset Health should separate overview, split/label, visual QA, and class distribution tabs");
                 AssertTrue(healthWindow.FindName("DatasetHealthSplitGrid") is System.Windows.Controls.DataGrid splitGrid && splitGrid.Items.Count == 3,
                     "Dataset Health should show a saved split/label table for YOLO datasets");
                 AssertTrue(healthWindow.FindName("DatasetHealthClassGrid") is System.Windows.Controls.DataGrid classGrid && classGrid.Items.Count == 1,
                     "Dataset Health should show the primary-label class distribution");
                 AssertTrue(healthWindow.FindName("DatasetHealthRefreshButton") is Wpf.Ui.Controls.Button refreshButton && refreshButton.Command != null,
                     "Dataset Health refresh should bind through the ViewModel");
+                AssertTrue(healthWindow.FindName("DatasetHealthVisualQaList") is System.Windows.Controls.ListBox,
+                    "Dataset Health should expose an image-level visual QA worklist");
+                AssertEqual(0, healthWindow.ViewModel.VisualQaItems.Count);
+                tabs.SelectedItem = healthWindow.FindName("DatasetHealthVisualQaTab");
+                PumpWpfDispatcher(TimeSpan.FromMilliseconds(150));
+                AssertEqual(2, healthWindow.ViewModel.VisualQaItems.Count);
+                AssertTrue(healthWindow.ViewModel.SelectedVisualQaItem?.PreviewSource != null,
+                    "the selected visual QA row should render a read-only saved-label preview");
+                healthWindow.ViewModel.ShowOnlyVisualQaProblems = true;
+                AssertEqual(0, healthWindow.ViewModel.VisualQaItems.Count);
+                healthWindow.ViewModel.ShowOnlyVisualQaProblems = false;
+                AssertEqual(2, healthWindow.ViewModel.VisualQaItems.Count);
+                AssertTrue(healthWindow.FindName("DatasetHealthOpenInEditorButton") is Wpf.Ui.Controls.Button openInEditorButton
+                    && openInEditorButton.Command != null,
+                    "visual QA should expose an explicit route to the existing labeling editor");
 
-                healthWindow.Close();
+                string selectedImagePath = healthWindow.ViewModel.SelectedVisualQaItem.ImagePath;
+                string selectedImageHash = ComputeFileSha256(selectedImagePath);
+                healthWindow.ViewModel.OpenSelectedVisualQaImageCommand.Execute(null);
+                PumpWpfDispatcher(TimeSpan.FromMilliseconds(350));
+                AssertEqual(selectedImagePath, GetPrivateField<string>(shell, "activeImagePath"));
+                AssertTrue(!healthWindow.IsVisible,
+                    "opening a visual QA item should close the read-only health window and return to the main editor");
+                AssertEqual(selectedImageHash, ComputeFileSha256(selectedImagePath));
             }
             finally
             {

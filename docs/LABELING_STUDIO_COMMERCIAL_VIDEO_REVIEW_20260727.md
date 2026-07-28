@@ -232,14 +232,25 @@ Reasoning effort: `medium`
 편집기 slice 뒤로 이동합니다. 기존 Recipe/readiness/quality 상태를
 재사용하고 gallery 안에서는 편집하지 않습니다.
 
+Status update (2026-07-28): `Complete`. 문제 우선 text worklist, 선택
+이미지 저장-overlay 지연 preview, `문제만`, 기존 editor 이동과 source
+불변이 focused/1920/1366 증거를 통과했습니다. 상세 계약:
+`docs\DATASET_HEALTH_VISUAL_QA_P4_20260728.md`.
+
 Recommended model: `gpt-5.6-terra`
 Reasoning effort: `medium`
 
 ### P5. 포맷·batch 실행 preflight
 
-구현된 COCO/Pascal VOC/Label Studio/CVAT service의 dry-run/Apply와
-batch detector의 범위·model·class mapping·threshold·기존 label 정책
-preflight를 별도 slice로 진행합니다.
+P5-A 포맷 변환은 완료되었습니다. 구현된 COCO/Pascal VOC/Label
+Studio/CVAT service를 그대로 재사용하며, 격리 Dry-run, 원본/요청 대상
+해시, 건너뜀 차단, 손실 경고, 입력 변경 시 stale 검사 무효화, 명시적
+Apply를 별도 창에서 제공합니다.
+
+P5-B는 완료되었습니다. batch detector의 범위·model/weight·task·Recipe
+class-name mapping·threshold·기존 label 정책을 Start 전에 검사하고,
+실행 결과를 Candidate Review로 보내되 자동 승인·자동 저장하지 않습니다.
+근거는 `docs\BATCH_AI_PREFLIGHT_P5B_20260728.md`입니다.
 
 Recommended model: `gpt-5.6-terra`
 Reasoning effort: `medium`
@@ -262,7 +273,9 @@ Reasoning effort: n/a
 3. P1은 저장·상호변환 의미를 먼저 고정하지 않으면 시작하지 않습니다.
 4. P2와 P3는 각각 객체 상태와 display-only 상태를 Recipe label
    source-of-truth와 분리합니다.
-5. P4/P5는 라벨링 편집기 핵심 slice 이후에 진행합니다.
+5. P4, P5-A format-conversion preflight, P5-B batch AI preflight는
+   완료되었습니다. 다음 제품 선행조건은 독립 production-camera/
+   cross-session 데이터입니다.
 
 다음 항목은 계속 범위 밖입니다.
 

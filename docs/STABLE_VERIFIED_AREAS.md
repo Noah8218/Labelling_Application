@@ -2,6 +2,37 @@
 
 This document records code paths that have already been performance- or UX-verified and should not be casually refactored. Treat these areas as protected product behavior: change them only when the user reports a new issue in that exact path, or when a focused verification gate proves the change is necessary.
 
+## 2026-07-28 P5-B Batch AI Preflight Contract
+
+Status: stable and Complete.
+
+Visible-row batch detection and failed-item retry open one contextual modal
+preflight before the existing worker loop. `WpfBatchDetectionPreflightService`
+validates unique physical images, runtime/weight settings, dataset task,
+confidence, Recipe classes, case-insensitive same-name worker class mapping,
+and the selected existing-label policy. The default excludes labeled images;
+the optional include policy preserves their labels. Missing images, invalid
+weights, empty or ambiguous Recipe classes, and a zero-item filtered plan block
+Start. The approved plan reuses the existing progress/stop/result loop. Results
+remain pending in Candidate Review; no automatic approval or label save was
+added.
+
+The current worker protocol has no common checkpoint-class metadata inspection
+command. The UI therefore warns that it validates the runtime `className`
+matching contract and does not claim checkpoint catalog extraction.
+
+Protected gates: zero-warning/error isolated build,
+`--wpf-batch-detection-preflight`, `--wpf-batch-detection-progress`,
+`--wpf-batch-detection-result`, `--wpf-labeling-shell`,
+`--priority-workflow-docs`, `git diff --check`, and fresh 1920x1080/1366x768
+captures under `artifacts/ui/batch-ai-preflight-p5b-20260728`.
+
+Evidence: `docs/BATCH_AI_PREFLIGHT_P5B_20260728.md`.
+
+Boundary: the remaining product dependency is independent
+production-camera/cross-session data; do not spend model tokens until it
+exists.
+
 ## Recipe Dataset Version v2 Contract
 
 Status: stable as of 2026-07-23 for local content identity, immutable metadata history, training/model provenance, and Model Center presentation.
@@ -187,7 +218,9 @@ PASS Exact staged-tree before/after 1920x1080 captures for commit 85d91e9: artif
 
 ## Dataset Health Separate Read-Only Analysis
 
-Status: stable for current-build purpose-aware dataset-health aggregation and its separate Model Center analysis window as of 2026-07-17. This is data-readiness visibility, not a model-quality or adoption approval.
+Status: stable for current-build purpose-aware aggregation, separate analysis
+window, and read-only image-level visual QA as of 2026-07-28. This is
+data-readiness visibility, not a model-quality or adoption approval.
 
 Protected behavior:
 
@@ -198,6 +231,16 @@ Protected behavior:
 - For segmentation, never infer `라벨 품질: 정상` merely because the box-label audit has no rows. Reuse readiness validation to distinguish `정상`, a missing/corrupt SEG annotation problem count, and `미확인` when configuration or image coverage prevents evaluation; expose SEG missing/corrupt counts in the matching split row.
 - Keep external native `data.yaml` outside this report. It is an explicit training-input profile and has its own validation workflow.
 - Keep the model-evidence boundary visible: healthy saved data does not prove accuracy, Takt, held-out comparability, or model adoption.
+- Keep `시각 QA` read-only and separate from the canonical editor. Missing,
+  corrupt, or unreviewed rows precede bounded healthy samples; `문제만` filters
+  the list and `편집기에서 열기` reuses the existing labeling workbench.
+- Do not add row thumbnails or preload full-resolution images. Defer catalog
+  construction until `시각 QA` is selected. The catalog is text-only, capped
+  at 500 rows with at most 48 healthy samples, and only the selected preview
+  is decoded at maximum width 800.
+- Detection boxes, segmentation polygon/raster boundaries, and anomaly review
+  state come from their existing canonical services. Preview must not write
+  images, labels, Recipe, history, or training input.
 
 Required gates before reporting this path complete again:
 
@@ -216,11 +259,13 @@ Latest evidence:
 ```text
 PASS Current-build 1920x1080 normal-state capture: artifacts\ui\dataset-health-20260717\after-dataset-health-populated-ready-1920.png
 PASS Object detection, segmentation, and anomaly report fixture coverage, including valid/missing/corrupt/not-evaluated SEG quality states: --dataset-health
-PASS Separate owned WPF FluentWindow, three tabs, four metrics, split/class grids, and refresh binding: --wpf-dataset-health-window
+PASS Separate owned WPF FluentWindow, four tabs, four metrics, split/class grids, visual-QA worklist/filter/preview/editor route, and refresh binding: --wpf-dataset-health-window
 PASS Existing readiness and quality-audit contracts: --dataset-readiness-purpose and --dataset-quality-audit
 PASS Current-source corrupt-SEG capture shows `라벨 품질: 1`, not `정상`: artifacts\ui\dataset-health-seg-quality-false-normal-after.png
 PASS Focused current-source recheck: 0-warning/0-error isolated build plus --dataset-health, --wpf-dataset-health-window, --dataset-readiness-purpose, --dataset-quality-audit, and --wpf-labeling-shell
 PASS Fresh 1920x1080 current-source no-data capture shows `라벨 품질: 미확인`, not `정상`, without clipping: artifacts\ui\dataset-health-20260717-current-review\dataset-health-current-1920.png
+PASS 2026-07-28 problem-first detection/segmentation/anomaly catalog, missing/corrupt segmentation classification, lazy saved-overlay preview, source SHA-256 invariance, `문제만`, and existing-editor navigation: --dataset-health and --wpf-dataset-health-window
+PASS 2026-07-28 current-build 1920x1080 and 1366x768 before/after evidence: artifacts\ui\dataset-health-visual-qa-p4-20260728
 ```
 
 ## YOLOv8 Anomaly Classification Candidate Runtime and Quality Boundary
@@ -3155,4 +3200,6 @@ Latest review recheck: `--wpf-image-queue-10k-responsive` returned in `16.1ms`; 
 
 2026-07-28 P2 bounded edge-aware intelligent scissors: `Complete`; field validation is `Not evaluated`. A selected saved manual polygon exposes `경계 추종` only inside the collapsed segment editor. `WpfIntelligentScissorsService` converts the bounded edge corridor to grayscale, builds a Sobel cost, and returns a deterministic A* path; the default corridor is 24 source pixels and plans above 180,000 pixels reject. The 128x128 fixture requires identical repeat paths, at least 90% of simplified path points within 2.5 source pixels of the known curve, and plan creation within 250ms. The gold `EDGE PREVIEW` does not mutate geometry/history/save; explicit Apply revalidates the source and creates one Undo/Redo step with `IntelligentScissors` provenance. Invalid, uniform, or stale plans do not mutate. Hidden/full-lock paths reject commands; movement pin allows refinement. Canonical v3 reopen preserves object ID/class/component/z-order/bounds/refined geometry/provenance. Covered by zero-warning/error isolated/app builds, `--intelligent-scissors`, protected structure/state/interchange/history/Object Review/ROI/segmentation regressions, `--priority-workflow-docs`, `git diff --check`, and fresh current-build 1920x1080/1366x768 captures. Evidence: `docs/INTELLIGENT_SCISSORS_P2_20260728.md` and `artifacts/ui/intelligent-scissors-p2-20260728`. At this checkpoint labeling-editor depth was `3.3/5`; focused workstation maturity remained `4.0/5`. Its historical next dependency was P3 display-only image/overlay aids, completed in the following record. Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
 
-2026-07-28 P3 display-only image aids: `Complete`; field validation is `Not evaluated`. The canvas header exposes one contextual `보기 보정` popup for brightness, contrast, gamma, invert, and luminance histogram equalization. `WpfImageDisplayAdjustmentService` creates an owned 24-bpp display copy; the shell replaces only the base texture after a 120ms coalescing delay. The canonical `activeImageBitmap`, source-file SHA-256, annotation dirty/history state, and overlay image coordinates remain unchanged through adjustment and reset. Settings remain screen-session state across image navigation and never enter Recipe, labels, export, or training input. The deterministic low-contrast fixture, 1920x1080 `333.7ms` Debug timing, zero-warning/error focused build, `--image-display-adjustment`, `git diff --check`, and fresh current-build 1920x1080/1366x768 before/after captures pass. Evidence: `docs/DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md` and `artifacts/ui/display-aids-p3-20260728`. Labeling-editor depth is `3.4/5`; focused workstation maturity remains `4.0/5`. Next priority is P4 Dataset Health visual label QA. Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
+2026-07-28 P3 display-only image aids: `Complete`; field validation is `Not evaluated`. The canvas header exposes one contextual `보기 보정` popup for brightness, contrast, gamma, invert, and luminance histogram equalization. `WpfImageDisplayAdjustmentService` creates an owned 24-bpp display copy; the shell replaces only the base texture after a 120ms coalescing delay. The canonical `activeImageBitmap`, source-file SHA-256, annotation dirty/history state, and overlay image coordinates remain unchanged through adjustment and reset. Settings remain screen-session state across image navigation and never enter Recipe, labels, export, or training input. The deterministic low-contrast fixture, 1920x1080 `333.7ms` Debug timing, zero-warning/error focused build, `--image-display-adjustment`, `git diff --check`, and fresh current-build 1920x1080/1366x768 before/after captures pass. Evidence: `docs/DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md` and `artifacts/ui/display-aids-p3-20260728`. Labeling-editor depth is `3.4/5`; focused workstation maturity remains `4.0/5`. The historical next priority P4 Dataset Health visual label QA is complete in the 2026-07-28 P4 record; P5-A format conversion is complete in the following record. Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
+
+2026-07-28 P5-A dataset-interchange preflight contract: `Complete`. One contextual Model Center > Data `변환` action opens a separate window for the fourteen existing COCO, Pascal VOC, Label Studio, and CVAT detection/segmentation import/export operations. `DatasetInterchangePreflightService` runs the selected real converter against an isolated temporary destination, normalizes image/annotation/class/skipped counts, reuses segmentation loss warnings, fingerprints the export dataset or import annotation-plus-image source, and proves the requested target did not change. Any skipped malformed/unsupported record blocks Apply. The ViewModel invalidates a passing dry-run whenever format, path, image root, or split changes; only the unchanged request can explicitly Apply. No automatic conversion, approval, or label save is introduced. Covered by the zero-warning/error isolated build, `--dataset-interchange-preflight`, `--export-capability-inventory`, `--priority-workflow-docs`, `git diff --check`, and current-build 1920x1080/1366x768 before/after evidence under `artifacts/ui/interchange-preflight-p5a-20260728`. This proves conversion safety only, not model quality, field data quality, or CVAT/V7 platform parity. Its historical next dependency P5-B is complete in `docs/BATCH_AI_PREFLIGHT_P5B_20260728.md`.

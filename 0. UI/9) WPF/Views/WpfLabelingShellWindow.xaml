@@ -2890,6 +2890,24 @@
                                                                 <TextBlock Text="&#xBD84;&#xC11D;" VerticalAlignment="Center" />
                                                             </StackPanel>
                                                         </ui:Button>
+                                                        <ui:Button x:Name="OpenDatasetInterchangeWindowButton"
+                                                                   Height="28"
+                                                                   MinWidth="60"
+                                                                   Padding="7,2"
+                                                                   Margin="4,0,0,0"
+                                                                   Style="{StaticResource WpfUiToolbarButtonStyle}"
+                                                                   AutomationProperties.AutomationId="OpenDatasetInterchangeWindowButton"
+                                                                   AutomationProperties.Name="&#xB370;&#xC774;&#xD130;&#xC14B; &#xBCC0;&#xD658; &#xC0AC;&#xC804;&#xAC80;&#xC0AC; &#xC5F4;&#xAE30;"
+                                                                   ToolTip="COCO, Pascal VOC, Label Studio, CVAT &#xBCC0;&#xD658;&#xC744; Dry-run&#xC73C;&#xB85C; &#xC810;&#xAC80;&#xD55C; &#xB4A4; &#xBA85;&#xC2DC;&#xC801;&#xC73C;&#xB85C; &#xC801;&#xC6A9;"
+                                                                   Command="{Binding ShellViewModel.OpenDatasetInterchangeCommand, ElementName=ShellWindow}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <iconPacks:PackIconMaterial Kind="SwapHorizontal"
+                                                                                            Width="13"
+                                                                                            Height="13"
+                                                                                            Margin="0,0,4,0" />
+                                                                <TextBlock Text="&#xBCC0;&#xD658;" VerticalAlignment="Center" />
+                                                            </StackPanel>
+                                                        </ui:Button>
                                                         <ui:Button x:Name="YoloDatasetQuickRefreshButton"
                                                                    Width="28"
                                                                    Height="28"
