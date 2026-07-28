@@ -19,6 +19,7 @@ namespace MvcVisionSystem
 
         private void BeginPendingSegmentationHoleEdit(WpfSegmentationHoleEditMode mode)
         {
+            CancelPendingIntelligentScissors(updateStatus: false);
             CompleteMaskAnnotationStroke();
             FlushQueuedMaskStrokeCommits();
             if (smartMaskPromptSession.HasSession || isCreatingSmartMask)
@@ -38,6 +39,13 @@ namespace MvcVisionSystem
                 const string selectionError = "\uAD6C\uBA4D\uC744 \uD3B8\uC9D1\uD560 \uD3F4\uB9AC\uACE4 \uB610\uB294 \uB9C8\uC2A4\uD06C \uAC1D\uCCB4\uB97C \uD558\uB098 \uC120\uD0DD\uD558\uC138\uC694.";
                 SetYoloCommandStatus(selectionError, isBusy: false);
                 AppendLog(selectionError);
+                return;
+            }
+
+            if (!CanMutateSelectedObject(selected, requireVisible: true, out string stateError))
+            {
+                SetYoloCommandStatus(stateError, isBusy: false);
+                AppendLog(stateError);
                 return;
             }
 

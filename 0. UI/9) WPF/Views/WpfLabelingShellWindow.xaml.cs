@@ -103,6 +103,7 @@ namespace MvcVisionSystem
         private readonly WpfImageDecodeCacheService imageDecodeCacheService = new WpfImageDecodeCacheService();
         private readonly WpfImageDecodeService imageDecodeService = new WpfImageDecodeService();
         private readonly WpfImageDecodePreloadService imageDecodePreloadService = new WpfImageDecodePreloadService();
+        private readonly WpfImageDisplayAdjustmentService imageDisplayAdjustmentService = new WpfImageDisplayAdjustmentService();
         private WpfImageLoadDiagnostics lastImageLoadDiagnostics = WpfImageLoadDiagnostics.Empty;
         private ICollectionView imageQueueView;
         private CancellationTokenSource imageQueueCatalogLoadCts;
@@ -124,6 +125,10 @@ namespace MvcVisionSystem
         private readonly WpfMaskAnnotationService maskAnnotationService = new WpfMaskAnnotationService();
         private readonly WpfSegmentationMergeService segmentationMergeService = new WpfSegmentationMergeService();
         private readonly WpfSegmentationSplitService segmentationSplitService = new WpfSegmentationSplitService();
+        private readonly WpfSegmentationZOrderService segmentationZOrderService = new WpfSegmentationZOrderService();
+        private readonly WpfSegmentationRemoveUnderlyingService segmentationRemoveUnderlyingService = new WpfSegmentationRemoveUnderlyingService();
+        private WpfSegmentationRemoveUnderlyingPlan pendingSegmentationRemoveUnderlyingPlan;
+        private readonly WpfObjectSessionStateService objectSessionStateService = new WpfObjectSessionStateService();
         private LabelingSegmentationObject pendingSegmentationSplitSource;
         private int pendingSegmentationSplitSourceIndex = -1;
         private WpfSegmentationSplitOrientation? pendingSegmentationSplitOrientation;
@@ -132,6 +137,13 @@ namespace MvcVisionSystem
         private LabelingSegmentationObject pendingSegmentationHoleSource;
         private int pendingSegmentationHoleSourceIndex = -1;
         private WpfSegmentationHoleEditMode? pendingSegmentationHoleEditMode;
+        private LabelingSegmentationObject pendingPolygonVertexSource;
+        private int pendingPolygonVertexSourceIndex = -1;
+        private WpfPolygonVertexEditMode? pendingPolygonVertexEditMode;
+        private readonly WpfIntelligentScissorsService intelligentScissorsService = new WpfIntelligentScissorsService();
+        private LabelingSegmentationObject pendingIntelligentScissorsSource;
+        private int pendingIntelligentScissorsSourceIndex = -1;
+        private WpfIntelligentScissorsPlan pendingIntelligentScissorsPlan;
         private readonly List<WpfAnnotationHistorySnapshot> undoAnnotationHistory = new List<WpfAnnotationHistorySnapshot>();
         private readonly List<WpfAnnotationHistorySnapshot> redoAnnotationHistory = new List<WpfAnnotationHistorySnapshot>();
         private readonly WpfCandidateReviewStateService candidateReviewState = new WpfCandidateReviewStateService();
@@ -178,6 +190,7 @@ namespace MvcVisionSystem
         private readonly DispatcherTimer trainingStatusPollTimer;
         private readonly DispatcherTimer maskStrokePreviewCommitSwapTimer;
         private readonly DispatcherTimer maskStrokeCommitQueueTimer;
+        private readonly DispatcherTimer displayAdjustmentRefreshTimer;
         private DateTime trainingStatusPollStartedUtc = DateTime.MinValue;
         private string lastAutoAppliedTrainingWeightsPath = string.Empty;
         private string pendingTrainingBaselineWeightsPath = string.Empty;
@@ -251,6 +264,11 @@ namespace MvcVisionSystem
                 Interval = TimeSpan.FromMilliseconds(WpfMaskEditStateService.CommitQueueQuietMilliseconds)
             };
             maskStrokeCommitQueueTimer.Tick += MaskStrokeCommitQueueTimer_Tick;
+            displayAdjustmentRefreshTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher)
+            {
+                Interval = TimeSpan.FromMilliseconds(120)
+            };
+            displayAdjustmentRefreshTimer.Tick += DisplayAdjustmentRefreshTimer_Tick;
             DataContext = viewModels;
             RestoreWorkspaceLayoutSettings();
             TemplateMatchingAutoLabelViewModel.ConfigureHost(this);

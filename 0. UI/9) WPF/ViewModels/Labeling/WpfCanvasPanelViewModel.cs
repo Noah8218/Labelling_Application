@@ -47,6 +47,15 @@ namespace MvcVisionSystem
         private bool isPanEnabled;
         private bool isFocusCandidateEnabled;
         private bool isResetAiOverlayEnabled;
+        private bool isDisplayAdjustmentEnabled;
+        private bool isDisplayAdjustmentOpen;
+        private int displayBrightness;
+        private double displayContrastPercent = 100D;
+        private double displayGamma = 1D;
+        private bool isDisplayInverted;
+        private bool isDisplayHistogramEqualized;
+        private bool suppressDisplayAdjustmentNotification;
+        private Action displayAdjustmentChanged = NoOpCommand;
         private bool isPreviousCandidateEnabled;
         private bool isNextCandidateEnabled;
         private bool isFocusCurrentLabelEnabled;
@@ -99,6 +108,8 @@ namespace MvcVisionSystem
         private ICommand panCommand = new RelayCommand(NoOpCommand);
         private ICommand focusCandidateCommand = new RelayCommand(NoOpCommand);
         private ICommand resetAiOverlayCommand = new RelayCommand(NoOpCommand);
+        private ICommand toggleDisplayAdjustmentCommand;
+        private ICommand resetDisplayAdjustmentCommand;
         private ICommand previousCandidateCommand = new RelayCommand(NoOpCommand);
         private ICommand nextCandidateCommand = new RelayCommand(NoOpCommand);
         private ICommand focusCurrentLabelCommand = new RelayCommand(NoOpCommand);
@@ -205,6 +216,94 @@ namespace MvcVisionSystem
             get => resetAiOverlayCommand;
             private set => SetProperty(ref resetAiOverlayCommand, value);
         }
+
+        public ICommand ToggleDisplayAdjustmentCommand
+            => toggleDisplayAdjustmentCommand ??= new RelayCommand(
+                () => IsDisplayAdjustmentOpen = IsDisplayAdjustmentEnabled && !IsDisplayAdjustmentOpen);
+
+        public ICommand ResetDisplayAdjustmentCommand
+            => resetDisplayAdjustmentCommand ??= new RelayCommand(ResetDisplayAdjustment);
+
+        public bool IsDisplayAdjustmentOpen
+        {
+            get => isDisplayAdjustmentOpen;
+            set => SetProperty(ref isDisplayAdjustmentOpen, value && IsDisplayAdjustmentEnabled);
+        }
+
+        public int DisplayBrightness
+        {
+            get => displayBrightness;
+            set
+            {
+                int normalized = Math.Clamp(value, -100, 100);
+                if (SetProperty(ref displayBrightness, normalized))
+                {
+                    OnPropertyChanged(nameof(DisplayBrightnessText));
+                    NotifyDisplayAdjustmentChanged();
+                }
+            }
+        }
+
+        public string DisplayBrightnessText => $"{DisplayBrightness:+0;-0;0}";
+
+        public double DisplayContrastPercent
+        {
+            get => displayContrastPercent;
+            set
+            {
+                double normalized = Math.Clamp(value, 50D, 200D);
+                if (SetProperty(ref displayContrastPercent, normalized))
+                {
+                    OnPropertyChanged(nameof(DisplayContrastText));
+                    NotifyDisplayAdjustmentChanged();
+                }
+            }
+        }
+
+        public string DisplayContrastText => $"{DisplayContrastPercent:0}%";
+
+        public double DisplayGamma
+        {
+            get => displayGamma;
+            set
+            {
+                double normalized = Math.Clamp(value, 0.2D, 3D);
+                if (SetProperty(ref displayGamma, normalized))
+                {
+                    OnPropertyChanged(nameof(DisplayGammaText));
+                    NotifyDisplayAdjustmentChanged();
+                }
+            }
+        }
+
+        public string DisplayGammaText => $"{DisplayGamma:0.00}";
+
+        public bool IsDisplayInverted
+        {
+            get => isDisplayInverted;
+            set
+            {
+                if (SetProperty(ref isDisplayInverted, value))
+                {
+                    NotifyDisplayAdjustmentChanged();
+                }
+            }
+        }
+
+        public bool IsDisplayHistogramEqualized
+        {
+            get => isDisplayHistogramEqualized;
+            set
+            {
+                if (SetProperty(ref isDisplayHistogramEqualized, value))
+                {
+                    NotifyDisplayAdjustmentChanged();
+                }
+            }
+        }
+
+        public bool IsDisplayAdjustmentActive
+            => !GetDisplayAdjustmentOptions().IsDefault;
 
         public ICommand PreviousCandidateCommand
         {
@@ -586,6 +685,12 @@ namespace MvcVisionSystem
             private set => SetProperty(ref isResetAiOverlayEnabled, value);
         }
 
+        public bool IsDisplayAdjustmentEnabled
+        {
+            get => isDisplayAdjustmentEnabled;
+            private set => SetProperty(ref isDisplayAdjustmentEnabled, value);
+        }
+
         public bool IsPreviousCandidateEnabled
         {
             get => isPreviousCandidateEnabled;
@@ -753,6 +858,49 @@ namespace MvcVisionSystem
             PanCommand = new RelayCommand(pan ?? NoOpCommand);
             FocusCandidateCommand = new RelayCommand(focusCandidate ?? NoOpCommand);
             ResetAiOverlayCommand = new RelayCommand(resetAiOverlay ?? NoOpCommand);
+        }
+
+        public void ConfigureDisplayAdjustment(Action adjustmentChanged)
+        {
+            displayAdjustmentChanged = adjustmentChanged ?? NoOpCommand;
+        }
+
+        public WpfImageDisplayAdjustmentOptions GetDisplayAdjustmentOptions()
+            => new WpfImageDisplayAdjustmentOptions
+            {
+                Brightness = DisplayBrightness,
+                Contrast = DisplayContrastPercent / 100D,
+                Gamma = DisplayGamma,
+                Invert = IsDisplayInverted,
+                EqualizeHistogram = IsDisplayHistogramEqualized
+            };
+
+        public void ResetDisplayAdjustment()
+        {
+            suppressDisplayAdjustmentNotification = true;
+            try
+            {
+                DisplayBrightness = 0;
+                DisplayContrastPercent = 100D;
+                DisplayGamma = 1D;
+                IsDisplayInverted = false;
+                IsDisplayHistogramEqualized = false;
+            }
+            finally
+            {
+                suppressDisplayAdjustmentNotification = false;
+            }
+
+            NotifyDisplayAdjustmentChanged();
+        }
+
+        private void NotifyDisplayAdjustmentChanged()
+        {
+            OnPropertyChanged(nameof(IsDisplayAdjustmentActive));
+            if (!suppressDisplayAdjustmentNotification)
+            {
+                displayAdjustmentChanged();
+            }
         }
 
         public void ConfigureBrushSizeCommands(Action decreaseBrushSize, Action increaseBrushSize)
@@ -1182,6 +1330,11 @@ namespace MvcVisionSystem
             IsFitEnabled = hasImage;
             IsActualSizeEnabled = hasImage;
             IsPanEnabled = hasImage;
+            IsDisplayAdjustmentEnabled = hasImage;
+            if (!hasImage)
+            {
+                IsDisplayAdjustmentOpen = false;
+            }
             IsFocusCandidateEnabled = hasImage && hasSelectedCandidate;
             IsResetAiOverlayEnabled = hasImage && hasPendingCandidates;
         }

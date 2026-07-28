@@ -24,7 +24,23 @@ namespace MvcVisionSystem
                 cancelSplit: ExecuteCancelSegmentationSplitCommand,
                 beginAddHole: ExecuteBeginAddSegmentationHoleCommand,
                 beginRemoveHole: ExecuteBeginRemoveSegmentationHoleCommand,
-                cancelHoleEdit: ExecuteCancelSegmentationHoleEditCommand);
+                cancelHoleEdit: ExecuteCancelSegmentationHoleEditCommand,
+                beginInsertVertex: ExecuteBeginInsertPolygonVertexCommand,
+                beginDeleteVertex: ExecuteBeginDeletePolygonVertexCommand,
+                cancelVertexEdit: ExecuteCancelPolygonVertexEditCommand,
+                beginIntelligentScissors: ExecuteBeginIntelligentScissorsCommand,
+                applyIntelligentScissors: ExecuteApplyIntelligentScissorsCommand,
+                cancelIntelligentScissors: ExecuteCancelIntelligentScissorsCommand,
+                sendToBack: ExecuteSendSegmentationToBackCommand,
+                sendBackward: ExecuteSendSegmentationBackwardCommand,
+                bringForward: ExecuteBringSegmentationForwardCommand,
+                bringToFront: ExecuteBringSegmentationToFrontCommand,
+                previewRemoveUnderlying: ExecutePreviewSegmentationRemoveUnderlyingCommand,
+                applyRemoveUnderlying: ExecuteApplySegmentationRemoveUnderlyingCommand,
+                cancelRemoveUnderlying: ExecuteCancelSegmentationRemoveUnderlyingCommand,
+                toggleObjectHidden: ExecuteToggleObjectHiddenCommand,
+                toggleObjectLocked: ExecuteToggleObjectLockedCommand,
+                toggleObjectPinned: ExecuteToggleObjectPinnedCommand);
             RefreshAttachedCommandBindings(
                 ObjectListBox,
                 InputCommandBehaviors.SelectedItemChangedCommandProperty,
@@ -51,6 +67,29 @@ namespace MvcVisionSystem
             RegisterObjectReviewName(nameof(BeginRemoveHoleButton), BeginRemoveHoleButton);
             RegisterObjectReviewName(nameof(CancelHoleEditButton), CancelHoleEditButton);
             RegisterObjectReviewName(nameof(HoleEditStatusText), HoleEditStatusText);
+            RegisterObjectReviewName(nameof(BeginInsertVertexButton), BeginInsertVertexButton);
+            RegisterObjectReviewName(nameof(BeginDeleteVertexButton), BeginDeleteVertexButton);
+            RegisterObjectReviewName(nameof(CancelVertexEditButton), CancelVertexEditButton);
+            RegisterObjectReviewName(nameof(VertexEditStatusText), VertexEditStatusText);
+            RegisterObjectReviewName(nameof(BeginIntelligentScissorsButton), BeginIntelligentScissorsButton);
+            RegisterObjectReviewName(nameof(ApplyIntelligentScissorsButton), ApplyIntelligentScissorsButton);
+            RegisterObjectReviewName(nameof(CancelIntelligentScissorsButton), CancelIntelligentScissorsButton);
+            RegisterObjectReviewName(nameof(IntelligentScissorsStatusText), IntelligentScissorsStatusText);
+            RegisterObjectReviewName(nameof(SendSegmentationToBackButton), SendSegmentationToBackButton);
+            RegisterObjectReviewName(nameof(SendSegmentationBackwardButton), SendSegmentationBackwardButton);
+            RegisterObjectReviewName(nameof(BringSegmentationForwardButton), BringSegmentationForwardButton);
+            RegisterObjectReviewName(nameof(BringSegmentationToFrontButton), BringSegmentationToFrontButton);
+            RegisterObjectReviewName(nameof(ZOrderStatusText), ZOrderStatusText);
+            RegisterObjectReviewName(nameof(PreviewRemoveUnderlyingButton), PreviewRemoveUnderlyingButton);
+            RegisterObjectReviewName(nameof(ApplyRemoveUnderlyingButton), ApplyRemoveUnderlyingButton);
+            RegisterObjectReviewName(nameof(CancelRemoveUnderlyingButton), CancelRemoveUnderlyingButton);
+            RegisterObjectReviewName(nameof(RemoveUnderlyingStatusText), RemoveUnderlyingStatusText);
+            RegisterObjectReviewName(nameof(ToggleObjectHiddenButton), ToggleObjectHiddenButton);
+            RegisterObjectReviewName(nameof(ToggleObjectLockedButton), ToggleObjectLockedButton);
+            RegisterObjectReviewName(nameof(ToggleObjectPinnedButton), ToggleObjectPinnedButton);
+            RegisterObjectReviewName(nameof(ObjectSessionStateStatusText), ObjectSessionStateStatusText);
+            RegisterObjectReviewName(nameof(ObjectQualityReviewExpander), ObjectQualityReviewExpander);
+            RegisterObjectReviewName(nameof(SegmentationAdvancedEditExpander), SegmentationAdvancedEditExpander);
             RegisterObjectReviewName(nameof(ObjectListBox), ObjectListBox);
         }
 

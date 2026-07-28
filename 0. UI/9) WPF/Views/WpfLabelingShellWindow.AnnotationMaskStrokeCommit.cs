@@ -434,7 +434,8 @@ namespace MvcVisionSystem
                     command.ImageSize,
                     command.ClassItem,
                     out LabelingSegmentationObject changedSegment,
-                    out _);
+                    out _,
+                    CanEditManualSegment);
                 TrackQueuedMaskStrokeSegment(changedSegment, changedSegmentIndices, ref needsFullObjectRefresh);
                 return changed;
             }
@@ -448,7 +449,8 @@ namespace MvcVisionSystem
                     command.Radius,
                     command.ImageSize,
                     out _,
-                    out IReadOnlyList<LabelingSegmentationObject> changedSegments);
+                    out IReadOnlyList<LabelingSegmentationObject> changedSegments,
+                    CanEditManualSegment);
                 TrackQueuedMaskStrokeSegments(changedSegments, changedSegmentIndices, ref needsFullObjectRefresh);
                 needsFullObjectRefresh |= manualSegments.Count != segmentCountBeforeErase;
                 return changed;

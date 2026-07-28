@@ -58,7 +58,8 @@ namespace MvcVisionSystem
                     shapeName,
                     payload.Source.ToString(),
                     payload.Index,
-                    payload));
+                    payload,
+                    isManualPolygon: !segment.IsRasterMask));
             }
 
             for (int i = 0; i < confirmedCount; i++)
@@ -126,7 +127,8 @@ namespace MvcVisionSystem
                 shapeName,
                 payload.Source.ToString(),
                 payload.Index,
-                payload);
+                payload,
+                isManualPolygon: !segment.IsRasterMask);
         }
         public WpfObjectReviewDeleteRefreshPlan BuildDeleteRefreshPlan(
             WpfObjectReviewSource deletedSource,

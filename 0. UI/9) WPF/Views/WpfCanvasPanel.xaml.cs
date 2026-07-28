@@ -1,5 +1,6 @@
 using OpenVisionLab.ImageCanvas.Views;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using ListBox = System.Windows.Controls.ListBox;
 using UserControl = System.Windows.Controls.UserControl;
 using WpfUiButton = Wpf.Ui.Controls.Button;
@@ -53,6 +54,8 @@ namespace MvcVisionSystem
         public WpfUiButton FitButton => FitCanvasButton;
         public WpfUiButton ActualSizeButton => ActualSizeCanvasButton;
         public WpfUiButton PanButton => PanCanvasButton;
+        public WpfUiButton DisplayAdjustmentButton => DisplayAdjustmentCanvasButton;
+        public Popup DisplayAdjustmentFlyout => DisplayAdjustmentPopup;
         public WpfUiButton FocusCandidateButton => FocusCandidateCanvasButton;
         public WpfUiButton ResetAiOverlayButton => ResetAiOverlayCanvasButton;
     }

@@ -67,7 +67,13 @@ namespace MvcVisionSystem
             }
 
             LabelingSegmentationObject segment = manualSegments[segmentIndex];
+            WpfObjectSessionState sessionState = GetManualSegmentSessionState(segmentIndex);
             if (segment?.IsRasterMask != true || segment.MaskData == null || segment.MaskSize.IsEmpty || segment.Bounds.IsEmpty)
+            {
+                return false;
+            }
+
+            if (sessionState.IsHidden)
             {
                 return false;
             }
@@ -88,16 +94,22 @@ namespace MvcVisionSystem
                 && selectedSourceIndex == segmentIndex
                 && ShouldSelectCommittedMaskAfterStroke();
             int displayIndex = manualRois.Count + segmentIndex + 1;
+            bool isRemoveUnderlyingPreview = IsPendingRemoveUnderlyingAffectedIndex(segmentIndex);
+            System.Drawing.Color overlayColor = isRemoveUnderlyingPreview
+                ? System.Drawing.Color.Orange
+                : segment.Color;
             overlay = new RoiImageCanvasMaskOverlay(
                 $"{activeImagePath}|mask|{segmentIndex}",
                 segment.MaskData,
                 segment.MaskSize,
                 maskBounds,
-                segment.Color,
+                overlayColor,
                 maskOpacity,
                 segment.RenderVersion,
                 isSegmentSelected,
-                $"SEG {displayIndex} {className}",
+                isRemoveUnderlyingPreview
+                    ? $"REMOVE PREVIEW {displayIndex} {className}"
+                    : $"SEG {displayIndex} {className}",
                 segment.RenderDirtyBounds,
                 (uploadedVersion, uploadedBounds) => ClearMaskRenderDirtyBounds(segment, uploadedVersion, uploadedBounds));
             return true;

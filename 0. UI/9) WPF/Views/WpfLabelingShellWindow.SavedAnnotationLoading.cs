@@ -73,7 +73,7 @@ namespace MvcVisionSystem
                 return 0;
             }
 
-            int loadedCount = 0;
+            var loadedSegments = new List<LabelingSegmentationObject>();
             foreach (KeyValuePair<string, List<LabelingSegmentationObject>> classSegments in savedSegments)
             {
                 CClassItem classItem = EnsureClassItem(classSegments.Key);
@@ -92,11 +92,16 @@ namespace MvcVisionSystem
                         segment.RenderDirtyBounds = segment.Bounds;
                     }
 
-                    manualSegments.Add(segment);
-                    loadedCount++;
+                    loadedSegments.Add(segment);
                 }
             }
 
+            manualSegments.AddRange(loadedSegments
+                .Select((segment, index) => new { Segment = segment, Index = index })
+                .OrderBy(item => item.Segment.ZOrder)
+                .ThenBy(item => item.Index)
+                .Select(item => item.Segment));
+            int loadedCount = loadedSegments.Count;
             if (loadedCount > 0)
             {
                 RefreshPolygonOverlays();

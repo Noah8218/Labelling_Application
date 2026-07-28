@@ -168,7 +168,7 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 
 | 경로 | 대표 파일 | 역할 |
 | --- | --- | --- |
-| `Services/Annotation` | `WpfAnnotationProductivityService`, `WpfAnnotationProductivityContracts`, `WpfSmartMaskPromptSessionService`, `WpfAnnotationHistoryService`, `WpfMask*`, `WpfPolygonAnnotationService` | annotation 단축키/반복/안전한 복제 정책, Smart Mask prompt/generation session, mask 편집 상태와 undo/redo. |
+| `Services/Annotation` | `WpfAnnotationProductivityService`, `WpfAnnotationProductivityContracts`, `WpfSmartMaskPromptSessionService`, `WpfAnnotationHistoryService`, `WpfMask*`, `WpfPolygonAnnotationService`, `WpfIntelligentScissorsService` | annotation 단축키/반복/안전한 복제 정책, Smart Mask prompt/generation session, mask 편집 상태와 undo/redo, polygon 유효성/정점 변경, bounded image-edge path 계산. |
 | `Services/Anomaly` | `WpfAnomaly*` | anomaly 평가와 dashboard 표시. |
 | `Services/CandidateReview` | `WpfCandidateReview*`, `WpfCandidateConfirmationService` | AI 후보 row/detail, review state, confirm/skip 정책. |
 | `Services/Dataset` | `WpfDataset*`, `WpfRecipeDatasetVersionPresentationService` | dataset setup, 상태, 품질, version 표시. |
@@ -606,9 +606,12 @@ partial이나 공개 타입을 기계적으로 더 나누는 일이 아닙니다
 P0-A `Labeling Command and Productivity Foundation`, P0-B
 `Interactive Smart Mask Refinement`, P1-A segmentation interchange
 preservation/loss contract, P1-B canonical schema v3, P1-C merge/join과
-axis-aligned split/slice와 enclosed hole add/fill은 완료되었습니다. 다음 bounded 기능은
-`docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`의 P1-C
-z-order입니다.
+axis-aligned split/slice, enclosed hole add/fill, saved-object z-order,
+remove-underlying, P2 session-only hide/full-lock/movement-pin contextual UI
+정정, polygon vertex insert/delete, bounded intelligent scissors, P3
+display-only image aids는 완료되었습니다. 다음 bounded 기능은
+`docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`의 P4 Dataset
+Health visual label QA입니다.
 
 - Current owner:
   - tool capability는 `WpfAnnotationToolCapabilityService`
@@ -625,6 +628,18 @@ z-order입니다.
   - ImageCanvas는 geometry hit-test/move/resize와 필요한 저수준
     duplicate primitive만 담당
   - canonical save/history는 기존 owner를 재사용
+  - current-image object presentation state는
+    `Services\ObjectReview\WpfObjectSessionStateService`
+  - object-state enablement와 row presentation은
+    `WpfObjectReviewPanelViewModel`
+  - state toggle orchestration과 mutation bridge는
+    `WpfLabelingShellWindow.ObjectSessionStateCommands`
+  - hide/full-lock/movement-pin은 canonical save/history/export owner에
+    들어가지 않음
+  - `CanvasOverlayItem.IsMoveLock`과 `RoiImageCanvasViewModel`은 ROI 이동만
+    막고 resize/copy/delete 경로는 유지
+  - Object Review 구조 명령은 manual segment에서만 접힌 contextual
+    expander로 노출
 - Preserved behavior:
   - Viewer/OpenGL/ROI/brush/eraser hot path 재작성 없음
   - text input focus에서 drawing shortcut 실행 없음
@@ -654,11 +669,46 @@ axis-aligned cut validation/component extraction은
 `WpfLabelingShellWindow.SegmentationSplitCommands`가 소유합니다.
 enclosed hole validation/flood fill은 `WpfSegmentationHoleService`,
 draft/point-input/mutation/history bridge는
-`WpfLabelingShellWindow.SegmentationHoleCommands`가 소유합니다. 이후
-z-order도 독립된 command/service와 focused test로 추가합니다.
+`WpfLabelingShellWindow.SegmentationHoleCommands`가 소유합니다.
+z-order 계획/경계 검증은 `WpfSegmentationZOrderService`, mutation/history/
+selection bridge는 `WpfLabelingShellWindow.SegmentationZOrderCommands`,
+enablement와 위치 안내는 `WpfObjectReviewPanelViewModel`이 소유합니다.
+remove-underlying의 raster overlap/subtraction/stale signature는
+`WpfSegmentationRemoveUnderlyingService`, preview/apply/cancel과 history/
+selection bridge는
+`WpfLabelingShellWindow.SegmentationRemoveUnderlyingCommands`, pending
+confirmation/안내는 `WpfObjectReviewPanelViewModel`이 소유합니다.
+`SavedAnnotationLoading`은 클래스 경계를 넘어 canonical z-order로 복원하고
+`AnnotationPolygonOverlays`는 각 polygon/raster overlay family 안에서 해당
+순서를 사용합니다. 두 renderer family의 정확한 교차 합성은 별도 Viewer
+경계이며 이 bounded slice의 완료 주장에 포함하지 않습니다.
 Dataset Health 시각 QA와 포맷/batch preflight는 핵심 라벨링 slice
 이후입니다. `OpenVisionLab.ImageCanvas`의 별도 프로젝트화와 남은
 WinForms 호환 경계는 현재 기능 우선순위가 아닙니다.
+
+### Display-only image-aid ownership
+
+Canonical image ownership remains in `WpfLabelingShellWindow.activeImageBitmap`
+and the existing dataset/image services. `Services/Infrastructure/
+WpfImageDisplayAdjustmentService.cs` owns only creation of an adjusted bitmap
+copy. `WpfCanvasPanelViewModel` owns screen-session settings, popup state,
+reset, and change notification. `WpfLabelingShellWindow.DisplayAdjustment.cs`
+coalesces slider input and replaces only the canvas base texture; it does not
+own annotation geometry, save, export, Recipe, or training state. The canvas
+overlay collections retain canonical image coordinates.
+
+Focused coverage is
+`tests/LabelingApplication.Tests/Program.ImageDisplayAdjustment.cs`; the visual
+contract is recorded in `docs/DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md`.
+
+### Polygon vertex precision ownership
+
+Polygon point creation, hit testing, movement, insert/delete validation is
+owned by `WpfPolygonAnnotationService`. One-click pending input, cancellation,
+history, dirty state, and selection restoration are owned by
+`WpfLabelingShellWindow.PolygonVertexCommands`. Polygon-only contextual
+enablement and status are owned by `WpfObjectReviewPanelViewModel`.
+Focused coverage is in `Program.PolygonVertex.cs`.
 
 ## 완료 보고 전 확인
 

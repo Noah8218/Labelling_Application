@@ -21,14 +21,16 @@ namespace MvcVisionSystem
             string shapeName,
             string sourceKey,
             int sourceIndex,
-            object payload)
+            object payload,
+            bool isManualPolygon = false)
         {
             return new WpfObjectReviewListItem(
                 FormatManualSummary(displayIndex, className, roi, shapeName),
                 FormatManualDetail(className, roi, shapeName),
                 sourceKey,
                 sourceIndex,
-                payload);
+                payload,
+                isManualPolygon: isManualPolygon);
         }
 
         public static WpfObjectReviewListItem BuildConfirmedItem(

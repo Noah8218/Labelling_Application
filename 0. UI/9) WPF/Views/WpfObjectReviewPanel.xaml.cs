@@ -33,6 +33,29 @@ namespace MvcVisionSystem
         public WpfUiButton RemoveHoleButton => BeginRemoveHoleButton;
         public WpfUiButton HoleEditCancelButton => CancelHoleEditButton;
         public TextBlock HoleEditStatusTextBlock => HoleEditStatusText;
+        public WpfUiButton InsertVertexButton => BeginInsertVertexButton;
+        public WpfUiButton DeleteVertexButton => BeginDeleteVertexButton;
+        public WpfUiButton VertexEditCancelButton => CancelVertexEditButton;
+        public TextBlock VertexEditStatusTextBlock => VertexEditStatusText;
+        public WpfUiButton IntelligentScissorsBeginButton => BeginIntelligentScissorsButton;
+        public WpfUiButton IntelligentScissorsApplyButton => ApplyIntelligentScissorsButton;
+        public WpfUiButton IntelligentScissorsCancelButton => CancelIntelligentScissorsButton;
+        public TextBlock IntelligentScissorsStatusTextBlock => IntelligentScissorsStatusText;
+        public WpfUiButton SegmentationToBackButton => SendSegmentationToBackButton;
+        public WpfUiButton SegmentationBackwardButton => SendSegmentationBackwardButton;
+        public WpfUiButton SegmentationForwardButton => BringSegmentationForwardButton;
+        public WpfUiButton SegmentationToFrontButton => BringSegmentationToFrontButton;
+        public TextBlock SegmentationZOrderStatusTextBlock => ZOrderStatusText;
+        public WpfUiButton RemoveUnderlyingPreviewButton => PreviewRemoveUnderlyingButton;
+        public WpfUiButton RemoveUnderlyingApplyButton => ApplyRemoveUnderlyingButton;
+        public WpfUiButton RemoveUnderlyingCancelButton => CancelRemoveUnderlyingButton;
+        public TextBlock RemoveUnderlyingStatusTextBlock => RemoveUnderlyingStatusText;
+        public WpfUiButton ObjectHiddenButton => ToggleObjectHiddenButton;
+        public WpfUiButton ObjectLockedButton => ToggleObjectLockedButton;
+        public WpfUiButton ObjectPinnedButton => ToggleObjectPinnedButton;
+        public TextBlock ObjectSessionStateStatusTextBlock => ObjectSessionStateStatusText;
+        public Expander QualityReviewEditor => ObjectQualityReviewExpander;
+        public Expander SegmentationAdvancedEditor => SegmentationAdvancedEditExpander;
         public ListBox ObjectList => ObjectListBox;
     }
 }

@@ -466,6 +466,12 @@ namespace MvcVisionSystem
                     .SelectMany(items => items)
                     .Where(segment => segment != null)
                     .ToList();
+                int nextZOrder = WpfSegmentationZOrderService.GetNextZOrder(manualSegments);
+                for (int index = 0; index < transferredSegments.Count; index++)
+                {
+                    transferredSegments[index].ZOrder = nextZOrder + index;
+                }
+
                 manualSegments.AddRange(transferredSegments);
                 addedCount = transferredSegments.Count;
             }

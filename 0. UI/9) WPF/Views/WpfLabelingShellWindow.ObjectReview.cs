@@ -35,17 +35,22 @@ namespace MvcVisionSystem
                 GetClippedCandidateBounds,
                 FormatCandidateDetail);
 
+            ApplyObjectSessionStates(presentation.Rows);
             SetObjectReviewObjects(presentation.Rows, presentation.Summary, presentation.SelectedItem);
             UpdateObjectReviewActionState();
         }
 
         private WpfObjectReviewListItem BuildManualRoiObjectReviewItem(int index)
-            => objectReviewPresentationService.BuildManualRoiItem(
+        {
+            WpfObjectReviewListItem row = objectReviewPresentationService.BuildManualRoiItem(
                 manualRois,
                 manualRoiClassNames,
                 manualRoiShapeKinds,
                 manualRoiOverlayIds,
                 index);
+            row?.ApplySessionState(objectSessionStateService.GetManualRoiState(index));
+            return row;
+        }
 
         private bool TryRefreshManualRoiObjectReviewRow(int manualRoiIndex, bool select)
         {
@@ -106,10 +111,24 @@ namespace MvcVisionSystem
         }
 
         private WpfObjectReviewListItem BuildManualSegmentObjectReviewItemCore(int manualSegmentIndex)
-            => objectReviewPresentationService.BuildManualSegmentItem(
+        {
+            WpfObjectReviewListItem row = objectReviewPresentationService.BuildManualSegmentItem(
                 manualRois.Count,
                 manualSegments,
                 manualSegmentIndex);
+            row?.ApplySessionState(GetManualSegmentSessionState(manualSegmentIndex));
+            return row;
+        }
+
+        private void ApplyObjectSessionStates(IEnumerable<WpfObjectReviewListItem> rows)
+        {
+            foreach (WpfObjectReviewListItem row in rows ?? Enumerable.Empty<WpfObjectReviewListItem>())
+            {
+                row?.ApplySessionState(row.Payload is WpfObjectReviewItemRef item
+                    ? GetObjectSessionState(item)
+                    : WpfObjectSessionState.Default);
+            }
+        }
 
         private bool TryRefreshManualSegmentObjectReviewRow(int manualSegmentIndex, string summary, bool select)
         {

@@ -53,9 +53,23 @@ labeling-editor score; it does not reduce the product-wide focused-workstation
 score. Focused single-operator workflow maturity remains `4.0/5`; labeling
 editor depth moved from the video-review baseline `2.1/5` to `2.5/5` after
 P0-A/P0-B, to `2.6/5` after P1-C merge/join, to `2.7/5` after the
-axis-aligned split/slice command, and to `2.8/5` after enclosed hole add/fill;
+axis-aligned split/slice command, to `2.8/5` after enclosed hole add/fill,
+to `2.9/5` after explicit saved-object z-order controls, to `3.0/5`
+after two-step remove-underlying, and temporarily to `3.1/5` after the first
+session-only hide/lock/pin implementation. Commercial-video re-check found an
+incorrect gold-bookmark pin meaning and an always-expanded command stack, so
+the correction then passed focused/protected and 1920/1366 visual gates and
+restored the estimate to `3.1/5`. Zoom-aware polygon vertex insert/delete then
+passed invalid-result, history, canonical replay, session protection, and
+1920/1366 visual gates, moving the estimate to `3.2/5`. Bounded edge-aware
+intelligent scissors then passed deterministic accuracy/latency,
+preview/apply/cancel, protected/canonical, and 1920/1366 gates, moving the
+estimate to `3.3/5`. P3 compact display-only brightness/contrast/gamma/invert/
+equalization then passed canonical source/file/history/overlay invariants and
+current-build 1920/1366 gates, moving the current estimate to `3.4/5`;
 general commercial labeling-suite parity remains
-`3.1/5`; intentional enterprise/team-platform parity remains `1.2/5`. These
+`3.4/5`; intentional
+enterprise/team-platform parity remains `1.2/5`. These
 are structured workflow estimates, not accuracy benchmarks. Independent
 production-camera/cross-session evidence remains the model-quality
 prerequisite. Collaboration, comments, accounts, cloud sync, deployment, video
@@ -90,13 +104,38 @@ Status: `Complete`. Field validation: `Not evaluated`.
 - P1-C enclosed hole add/fill is complete with polygon/raster support,
   exterior-connected background rejection, one-step undo/redo, and canonical
   v3 evidence.
-- The next product-development priority is z-order; remove-underlying warning
-  behavior remains a separate acceptance-gated slice.
-- P2 object state/precision, P3 display-only aids, P4 Dataset Health visual QA,
-  and P5 interchange/batch preflight remain ordered follow-ups.
+- P1-C saved-object z-order is complete with four explicit stack moves,
+  boundary no-mutation, one-step undo/redo, class-independent reload ordering,
+  and canonical v3 evidence. The current renderer preserves that order within
+  each polygon or raster overlay family; exact polygon/raster interleaving is
+  not claimed.
+- P1-C remove-underlying is complete with read-only affected-object/pixel/full
+  removal analysis, orange preview, explicit Apply/cancel, stale-plan
+  rejection, one-step Undo/Redo, and canonical v3 replay.
+- P2 session-only hide/full-lock/movement-pin and contextual exposure are complete
+  for saved manual ROI and segmentation objects. Hidden rows remain selectable
+  while leaving the canvas; lock protects direct and canvas mutation paths;
+  movement pin blocks translation without gold emphasis and preserves
+  resize/vertex/copy/delete. These states reset with the image session and do not enter label
+  history, dirty state, canonical data, export, or training input.
+- P2 polygon vertex insert/delete is complete with contextual exposure,
+  zoom-aware deterministic hit testing, invalid-result rejection, one-step
+  history, canonical v3 replay, and session-state protection.
+- P2 bounded edge-aware intelligent scissors is complete with a deterministic
+  90%/2.5px·250ms fixture, selected-edge preview/apply/cancel, stale and
+  invalid no-mutation, one-step history, canonical v3 replay, session-state
+  protection, and current-build 1920/1366 evidence.
+- P3 display-only image aids are complete in one compact canvas-header popup.
+  Brightness, contrast, gamma, invert, and histogram equalization change only
+  an owned display copy. Canonical source/file hashes, dirty/history state, and
+  overlay image coordinates remain unchanged. Current-build 1920/1366 evidence
+  passes; see `docs\DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md`.
+- The next product-development priority is P4 Dataset Health visual label QA.
+- P4 visual QA and P5 interchange/batch preflight remain ordered follow-ups.
 
-The `2.8/5` labeling-editor score is still materially below CVAT/V7 editor
-depth. It does not claim mask-structure parity, object-state parity, video
+The current `3.4/5` labeling-editor score is still
+materially below CVAT/V7 editor
+depth. It does not claim persistent object-metadata parity, video
 propagation, collaboration, field accuracy, or production model readiness.
 
 ## Latest Handoff Reconciliation (2026-07-24)
@@ -119,7 +158,7 @@ Status: `Complete` for the documented local-workstation feature scope at commit
   video/3D/keypoints, and generic arbitrary-model execution remain outside the
   approved local single-operator product scope.
 - Focused single-operator workflow maturity remains `4.0/5`; general commercial
-  labeling-suite parity remains `3.1/5`; intentional enterprise/team-platform
+  labeling-suite parity remains `3.4/5`; intentional enterprise/team-platform
   parity remains `1.2/5`. These are workflow/scope estimates, not accuracy.
 
 This audit answers one product question: when compared with established labeling tools, which parts of OpenVisionLab Labeling Studio are mature enough to stop revisiting, and which gaps should drive the next development work.
@@ -247,7 +286,7 @@ These are directional maturity estimates based on the verified local workflow an
 | Product scope | Maturity | Decision |
 | --- | ---: | --- |
 | Focused local single-operator industrial image workflow | 4.0/5, about 80% | Strong enough to use and stabilize. Stop repeating completed labeling, queue, local training/inference, and model-review implementation work. |
-| General commercial image-labeling suite | 3.1/5, about 62% | Competitive in the intended image workflow, but behind broad suites in smart annotation, object-level QA, modalities, extensibility, and team operations. |
+| General commercial image-labeling suite | 3.4/5, about 68% | Competitive in the intended image workflow after contextual Object Review, precision geometry, and compact display-only aids, but still behind broad suites in persistent metadata, modalities, extensibility, and team operations. |
 | Enterprise/team labeling platform | 1.2/5, about 24% | Intentionally outside the current product direction. Do not spend current-priority effort on workforce/cloud parity. |
 
 Current strengths:
@@ -327,7 +366,14 @@ This improves scoped model-quality evidence but does not change the product scor
 
 OpenVisionLab Labeling Studio is already strong as a local Windows workstation for industrial image labeling, local YOLOv5/YOLOv8 training, current-image/batch inference review, and model-candidate decisions. That scope is roughly 4.0/5, or about 80 percent of a focused single-operator product.
 
-It is not a general CVAT/Label Studio/Roboflow/Labelbox replacement. Against full image-labeling-suite expectations, it is roughly 3.1/5, or about 62 percent. Import/export breadth is no longer the primary gap; the main gaps are smart mask assistance, object-level QA/audit depth, collaboration operations, broader modalities, and independent production SEG/anomaly evidence.
+It is not a general CVAT/Label Studio/Roboflow/Labelbox replacement. Against
+full image-labeling-suite expectations, the current estimate is 3.4/5 after
+contextual Object Review, polygon vertex editing, and bounded edge-aware
+scissors and compact display-only image-aid verification closed. Import/export
+breadth is no longer the primary gap; the main gaps are persistent metadata,
+object-level QA/audit depth,
+collaboration operations, broader modalities, and independent production
+SEG/anomaly evidence.
 
 Against enterprise/cloud labeling platforms, it is intentionally much lower, roughly 1.2/5, or about 24 percent. The app currently has no multi-user assignment, role-based review, comments, consensus, cloud storage, hosted workforce workflow, general API/SDK surface, or enterprise administration.
 
@@ -398,8 +444,8 @@ image-level anomaly candidates no longer use object-detection geometry/error
 language. See `docs/BEGINNER_END_TO_END_UX_AUDIT_20260722.md`.
 
 This evidence does not change the current maturity estimates: focused
-single-operator workflow `4.0/5` (about 80%), general commercial labeling-suite
-parity `3.1/5` (about 62%), and intentional enterprise/team-platform parity
+single-operator workflow `4.0/5` (about 80%), then-current general commercial labeling-suite
+parity `3.3/5` (about 66%), and intentional enterprise/team-platform parity
 `1.2/5` (about 24%). These are workflow/scope estimates, not model accuracy.
 
 The remaining wizard naming finding from that audit is also complete. A purpose
@@ -614,7 +660,11 @@ Approved direction as of 2026-07-15:
 
 ### Reassessment
 
-- The focused local-workstation estimate remains `4.0/5`; the general image-labeling-suite estimate remains `3.1/5`. This research changes prioritization, not verified model accuracy or product-maturity evidence.
+- The focused local-workstation estimate remains `4.0/5`; the general
+  image-labeling-suite estimate is `3.4/5` after contextual Object Review,
+  polygon vertex insert/delete, bounded intelligent scissors, and compact
+  display-only aids passed focused/protected/canonical and 1920/1366 visual
+  gates.
 - Commercial products consistently make four concepts immediately visible: project/data context, review/rework state, AI assistance, and comparable model-quality evidence. Their team/workforce, cloud, and broad-modality scope is not a reason to copy those products wholesale.
 - Labeling Studio already has a meaningful local positioning, not a proven exclusive feature claim: local source/weight operation, raster-mask/contour preservation, template-source geometry transfer, and fail-closed model comparison/adoption based on matching evaluation evidence and timing conditions.
 - `WpfModelBenchmarkWindow` already has a native WPF quality-versus-Takt scatter plot plus evidence-fingerprint and comparability guards. Do not add LiveCharts, OxyPlot, or another chart dependency merely to duplicate that display.
@@ -660,14 +710,17 @@ this current sequence:
    result rejection, and current-EXE evidence.
    Recommended model: `gpt-5.6-sol`
    Reasoning effort: `high`
-3. Implement P1-C merge/split/hole/z-order after the completed P1-A/P1-B
-   preservation and canonical identity contracts, then add
-   object-state/precision and display-only image aids as separate focused
-   slices.
-   Recommended model: `gpt-5.6-sol`
-   Reasoning effort: `high`
-4. Move Dataset Health visual QA and existing interchange/batch preflight
-   exposure behind the core editor slices.
+3. P1-C merge/split/hole/saved-object z-order/remove-underlying is complete
+   after the P1-A/P1-B preservation and canonical identity contracts. The P2
+   contextual hide/full-lock/movement-pin correction and polygon vertex
+   insert/delete plus bounded intelligent scissors are complete. P3
+   display-only image aids are also complete with source/file/history/overlay
+   immutability.
+   Recommended model: `gpt-5.6-terra`
+   Reasoning effort: `medium`
+4. Implement P4 Dataset Health visual label QA as a read-only dataset-level
+   issue gallery with explicit navigation back to the existing editor. Keep
+   existing interchange/batch preflight exposure behind that bounded slice.
    Recommended model: `gpt-5.6-terra`
    Reasoning effort: `medium`
 5. When an approved NG-rich object-detection camera/session source with

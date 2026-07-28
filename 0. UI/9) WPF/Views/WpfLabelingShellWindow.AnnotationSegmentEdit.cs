@@ -22,7 +22,7 @@ namespace MvcVisionSystem
             }
 
             LabelingSegmentationObject segment = manualSegments[item.Index];
-            if (segment == null)
+            if (segment == null || !CanEditManualSegment(segment))
             {
                 return false;
             }
@@ -42,6 +42,15 @@ namespace MvcVisionSystem
                 {
                     return false;
                 }
+            }
+
+            WpfObjectSessionState sessionState = objectSessionStateService.GetManualSegmentState(segment);
+            if (sessionState.IsPinned && (segment.IsRasterMask || pointIndex < 0))
+            {
+                SetYoloCommandStatus(
+                    "\uC774\uB3D9 \uACE0\uC815\uB41C \uAC1D\uCCB4\uC785\uB2C8\uB2E4. \uACE0\uC815\uC744 \uD574\uC81C\uD558\uBA74 \uC804\uCCB4 \uC704\uCE58\uB97C \uC62E\uAE38 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
+                    isBusy: false);
+                return false;
             }
 
             activeSegmentDragIndex = item.Index;

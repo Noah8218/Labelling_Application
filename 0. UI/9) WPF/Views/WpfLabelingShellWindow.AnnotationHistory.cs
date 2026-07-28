@@ -183,6 +183,7 @@ namespace MvcVisionSystem
 
         private void RestoreAnnotationHistorySnapshot(WpfAnnotationHistorySnapshot snapshot)
         {
+            CancelPendingIntelligentScissors(updateStatus: false);
             suppressAnnotationHistory = true;
             try
             {

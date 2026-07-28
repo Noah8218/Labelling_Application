@@ -22,6 +22,7 @@ namespace OpenVisionLab.ImageCanvas.Overlays
 		public bool IsGroupRectangle { get; set; } // 해당 Object가 Group안에 ROI를 포함하는 Rectangle인지 결정합니다. 해당 ROI는 User가 화면에서 수정이 안됩니다.
 		public bool IsFill { get; set; } // 해당 Object 안쪽을 가득 채울지 안채울지 플래그
 		public bool IsControlLock { get; set; } = false;
+		public bool IsMoveLock { get; set; } = false;
 		public EnumItemType ItemType { get; set; } = EnumItemType.Group;
 		public CanvasShape Shape { get; set; }
 		public List<CanvasOverlayItem> ChildObjects { get; set; } = new List<CanvasOverlayItem>(); // 추가한 하위 그룹		

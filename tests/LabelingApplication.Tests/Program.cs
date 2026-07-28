@@ -512,6 +512,13 @@ internal static partial class Program
             return RunWpfAnnotationObjectVerification();
         }
 
+        if (args.Any(arg => string.Equals(arg, "--wpf-roi-object-manipulation", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "WPF ROI object manipulation updates shell state",
+                TestWpfRoiObjectManipulationUpdatesShellState);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--roi-500k-performance", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("ROI 500K object single-move performance", TestRoi500KObjectSingleMovePerformance);
@@ -1064,6 +1071,48 @@ internal static partial class Program
             return RunSingleSmoke(
                 "Segmentation hole editing preserves enclosure, history, and canonical identity",
                 SegmentationHoleTests.TestHoleWorkflow);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--polygon-vertex", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Polygon vertex insert and delete preserve valid geometry, history, session protection, and canonical identity",
+                PolygonVertexTests.TestPolygonVertexWorkflow);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--intelligent-scissors", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Intelligent scissors follows a deterministic image edge within the accuracy and latency contract",
+                IntelligentScissorsTests.TestIntelligentScissorsContract);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--image-display-adjustment", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Display-only image aids preserve canonical pixels, saved input, history, and overlay coordinates",
+                ImageDisplayAdjustmentTests.TestDisplayOnlyAdjustmentContract);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--segmentation-zorder", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Segmentation z-order preserves explicit ordering, history, and canonical identity",
+                SegmentationZOrderTests.TestZOrderWorkflow);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--segmentation-remove-underlying", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Segmentation remove-underlying previews impact and preserves history and canonical identity",
+                SegmentationRemoveUnderlyingTests.TestRemoveUnderlyingWorkflow);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--object-session-state", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Object hide lock and pin remain session-only and protect mutation",
+                ObjectSessionStateTests.TestObjectSessionStateWorkflow);
         }
 
         if (args.Any(arg => string.Equals(arg, "--segmentation-historical-remediation-audit", StringComparison.OrdinalIgnoreCase)))
@@ -1777,6 +1826,11 @@ internal static partial class Program
         bool selectMergeSegments = HasArgument(args, "--select-merge-segments");
         string armSegmentationSplit = GetArgumentValue(args, "--arm-segmentation-split", string.Empty);
         string armSegmentationHole = GetArgumentValue(args, "--arm-segmentation-hole", string.Empty);
+        string armPolygonVertex = GetArgumentValue(args, "--arm-polygon-vertex", string.Empty);
+        bool previewIntelligentScissors = HasArgument(args, "--preview-intelligent-scissors");
+        string applySegmentationZOrder = GetArgumentValue(args, "--apply-segmentation-zorder", string.Empty);
+        bool previewSegmentationRemoveUnderlying = HasArgument(args, "--preview-segmentation-remove-underlying");
+        bool showObjectSessionState = HasArgument(args, "--show-object-session-state");
         bool openHeaderToolsMenu = HasArgument(args, "--open-header-tools-menu");
         bool showWorkspaceLayoutControls = HasArgument(args, "--show-workspace-layout-controls");
         bool showTrainingRecoveryStatus = HasArgument(args, "--show-training-recovery-status");
@@ -1800,6 +1854,24 @@ internal static partial class Program
         bool showModelBenchmarkClassErrors = HasArgument(args, "--model-benchmark-class-errors");
         bool showModelBenchmarkThresholdReview = HasArgument(args, "--model-benchmark-threshold-review");
         bool showRoiLodStatus = HasArgument(args, "--show-roi-lod-status");
+        bool openDisplayAdjustment = HasArgument(args, "--open-display-adjustment");
+        int displayBrightness = TryParseInt(GetArgumentValue(args, "--display-brightness", "0"), 0);
+        double displayContrast = double.TryParse(
+            GetArgumentValue(args, "--display-contrast", "100"),
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture,
+            out double parsedDisplayContrast)
+            ? parsedDisplayContrast
+            : 100D;
+        double displayGamma = double.TryParse(
+            GetArgumentValue(args, "--display-gamma", "1"),
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture,
+            out double parsedDisplayGamma)
+            ? parsedDisplayGamma
+            : 1D;
+        bool displayInvert = HasArgument(args, "--display-invert");
+        bool displayEqualize = HasArgument(args, "--display-equalize");
         bool screenCapture = HasArgument(args, "--screen-capture");
         bool labelsOnly = HasArgument(args, "--labels-only");
         bool segmentationCandidates = HasArgument(args, "--segmentation-candidates");
@@ -2309,6 +2381,101 @@ internal static partial class Program
                         {
                             window.ObjectReviewViewModel.BeginAddHoleCommand.Execute(null);
                         }
+                    }
+                    if (!string.IsNullOrWhiteSpace(armPolygonVertex))
+                    {
+                        SelectVisualSmokePolygonObject(window);
+                        if (armPolygonVertex.Equals("delete", StringComparison.OrdinalIgnoreCase))
+                        {
+                            window.ObjectReviewViewModel.BeginDeleteVertexCommand.Execute(null);
+                        }
+                        else
+                        {
+                            window.ObjectReviewViewModel.BeginInsertVertexCommand.Execute(null);
+                        }
+                    }
+                    if (previewIntelligentScissors)
+                    {
+                        SelectVisualSmokePolygonObject(window);
+                        window.ObjectReviewViewModel.BeginIntelligentScissorsCommand.Execute(null);
+                        List<LabelingSegmentationObject> segments =
+                            GetPrivateField<List<LabelingSegmentationObject>>(window, "manualSegments");
+                        LabelingSegmentationObject polygon = segments.FirstOrDefault(segment => segment?.IsRasterMask == false);
+                        AssertTrue(polygon?.Points?.Count >= 3, "Intelligent-scissors visual smoke needs a manual polygon");
+                        Point first = polygon.Points[0];
+                        Point second = polygon.Points[1];
+                        Point edgeMidpoint = new Point(
+                            (first.X + second.X) / 2,
+                            (first.Y + second.Y) / 2);
+                        InvokePrivateResult<object>(
+                            window,
+                            "MainCanvasViewModel_ImagePointClicked",
+                            window.MainCanvasViewModel,
+                            new CanvasImagePointEventArgs(
+                                CanvasPointerButton.Left,
+                                1,
+                                0,
+                                0,
+                                edgeMidpoint,
+                                PointF.Empty));
+                        AssertTrue(
+                            window.ObjectReviewViewModel.HasIntelligentScissorsPreview,
+                            "Intelligent-scissors visual smoke did not produce a preview");
+                    }
+                    if (!string.IsNullOrWhiteSpace(applySegmentationZOrder))
+                    {
+                        SelectVisualSmokeMaskObject(window);
+                        switch (applySegmentationZOrder.Trim().ToLowerInvariant())
+                        {
+                            case "back":
+                                window.ObjectReviewViewModel.SendToBackCommand.Execute(null);
+                                break;
+                            case "backward":
+                                window.ObjectReviewViewModel.SendBackwardCommand.Execute(null);
+                                break;
+                            case "forward":
+                                window.ObjectReviewViewModel.BringForwardCommand.Execute(null);
+                                break;
+                            default:
+                                window.ObjectReviewViewModel.BringToFrontCommand.Execute(null);
+                                break;
+                        }
+                    }
+                    if (previewSegmentationRemoveUnderlying)
+                    {
+                        SeedVisualSmokeRemoveUnderlyingOverlap(window);
+                        SelectVisualSmokeMaskObject(window);
+                        window.ObjectReviewViewModel.PreviewRemoveUnderlyingCommand.Execute(null);
+                    }
+                    if (showObjectSessionState)
+                    {
+                        if (window.CanvasPanelViewModel.ResetAiOverlayCommand.CanExecute(null))
+                        {
+                            window.CanvasPanelViewModel.ResetAiOverlayCommand.Execute(null);
+                        }
+
+                        SelectVisualSmokePolygonObject(window);
+                        window.ObjectReviewViewModel.ToggleObjectPinnedCommand.Execute(null);
+                        window.ObjectReviewViewModel.ToggleObjectLockedCommand.Execute(null);
+                        AssertTrue(
+                            window.MainCanvasViewModel.PolygonOverlays.Any(overlay =>
+                                overlay.Label.StartsWith("SEG", StringComparison.Ordinal)
+                                && overlay.Color.ToArgb() != Color.Gold.ToArgb()),
+                            "Object-session-state visual smoke should preserve the class-colored polygon under movement pin");
+                    }
+                    if (openDisplayAdjustment)
+                    {
+                        window.CanvasPanelViewModel.DisplayBrightness = displayBrightness;
+                        window.CanvasPanelViewModel.DisplayContrastPercent = displayContrast;
+                        window.CanvasPanelViewModel.DisplayGamma = displayGamma;
+                        window.CanvasPanelViewModel.IsDisplayInverted = displayInvert;
+                        window.CanvasPanelViewModel.IsDisplayHistogramEqualized = displayEqualize;
+                        InvokePrivate(window, "ApplyDisplayAdjustmentNow");
+                        window.CanvasPanelViewModel.IsDisplayAdjustmentOpen = true;
+                        AssertTrue(
+                            window.CanvasPanelViewModel.IsDisplayAdjustmentOpen,
+                            "Display-adjustment visual smoke should open the compact popup");
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
                     }
 
                     window.UpdateLayout();
@@ -11491,6 +11658,64 @@ internal static partial class Program
         InvokePrivate(window, "RefreshPolygonOverlays");
     }
 
+    private static void SelectVisualSmokePolygonObject(WpfLabelingShellWindow window)
+    {
+        if (window?.FindName("ObjectReviewPanelControl") is not WpfObjectReviewPanel objectReviewPanel)
+        {
+            return;
+        }
+
+        WpfObjectReviewListItem polygonItem = objectReviewPanel.ViewModel.Objects.FirstOrDefault(item =>
+            item.IsEnabled
+            && string.Equals(item.SourceKey, WpfObjectReviewSource.ManualSegment.ToString(), StringComparison.OrdinalIgnoreCase)
+            && item.DisplayText.Contains("\uD3F4\uB9AC\uACE4", StringComparison.Ordinal));
+        if (polygonItem == null)
+        {
+            return;
+        }
+
+        objectReviewPanel.ViewModel.SelectedObject = polygonItem;
+        objectReviewPanel.ViewModel.ObjectSelectionChangedCommand.Execute(polygonItem);
+        InvokePrivate(window, "RefreshPolygonOverlays");
+    }
+
+    private static void SeedVisualSmokeRemoveUnderlyingOverlap(WpfLabelingShellWindow window)
+    {
+        List<LabelingSegmentationObject> segments =
+            GetPrivateField<List<LabelingSegmentationObject>>(window, "manualSegments");
+        LabelingSegmentationObject selectedMask = segments.FirstOrDefault(segment => segment?.IsRasterMask == true);
+        int polygonIndex = segments.FindIndex(segment => segment?.IsRasterMask != true);
+        if (selectedMask == null || polygonIndex < 0 || selectedMask.Bounds.IsEmpty)
+        {
+            return;
+        }
+
+        Rectangle bounds = selectedMask.Bounds;
+        Size imageSize = selectedMask.MaskSize;
+        int left = Math.Max(0, bounds.Left - 8);
+        int top = Math.Max(0, bounds.Top - 8);
+        int right = Math.Min(imageSize.Width - 1, bounds.Right + 8);
+        int bottom = Math.Min(imageSize.Height - 1, bounds.Bottom + 8);
+        var previewClass = new CClassItem { Text = "Defect", DrawColor = Color.DeepSkyBlue };
+        segments[polygonIndex] = new LabelingSegmentationObject(
+            new[]
+            {
+                new Point(left, top),
+                new Point(right, top),
+                new Point(right, bottom),
+                new Point(left, bottom)
+            },
+            previewClass)
+        {
+            ClassName = previewClass.Text,
+            ObjectId = "visual-remove-underlying",
+            ZOrder = selectedMask.ZOrder - 1,
+            LastStructuralOperation = "Original"
+        };
+        selectedMask.ZOrder = Math.Max(selectedMask.ZOrder, segments[polygonIndex].ZOrder + 1);
+        InvokePrivate(window, "RefreshObjectList");
+    }
+
     private static void SelectVisualSmokeActiveRoi(WpfLabelingShellWindow window)
     {
         if (window?.MainCanvasViewModel == null)
@@ -19869,9 +20094,14 @@ internal static partial class Program
                 InvokePrivateResult<object>(window, "RedrawReviewRois");
 
                 var manualRois = GetPrivateField<List<Rectangle>>(window, "manualRois");
+                var manualRoiClassNames = GetPrivateField<List<string>>(window, "manualRoiClassNames");
                 var manualOverlayIds = GetPrivateField<List<string>>(window, "manualRoiOverlayIds");
                 AssertEqual(1, manualRois.Count);
                 AssertEqual(new Rectangle(20, 20, 40, 40), manualRois[0]);
+                AssertEqual("Defect", manualRoiClassNames[0]);
+                AssertEqual(
+                    Color.Red.ToArgb(),
+                    InvokePrivateResult<CClassItem>(window, "EnsureClassItem", "Defect").DrawColor.ToArgb());
                 AssertTrue(!string.IsNullOrWhiteSpace(manualOverlayIds[0]), "redraw should bind manual ROI to a real canvas overlay id");
                 var manualOverlay = window.MainCanvasViewModel.ImageViewer.GetCanvasOverlayManager().GetOverlayByUniqueId(manualOverlayIds[0]);
                 AssertTrue(manualOverlay != null, "redraw should create a canvas overlay for the manual ROI");

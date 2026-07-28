@@ -34,6 +34,29 @@ namespace MvcVisionSystem
         private bool isHoleEditEnabled;
         private bool isHoleEditPending;
         private string holeEditStatusText = "\uB0B4\uBD80 \uAD6C\uBA4D\uC744 \uB2E4\uAC01\uD615\uC73C\uB85C \uCD94\uAC00\uD558\uAC70\uB098 \uD074\uB9AD\uD574 \uCC44\uC6C1\uB2C8\uB2E4.";
+        private bool isPolygonVertexContextVisible;
+        private bool isVertexEditEnabled;
+        private bool isVertexEditPending;
+        private string vertexEditStatusText = "\uD3F4\uB9AC\uACE4 \uBAA8\uC11C\uB9AC\uC5D0 \uC815\uC810\uC744 \uCD94\uAC00\uD558\uAC70\uB098 \uAE30\uC874 \uC815\uC810\uC744 \uC0AD\uC81C\uD569\uB2C8\uB2E4.";
+        private bool isIntelligentScissorsEnabled;
+        private bool isIntelligentScissorsPending;
+        private bool hasIntelligentScissorsPreview;
+        private string intelligentScissorsStatusText = "\uD3F4\uB9AC\uACE4 \uBAA8\uC11C\uB9AC\uB97C \uC120\uD0DD\uD574 \uC774\uBBF8\uC9C0 \uACBD\uACC4 \uACBD\uB85C\uB97C \uBBF8\uB9AC\uBCF4\uAE30\uD569\uB2C8\uB2E4.";
+        private bool isSendToBackEnabled;
+        private bool isSendBackwardEnabled;
+        private bool isBringForwardEnabled;
+        private bool isBringToFrontEnabled;
+        private string zOrderStatusText = "\uC120\uD0DD\uD55C \uC138\uADF8\uBA3C\uD2B8\uC758 \uC55E\uB4A4 \uD45C\uC2DC \uC21C\uC11C\uB97C \uBCC0\uACBD\uD569\uB2C8\uB2E4.";
+        private bool isRemoveUnderlyingPreviewEnabled;
+        private bool isRemoveUnderlyingPreviewPending;
+        private string removeUnderlyingStatusText = "\uC704\uCABD \uAC1D\uCCB4\uC640 \uACB9\uCE58\uB294 \uB4A4\uCABD geometry\uB97C \uBD84\uC11D\uD55C \uD6C4 \uD655\uC778\uD574 \uC81C\uAC70\uD569\uB2C8\uB2E4.";
+        private bool isObjectSessionStateEnabled;
+        private bool isSelectedObjectHidden;
+        private bool isSelectedObjectLocked;
+        private bool isSelectedObjectPinned;
+        private string objectSessionStateStatusText = "\uC228\uAE40/\uC7A0\uAE08/\uC774\uB3D9 \uACE0\uC815\uC740 \uD604\uC7AC \uC774\uBBF8\uC9C0 \uC138\uC158\uC5D0\uB9CC \uC801\uC6A9\uB429\uB2C8\uB2E4.";
+        private bool isSegmentContextVisible;
+        private bool isSegmentAdvancedEditorOpen;
         private string qualityReviewStatusText = "이미지 없음";
         private string qualityReviewDetailText = "이미지를 열면 품질 검수 상태를 표시합니다.";
         private string qualityReviewNoteText = string.Empty;
@@ -53,6 +76,22 @@ namespace MvcVisionSystem
         private ICommand beginAddHoleCommand = new RelayCommand(NoOpCommand);
         private ICommand beginRemoveHoleCommand = new RelayCommand(NoOpCommand);
         private ICommand cancelHoleEditCommand = new RelayCommand(NoOpCommand);
+        private ICommand beginInsertVertexCommand = new RelayCommand(NoOpCommand);
+        private ICommand beginDeleteVertexCommand = new RelayCommand(NoOpCommand);
+        private ICommand cancelVertexEditCommand = new RelayCommand(NoOpCommand);
+        private ICommand beginIntelligentScissorsCommand = new RelayCommand(NoOpCommand);
+        private ICommand applyIntelligentScissorsCommand = new RelayCommand(NoOpCommand);
+        private ICommand cancelIntelligentScissorsCommand = new RelayCommand(NoOpCommand);
+        private ICommand sendToBackCommand = new RelayCommand(NoOpCommand);
+        private ICommand sendBackwardCommand = new RelayCommand(NoOpCommand);
+        private ICommand bringForwardCommand = new RelayCommand(NoOpCommand);
+        private ICommand bringToFrontCommand = new RelayCommand(NoOpCommand);
+        private ICommand previewRemoveUnderlyingCommand = new RelayCommand(NoOpCommand);
+        private ICommand applyRemoveUnderlyingCommand = new RelayCommand(NoOpCommand);
+        private ICommand cancelRemoveUnderlyingCommand = new RelayCommand(NoOpCommand);
+        private ICommand toggleObjectHiddenCommand = new RelayCommand(NoOpCommand);
+        private ICommand toggleObjectLockedCommand = new RelayCommand(NoOpCommand);
+        private ICommand toggleObjectPinnedCommand = new RelayCommand(NoOpCommand);
         private ICommand objectSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
         private ICommand objectPreviewKeyDownCommand = new RelayCommand<KeyInputCommandArgs>(NoOpKeyCommand);
         private ICommand markQualityUnreviewedCommand = new RelayCommand(NoOpCommand);
@@ -134,6 +173,102 @@ namespace MvcVisionSystem
         {
             get => cancelHoleEditCommand;
             private set => SetProperty(ref cancelHoleEditCommand, value);
+        }
+
+        public ICommand BeginInsertVertexCommand
+        {
+            get => beginInsertVertexCommand;
+            private set => SetProperty(ref beginInsertVertexCommand, value);
+        }
+
+        public ICommand BeginDeleteVertexCommand
+        {
+            get => beginDeleteVertexCommand;
+            private set => SetProperty(ref beginDeleteVertexCommand, value);
+        }
+
+        public ICommand CancelVertexEditCommand
+        {
+            get => cancelVertexEditCommand;
+            private set => SetProperty(ref cancelVertexEditCommand, value);
+        }
+
+        public ICommand BeginIntelligentScissorsCommand
+        {
+            get => beginIntelligentScissorsCommand;
+            private set => SetProperty(ref beginIntelligentScissorsCommand, value);
+        }
+
+        public ICommand ApplyIntelligentScissorsCommand
+        {
+            get => applyIntelligentScissorsCommand;
+            private set => SetProperty(ref applyIntelligentScissorsCommand, value);
+        }
+
+        public ICommand CancelIntelligentScissorsCommand
+        {
+            get => cancelIntelligentScissorsCommand;
+            private set => SetProperty(ref cancelIntelligentScissorsCommand, value);
+        }
+
+        public ICommand SendToBackCommand
+        {
+            get => sendToBackCommand;
+            private set => SetProperty(ref sendToBackCommand, value);
+        }
+
+        public ICommand SendBackwardCommand
+        {
+            get => sendBackwardCommand;
+            private set => SetProperty(ref sendBackwardCommand, value);
+        }
+
+        public ICommand BringForwardCommand
+        {
+            get => bringForwardCommand;
+            private set => SetProperty(ref bringForwardCommand, value);
+        }
+
+        public ICommand BringToFrontCommand
+        {
+            get => bringToFrontCommand;
+            private set => SetProperty(ref bringToFrontCommand, value);
+        }
+
+        public ICommand PreviewRemoveUnderlyingCommand
+        {
+            get => previewRemoveUnderlyingCommand;
+            private set => SetProperty(ref previewRemoveUnderlyingCommand, value);
+        }
+
+        public ICommand ApplyRemoveUnderlyingCommand
+        {
+            get => applyRemoveUnderlyingCommand;
+            private set => SetProperty(ref applyRemoveUnderlyingCommand, value);
+        }
+
+        public ICommand CancelRemoveUnderlyingCommand
+        {
+            get => cancelRemoveUnderlyingCommand;
+            private set => SetProperty(ref cancelRemoveUnderlyingCommand, value);
+        }
+
+        public ICommand ToggleObjectHiddenCommand
+        {
+            get => toggleObjectHiddenCommand;
+            private set => SetProperty(ref toggleObjectHiddenCommand, value);
+        }
+
+        public ICommand ToggleObjectLockedCommand
+        {
+            get => toggleObjectLockedCommand;
+            private set => SetProperty(ref toggleObjectLockedCommand, value);
+        }
+
+        public ICommand ToggleObjectPinnedCommand
+        {
+            get => toggleObjectPinnedCommand;
+            private set => SetProperty(ref toggleObjectPinnedCommand, value);
         }
 
         public ICommand ObjectSelectionChangedCommand
@@ -304,6 +439,144 @@ namespace MvcVisionSystem
             private set => SetProperty(ref holeEditStatusText, value ?? string.Empty);
         }
 
+        public bool IsPolygonVertexContextVisible
+        {
+            get => isPolygonVertexContextVisible;
+            private set => SetProperty(ref isPolygonVertexContextVisible, value);
+        }
+
+        public bool IsVertexEditEnabled
+        {
+            get => isVertexEditEnabled;
+            private set => SetProperty(ref isVertexEditEnabled, value);
+        }
+
+        public bool IsVertexEditPending
+        {
+            get => isVertexEditPending;
+            private set => SetProperty(ref isVertexEditPending, value);
+        }
+
+        public string VertexEditStatusText
+        {
+            get => vertexEditStatusText;
+            private set => SetProperty(ref vertexEditStatusText, value ?? string.Empty);
+        }
+
+        public bool IsIntelligentScissorsEnabled
+        {
+            get => isIntelligentScissorsEnabled;
+            private set => SetProperty(ref isIntelligentScissorsEnabled, value);
+        }
+
+        public bool IsIntelligentScissorsPending
+        {
+            get => isIntelligentScissorsPending;
+            private set => SetProperty(ref isIntelligentScissorsPending, value);
+        }
+
+        public bool HasIntelligentScissorsPreview
+        {
+            get => hasIntelligentScissorsPreview;
+            private set => SetProperty(ref hasIntelligentScissorsPreview, value);
+        }
+
+        public string IntelligentScissorsStatusText
+        {
+            get => intelligentScissorsStatusText;
+            private set => SetProperty(ref intelligentScissorsStatusText, value ?? string.Empty);
+        }
+
+        public bool IsSendToBackEnabled
+        {
+            get => isSendToBackEnabled;
+            private set => SetProperty(ref isSendToBackEnabled, value);
+        }
+
+        public bool IsSendBackwardEnabled
+        {
+            get => isSendBackwardEnabled;
+            private set => SetProperty(ref isSendBackwardEnabled, value);
+        }
+
+        public bool IsBringForwardEnabled
+        {
+            get => isBringForwardEnabled;
+            private set => SetProperty(ref isBringForwardEnabled, value);
+        }
+
+        public bool IsBringToFrontEnabled
+        {
+            get => isBringToFrontEnabled;
+            private set => SetProperty(ref isBringToFrontEnabled, value);
+        }
+
+        public string ZOrderStatusText
+        {
+            get => zOrderStatusText;
+            private set => SetProperty(ref zOrderStatusText, value ?? string.Empty);
+        }
+
+        public bool IsRemoveUnderlyingPreviewEnabled
+        {
+            get => isRemoveUnderlyingPreviewEnabled;
+            private set => SetProperty(ref isRemoveUnderlyingPreviewEnabled, value);
+        }
+
+        public bool IsRemoveUnderlyingPreviewPending
+        {
+            get => isRemoveUnderlyingPreviewPending;
+            private set => SetProperty(ref isRemoveUnderlyingPreviewPending, value);
+        }
+
+        public string RemoveUnderlyingStatusText
+        {
+            get => removeUnderlyingStatusText;
+            private set => SetProperty(ref removeUnderlyingStatusText, value ?? string.Empty);
+        }
+
+        public bool IsObjectSessionStateEnabled
+        {
+            get => isObjectSessionStateEnabled;
+            private set => SetProperty(ref isObjectSessionStateEnabled, value);
+        }
+
+        public bool IsSelectedObjectHidden
+        {
+            get => isSelectedObjectHidden;
+            private set => SetProperty(ref isSelectedObjectHidden, value);
+        }
+
+        public bool IsSelectedObjectLocked
+        {
+            get => isSelectedObjectLocked;
+            private set => SetProperty(ref isSelectedObjectLocked, value);
+        }
+
+        public bool IsSelectedObjectPinned
+        {
+            get => isSelectedObjectPinned;
+            private set => SetProperty(ref isSelectedObjectPinned, value);
+        }
+
+        public string ObjectSessionStateStatusText
+        {
+            get => objectSessionStateStatusText;
+            private set => SetProperty(ref objectSessionStateStatusText, value ?? string.Empty);
+        }
+
+        public bool IsSegmentContextVisible
+        {
+            get => isSegmentContextVisible;
+            private set => SetProperty(ref isSegmentContextVisible, value);
+        }
+
+        public bool IsSegmentAdvancedEditorOpen
+        {
+            get => isSegmentAdvancedEditorOpen;
+            set => SetProperty(ref isSegmentAdvancedEditorOpen, value);
+        }
+
         public string QualityReviewStatusText
         {
             get => qualityReviewStatusText;
@@ -379,7 +652,23 @@ namespace MvcVisionSystem
             Action cancelSplit = null,
             Action beginAddHole = null,
             Action beginRemoveHole = null,
-            Action cancelHoleEdit = null)
+            Action cancelHoleEdit = null,
+            Action beginInsertVertex = null,
+            Action beginDeleteVertex = null,
+            Action cancelVertexEdit = null,
+            Action beginIntelligentScissors = null,
+            Action applyIntelligentScissors = null,
+            Action cancelIntelligentScissors = null,
+            Action sendToBack = null,
+            Action sendBackward = null,
+            Action bringForward = null,
+            Action bringToFront = null,
+            Action previewRemoveUnderlying = null,
+            Action applyRemoveUnderlying = null,
+            Action cancelRemoveUnderlying = null,
+            Action toggleObjectHidden = null,
+            Action toggleObjectLocked = null,
+            Action toggleObjectPinned = null)
         {
             // The review panel exposes commands; the shell injects workflow actions without owning the view events.
             DeleteObjectCommand = new RelayCommand(deleteObject ?? NoOpCommand);
@@ -402,11 +691,31 @@ namespace MvcVisionSystem
             BeginAddHoleCommand = new RelayCommand(beginAddHole ?? NoOpCommand);
             BeginRemoveHoleCommand = new RelayCommand(beginRemoveHole ?? NoOpCommand);
             CancelHoleEditCommand = new RelayCommand(cancelHoleEdit ?? NoOpCommand);
+            BeginInsertVertexCommand = new RelayCommand(beginInsertVertex ?? NoOpCommand);
+            BeginDeleteVertexCommand = new RelayCommand(beginDeleteVertex ?? NoOpCommand);
+            CancelVertexEditCommand = new RelayCommand(cancelVertexEdit ?? NoOpCommand);
+            BeginIntelligentScissorsCommand = new RelayCommand(beginIntelligentScissors ?? NoOpCommand);
+            ApplyIntelligentScissorsCommand = new RelayCommand(applyIntelligentScissors ?? NoOpCommand);
+            CancelIntelligentScissorsCommand = new RelayCommand(cancelIntelligentScissors ?? NoOpCommand);
+            SendToBackCommand = new RelayCommand(sendToBack ?? NoOpCommand);
+            SendBackwardCommand = new RelayCommand(sendBackward ?? NoOpCommand);
+            BringForwardCommand = new RelayCommand(bringForward ?? NoOpCommand);
+            BringToFrontCommand = new RelayCommand(bringToFront ?? NoOpCommand);
+            PreviewRemoveUnderlyingCommand = new RelayCommand(previewRemoveUnderlying ?? NoOpCommand);
+            ApplyRemoveUnderlyingCommand = new RelayCommand(applyRemoveUnderlying ?? NoOpCommand);
+            CancelRemoveUnderlyingCommand = new RelayCommand(cancelRemoveUnderlying ?? NoOpCommand);
+            ToggleObjectHiddenCommand = new RelayCommand(toggleObjectHidden ?? NoOpCommand);
+            ToggleObjectLockedCommand = new RelayCommand(toggleObjectLocked ?? NoOpCommand);
+            ToggleObjectPinnedCommand = new RelayCommand(toggleObjectPinned ?? NoOpCommand);
         }
 
         public void SetSplitPending(WpfSegmentationSplitOrientation? orientation)
         {
             IsSplitPending = orientation.HasValue;
+            if (orientation.HasValue)
+            {
+                IsSegmentAdvancedEditorOpen = true;
+            }
             SplitStatusText = orientation switch
             {
                 WpfSegmentationSplitOrientation.Vertical
@@ -421,6 +730,10 @@ namespace MvcVisionSystem
         public void SetHoleEditPending(WpfSegmentationHoleEditMode? mode)
         {
             IsHoleEditPending = mode.HasValue;
+            if (mode.HasValue)
+            {
+                IsSegmentAdvancedEditorOpen = true;
+            }
             HoleEditStatusText = mode switch
             {
                 WpfSegmentationHoleEditMode.Add
@@ -429,6 +742,53 @@ namespace MvcVisionSystem
                     => "\uCC44\uC6B8 \uB0B4\uBD80 \uAD6C\uBA4D\uC744 \uCE94\uBC84\uC2A4\uC5D0\uC11C \uD074\uB9AD\uD558\uC138\uC694.",
                 _ => "\uB0B4\uBD80 \uAD6C\uBA4D\uC744 \uB2E4\uAC01\uD615\uC73C\uB85C \uCD94\uAC00\uD558\uAC70\uB098 \uD074\uB9AD\uD574 \uCC44\uC6C1\uB2C8\uB2E4."
             };
+            RefreshActionState();
+        }
+
+        public void SetVertexEditPending(WpfPolygonVertexEditMode? mode)
+        {
+            IsVertexEditPending = mode.HasValue;
+            if (mode.HasValue)
+            {
+                IsSegmentAdvancedEditorOpen = true;
+            }
+
+            VertexEditStatusText = mode switch
+            {
+                WpfPolygonVertexEditMode.Insert
+                    => "\uD3F4\uB9AC\uACE4 \uBAA8\uC11C\uB9AC \uADFC\uCC98\uB97C \uD074\uB9AD\uD558\uC138\uC694. \uC6B0\uD074\uB9AD\uC740 \uCDE8\uC18C\uC785\uB2C8\uB2E4.",
+                WpfPolygonVertexEditMode.Delete
+                    => "\uC0AD\uC81C\uD560 \uD3F4\uB9AC\uACE4 \uC815\uC810 \uADFC\uCC98\uB97C \uD074\uB9AD\uD558\uC138\uC694. \uC6B0\uD074\uB9AD\uC740 \uCDE8\uC18C\uC785\uB2C8\uB2E4.",
+                _ => "\uD3F4\uB9AC\uACE4 \uBAA8\uC11C\uB9AC\uC5D0 \uC815\uC810\uC744 \uCD94\uAC00\uD558\uAC70\uB098 \uAE30\uC874 \uC815\uC810\uC744 \uC0AD\uC81C\uD569\uB2C8\uB2E4."
+            };
+            RefreshActionState();
+        }
+
+        public void SetIntelligentScissorsState(bool pending, bool hasPreview, string statusText = "")
+        {
+            IsIntelligentScissorsPending = pending;
+            HasIntelligentScissorsPreview = pending && hasPreview;
+            if (pending)
+            {
+                IsSegmentAdvancedEditorOpen = true;
+            }
+
+            IntelligentScissorsStatusText = !string.IsNullOrWhiteSpace(statusText)
+                ? statusText.Trim()
+                : "\uD3F4\uB9AC\uACE4 \uBAA8\uC11C\uB9AC\uB97C \uC120\uD0DD\uD574 \uC774\uBBF8\uC9C0 \uACBD\uACC4 \uACBD\uB85C\uB97C \uBBF8\uB9AC\uBCF4\uAE30\uD569\uB2C8\uB2E4.";
+            RefreshActionState();
+        }
+
+        public void SetRemoveUnderlyingPreview(bool pending, string statusText = "")
+        {
+            IsRemoveUnderlyingPreviewPending = pending;
+            if (pending)
+            {
+                IsSegmentAdvancedEditorOpen = true;
+            }
+            RemoveUnderlyingStatusText = pending && !string.IsNullOrWhiteSpace(statusText)
+                ? statusText.Trim()
+                : "\uC704\uCABD \uAC1D\uCCB4\uC640 \uACB9\uCE58\uB294 \uB4A4\uCABD geometry\uB97C \uBD84\uC11D\uD55C \uD6C4 \uD655\uC778\uD574 \uC81C\uAC70\uD569\uB2C8\uB2E4.";
             RefreshActionState();
         }
 
@@ -481,9 +841,24 @@ namespace MvcVisionSystem
             RefreshActionState();
         }
 
+        public void RefreshSelectedObjectSessionState()
+        {
+            bool supported = SelectedObject?.SupportsSessionState == true;
+            IsObjectSessionStateEnabled = supported;
+            IsSelectedObjectHidden = supported && SelectedObject.IsHidden;
+            IsSelectedObjectLocked = supported && SelectedObject.IsLocked;
+            IsSelectedObjectPinned = supported && SelectedObject.IsPinned;
+            ObjectSessionStateStatusText = !supported
+                ? "\uC218\uB3D9 \uBC15\uC2A4 \uB610\uB294 \uC138\uADF8\uBA3C\uD2B8\uB97C \uC120\uD0DD\uD558\uC138\uC694."
+                : SelectedObject.ObjectSessionStateText;
+        }
+
         public IReadOnlyList<int> GetMergeSelectedManualSegmentIndices()
             => Objects
-                .Where(item => item?.IsManualSegment == true && item.IsMergeSelected)
+                .Where(item => item?.IsManualSegment == true
+                    && item.IsMergeSelected
+                    && !item.IsHidden
+                    && !item.IsLocked)
                 .Select(item => item.SourceIndex)
                 .Distinct()
                 .OrderBy(index => index)
@@ -641,14 +1016,91 @@ namespace MvcVisionSystem
         public void RefreshActionState()
         {
             bool hasSelectedObject = SelectedObject?.IsEnabled == true;
-            IsDeleteEnabled = hasSelectedObject;
-            IsApplyClassEnabled = hasSelectedObject && !string.IsNullOrWhiteSpace(SelectedClassName);
-            IsSplitEnabled = SelectedObject?.IsManualSegment == true && !IsSplitPending && !IsHoleEditPending;
-            IsHoleEditEnabled = SelectedObject?.IsManualSegment == true && !IsSplitPending && !IsHoleEditPending;
-            int mergeSelectionCount = Objects.Count(item => item?.IsManualSegment == true && item.IsMergeSelected);
-            IsMergeSelectedSegmentsEnabled = mergeSelectionCount >= 2;
+            bool selectedLocked = SelectedObject?.IsLocked == true;
+            bool selectedHidden = SelectedObject?.IsHidden == true;
+            IsSegmentContextVisible = SelectedObject?.IsManualSegment == true;
+            IsPolygonVertexContextVisible = SelectedObject?.IsManualPolygon == true;
+            if (!IsSegmentContextVisible)
+            {
+                IsSegmentAdvancedEditorOpen = false;
+            }
+            IsDeleteEnabled = hasSelectedObject && !selectedLocked;
+            IsApplyClassEnabled = hasSelectedObject
+                && !selectedLocked
+                && !string.IsNullOrWhiteSpace(SelectedClassName);
+            IsSplitEnabled = SelectedObject?.IsManualSegment == true
+                && !selectedLocked
+                && !selectedHidden
+                && !IsSplitPending
+                && !IsHoleEditPending
+                && !IsVertexEditPending
+                && !IsIntelligentScissorsPending
+                && !IsRemoveUnderlyingPreviewPending;
+            IsHoleEditEnabled = SelectedObject?.IsManualSegment == true
+                && !selectedLocked
+                && !selectedHidden
+                && !IsSplitPending
+                && !IsHoleEditPending
+                && !IsVertexEditPending
+                && !IsIntelligentScissorsPending
+                && !IsRemoveUnderlyingPreviewPending;
+            IsVertexEditEnabled = SelectedObject?.IsManualPolygon == true
+                && !selectedLocked
+                && !selectedHidden
+                && !IsSplitPending
+                && !IsHoleEditPending
+                && !IsVertexEditPending
+                && !IsIntelligentScissorsPending
+                && !IsRemoveUnderlyingPreviewPending;
+            IsIntelligentScissorsEnabled = SelectedObject?.IsManualPolygon == true
+                && !selectedLocked
+                && !selectedHidden
+                && !IsSplitPending
+                && !IsHoleEditPending
+                && !IsVertexEditPending
+                && !IsIntelligentScissorsPending
+                && !IsRemoveUnderlyingPreviewPending;
+            int manualSegmentCount = Objects.Count(item => item?.IsManualSegment == true);
+            int selectedSegmentIndex = SelectedObject?.IsManualSegment == true
+                ? SelectedObject.SourceIndex
+                : -1;
+            bool canChangeZOrder = selectedSegmentIndex >= 0
+                && selectedSegmentIndex < manualSegmentCount
+                && !selectedLocked
+                && !selectedHidden
+                && !IsSplitPending
+                && !IsHoleEditPending
+                && !IsVertexEditPending
+                && !IsIntelligentScissorsPending
+                && !IsRemoveUnderlyingPreviewPending;
+            IsSendToBackEnabled = canChangeZOrder && selectedSegmentIndex > 0;
+            IsSendBackwardEnabled = canChangeZOrder && selectedSegmentIndex > 0;
+            IsBringForwardEnabled = canChangeZOrder && selectedSegmentIndex < manualSegmentCount - 1;
+            IsBringToFrontEnabled = canChangeZOrder && selectedSegmentIndex < manualSegmentCount - 1;
+            ZOrderStatusText = canChangeZOrder
+                ? FormattableString.Invariant(
+                    $"\uD45C\uC2DC \uC21C\uC11C {selectedSegmentIndex + 1}/{manualSegmentCount} \u00B7 \uC22B\uC790\uAC00 \uD074\uC218\uB85D \uC55E")
+                : "\uC120\uD0DD\uD55C \uC138\uADF8\uBA3C\uD2B8\uC758 \uC55E\uB4A4 \uD45C\uC2DC \uC21C\uC11C\uB97C \uBCC0\uACBD\uD569\uB2C8\uB2E4.";
+            IsRemoveUnderlyingPreviewEnabled = selectedSegmentIndex >= 0
+                && manualSegmentCount >= 2
+                && !selectedLocked
+                && !selectedHidden
+                && !IsSplitPending
+                && !IsHoleEditPending
+                && !IsVertexEditPending
+                && !IsIntelligentScissorsPending
+                && !IsRemoveUnderlyingPreviewPending;
+            int mergeSelectionCount = Objects.Count(item => item?.IsManualSegment == true
+                && item.IsMergeSelected
+                && !item.IsHidden
+                && !item.IsLocked);
+            IsMergeSelectedSegmentsEnabled = mergeSelectionCount >= 2
+                && !IsVertexEditPending
+                && !IsIntelligentScissorsPending
+                && !IsRemoveUnderlyingPreviewPending;
             MergeSelectionText = FormattableString.Invariant(
                 $"\uBCD1\uD569 \uC120\uD0DD {mergeSelectionCount}\uAC1C \u00B7 \uAC19\uC740 \uD074\uB798\uC2A4 2\uAC1C \uC774\uC0C1");
+            RefreshSelectedObjectSessionState();
             RefreshSelectedObjectTaskText();
         }
 
@@ -728,8 +1180,20 @@ namespace MvcVisionSystem
     public sealed class WpfObjectReviewListItem : WpfObservableViewModel
     {
         private bool isMergeSelected;
+        private bool isHidden;
+        private bool isLocked;
+        private bool isPinned;
+        private string objectSessionStateText = "\uC138\uC158 \uC0C1\uD0DC \uC5C6\uC74C";
+        private string stateBadgeText = string.Empty;
 
-        public WpfObjectReviewListItem(string displayText, string toolTip, string sourceKey, int sourceIndex, object payload, bool isEnabled = true)
+        public WpfObjectReviewListItem(
+            string displayText,
+            string toolTip,
+            string sourceKey,
+            int sourceIndex,
+            object payload,
+            bool isEnabled = true,
+            bool isManualPolygon = false)
         {
             DisplayText = displayText ?? string.Empty;
             ToolTip = toolTip ?? string.Empty;
@@ -737,6 +1201,7 @@ namespace MvcVisionSystem
             SourceIndex = sourceIndex;
             Payload = payload;
             IsEnabled = isEnabled;
+            IsManualPolygon = isManualPolygon;
         }
 
         public string DisplayText { get; }
@@ -756,10 +1221,68 @@ namespace MvcVisionSystem
         public bool IsManualSegment => IsEnabled
             && string.Equals(SourceKey, WpfObjectReviewSource.ManualSegment.ToString(), StringComparison.OrdinalIgnoreCase);
 
+        public bool IsManualPolygon { get; }
+
+        public bool SupportsSessionState => IsEnabled
+            && (string.Equals(SourceKey, WpfObjectReviewSource.ManualRoi.ToString(), StringComparison.OrdinalIgnoreCase)
+                || string.Equals(SourceKey, WpfObjectReviewSource.ManualSegment.ToString(), StringComparison.OrdinalIgnoreCase));
+
+        public bool IsHidden
+        {
+            get => isHidden;
+            private set => SetProperty(ref isHidden, value);
+        }
+
+        public bool IsLocked
+        {
+            get => isLocked;
+            private set => SetProperty(ref isLocked, value);
+        }
+
+        public bool IsPinned
+        {
+            get => isPinned;
+            private set => SetProperty(ref isPinned, value);
+        }
+
+        public string ObjectSessionStateText
+        {
+            get => objectSessionStateText;
+            private set => SetProperty(ref objectSessionStateText, value ?? string.Empty);
+        }
+
+        public string StateBadgeText
+        {
+            get => stateBadgeText;
+            private set => SetProperty(ref stateBadgeText, value ?? string.Empty);
+        }
+
+        public double ContentOpacity => IsHidden ? 0.5D : IsLocked ? 0.72D : 1D;
+
+        public bool CanMergeSelect => IsManualSegment && !IsHidden && !IsLocked;
+
         public bool IsMergeSelected
         {
             get => isMergeSelected;
             set => SetProperty(ref isMergeSelected, value);
+        }
+
+        public void ApplySessionState(WpfObjectSessionState state)
+        {
+            state ??= WpfObjectSessionState.Default;
+            IsHidden = state.IsHidden;
+            IsLocked = state.IsLocked;
+            IsPinned = state.IsPinned;
+            StateBadgeText = state.BadgeText;
+            ObjectSessionStateText = state.IsDefault
+                ? "\uC138\uC158 \uC0C1\uD0DC \uC5C6\uC74C \u00B7 \uC800\uC7A5/\uB0B4\uBCF4\uB0B4\uAE30 \uBE44\uC624\uC5FC"
+                : $"{state.BadgeText} \u00B7 \uD604\uC7AC \uC774\uBBF8\uC9C0 \uC138\uC158\uB9CC";
+            OnPropertyChanged(nameof(ContentOpacity));
+            OnPropertyChanged(nameof(CanMergeSelect));
+            if (!CanMergeSelect)
+            {
+                IsMergeSelected = false;
+            }
         }
 
         public static WpfObjectReviewListItem Empty(string text)

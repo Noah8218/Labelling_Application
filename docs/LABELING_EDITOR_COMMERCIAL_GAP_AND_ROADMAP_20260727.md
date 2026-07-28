@@ -235,22 +235,33 @@ segmentation의 주 생산 도구 목록에 포함되지 않으므로 상용 비
 
 | 평가 축 | 점수 | 가중치 | 현재 판단 |
 | --- | ---: | ---: | --- |
-| 기본 shape와 직접 편집 | `3.0/5` | 15% | 저장 가능한 box/polygon/brush/eraser 기반 |
+| 기본 shape와 직접 편집 | `3.5/5` | 15% | 저장 가능한 box/polygon/brush/eraser와 선택 폴리곤 정점 추가·삭제 |
 | 반복·고처리량 생산성 | `2.8/5` | 15% | P0-A shortcut/repeat/duplicate/help 완료; batch propagation은 제외 |
-| mask/geometry 구조 편집 | `3.0/5` | 20% | P1-A/P1-B 계약과 merge/join, axis-aligned split/slice, enclosed hole add/fill 완료; z-order 남음 |
+| mask/geometry 구조 편집 | `3.8/5` | 20% | P1-A/P1-B 계약과 merge/join, axis-aligned split/slice, enclosed hole add/fill, saved-object z-order, remove-underlying 완료 |
 | 대화형 AI correction | `3.5/5` | 20% | P0-B box+positive/negative correction, rerun-replace, 상세도, 다음 객체 완료 |
-| 객체 상태·metadata | `1.0/5` | 10% | class/delete 외 상태가 매우 제한적 |
-| 이미지·overlay 가시성 | `1.5/5` | 10% | opacity 외 display aid 부족 |
+| 객체 상태·metadata | `2.0/5` | 10% | P2 session-only hide/full-lock/movement-pin, compact state icons, contextual segment options 완료; 영속 tag/group/occlusion은 미구현 |
+| 이미지·overlay 가시성 | `3.5/5` | 10% | compact display-only brightness/contrast/gamma/invert/equalization과 overlay 좌표 불변 검증 |
 | 저장·검토 안정성 | `4.0/5` | 10% | Recipe/no-autosave/canonical save/provenance |
-| 가중 합계 | **`2.8/5`** | 100% | P0-A/P0-B와 P1-C merge/join, split/slice, hole add/fill 완료 후 상용 영상 대비 구조적 워크플로 추정 |
+| 가중 합계 | **`3.4/5`** | 100% | contextual Object Review, precision geometry, compact display-only aids를 검증한 구조적 워크플로 추정 |
 
 이 점수는 제품 전체 완성도나 모델 정확도가 아닙니다. 현재 제품 전체의
 집중형 로컬 워크플로 평가는 `4.0/5`로 유지하되, 라벨링 편집기 깊이는
 영상 재평가 당시 기준선 `2.1/5`에서 P0-A/P0-B 완료 후 `2.5/5`, 첫
 P1-C merge/join 완료 후 `2.6/5`, axis-aligned split/slice 완료 후
-`2.7/5`, enclosed hole add/fill 완료 후 `2.8/5`로 관리합니다. 남은 P1 mask structure,
-P2 object state, P3 display aid가
-있으므로 CVAT/V7 parity로 해석하지 않습니다.
+`2.7/5`, enclosed hole add/fill 완료 후 `2.8/5`, saved-object z-order 완료
+후 `2.9/5`, remove-underlying 완료 후 `3.0/5`, P2 session-only
+hide/lock/pin 1차 완료 후 `3.1/5`로 관리했으나, 상용 영상을 다시 확인해
+pin을 금색 북마크로 해석한 오류와 모든 구조 명령 상시 노출 문제를 발견했습니다.
+movement-pin과 맥락 UI의 focused/protected/current-build 1920/1366 검증을
+완료한 뒤 polygon vertex insert/delete의 focused/protected/current-build
+1920/1366 검증도 통과해 현재는 `3.2/5`로 관리합니다. 남은 P2 edge-aware
+precision geometry도 독립 정확도/지연시간 fixture, 명시적 preview/apply/
+cancel, protected/canonical 회귀와 current-build 1920/1366 검증을 통과해
+`3.3/5`로 관리했습니다. P3 display-only brightness/contrast/gamma/invert/
+equalization도 source/file/history/overlay 불변 계약과 current-build
+1920/1366 검증을 통과해 현재는 `3.4/5`로 관리합니다. persistent metadata,
+video propagation, collaboration이 남아 있으므로 CVAT/V7 parity로
+해석하지 않습니다.
 
 ## 6. 개발 계약
 
@@ -260,10 +271,10 @@ P2 object state, P3 display aid가
 | --- | --- | --- | --- |
 | P0-A command/productivity | **Complete** | 단축키·반복·복제·도움말 구현, focused 회귀, current-source 및 actual-EXE 1920x1080 증거 통과 | 상용 parity는 아니며 이후 회귀 시에만 재개 |
 | P0-B interactive Smart Mask | **Complete** | 실제 box+positive+negative worker, session/stale/replace/no-autosave 계약, actual-EXE confirm/next-instance 통과 | field validation은 `Not evaluated`; 이후 회귀 시에만 재개 |
-| P1 mask structure | **진행 중 (P1-A/P1-B 및 P1-C merge/join·split/slice·hole 완료)** | preservation/loss, canonical v3 identity, merge, axis-aligned split, enclosed hole add/fill, undo/redo와 save/load/re-save 통과 | P1-C z-order, remove-underlying |
-| P2 object state/precision | 대기 | object list·class 변경·delete 존재 | 상태 의미 계약과 정밀 geometry 편집 |
-| P3 display aids | 대기 | 기본 canvas 표시 존재 | source/training 불변 display-only 처리 |
-| P4 visual QA | 순서 이동 후 대기 | Dataset Health 숫자/표 기반 분석 존재 | dataset-level 시각 문제 탐색과 editor 이동 |
+| P1 mask structure | **Complete** | preservation/loss, canonical v3 identity, merge, axis-aligned split, enclosed hole add/fill, explicit saved-object stack order, two-step remove-underlying, undo/redo와 save/load/re-save 통과 | polygon/raster exact visual interleaving은 renderer 후속 |
+| P2 object state/precision | **Complete** | session-only hide/full-lock/movement-pin, contextual options, zoom-aware polygon vertex insert/delete, bounded edge-aware intelligent scissors, protected/canonical 회귀와 1920/1366 증거 완료 | 임의 자연영상/field 정확도와 CVAT/V7 parity는 주장하지 않으며 회귀 시에만 재개 |
+| P3 display aids | **Complete** | compact `보기 보정`, source/file/history/overlay 불변 test, 1920/1366 current-build 증거 | production-camera usefulness와 CVAT/V7 parity는 주장하지 않음 |
+| P4 visual QA | **다음** | Dataset Health 숫자/표 기반 분석 존재 | read-only dataset-level 시각 문제 탐색과 editor 이동 |
 | P5 interchange/batch preflight | 대기 | 기존 import/export와 batch detection 서비스 존재 | dry-run/Apply 및 명시적 실행 정책 |
 
 P0-A 개발 시작 기준:
@@ -483,7 +494,11 @@ Status update (2026-07-27):
 - P1-C axis-aligned split/slice is complete. One selected polygon/raster source
   is cut by a one-pixel row/column only when 2+ components result, with new
   identities, `Split` provenance, one-step undo/redo, and v3 re-save evidence.
-- Hole editing, z-order, and remove-underlying remain separate later commands.
+- Hole editing, saved-object z-order, and remove-underlying are complete.
+  Remove-underlying uses a read-only impact analysis, orange affected-object
+  preview, explicit confirmation/cancel, stale-plan rejection, one-step
+  history, and canonical v3 replay. Exact polygon/raster overlay interleaving
+  remains a renderer-level limitation and is not claimed.
 - Evidence:
   `docs\SEGMENTATION_INTERCHANGE_PRESERVATION_CONTRACT_20260727.md` and
   `docs\SEGMENTATION_MERGE_P1C_20260727.md`, and
@@ -517,24 +532,32 @@ Reasoning effort: `high`
 
 ### P2. Object State and Precision Geometry
 
-- hide/lock/pin은 label data가 아닌 presentation/session state로 시작
+- hide/full-lock/movement-pin은 label data가 아닌 presentation/session state
+- hidden은 canvas/structural edit에서 제외하고 row 재선택은 유지
+- locked는 class/delete/geometry/brush/eraser/structural direct mutation까지 차단
+- movement pin은 whole-object 이동만 차단하고 ROI resize, polygon vertex edit,
+  copy/delete/class/structural command는 허용함
+- gold review focus와 `PINNED` overlay label은 잘못된 해석이므로 사용하지 않음
+- 상태 아이콘은 compact selected-object property로 유지하고, merge/split/hole/
+  z-order/remove-underlying은 manual segment 선택 때만 접힌 options로 노출
+- image/queue 전환에서 reset하고 history/dirty state에는 포함하지 않음
 - occluded/tag/group은 Recipe/export 소비 계약이 있을 때만 영속화
 - 4점/extreme-point box
-- polygon vertex insert/delete
-- edge-aware intelligent scissors는 독립 성능/정확성 slice
+- polygon vertex insert/delete — **Complete; zoom-aware hit, invalid-result rejection, one-step history, v3 replay**
+- edge-aware intelligent scissors — **Complete; deterministic 90%/2.5px·250ms fixture, explicit preview/apply/cancel, one-step history, v3 replay**
 
 Recommended model: `gpt-5.6-sol`
 Reasoning effort: `high`
 
 ### P3. Display-Only Image and Overlay Aids
 
-- brightness
-- contrast
-- gamma
-- invert
-- histogram/equalization
-- overlay alignment 유지
-- source pixel, dataset hash, training input 불변
+- **Complete**
+- compact canvas-header `보기 보정` popup
+- brightness, contrast, gamma, invert, histogram equalization
+- 120ms slider input coalescing and queue-navigation setting retention
+- canonical source/file hash, dirty/history, overlay image-coordinate invariants
+- current-build 1920x1080 and 1366x768 visual evidence
+- evidence: `docs\DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md`
 
 Recommended model: `gpt-5.6-terra`
 Reasoning effort: `medium`
@@ -588,10 +611,10 @@ Reasoning effort: `medium`
 
 1. P0-A command/productivity foundation — **Complete**
 2. P0-B interactive Smart Mask — **Complete**
-3. P1 mask structure contract와 editor — **진행 중; merge/join·split/slice·hole 완료, z-order 다음**
-4. P2 object state/precision
-5. P3 display-only aids
-6. P4 visual QA
+3. P1 mask structure contract와 editor — **Complete; merge/join·split/slice·hole·saved-object z-order·remove-underlying 완료**
+4. P2 object state/precision — **Complete; contextual UI, movement-pin, polygon vertex insert/delete, bounded edge-aware scissors 완료**
+5. P3 display-only aids — **Complete**
+6. P4 visual QA — **Next**
 7. P5 interchange/batch preflight
 
 한 단계가 acceptance criteria와 현재 EXE 증거를 통과하기 전에 다음
@@ -611,7 +634,12 @@ Acceptance criteria:
 - box, mask, AI, object state, shortcut 격차가 각각 기록됨: pass
 - 라벨링 편집기 영상 기준선 `2.1/5`, P0-A/P0-B 완료 후 `2.5/5`, 첫
   P1-C merge/join 완료 후 `2.6/5`, split/slice 완료 후 `2.7/5`
-  및 hole add/fill 완료 후 `2.8/5` 근거가 계산됨: pass
+  및 hole add/fill 완료 후 `2.8/5`, saved-object z-order 완료 후 `2.9/5`,
+  remove-underlying 완료 후 `3.0/5`, P2 session-only hide/lock/pin 1차 완료 후
+  `3.1/5`였고, 상용 영상 기반 의미/UI 정정 동안 `3.0/5`로 환원한 뒤
+  protected 회귀와 1920/1366 증거 통과 후 `3.1/5`로 복원하고 polygon
+  vertex insert/delete 완료 후 `3.2/5`, bounded edge-aware scissors 완료 후
+  `3.3/5`, P3 display-only aids 완료 후 `3.4/5`로 갱신: pass
 - P0-A/P0-B의 owner, included/excluded scope, state safety, 완료 기준이
   구현 가능한 수준으로 정의됨: pass
 - protected behavior와 out-of-scope가 명시됨: pass
@@ -630,9 +658,13 @@ Evidence:
 - `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`
 - 이 문서
 
-Boundary / next dependency: P0-A/P0-B와 P1-C merge/join·split/slice·hole은
-각 acceptance criteria와 protected regression을 통과했습니다. 다음
-구현은 P1-C z-order이며, remove-underlying은
-영향 객체 preview/warning 계약이 먼저 필요합니다. 현재
+Boundary / next dependency: P0-A/P0-B와 P1-C merge/join·split/slice·hole·saved-object z-order·remove-underlying,
+P2 session-only hide/full-lock/movement-pin의 상용 영상 기반 의미/UI
+정정, polygon vertex insert/delete, bounded edge-aware intelligent scissors와
+P3 display-only aids는 protected regression과 1920/1366 current-build
+증거를 통과했습니다. 다음 구현은 P4 Dataset Health visual label QA입니다.
+saved-object z-order는 canonical 전역 순서와
+polygon/raster 각 overlay family 내부 표시 순서를 보장하지만 두
+family의 정확한 교차 합성 순서까지 보장하지 않습니다. 현재
 완료는 CVAT/V7 parity, field accuracy, video propagation, cloud/team
 platform을 의미하지 않습니다.

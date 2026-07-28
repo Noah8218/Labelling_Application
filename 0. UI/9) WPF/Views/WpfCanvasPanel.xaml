@@ -443,6 +443,116 @@
                                 <TextBlock Text="이동" VerticalAlignment="Center" />
                             </StackPanel>
                         </ui:Button>
+                        <ui:Button x:Name="DisplayAdjustmentCanvasButton"
+                                   Style="{StaticResource CanvasCommandButtonStyle}"
+                                   ToolTip="밝기·대비·감마 등을 화면에만 적용합니다. 원본, 저장, 학습 이미지는 바뀌지 않습니다."
+                                   AutomationProperties.AutomationId="DisplayAdjustmentCanvasButton"
+                                   IsEnabled="{Binding IsDisplayAdjustmentEnabled}"
+                                   Command="{Binding ToggleDisplayAdjustmentCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial Kind="Tune" Style="{StaticResource CanvasCommandIconStyle}" />
+                                <TextBlock Text="보기 보정" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ui:Button>
+                        <Popup x:Name="DisplayAdjustmentPopup"
+                               PlacementTarget="{Binding ElementName=DisplayAdjustmentCanvasButton}"
+                               Placement="Bottom"
+                               HorizontalOffset="-220"
+                               VerticalOffset="4"
+                               AllowsTransparency="True"
+                               StaysOpen="False"
+                               IsOpen="{Binding IsDisplayAdjustmentOpen, Mode=TwoWay}">
+                            <Border Width="330"
+                                    Padding="14"
+                                    CornerRadius="6"
+                                    Background="{DynamicResource PanelBrush}"
+                                    BorderBrush="{DynamicResource BorderBrushDark}"
+                                    BorderThickness="1">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <ui:Button DockPanel.Dock="Right"
+                                                   Style="{StaticResource CanvasCommandButtonStyle}"
+                                                   AutomationProperties.AutomationId="ResetDisplayAdjustmentButton"
+                                                   Command="{Binding ResetDisplayAdjustmentCommand}">
+                                            <TextBlock Text="초기화" />
+                                        </ui:Button>
+                                        <StackPanel>
+                                            <TextBlock Text="보기 보정"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                       FontWeight="SemiBold"
+                                                       FontSize="13" />
+                                            <TextBlock Text="표시 전용 · 원본/저장/학습 불변"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       FontSize="10"
+                                                       Margin="0,2,0,0" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="42" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="밝기" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" />
+                                        <Slider Grid.Column="1"
+                                                Minimum="-100"
+                                                Maximum="100"
+                                                TickFrequency="5"
+                                                Value="{Binding DisplayBrightness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding DisplayBrightnessText}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="42" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="대비" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" />
+                                        <Slider Grid.Column="1"
+                                                Minimum="50"
+                                                Maximum="200"
+                                                TickFrequency="5"
+                                                Value="{Binding DisplayContrastPercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding DisplayContrastText}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="42" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="감마" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" />
+                                        <Slider Grid.Column="1"
+                                                Minimum="0.2"
+                                                Maximum="3"
+                                                TickFrequency="0.1"
+                                                Value="{Binding DisplayGamma, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding DisplayGammaText}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                    <WrapPanel>
+                                        <CheckBox Content="색상 반전"
+                                                  Margin="0,0,18,0"
+                                                  Foreground="{DynamicResource PrimaryTextBrush}"
+                                                  IsChecked="{Binding IsDisplayInverted, Mode=TwoWay}" />
+                                        <CheckBox Content="히스토그램 평활화"
+                                                  Foreground="{DynamicResource PrimaryTextBrush}"
+                                                  IsChecked="{Binding IsDisplayHistogramEqualized, Mode=TwoWay}" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
                         <ui:Button x:Name="FocusCandidateCanvasButton"
                                    Style="{StaticResource CanvasCommandButtonStyle}"
                                    ToolTip="선택한 AI 후보 위치로 이동합니다."

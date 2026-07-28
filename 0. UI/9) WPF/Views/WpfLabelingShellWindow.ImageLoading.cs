@@ -47,6 +47,11 @@ namespace MvcVisionSystem
                 return false;
             }
 
+            displayAdjustmentRefreshTimer.Stop();
+            CancelPendingSegmentationRemoveUnderlying(updateStatus: false);
+            CancelPendingPolygonVertexEdit(updateStatus: false);
+            CancelPendingIntelligentScissors(updateStatus: false);
+            objectSessionStateService.Clear();
             Stopwatch loadStopwatch = Stopwatch.StartNew();
             long stepStartTicks = loadStopwatch.ElapsedTicks;
             bool cacheHit = false;
@@ -111,6 +116,8 @@ namespace MvcVisionSystem
                 manualSegments.Clear();
                 CancelPendingSegmentationSplit(updateStatus: false);
                 CancelPendingSegmentationHoleEdit(updateStatus: false);
+                CancelPendingPolygonVertexEdit(updateStatus: false);
+                CancelPendingIntelligentScissors(updateStatus: false);
                 ClearQueuedMaskStrokeCommits();
                 polygonAnnotationService.Reset();
                 CancelMaskStrokePreviewCommitSwap();
@@ -156,6 +163,10 @@ namespace MvcVisionSystem
                     RefreshImageLoadReviewState(refreshActiveStatus, refreshClassCatalog: true);
                 }
                 reviewRefreshMilliseconds = WpfImageLoadDiagnosticsService.TakeElapsedMilliseconds(loadStopwatch, ref stepStartTicks);
+                if (CanvasPanelViewModel.IsDisplayAdjustmentActive)
+                {
+                    ScheduleDisplayAdjustmentRefresh();
+                }
                 if (!appendLoadLog)
                 {
                     PreloadAdjacentQueueImages(imagePath);
@@ -208,6 +219,11 @@ namespace MvcVisionSystem
 
         private void ClearActiveImageAfterQueueReset()
         {
+            displayAdjustmentRefreshTimer.Stop();
+            CancelPendingSegmentationRemoveUnderlying(updateStatus: false);
+            CancelPendingPolygonVertexEdit(updateStatus: false);
+            CancelPendingIntelligentScissors(updateStatus: false);
+            objectSessionStateService.Clear();
             activeImageBitmap?.Dispose();
             activeImageBitmap = null;
             activeImagePath = string.Empty;
@@ -224,6 +240,8 @@ namespace MvcVisionSystem
             manualSegments.Clear();
             CancelPendingSegmentationSplit(updateStatus: false);
             CancelPendingSegmentationHoleEdit(updateStatus: false);
+            CancelPendingPolygonVertexEdit(updateStatus: false);
+            CancelPendingIntelligentScissors(updateStatus: false);
             ClearQueuedMaskStrokeCommits();
             polygonAnnotationService.Reset();
             CancelMaskStrokePreviewCommitSwap();

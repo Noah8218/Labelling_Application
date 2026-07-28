@@ -17403,6 +17403,7 @@ Acceptance criteria:
 Verification:
 
 - isolated test build: warning 0, error 0;
+- application Debug build: warning 0, error 0;
 - `--segmentation-interchange-contract`: pass;
 - `--segmentation-annotation-storage`: pass;
 - `--coco-segmentation-export`: pass;
@@ -17640,3 +17641,341 @@ workstation maturity remains `4.0/5`. The next bounded P1-C operation is
 z-order. Remove-underlying remains separate and requires an affected-object
 preview/warning before mutation. Recommended model: `gpt-5.6-sol`; reasoning
 effort: `high`.
+
+## 2026-07-28 P1-C Segmentation Saved-Object Z-Order
+
+Status: `Complete`
+
+Scope:
+
+- expose **맨 뒤**, **한 칸 뒤**, **한 칸 앞**, and **맨 앞** for one
+  selected saved polygon or raster-mask object;
+- stable-sort legacy equal-order objects, apply one move, and normalize the
+  global saved-object stack to `0..N-1`;
+- preserve object ID, class, geometry, component data, and selection;
+- reject first/last boundary moves without mutation or history;
+- support one-step undo/redo and multi-class canonical v3
+  save/load/re-save.
+
+Acceptance criteria:
+
+- all four deterministic move plans: pass;
+- boundary no-mutation/no-history behavior: pass;
+- stable identity, class, geometry, and `ZOrder` provenance: pass;
+- one Undo/Redo restores/reapplies the whole stack: pass;
+- shell reload restores canonical order across class grouping: pass;
+- current-source 1920x1080 controls and position guidance without clipping:
+  pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--segmentation-zorder`: pass;
+- hole/split/merge/interchange/storage/history/segmentation/mask-performance
+  regressions: pass;
+- current-source visual smoke:
+  `artifacts\ui\segmentation-zorder-p1c-20260728`;
+- final app build, documentation gate, and `git diff --check`: recorded in the
+  task close-out.
+
+Evidence:
+
+- `0. UI\9) WPF\Services\Annotation\WpfSegmentationZOrderService.cs`;
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.SegmentationZOrderCommands.cs`;
+- `tests\LabelingApplication.Tests\Program.SegmentationZOrder.cs`;
+- `docs\SEGMENTATION_ZORDER_P1C_20260728.md`;
+- `artifacts\ui\segmentation-zorder-p1c-20260728`.
+
+Boundary / next dependency: labeling-editor depth is now `2.9/5`; focused
+workstation maturity remains `4.0/5`. Exact polygon/raster overlay interleaving
+is not included because the current viewer uses separate render passes. The
+next P1-C operation is remove-underlying with an affected-object
+preview/warning, explicit confirmation, unaffected-object identity/order
+preservation, and one-step undo. Recommended model: `gpt-5.6-sol`; reasoning
+effort: `high`.
+
+## 2026-07-28 P1-C Segmentation Remove-Underlying
+
+Status: `Complete`
+
+Scope:
+
+- select one saved polygon or raster-mask object as the top/reference;
+- analyze only lower-stack overlap without mutation;
+- show affected objects, removed pixels, and full removals with orange preview;
+- explicitly Apply or cancel;
+- reject stale analysis after geometry/order/state changes;
+- subtract the selected mask from underlying objects, remove full coverage, and
+  preserve partial survivors as exact raster remainders;
+- preserve selected/front/unaffected objects, one-step Undo/Redo, and canonical
+  v3 save/load/re-save.
+
+Acceptance criteria:
+
+- analysis, cancel, no-overlap, and stale rejection leave geometry/history
+  unchanged: pass;
+- only lower overlapping objects are affected: pass;
+- partial survivor and full removal semantics: pass;
+- ID/class/z-order and `RemoveUnderlying` provenance: pass;
+- selected/front/unaffected preservation: pass;
+- one Undo/Redo per successful Apply: pass;
+- v3 save/load/re-save and orange preview: pass;
+- current-source 1920x1080 before/after evidence: pass.
+
+Verification:
+
+- isolated test build: pass, zero warnings and zero errors;
+- `--segmentation-remove-underlying`: pass;
+- z-order, hole, split, merge, interchange, storage, undo/redo, segmentation
+  object verification, mask drag, Object Review, shell, MVVM, productivity,
+  and MobileSAM box regressions: pass.
+
+Evidence:
+
+- `0. UI\9) WPF\Services\Annotation\WpfSegmentationRemoveUnderlyingService.cs`;
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.SegmentationRemoveUnderlyingCommands.cs`;
+- `tests\LabelingApplication.Tests\Program.SegmentationRemoveUnderlying.cs`;
+- `docs\SEGMENTATION_REMOVE_UNDERLYING_P1C_20260728.md`;
+- `artifacts\ui\segmentation-remove-underlying-p1c-20260728`.
+
+Boundary / next dependency: P1-C is complete. Labeling-editor depth is now
+`3.0/5`; focused workstation maturity remains `4.0/5`. Exact polygon/raster
+cross-pass interleaving remains outside this slice. The next priority is P2
+session-only hide/lock/pin, followed by an independent polygon vertex-editing
+slice. Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
+
+## 2026-07-28 P2 Object State Contextual Correction
+
+Status: `Complete`
+
+Scope:
+
+- add compact independent `숨김`, `잠금`, and `이동 고정` controls for saved manual ROI and
+  manual segmentation rows;
+- keep hidden rows selectable while removing their canvas overlays and
+  structural/canvas editing;
+- block locked class/delete/duplicate, ROI/polygon geometry, brush/eraser,
+  merge/split/hole/z-order/remove-underlying mutations through enablement and
+  direct guards;
+- movement pin blocks whole-object translation while preserving ROI resize,
+  polygon vertex edit, copy, delete, class, and structural commands;
+- remove the invalid gold bookmark/`PINNED` overlay interpretation;
+- move merge/split/hole/z-order/remove-underlying into one collapsed
+  segment-only contextual editor, with cancel/status shown only while pending;
+- clear all state on image/queue change and exclude it from history, dirty
+  state, canonical labels, exports, and training input.
+
+Acceptance criteria:
+
+- supported row controls and independent state presentation: pass;
+- hidden overlay removal, row retention, and show restoration: pass;
+- locked direct and canvas mutation rejection, including ROI and raster-mask
+  paths: pass;
+- pinned polygon whole-move rejection and vertex-edit allowance: pass;
+- pinned ROI move lock without full control lock: pass;
+- contextual segment-only collapsed editor: pass in focused test;
+- image-session lifetime and stable segment identity: pass;
+- no history, dirty-state, save, export, or training semantic change: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- application solution Debug build: warning 0, error 0;
+- `--object-session-state`: pass;
+- remove-underlying, z-order, hole, split, merge, interchange, storage,
+  undo/redo, segmentation-object, ROI-object, mask-drag, Object Review, shell,
+  MVVM, productivity, and MobileSAM regressions: pass;
+- current-build 1920x1080 and 1366x768 before/after captures pass; the 1366
+  baseline had zero visible object rows and the after capture shows all three:
+  `artifacts\ui\object-review-contextual-20260728`.
+
+Evidence:
+
+- `0. UI\9) WPF\Services\ObjectReview\WpfObjectSessionStateService.cs`;
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.ObjectSessionStateCommands.cs`;
+- `tests\LabelingApplication.Tests\Program.ObjectSessionState.cs`;
+- `docs\OBJECT_SESSION_STATE_P2_20260728.md`;
+- `docs\OBJECT_REVIEW_CONTEXTUAL_UI_CORRECTION_20260728.md`;
+- `artifacts\ui\object-review-contextual-20260728`.
+
+Boundary / next dependency: this is presentation/session state, not persistent
+label metadata, collaboration permission, or export meaning. Labeling-editor
+depth is `3.1/5`; focused workstation maturity remains `4.0/5`.
+Polygon vertex insert/delete is the next bounded P2 slice.
+Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
+
+## 2026-07-28 P2 edge-aware intelligent scissors
+
+Status: Complete
+
+Scope:
+
+- Refine one operator-selected edge of one selected saved manual polygon.
+- Keep the command inside the collapsed selected-polygon segment editor.
+- Show a read-only gold path preview before explicit Apply.
+- Preserve no-autosave and one-step Undo/Redo.
+- Exclude whole-object automatic segmentation, video propagation, field
+  accuracy, and cloud/team scope.
+
+Implementation:
+
+- Added `WpfIntelligentScissorsService` in the existing Annotation domain.
+  It owns cropped grayscale conversion, Sobel edge costs, deterministic bounded
+  A* search, simplification, and stale-plan checks.
+- Kept polygon validity and point mutation in
+  `WpfPolygonAnnotationService`; the applied operation is
+  `IntelligentScissors`.
+- Added selected-polygon-only `경계 추종`, `미리보기 적용`, and `취소`
+  commands and status. The preview is an open gold `EDGE PREVIEW` overlay.
+- Planning, failed planning, selection cancellation, and visible cancel do not
+  mutate geometry, history, or disk state.
+- Apply revalidates source reference and points, preserves
+  ObjectId/class/component/z-order, and marks the image dirty without saving.
+- Hidden/full-lock states reject direct command execution. Movement pin remains
+  editable.
+
+Acceptance criteria:
+
+- Deterministic repeated path on the fixed 128x128 curved-edge fixture: pass.
+- At least 90% of simplified path points within 2.5 source pixels: pass.
+- Debug fixture planning at or below 250ms: pass.
+- Uniform/invalid/stale paths reject without mutation: pass.
+- Explicit preview/apply/cancel and selection/right-click cancellation: pass.
+- Exactly one Undo/Redo step on Apply: pass.
+- Canonical v3 identity, bounds, refined geometry, and provenance: pass.
+- Hidden/full-lock protection and movement-pin allowance: pass.
+- Current-build 1920x1080 and 1366x768 contextual UI: pass.
+
+Verification:
+
+- isolated test build:
+  `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\`
+  — warning 0, error 0.
+- current app Debug build:
+  `dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false`
+  — warning 0, error 0.
+- focused and protected gates: `--intelligent-scissors`,
+  `--polygon-vertex`, `--segmentation-merge`, `--segmentation-split`,
+  `--segmentation-hole`, `--segmentation-zorder`,
+  `--segmentation-remove-underlying`, `--object-session-state`,
+  `--segmentation-interchange-contract`, `--wpf-undo-redo-shortcuts`,
+  `--wpf-object-review-panel`, `--wpf-annotation-object-verification`,
+  `--wpf-roi-object-manipulation`, and `--priority-workflow-docs` — pass.
+- `git diff --check` — pass.
+
+Evidence:
+
+- `docs\INTELLIGENT_SCISSORS_P2_20260728.md`
+- `tests\LabelingApplication.Tests\Program.IntelligentScissors.cs`
+- `artifacts\ui\intelligent-scissors-p2-20260728`
+
+Boundary / next dependency:
+
+- This proves a bounded selected-edge correction contract on a deterministic
+  fixture and current visual-smoke image. It does not prove arbitrary
+  natural-image or production-camera accuracy and does not establish CVAT/V7
+  parity.
+- P2 object state/precision is Complete. Next priority is P3 display-only
+  brightness/contrast/gamma/invert and histogram/equalization with source
+  pixels, dataset hash, saved labels, and training inputs unchanged.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
+## 2026-07-28 P3 Display-Only Image Aids
+
+Status: `Complete`
+
+Scope:
+
+- expose brightness, contrast, gamma, invert, and histogram equalization behind
+  one compact canvas-header `보기 보정` popup;
+- create an owned display copy and replace only the base canvas texture;
+- keep the canonical bitmap, disk image, saved/training input, annotation
+  dirty/history state, and overlay image coordinates unchanged;
+- retain screen-session settings across image navigation and provide explicit
+  display reset;
+- keep the annotation tool rail and Recipe persistence unchanged.
+
+Acceptance criteria:
+
+- all five display aids and reset are available in one contextual popup: pass;
+- canonical in-memory bitmap and disk-image SHA-256 remain unchanged: pass;
+- annotation dirty/history and polygon overlay coordinates remain unchanged:
+  pass;
+- low-contrast equalization expands the deterministic fixture: pass;
+- 1920x1080 Debug transformation `333.7ms`, below the 1000ms gate: pass;
+- current-build 1920x1080 and 1366x768 before/after evidence: pass.
+
+Verification:
+
+- focused isolated build: warning 0, error 0;
+- `--image-display-adjustment`: pass;
+- two `--wpf-visual-smoke --open-display-adjustment` screen captures: pass;
+- `git diff --check`: pass, existing line-ending conversion notices only.
+
+Evidence:
+
+- `docs\DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md`;
+- `tests\LabelingApplication.Tests\Program.ImageDisplayAdjustment.cs`;
+- `artifacts\ui\display-aids-p3-20260728`.
+
+Boundary / next dependency:
+
+- This proves display-only safety and current-build layout, not usefulness on
+  production-camera images or CVAT/V7 parity.
+- Labeling-editor depth is `3.4/5`; focused workstation maturity remains
+  `4.0/5`.
+- Next priority is P4 Dataset Health visual label QA: read-only dataset-level
+  issue discovery and explicit editor navigation.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
+## 2026-07-28 P2 Polygon Vertex Insert/Delete
+
+Status: `Complete`
+
+Scope:
+
+- expose insert/delete only for a selected saved manual polygon inside the
+  collapsed segment context;
+- convert an eight-screen-pixel tolerance through current zoom;
+- project insertion onto the deterministic nearest edge and select deletion by
+  the deterministic nearest vertex;
+- reject endpoint/duplicate/three-point/zero-area/self-intersecting results
+  without mutation;
+- preserve object ID, class, component, z-order, cutouts, and selection;
+- create exactly one Undo/Redo step and preserve `VertexInsert`/`VertexDelete`
+  through canonical v3 save/load/re-save;
+- reject hidden/full-lock mutation while retaining movement-pin vertex edit.
+
+Acceptance criteria:
+
+- contextual polygon-only UI and pending-only cancel/status: pass;
+- zoom-aware deterministic hit and invalid-result no-mutation: pass;
+- identity/class/component/z-order and selection preservation: pass;
+- one-step Undo/Redo and canonical v3 replay: pass;
+- session-state protection: pass;
+- current-build 1920x1080 and 1366x768 before/after evidence: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--polygon-vertex`: pass;
+- merge, split, hole, z-order, remove-underlying, object-state, interchange,
+  history, Object Review, ROI and segmentation object verification: pass.
+
+Evidence:
+
+- `docs\POLYGON_VERTEX_EDIT_P2_20260728.md`;
+- `tests\LabelingApplication.Tests\Program.PolygonVertex.cs`;
+- `artifacts\ui\polygon-vertex-p2-20260728`.
+
+Boundary / next dependency: manual vertex editing is complete, not automatic
+edge following. Labeling-editor depth is `3.2/5`; focused workstation maturity
+remains `4.0/5`. The next bounded P2 slice is edge-aware intelligent scissors
+after a latency/accuracy fixture is defined.
+Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.

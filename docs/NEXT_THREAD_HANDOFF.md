@@ -24,7 +24,9 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
 - The labeling-editor structure workflow through P0-A/P0-B, P1-A/P1-B,
   merge/join, and axis-aligned split/slice was committed and pushed as
   `9b2160a feat: advance labeling editor structure workflows` on 2026-07-28.
-  The enclosed hole add/fill closure follows it in current source.
+  Enclosed hole add/fill was committed and pushed as
+  `d669b64 feat: add segmentation hole editing`; saved-object z-order and
+  remove-underlying follow it in current uncommitted source.
 - The structural-refactor sequence is `3351abd` (Core contract ownership),
   `5ed829c` (Model/Yolo ownership), and `889abdf` (Yolo contract ownership and
   final declaration audit). This phase is complete; do not reopen mechanical
@@ -51,11 +53,13 @@ There is no separate C:\AGENTS.md or C:\Git\AGENTS.md in this workstation snapsh
   `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`. A denser V7/CVAT
   labeling review corrected the initial visual-QA-first decision. P0-A
   command/productivity, P0-B interactive Smart Mask, and the first P1-C
-  merge/join, axis-aligned split/slice, and enclosed hole add/fill commands are now complete in the
-  current source. The labeling-only estimate moved from the review
-  baseline `2.1/5` to `2.8/5`;
-  object state, remaining structural mask editing, display
-  aids, video propagation, and collaboration still prevent CVAT/V7 parity.
+  merge/join, axis-aligned split/slice, enclosed hole add/fill, saved-object
+  z-order and remove-underlying are complete. P2 session-only
+  hide/full-lock/movement-pin and contextual Object Review correction are
+  complete, and polygon vertex insert/delete plus bounded edge-aware intelligent
+  scissors are complete. P3 compact display-only image aids are also complete.
+  The labeling-only estimate is `3.4/5`; persistent object metadata, video
+  propagation, and collaboration still prevent CVAT/V7 parity.
   This remains separate from the focused local-workstation estimate of `4.0/5`.
   `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md` is the current
    implementation contract.
@@ -111,12 +115,44 @@ Evidence:
 
 Boundary / next dependency:
 
-- P1-C merge/join, axis-aligned split/slice, and enclosed hole add/fill are
-  complete and raise the labeling-editor depth estimate only to `2.8/5`.
-- P1-C continues with z-order next.
-  Remove-underlying remains a separate command with a required affected-object
-  preview/warning.
-- Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
+- P1-C merge/join, axis-aligned split/slice, enclosed hole add/fill,
+  saved-object z-order, and remove-underlying are complete in current source.
+- P2 session-only hide/full-lock/movement-pin and contextual exposure are
+  complete for manual ROI and segmentation rows. These states do not enter
+  canonical labels or export semantics. Protected regressions and fresh
+  1920/1366 evidence pass. Polygon vertex insert/delete also passed focused,
+  protected, canonical, and 1920/1366 gates. Bounded intelligent scissors then
+  passed deterministic 90%/2.5px·250ms, explicit preview/apply/cancel,
+  protected/canonical, and 1920/1366 gates; P3 display-only aids then passed
+  source/file/history/overlay invariants and current-build 1920/1366 evidence;
+  the editor estimate is `3.4/5`.
+- P2 object state/precision and P3 display-only aids are Complete. P4 Dataset
+  Health visual label QA is next.
+- Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
+
+### Completed P2 intelligent-scissors checkpoint (2026-07-28)
+
+- The command is visible only for a selected manual polygon inside the
+  collapsed-by-default `세그먼트 편집 옵션`; it is not a global tool.
+- `경계 추종` arms one edge click. A bounded Sobel-cost A* path appears as a
+  gold `EDGE PREVIEW`; geometry, history, and disk state remain unchanged.
+- `미리보기 적용` revalidates the same source geometry and creates one
+  Undo/Redo step. `취소`, right-click, selection/tool/image change, and history
+  restore discard the preview.
+- Hidden and full-lock states reject the command; movement pin permits it.
+- Canonical v3 reopen preserves ObjectId, class, component index, z-order,
+  bounds, refined geometry, and `IntelligentScissors` provenance.
+- Focused gate: `--intelligent-scissors`.
+- Evidence:
+  `docs\INTELLIGENT_SCISSORS_P2_20260728.md` and
+  `artifacts\ui\intelligent-scissors-p2-20260728`.
+- Boundary: one adjacent polygon edge only, fixed 24-source-pixel corridor,
+  180,000-pixel maximum search, no autonomous whole-object segmentation, no
+  field accuracy or CVAT/V7 parity claim.
+- P3 display-only brightness/contrast/gamma/invert and histogram/equalization
+  is complete in the following checkpoint. Next priority is P4 Dataset Health
+  visual label QA.
+- Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
 
 ### Completed P1-C merge/join checkpoint (2026-07-27)
 
@@ -180,8 +216,79 @@ Boundary / next dependency:
 - Evidence:
   `docs\SEGMENTATION_HOLE_P1C_20260728.md` and
   `artifacts\ui\segmentation-hole-p1c-20260728`.
-- Next bounded operation: z-order. Remove-underlying remains separate and
-  requires an affected-object preview/warning.
+- Saved-object z-order is completed in the following checkpoint.
+
+### Completed P1-C saved-object z-order checkpoint (2026-07-28)
+
+- Saved Labels exposes **맨 뒤**, **한 칸 뒤**, **한 칸 앞**, and **맨 앞**
+  for one selected manual segmentation object.
+- Lower `ZOrder` is farther back. A successful command stable-sorts legacy
+  equal-order objects, moves the selected object, and normalizes the global
+  stack to `0..N-1`.
+- IDs, classes, polygon/cutout/raster geometry, and component metadata remain
+  unchanged. Changed objects record `LastStructuralOperation=ZOrder`.
+- First/last boundary commands make no data or history change.
+- One Undo/Redo restores/reapplies the whole stack. Canonical v3 save,
+  class-independent shell reload, and re-save preserve global order.
+- `AnnotationPolygonOverlays` uses this order inside each polygon or raster
+  renderer family. Exact polygon/raster interleaving is not claimed because
+  the viewer still uses separate render passes.
+- Focused gate: `--segmentation-zorder`.
+- Evidence:
+  `docs\SEGMENTATION_ZORDER_P1C_20260728.md` and
+  `artifacts\ui\segmentation-zorder-p1c-20260728`.
+- Historical next dependency at z-order closure was remove-underlying; it is
+  completed in the following checkpoint.
+
+### Completed P1-C remove-underlying checkpoint (2026-07-28)
+
+- Saved Labels exposes **겹침 분석**, **확인 후 제거**, and **취소**.
+- Analysis is read-only and reports affected objects, removed pixels, and full
+  removals. Affected underlying overlays and the pending summary are orange.
+- Only overlapping lower-stack objects change. Partial survivors preserve
+  ID/class/z-order as exact raster remainders with
+  `LastStructuralOperation=RemoveUnderlying`; fully covered objects are
+  removed. Selected/front/unaffected objects remain unchanged.
+- Apply re-analyzes and compares a full geometry/order signature. Stale plans
+  are rejected without mutation or history.
+- Apply is one Undo/Redo step. Canonical v3 save/load/re-save preserves raster
+  remainder, identity, z-order, and provenance.
+- Focused gate: `--segmentation-remove-underlying`.
+- Evidence:
+  `docs\SEGMENTATION_REMOVE_UNDERLYING_P1C_20260728.md` and
+  `artifacts\ui\segmentation-remove-underlying-p1c-20260728`.
+- Historical next dependency at remove-underlying closure was P2 object state;
+  it is completed in the following checkpoint.
+
+### P2 object-state contextual correction checkpoint (2026-07-28)
+
+- Saved manual ROI and manual segmentation rows expose **숨김**, **잠금**, and
+  **이동 고정** as independent current-image-session states.
+- Hidden objects leave the canvas and structural/canvas edit paths but remain
+  selectable in Object Review so they can be shown again.
+- Locked objects reject class, delete, duplicate, geometry, ROI handle,
+  brush/eraser, merge, split, hole, z-order, and remove-underlying mutation.
+  Direct mutation paths are guarded in addition to button enablement.
+- Movement-pinned objects keep ordinary class presentation and reject only
+  whole-object translation. ROI resize, polygon vertex edit, copy, delete,
+  class, and structural commands remain allowed. Gold focus and `PINNED`
+  overlay labels are prohibited.
+- State controls are compact icons. Merge/split/hole/z-order/remove-underlying
+  live in one collapsed segmentation editor visible only for a selected manual
+  segment. Cancel/status appear only while the matching operation is pending.
+- State is cleared on image change or queue reset and is excluded from
+  history, dirty state, canonical JSON, exports, and training input.
+- Focused gate: `--object-session-state`.
+- The correction is `Complete`: protected regressions and fresh current-build
+  1920x1080/1366x768 after captures pass, and all three fixture object rows are
+  visible at 1366x768.
+- Evidence:
+  `docs\OBJECT_SESSION_STATE_P2_20260728.md`,
+  `docs\OBJECT_REVIEW_CONTEXTUAL_UI_CORRECTION_20260728.md`, and
+  `artifacts\ui\object-review-contextual-20260728`.
+- Polygon vertex insert/delete and bounded edge-aware intelligent scissors are
+  complete. Next bounded operation: define the P3 display-only image/overlay
+  transformation and source/training immutability contract.
 
 ### Completed P0-A development checkpoint (2026-07-27)
 
@@ -255,15 +362,16 @@ Full development sequence:
 1. P0-A command/productivity: `Complete`.
 2. P0-B interactive Smart Mask: `Complete`.
 3. P1 mask structure: P1-A preservation/loss, P1-B canonical v3 identity, and
-   P1-C merge/join plus axis-aligned split/slice are complete. P1-C continues
-   with holes, z-order, and remove-underlying warnings.
-4. P2 object state and precision geometry: hide/lock/pin, contract-backed
-   occlusion/tags/groups, 4-point boxes, polygon vertex insert/delete, and a
-   separately proven edge-aware slice.
-5. P3 display-only aids: brightness, contrast, gamma, invert,
-   histogram/equalization, and overlay alignment without changing source or
-   training pixels.
-6. P4 Dataset Health visual label QA: read-only dataset-level issue discovery
+   P1-C merge/join, axis-aligned split/slice, enclosed holes, saved-object
+   z-order, and remove-underlying are complete.
+4. P2 object state and precision geometry: contextual hide/full-lock/
+   movement-pin correction, polygon vertex insert/delete, and bounded
+   intelligent scissors are complete. Contract-backed
+   occlusion/tags/groups and 4-point boxes remain later independent gates.
+5. P3 display-only aids: `Complete`; brightness, contrast, gamma, invert,
+   histogram/equalization, and overlay alignment preserve canonical source,
+   disk file, history, and training pixels.
+6. P4 Dataset Health visual label QA: `Next`; read-only dataset-level issue discovery
    with navigation back to the canonical editor.
 7. P5 interchange and batch preflight: dry-run/Apply validation for existing
    formats and explicit batch AI scope, model, class mapping, confidence, and
@@ -298,11 +406,15 @@ P0-B durable status: `Complete`. Field validation: `Not evaluated`.
 - Existing 24-call exact-box and 96-call box-jitter results remain protected
   regression evidence, not field accuracy.
 
-The immediate product priority is now P1-C z-order. P1-A
+The immediate product priority is now P4 Dataset Health visual label QA.
+P3 display-only image aids, P2 bounded intelligent scissors, and polygon vertex
+insert/delete are complete.
+Session-only hide/lock/pin is complete. P1-A
 JSON/mask-PNG/YOLO/COCO/CVAT preservation/loss semantics and P1-B canonical
 v3 object/component identity are complete, and P1-C merge/join plus
-axis-aligned split/slice and enclosed hole add/fill have user-visible commands
-and focused evidence.
+axis-aligned split/slice, enclosed hole add/fill, saved-object z-order, and
+remove-underlying have
+user-visible commands and focused evidence.
 Keep the next structural command independently acceptance-gated.
 
 ### Completed structural-refactor phase
@@ -324,6 +436,52 @@ Do not continue refactoring merely to reduce file length or public-type count.
 Resume structural work only when a concrete change exposes mixed ownership,
 stale coupling, an untestable responsibility, or a real navigation problem.
 Keep `.proofline/STATE.md` and `.proofline/dashboard/` outside project commits.
+
+### Completed P2 polygon vertex insert/delete (2026-07-28)
+
+Status: `Complete`. Field validation: `Not evaluated`.
+
+- Selected saved manual polygons expose `정점 추가` and `정점 삭제` only in
+  the collapsed segment context. Masks and boxes do not expose them.
+- Eight screen pixels are converted through current zoom. Insert projects onto
+  the deterministic nearest edge; delete selects the nearest vertex.
+- Endpoint, duplicate, triangle, zero-area, and self-intersecting results
+  reject without mutation or history.
+- Successful edits preserve object ID/class/component/z-order/cutouts and
+  selection, create one Undo/Redo step, and replay `VertexInsert` or
+  `VertexDelete` through canonical v3.
+- Hidden/full-lock mutation is rejected; movement pin remains vertex-editable.
+- Focused and protected gates plus current-build 1920x1080 and 1366x768
+  captures pass. Read `docs/POLYGON_VERTEX_EDIT_P2_20260728.md`; evidence is
+  `artifacts/ui/polygon-vertex-p2-20260728`.
+- Labeling-editor depth is now `3.3/5`; focused workstation maturity remains
+  `4.0/5`.
+
+The historical next dependency was P3 display-only image aids, now complete.
+
+### Completed P3 display-only image aids (2026-07-28)
+
+Status: `Complete`. Field validation: `Not evaluated`.
+
+- One compact canvas-header `보기 보정` popup owns brightness, contrast, gamma,
+  invert, histogram equalization, and reset; the annotation rail is unchanged.
+- `WpfImageDisplayAdjustmentService` creates an owned copy. The shell replaces
+  only the base texture after a 120ms coalescing delay.
+- Canonical in-memory bitmap and disk-file hashes, annotation dirty/history,
+  and overlay image coordinates remain unchanged through apply and reset.
+- Queue navigation retains the same screen-session settings; Recipe, labels,
+  export, training input, autosave, Preview, and Run remain untouched.
+- Focused build is zero-warning/error; `--image-display-adjustment`,
+  `git diff --check`, and current-build 1920x1080/1366x768 before/after visual
+  evidence pass.
+- Evidence: `docs\DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md` and
+  `artifacts\ui\display-aids-p3-20260728`.
+- Labeling-editor depth is `3.4/5`; focused workstation maturity remains
+  `4.0/5`.
+
+Next bounded priority: implement P4 Dataset Health visual label QA as a
+read-only dataset-level issue gallery with explicit navigation to the existing
+editor. Recommended model: `gpt-5.6-terra`; reasoning effort: `medium`.
 
 ## 3. Product Identity and Direction
 
@@ -669,44 +827,33 @@ reproduced. Preserve P0-B's box-only compatibility, point session,
 rerun-replace, cancellation, stale guard, confirm-only save, provenance, and
 next-instance behavior.
 
-1. Add P1-C z-order, then remove-underlying with an
-   affected-object warning and undo. Merge/join and axis-aligned split/slice
-   and enclosed hole add/fill are complete. P1-A already states what
-   polygon/segment JSON, mask PNG, YOLO, COCO, and CVAT preserve or reject
-   before editing code. Do not treat an internal brush-span merge as a
-   user-visible object merge.
+1. P2 object-state and precision-edit slices are complete for contextual
+   hide/full-lock/movement-pin, polygon vertex insert/delete, and bounded
+   intelligent scissors. Persistent occluded/tags/groups and 4-point box remain
+   separate contract-dependent gaps; do not reopen P2 without changed evidence.
    Recommended model: `gpt-5.6-sol`
    Reasoning effort: `high`
 
-2. Add object-state and precision-edit slices only after the mask contract.
-   Start hide/lock/pin as presentation/session state; persist occluded/tags only
-   when Recipe and export consumers are defined. Separate 4-point box,
-   polygon-vertex insert/delete, and edge-aware scissors into focused
-   acceptance-gated work.
-   Recommended model: `gpt-5.6-sol`
-   Reasoning effort: `high`
-
-3. Add display-only brightness, contrast, gamma, invert, and
-   histogram/equalization without changing source pixels, dataset hashes, or
-   training inputs. Overlay alignment and current image-switch behavior must
-   remain deterministic.
+2. P3 display-only brightness, contrast, gamma, invert, and
+   histogram/equalization is complete with canonical source/file/history/
+   overlay invariants and current-build 1920/1366 evidence.
    Recommended model: `gpt-5.6-terra`
    Reasoning effort: `medium`
 
-4. After the core labeling slices, add the previously designed read-only
-   Dataset Health visual-label-QA gallery, followed by dry-run-first
+3. Implement the previously designed read-only Dataset Health visual-label-QA
+   gallery next, followed by dry-run-first
    interchange and batch-AI preflight slices. The gallery still must not edit
    labels, auto-approve candidates, create a new queue, or preload all 10K
    images at full resolution.
    Recommended model: `gpt-5.6-terra`
    Reasoning effort: `medium`
 
-5. Acquire a new, approved NG-rich object-detection camera/session source, define its object classes and box rules, create a content-separated held-out test split, and rerun the unchanged controlled engine comparison. This remains the next object-detection quality priority because current synthetic comparisons prove runtime/format behavior but not field generalization. It includes provenance, label audit, SHA-256 non-overlap, fixed thresholds, and error review; it excludes treating folder-level OK/NG names as boxes or tuning on the held-out test. The operator-excluded `D:\기타이미지\2022.11.16_SIT 이미지` path must not be inspected or used.
+4. Acquire a new, approved NG-rich object-detection camera/session source, define its object classes and box rules, create a content-separated held-out test split, and rerun the unchanged controlled engine comparison. This remains the next object-detection quality priority because current synthetic comparisons prove runtime/format behavior but not field generalization. It includes provenance, label audit, SHA-256 non-overlap, fixed thresholds, and error review; it excludes treating folder-level OK/NG names as boxes or tuning on the held-out test. The operator-excluded `D:\기타이미지\2022.11.16_SIT 이미지` path must not be inspected or used.
    Prerequisite: a newly approved source with trustworthy bounding boxes and enough NG examples.
    Recommended model: none until the data is available
    Reasoning effort: n/a
 
-6. Acquire balanced independent production-camera/cross-session normal and abnormal anomaly data, keep it outside training initially, and rerun the unchanged anomaly evaluation guard. This remains the next anomaly-quality priority and distinguishes a repeatable classifier runtime from generalizable anomaly quality; it includes provenance, content-overlap checks, confidence-gated errors, and an adopt/hold decision, and excludes tuning against the preserved circular or MultiIndustry synthetic evaluation sets.
+5. Acquire balanced independent production-camera/cross-session normal and abnormal anomaly data, keep it outside training initially, and rerun the unchanged anomaly evaluation guard. This remains the next anomaly-quality priority and distinguishes a repeatable classifier runtime from generalizable anomaly quality; it includes provenance, content-overlap checks, confidence-gated errors, and an adopt/hold decision, and excludes tuning against the preserved circular or MultiIndustry synthetic evaluation sets.
    On the same 104-image circular synthetic test at confidence `0.8`, YOLOv8
    remains `hold` at `90/104` and YOLO11 remains `hold` at `82/104`. Do not tune
    either model against that test or substitute it for new acquisition evidence.

@@ -53,7 +53,8 @@ namespace MvcVisionSystem
             Size imageSize,
             CClassItem classItem,
             out LabelingSegmentationObject changedSegment,
-            out Rectangle changedBounds)
+            out Rectangle changedBounds,
+            Func<LabelingSegmentationObject, bool> canEdit = null)
         {
             changedSegment = null;
             changedBounds = Rectangle.Empty;
@@ -69,7 +70,11 @@ namespace MvcVisionSystem
             }
 
             CClassItem targetClass = ResolveClass(classItem);
-            LabelingSegmentationObject segment = GetOrCreateRasterSegment(segments, imageSize, targetClass);
+            LabelingSegmentationObject segment = GetOrCreateRasterSegment(
+                segments,
+                imageSize,
+                targetClass,
+                canEdit);
             if (!ApplyBrushToMask(segment.MaskData, segment.MaskSize, strokeCenters, radius, paint: true, out changedBounds))
             {
                 return false;
@@ -97,7 +102,8 @@ namespace MvcVisionSystem
             int radius,
             Size imageSize,
             out Rectangle changedBounds,
-            out IReadOnlyList<LabelingSegmentationObject> changedSegments)
+            out IReadOnlyList<LabelingSegmentationObject> changedSegments,
+            Func<LabelingSegmentationObject, bool> canEdit = null)
         {
             changedBounds = Rectangle.Empty;
             changedSegments = Array.Empty<LabelingSegmentationObject>();
@@ -117,6 +123,11 @@ namespace MvcVisionSystem
             bool changed = false;
             foreach (LabelingSegmentationObject segment in segments.Where(item => item?.IsRasterMask == true).ToList())
             {
+                if (canEdit != null && !canEdit(segment))
+                {
+                    continue;
+                }
+
                 Rectangle currentBounds = segment.MaskBounds.IsEmpty ? segment.Bounds : segment.MaskBounds;
                 if (currentBounds.IsEmpty || !currentBounds.IntersectsWith(strokeBounds))
                 {
@@ -219,11 +230,13 @@ namespace MvcVisionSystem
         private static LabelingSegmentationObject GetOrCreateRasterSegment(
             IList<LabelingSegmentationObject> segments,
             Size imageSize,
-            CClassItem classItem)
+            CClassItem classItem,
+            Func<LabelingSegmentationObject, bool> canEdit)
         {
             string className = classItem?.Text ?? "Defect";
             LabelingSegmentationObject existing = segments.FirstOrDefault(segment =>
                 segment?.IsRasterMask == true
+                && (canEdit == null || canEdit(segment))
                 && string.Equals(segment.ClassName, className, StringComparison.OrdinalIgnoreCase));
             if (existing != null)
             {
@@ -239,6 +252,7 @@ namespace MvcVisionSystem
                 MaskData = new byte[Math.Max(0, imageSize.Width * imageSize.Height)],
                 MaskSize = imageSize,
                 MaskBounds = Rectangle.Empty,
+                ZOrder = WpfSegmentationZOrderService.GetNextZOrder(segments),
                 RenderVersion = 1,
                 RenderDirtyBounds = new Rectangle(Point.Empty, imageSize)
             };

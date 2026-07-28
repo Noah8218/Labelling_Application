@@ -34,12 +34,40 @@ namespace MvcVisionSystem
                 CancelPendingSegmentationHoleEdit(updateStatus: false);
             }
 
+            if (pendingPolygonVertexEditMode.HasValue
+                && (selectedItem is not WpfObjectReviewListItem selectedVertexRow
+                    || !selectedVertexRow.IsManualPolygon
+                    || selectedVertexRow.SourceIndex != pendingPolygonVertexSourceIndex))
+            {
+                CancelPendingPolygonVertexEdit(updateStatus: false);
+            }
+
+            if (pendingIntelligentScissorsSource != null
+                && (selectedItem is not WpfObjectReviewListItem selectedScissorsRow
+                    || !selectedScissorsRow.IsManualPolygon
+                    || selectedScissorsRow.SourceIndex != pendingIntelligentScissorsSourceIndex))
+            {
+                CancelPendingIntelligentScissors(updateStatus: false);
+            }
+
+            if (pendingSegmentationRemoveUnderlyingPlan != null
+                && (selectedItem is not WpfObjectReviewListItem selectedRemoveRow
+                    || !selectedRemoveRow.IsManualSegment
+                    || selectedRemoveRow.SourceIndex != pendingSegmentationRemoveUnderlyingPlan.SelectedIndex))
+            {
+                CancelPendingSegmentationRemoveUnderlying(updateStatus: false);
+            }
+
             SyncObjectClassEditorToSelection();
             UpdateObjectReviewActionState();
             bool isManualSegmentSelected = ObjectReviewViewModel?.IsSelectedSource(WpfObjectReviewSource.ManualSegment) == true;
+            bool canEditSelectedSegment = isManualSegmentSelected
+                && selectedItem is WpfObjectReviewListItem selectedStateRow
+                && !selectedStateRow.IsHidden
+                && !selectedStateRow.IsLocked;
             if (activeAnnotationTool == WpfAnnotationTool.Select)
             {
-                MainCanvasViewModel.IsImagePointInputMode = isManualSegmentSelected;
+                MainCanvasViewModel.IsImagePointInputMode = canEditSelectedSegment;
             }
 
             if (ObjectReviewViewModel?.IsSelectedSource(WpfObjectReviewSource.ManualRoi) != true)
@@ -54,6 +82,13 @@ namespace MvcVisionSystem
         {
             if (!TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef item))
             {
+                return;
+            }
+
+            if (!CanMutateSelectedObject(item, requireVisible: false, out string stateError))
+            {
+                SetYoloCommandStatus(stateError, isBusy: false);
+                AppendLog(stateError);
                 return;
             }
 
@@ -154,12 +189,24 @@ namespace MvcVisionSystem
                 return false;
             }
 
+            if (!CanMutateSelectedObject(item, requireVisible: false, out string stateError))
+            {
+                SetYoloCommandStatus(stateError, isBusy: false);
+                AppendLog(stateError);
+                return false;
+            }
+
             int selectedObjectRowIndex = GetSelectedObjectReviewRowIndex();
             string manualOverlayId = item.Source == WpfObjectReviewSource.ManualRoi
                 ? GetManualRoiOverlayId(item.Index)
                 : string.Empty;
             string removedText = ObjectReviewViewModel?.SelectedObject?.DisplayText
                 ?? "object";
+            LabelingSegmentationObject deletedSegment = item.Source == WpfObjectReviewSource.ManualSegment
+                && item.Index >= 0
+                && item.Index < manualSegments.Count
+                ? manualSegments[item.Index]
+                : null;
             WpfAnnotationHistorySnapshot beforeChange = item.Source == WpfObjectReviewSource.ManualRoi
                 ? CaptureManualRoiHistory("\uB77C\uBCA8 \uC0AD\uC81C")
                 : CaptureAnnotationHistory("\uB77C\uBCA8 \uC0AD\uC81C");
@@ -172,6 +219,15 @@ namespace MvcVisionSystem
             {
                 UpdateObjectReviewActionState();
                 return false;
+            }
+
+            if (item.Source == WpfObjectReviewSource.ManualRoi)
+            {
+                objectSessionStateService.ShiftRoiStatesAfterRemoval(item.Index);
+            }
+            else if (item.Source == WpfObjectReviewSource.ManualSegment)
+            {
+                objectSessionStateService.RemoveManualSegment(deletedSegment);
             }
 
             PushAnnotationHistorySnapshot(beforeChange);

@@ -21,6 +21,21 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (pendingSegmentationRemoveUnderlyingPlan != null)
+            {
+                CancelPendingSegmentationRemoveUnderlying(updateStatus: false);
+            }
+
+            if (pendingPolygonVertexEditMode.HasValue)
+            {
+                CancelPendingPolygonVertexEdit(updateStatus: false);
+            }
+
+            if (pendingIntelligentScissorsSource != null)
+            {
+                CancelPendingIntelligentScissors(updateStatus: false);
+            }
+
             if (!CanSelectAnnotationToolForCurrentPurpose(selectedToolItem))
             {
                 RejectAnnotationToolOutsideCurrentPurpose(selectedToolItem.Tool);
@@ -173,6 +188,16 @@ namespace MvcVisionSystem
                 CancelPendingSegmentationHoleEdit(updateStatus: false);
             }
 
+            if (pendingPolygonVertexEditMode.HasValue)
+            {
+                CancelPendingPolygonVertexEdit(updateStatus: false);
+            }
+
+            if (pendingSegmentationRemoveUnderlyingPlan != null)
+            {
+                CancelPendingSegmentationRemoveUnderlying(updateStatus: false);
+            }
+
             WpfAnnotationToolItem selectedTool = ResolveSelectableAnnotationTool(tool);
             if (selectedTool == null)
             {
@@ -273,6 +298,15 @@ namespace MvcVisionSystem
                 return false;
             }
 
+            if (!CanMutateSelectedObject(
+                WpfObjectReviewItemRef.Manual(sourceIndex),
+                requireVisible: true,
+                out string stateError))
+            {
+                SetYoloCommandStatus(stateError, isBusy: false);
+                return false;
+            }
+
             if (GetManualRoiShapeKind(sourceIndex)
                 != OpenVisionLab.ImageCanvas.CanvasShapes.CanvasRoiShapeKind.Rectangle)
             {
@@ -309,6 +343,15 @@ namespace MvcVisionSystem
                 return false;
             }
 
+            if (!CanMutateSelectedObject(
+                WpfObjectReviewItemRef.ManualSegment(sourceIndex),
+                requireVisible: true,
+                out string stateError))
+            {
+                SetYoloCommandStatus(stateError, isBusy: false);
+                return false;
+            }
+
             LabelingSegmentationObject duplicate = WpfAnnotationProductivityService.CreateOffsetSegment(
                 manualSegments[sourceIndex],
                 activeImageSize,
@@ -319,6 +362,7 @@ namespace MvcVisionSystem
             }
 
             RegisterAnnotationHistoryBeforeChange("라벨 복제");
+            duplicate.ZOrder = WpfSegmentationZOrderService.GetNextZOrder(manualSegments);
             manualSegments.Add(duplicate);
             int duplicateIndex = manualSegments.Count - 1;
             RefreshObjectListWithSelection(WpfObjectReviewItemRef.ManualSegment(duplicateIndex));

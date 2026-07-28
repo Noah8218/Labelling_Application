@@ -14,6 +14,8 @@ namespace MvcVisionSystem
                 ExecutePanCanvasCommand,
                 ExecuteFocusCandidateCommand,
                 ExecuteResetAiOverlayCommand);
+            CanvasPanelViewModel.ConfigureDisplayAdjustment(
+                ScheduleDisplayAdjustmentRefresh);
             CanvasPanelViewModel.ConfigureCandidateReviewCommands(
                 ExecutePreviousCandidateCommand,
                 ExecuteNextCandidateCommand,
@@ -245,6 +247,8 @@ namespace MvcVisionSystem
             RegisterCanvasName(nameof(FitCanvasButton), FitCanvasButton);
             RegisterCanvasName(nameof(ActualSizeCanvasButton), ActualSizeCanvasButton);
             RegisterCanvasName(nameof(PanCanvasButton), PanCanvasButton);
+            RegisterCanvasName(nameof(DisplayAdjustmentCanvasButton), DisplayAdjustmentCanvasButton);
+            RegisterCanvasName(nameof(DisplayAdjustmentPopup), DisplayAdjustmentPopup);
             RegisterCanvasName(nameof(FocusCandidateCanvasButton), FocusCandidateCanvasButton);
             RegisterCanvasName(nameof(ResetAiOverlayCanvasButton), ResetAiOverlayCanvasButton);
             RegisterCanvasName(nameof(DetectionResultOverlay), DetectionResultOverlay);

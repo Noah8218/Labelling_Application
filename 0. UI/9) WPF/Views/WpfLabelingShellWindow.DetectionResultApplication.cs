@@ -91,14 +91,28 @@ namespace MvcVisionSystem
                     for (int i = 0; i < manualRois.Count; i++)
                     {
                         DrawingRectangle roi = manualRois[i];
-                        if (roi.IsEmpty)
+                        WpfObjectSessionState sessionState = GetManualRoiSessionState(i);
+                        if (roi.IsEmpty || sessionState.IsHidden)
                         {
+                            manualRoiOverlayIds[i] = string.Empty;
                             continue;
                         }
 
                         string className = GetManualRoiClassName(i);
-                        var overlay = MainCanvasViewModel.AddInitialRoi(roi, GetManualRoiShapeKind(i), GetClassDrawColor(className), className);
+                        var overlay = MainCanvasViewModel.AddInitialRoi(
+                            roi,
+                            GetManualRoiShapeKind(i),
+                            GetClassDrawColor(className),
+                            className);
                         manualRoiOverlayIds[i] = overlay?.UniqueId ?? string.Empty;
+                        var overlayItem = MainCanvasViewModel.ImageViewer
+                            .GetCanvasOverlayManager()
+                            .GetOverlayByUniqueId(manualRoiOverlayIds[i]);
+                        if (overlayItem != null)
+                        {
+                            overlayItem.IsControlLock = sessionState.IsLocked;
+                            overlayItem.IsMoveLock = sessionState.IsPinned;
+                        }
                     }
 
                     foreach (YoloWorkerSmokeCandidate candidate in confirmedDetectionCandidates)

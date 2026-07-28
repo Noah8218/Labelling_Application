@@ -23,6 +23,7 @@ namespace MvcVisionSystem
             }
 
             RegisterAnnotationHistoryBeforeChange("Add polygon");
+            annotation.ZOrder = WpfSegmentationZOrderService.GetNextZOrder(manualSegments);
             manualSegments.Add(annotation);
             polygonAnnotationService.Reset();
             RefreshPolygonOverlays();
@@ -56,10 +57,17 @@ namespace MvcVisionSystem
             int selectedSourceIndex = selectedObject?.SourceIndex ?? -1;
             if (showSavedLabels)
             {
-                for (int i = 0; i < manualSegments.Count; i++)
+                IEnumerable<int> renderIndices = manualSegments
+                    .Select((segment, index) => new { Segment = segment, Index = index })
+                    .Where(item => item.Segment != null)
+                    .OrderBy(item => item.Segment.ZOrder)
+                    .ThenBy(item => item.Index)
+                    .Select(item => item.Index);
+                foreach (int i in renderIndices)
                 {
                     LabelingSegmentationObject segment = manualSegments[i];
-                    if (segment == null)
+                    WpfObjectSessionState sessionState = GetManualSegmentSessionState(i);
+                    if (sessionState.IsHidden)
                     {
                         continue;
                     }
@@ -85,10 +93,16 @@ namespace MvcVisionSystem
                         continue;
                     }
 
+                    bool isRemoveUnderlyingPreview = IsPendingRemoveUnderlyingAffectedIndex(i);
+                    System.Drawing.Color overlayColor = isRemoveUnderlyingPreview
+                        ? System.Drawing.Color.Orange
+                        : segment.Color;
                     overlays.Add(new RoiImageCanvasPolygonOverlay(
                         segment.Points,
-                        $"SEG {i + 1} {className}",
-                        segment.Color,
+                        isRemoveUnderlyingPreview
+                            ? $"REMOVE PREVIEW {i + 1} {className}"
+                            : $"SEG {i + 1} {className}",
+                        overlayColor,
                         isClosed: true,
                         isDraft: false,
                         isSelected: isSegmentSelected,
@@ -113,6 +127,17 @@ namespace MvcVisionSystem
                         $"HOLE DRAFT {holePolygonAnnotationService.Points.Count}",
                         System.Drawing.Color.Orange,
                         holePolygonAnnotationService.IsClosed,
+                        isDraft: true,
+                        isSelected: true));
+                }
+
+                if (pendingIntelligentScissorsPlan?.PathPoints?.Count > 1)
+                {
+                    overlays.Add(new RoiImageCanvasPolygonOverlay(
+                        pendingIntelligentScissorsPlan.PathPoints,
+                        "EDGE PREVIEW",
+                        System.Drawing.Color.Gold,
+                        isClosed: false,
                         isDraft: true,
                         isSelected: true));
                 }

@@ -3225,7 +3225,10 @@ namespace OpenVisionLab.ImageCanvas.ViewModels
 					RoiInteractionMouseMove.ResizeRoiRect(_imageViewer, _selectedRect, currentRobotyPos, _imageSize, OnRoiEditingCompleted, notifyEditingCompleted: false);
 					break;
 				case CanvasInteractionMode.Move:
-					RoiInteractionMouseMove.MoveOverlay(_imageViewer, _selectedRect, currentRobotyPos, _imageSize, true, OnRoiEditingCompleted, UseGroupMoveMode, notifyEditingCompleted: false);
+					if (!IsRoiMoveLocked(_selectedRect))
+					{
+						RoiInteractionMouseMove.MoveOverlay(_imageViewer, _selectedRect, currentRobotyPos, _imageSize, true, OnRoiEditingCompleted, UseGroupMoveMode, notifyEditingCompleted: false);
+					}
 					break;
 				case CanvasInteractionMode.Drawing:
 					RoiInteractionMouseMove.UpdateReactangleToOverlay(_imageViewer, _drawingRect, _imageSize);
@@ -3337,7 +3340,11 @@ namespace OpenVisionLab.ImageCanvas.ViewModels
 				MarkRoiDisplayChanged(_selectedRect);
 				mouseUpRect = _selectedRect;
 			}
-			if ((_mouseDownOnExistingRoi || isCommittingExistingRoiEdit) && hasValidLeftDrag)
+			bool isBlockedMoveDrag = mouseUpViewMode == CanvasInteractionMode.Move
+				&& IsRoiMoveLocked(mouseUpRect);
+			if ((_mouseDownOnExistingRoi || isCommittingExistingRoiEdit)
+				&& hasValidLeftDrag
+				&& !isBlockedMoveDrag)
 			{
 				RefreshGroupBoundsForCommittedRoi(mouseUpRect);
 				OnRoiEditingCompleted(mouseUpRect);
@@ -3772,6 +3779,19 @@ namespace OpenVisionLab.ImageCanvas.ViewModels
 			//Ex. Load Image
 			//LoadImageRequested(this, mat);
 			CanvasImageLoader.UploadMatAsTexture(_imageViewer, mat, fileName, ref _imageSize, replaceExistingTextures: true);
+		}
+
+		private bool IsRoiMoveLocked(CanvasRect<float> roiRect)
+		{
+			if (roiRect == null || string.IsNullOrWhiteSpace(roiRect.UniqueId))
+			{
+				return false;
+			}
+
+			CanvasOverlayItem overlayItem = _imageViewer
+				.GetCanvasOverlayManager()
+				.GetOverlayByUniqueId(roiRect.UniqueId);
+			return overlayItem?.IsMoveLock == true;
 		}
 
 		public void ClearImage()

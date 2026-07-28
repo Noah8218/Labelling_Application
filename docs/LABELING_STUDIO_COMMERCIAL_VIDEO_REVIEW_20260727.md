@@ -53,7 +53,7 @@ V7과 CVAT의 라벨링 영상을 더 촘촘한 간격으로 다시 검토한 �
 | --- | ---: | --- |
 | 집중형 로컬 단일 작업자 전체 워크플로 | `4.0/5` | 약 80%; 설정·저장·학습·추론·검토·모델 근거를 포함한 제품 전체의 범위 적합도 |
 | 이미지 라벨링 편집기 깊이 | `2.1/5` | 약 42%; V7/CVAT 영상에서 확인한 이미지 편집 생산성·mask 구조·AI 보정과 비교한 별도 추정치 |
-| 일반 상용 이미지 라벨링 제품군 전체 | `3.1/5` | 약 62%; QA, 포맷 작업 흐름, 편집 생산성, 협업 범위를 포함한 넓은 비교 |
+| 일반 상용 이미지 라벨링 제품군 전체 | `3.4/5` | 약 68%; contextual Object Review, precision geometry, compact display-only aids 완료 후에도 persistent metadata, video propagation, 협업 범위는 뒤처짐 |
 | 엔터프라이즈/팀 플랫폼 | `1.2/5` | 약 24%; 의도적으로 목표로 삼지 않는 범위 |
 
 `2.1/5`는 정확도 benchmark가 아니라 영상에서 확인한 기능과 현재
@@ -217,6 +217,12 @@ Reasoning effort: `high`
 brightness, contrast, gamma, invert, histogram/equalization을 source pixel을
 바꾸지 않는 display-only 상태로 추가합니다.
 
+Status: **Complete**. 캔버스 헤더의 단일 `보기 보정` 팝업에만 노출했고,
+annotation rail에는 추가하지 않았습니다. canonical source/file hash,
+dirty/history, overlay image-coordinate 불변과 current-build 1920/1366
+증거를 통과했습니다. 상세 계약:
+`docs\DISPLAY_ONLY_IMAGE_AIDS_P3_20260728.md`.
+
 Recommended model: `gpt-5.6-terra`
 Reasoning effort: `medium`
 
@@ -319,3 +325,65 @@ Evidence:
 Boundary / next dependency: 이 완료 상태는 분석과 개발 계약 문서에만
 해당합니다. 라벨링 기능 구현은 각 우선순위의 focused tests와 현재 EXE
 before/after 증거가 통과할 때 별도로 Complete가 됩니다.
+
+## 2026-07-28 Object Review 노출 방식 정정
+
+상용 영상은 모든 라벨링 기능을 항상 펼쳐 놓는 구조가 아닙니다. V7은
+compact tool rail과 instance list를 주 작업면으로 유지하고, CVAT는 공통
+객체 상태를 object row/property 근처에 두며 mask plus/minus와 구조 도구를
+현재 tool context에서 노출합니다.
+
+우리 프로그램의 첫 Object Review 구현은 1366x768에서 비활성 merge, split,
+hole, z-order, remove-underlying 명령이 전체 높이를 차지해 object list의
+보이는 행이 0개가 되는 문제가 확인되었습니다. 정정 계약은 다음과 같습니다.
+
+- 선택 객체의 숨김, 전체 잠금, 이동 고정은 compact icon으로 노출
+- manual segment 선택 때만 하나의 접힌 `세그먼트 편집 옵션`을 노출
+- cancel과 진행 안내는 해당 interaction이 pending일 때만 노출
+- object/instance list를 주 검토면으로 유지
+- CVAT식 pin은 전체 위치 이동만 막고 resize, polygon vertex edit,
+  copy/delete/class/structural command는 허용
+- gold bookmark와 `PINNED` overlay label은 사용하지 않음
+
+맥락 노출은 자동 구조 변경을 의미하지 않습니다. Preview, Apply, label
+save, Candidate Review 확인은 계속 명시적 사용자 동작입니다.
+
+구현·검증 계약:
+`docs\OBJECT_REVIEW_CONTEXTUAL_UI_CORRECTION_20260728.md`.
+
+## 2026-07-28 지능형 가위 적용 결과
+
+CVAT AI-tools 영상의 intelligent scissors는 전역 자동 라벨링이 아니라
+사용자가 시작점/경계를 정하고 결과를 보정하는 correction 도구로
+해석했습니다. 현재 프로그램은 이를 선택된 수동 polygon의 접힌
+`세그먼트 편집 옵션` 안에 한정했습니다.
+
+- `경계 추종` 후 기존 polygon edge를 클릭
+- bounded image-edge path를 금색 open-path로만 미리보기
+- `미리보기 적용` 또는 `취소`를 명시적으로 선택
+- Apply 전 geometry/history/save 불변
+- Apply 후에도 `라벨 저장`은 별도 동작
+- deterministic 90%/2.5px·250ms synthetic contract와 protected/canonical
+  회귀 통과
+
+이는 CVAT/V7 전체 AI correction parity나 자연영상 field 정확도를
+증명하지 않습니다. 구현·검증 계약:
+`docs\INTELLIGENT_SCISSORS_P2_20260728.md`.
+
+## 2026-07-28 표시 전용 보정 적용 결과
+
+V7/CVAT 영상에서 image equalization 계열 기능은 매 라벨마다 펼쳐진
+annotation tool이 아니라 필요할 때 여는 display option으로 관찰했습니다.
+현재 프로그램도 같은 제품 원칙을 적용했습니다.
+
+- 캔버스 헤더에는 `보기 보정` 진입점 하나만 유지
+- 밝기/대비/감마/반전/히스토그램 평활화는 popup 안에만 배치
+- 원본, 저장 이미지, 학습 입력, annotation history는 불변
+- base texture만 바꾸고 box/polygon/mask image coordinates는 불변
+- queue image 전환 중 동일 설정을 유지해 비교 가능
+- reset은 화면만 원복하며 Preview/Run/save를 자동 실행하지 않음
+
+이 완료로 라벨링 편집기 추정치는 `3.3/5`에서 `3.4/5`로 조정합니다.
+집중형 로컬 단일 작업자 전체 워크플로 평가는 `4.0/5`로 유지합니다.
+이는 production-camera usefulness, persistent object metadata, video
+propagation, collaboration, 또는 CVAT/V7 parity를 증명하지 않습니다.

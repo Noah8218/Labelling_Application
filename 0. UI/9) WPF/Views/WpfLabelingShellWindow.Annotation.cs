@@ -18,6 +18,16 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (TryApplyPendingPolygonVertexEdit(e))
+            {
+                return;
+            }
+
+            if (TryHandlePendingIntelligentScissors(e))
+            {
+                return;
+            }
+
             if (TryApplyPendingSegmentationSplit(e))
             {
                 return;

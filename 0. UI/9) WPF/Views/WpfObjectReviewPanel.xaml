@@ -3,9 +3,12 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:MvcVisionSystem"
-                          xmlns:mvvm="clr-namespace:OpenVisionLab.Mvvm.Behaviors;assembly=OpenVisionLab.Mvvm"
-xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:mvvm="clr-namespace:OpenVisionLab.Mvvm.Behaviors;assembly=OpenVisionLab.Mvvm"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
         <Style x:Key="ObjectReviewButtonStyle" TargetType="{x:Type ui:Button}">
             <Setter Property="Background" Value="{DynamicResource ToolbarButtonBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -36,6 +39,27 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                     <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
                 </DataTrigger>
             </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ObjectReviewStateButtonStyle"
+               TargetType="{x:Type ui:Button}"
+               BasedOn="{StaticResource ObjectReviewButtonStyle}">
+            <Setter Property="Height" Value="24" />
+            <Setter Property="MinWidth" Value="34" />
+            <Setter Property="Padding" Value="5,0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ObjectReviewStateIconStyle" TargetType="{x:Type iconPacks:PackIconMaterial}">
+            <Setter Property="Width" Value="15" />
+            <Setter Property="Height" Value="15" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style x:Key="ObjectReviewComboBoxStyle" TargetType="ComboBox">
@@ -298,8 +322,17 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                 <Border Height="1"
                         Background="{DynamicResource BorderBrushDark}"
                         Margin="0,7,0,6" />
+                <Expander x:Name="ObjectQualityReviewExpander"
+                          AutomationProperties.AutomationId="ObjectQualityReviewExpander"
+                          AutomationProperties.Name="&#xD488;&#xC9C8; &#xAC80;&#xC218; &#xC635;&#xC158;"
+                          Header="&#xD488;&#xC9C8; &#xAC80;&#xC218; &#xC635;&#xC158;"
+                          Foreground="{DynamicResource PrimaryTextBrush}"
+                          FontFamily="Segoe UI"
+                          FontSize="11"
+                          IsExpanded="False">
                 <Grid x:Name="ObjectQualityReviewPanel"
-                      AutomationProperties.AutomationId="ObjectQualityReviewPanel">
+                      AutomationProperties.AutomationId="ObjectQualityReviewPanel"
+                      Margin="0,3,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -410,6 +443,7 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                                    ToolTip="&#xC800;&#xC7A5; &#xD3F4;&#xB354;&#xC5D0; label-quality-review.md&#xB85C; &#xC800;&#xC7A5;&#xD569;&#xB2C8;&#xB2E4;." />
                     </Grid>
                 </Grid>
+                </Expander>
                 <TextBlock x:Name="ObjectReviewSelectedTaskTitleText"
                            AutomationProperties.AutomationId="ObjectReviewSelectedTaskTitleText"
                            Text="{Binding SelectedObjectTaskTitleText}"
@@ -418,6 +452,7 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                            FontSize="12"
                            FontWeight="SemiBold"
                            Margin="0,3,0,0"
+                           Visibility="Collapsed"
                            TextTrimming="CharacterEllipsis" />
                 <TextBlock x:Name="ObjectReviewSelectedTaskDetailText"
                            AutomationProperties.AutomationId="ObjectReviewSelectedTaskDetailText"
@@ -426,6 +461,7 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                            FontFamily="Segoe UI"
                            FontSize="11"
                            Margin="0,2,0,0"
+                           Visibility="Collapsed"
                            TextWrapping="Wrap" />
                 <TextBlock x:Name="ObjectReviewSelectedTaskActionText"
                            AutomationProperties.AutomationId="ObjectReviewSelectedTaskActionText"
@@ -498,131 +534,397 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                                IsEnabled="{Binding IsApplyClassEnabled}"
                                Command="{Binding ApplyObjectClassCommand}" />
                 </Grid>
-                <Grid Margin="0,6,0,0">
+                <Grid Margin="0,6,0,0"
+                      HorizontalAlignment="Right">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="MergeSelectionText"
-                               AutomationProperties.AutomationId="MergeSelectionText"
-                               Text="{Binding MergeSelectionText}"
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               FontFamily="Segoe UI"
-                               FontSize="9.5"
-                               VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis" />
-                    <ui:Button x:Name="MergeSelectedSegmentsButton"
-                               Grid.Column="1"
-                               AutomationProperties.AutomationId="MergeSelectedSegmentsButton"
-                               AutomationProperties.Name="&#xC120;&#xD0DD; &#xB9C8;&#xC2A4;&#xD06C; &#xBCD1;&#xD569;"
-                               Style="{StaticResource ObjectReviewButtonStyle}"
-                               MinWidth="96"
-                               Height="24"
-                               Padding="8,0"
-                               Margin="6,0,0,0"
-                               Content="&#xC120;&#xD0DD; &#xB9C8;&#xC2A4;&#xD06C; &#xBCD1;&#xD569;"
-                               ToolTip="&#xAC19;&#xC740; &#xD074;&#xB798;&#xC2A4; &#xC138;&#xADF8;&#xBA3C;&#xD2B8; 2&#xAC1C; &#xC774;&#xC0C1;&#xC744; &#xD558;&#xB098;&#xC758; &#xB9C8;&#xC2A4;&#xD06C; &#xAC1D;&#xCCB4;&#xB85C; &#xBCD1;&#xD569;"
-                               IsEnabled="{Binding IsMergeSelectedSegmentsEnabled}"
-                               Command="{Binding MergeSelectedSegmentsCommand}" />
-                </Grid>
-                <Grid Margin="0,6,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ui:Button x:Name="BeginVerticalSplitButton"
-                               AutomationProperties.AutomationId="BeginVerticalSplitButton"
-                               AutomationProperties.Name="&#xC138;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58; &#xC120;&#xD0DD;"
-                               Style="{StaticResource ObjectReviewButtonStyle}"
-                               Height="24"
+                    <ui:Button x:Name="ToggleObjectHiddenButton"
+                               AutomationProperties.AutomationId="ToggleObjectHiddenButton"
+                               AutomationProperties.Name="&#xC120;&#xD0DD; &#xAC1D;&#xCCB4; &#xC228;&#xAE40; &#xC804;&#xD658;"
+                               Style="{StaticResource ObjectReviewStateButtonStyle}"
                                Margin="0,0,3,0"
-                               Content="&#xC138;&#xB85C; &#xC808;&#xB2E8;"
-                               ToolTip="&#xC120;&#xD0DD;&#xD55C; &#xC138;&#xADF8;&#xBA3C;&#xD2B8;&#xC758; &#xC138;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58;&#xB97C; &#xCE94;&#xBC84;&#xC2A4;&#xC5D0;&#xC11C; &#xC120;&#xD0DD;"
-                               IsEnabled="{Binding IsSplitEnabled}"
-                               Command="{Binding BeginVerticalSplitCommand}" />
-                    <ui:Button x:Name="BeginHorizontalSplitButton"
+                               ToolTip="&#xC228;&#xAE40;: &#xD604;&#xC7AC; &#xC774;&#xBBF8;&#xC9C0; &#xC138;&#xC158;&#xC5D0;&#xC11C;&#xB9CC; &#xCEA0;&#xBC84;&#xC2A4; &#xD45C;&#xC2DC; &#xC804;&#xD658;"
+                               Tag="{Binding IsSelectedObjectHidden}"
+                               IsEnabled="{Binding IsObjectSessionStateEnabled}"
+                               Command="{Binding ToggleObjectHiddenCommand}">
+                        <iconPacks:PackIconMaterial Kind="EyeOffOutline"
+                                                    Style="{StaticResource ObjectReviewStateIconStyle}" />
+                    </ui:Button>
+                    <ui:Button x:Name="ToggleObjectLockedButton"
                                Grid.Column="1"
-                               AutomationProperties.AutomationId="BeginHorizontalSplitButton"
-                               AutomationProperties.Name="&#xAC00;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58; &#xC120;&#xD0DD;"
-                               Style="{StaticResource ObjectReviewButtonStyle}"
-                               Height="24"
+                               AutomationProperties.AutomationId="ToggleObjectLockedButton"
+                               AutomationProperties.Name="&#xC120;&#xD0DD; &#xAC1D;&#xCCB4; &#xC7A0;&#xAE08; &#xC804;&#xD658;"
+                               Style="{StaticResource ObjectReviewStateButtonStyle}"
                                Margin="3,0"
-                               Content="&#xAC00;&#xB85C; &#xC808;&#xB2E8;"
-                               ToolTip="&#xC120;&#xD0DD;&#xD55C; &#xC138;&#xADF8;&#xBA3C;&#xD2B8;&#xC758; &#xAC00;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58;&#xB97C; &#xCE94;&#xBC84;&#xC2A4;&#xC5D0;&#xC11C; &#xC120;&#xD0DD;"
-                               IsEnabled="{Binding IsSplitEnabled}"
-                               Command="{Binding BeginHorizontalSplitCommand}" />
-                    <ui:Button x:Name="CancelSplitButton"
+                               ToolTip="&#xC7A0;&#xAE08;: geometry, &#xD074;&#xB798;&#xC2A4;, &#xC0AD;&#xC81C;, &#xAD6C;&#xC870; &#xD3B8;&#xC9D1; &#xCC28;&#xB2E8;"
+                               Tag="{Binding IsSelectedObjectLocked}"
+                               IsEnabled="{Binding IsObjectSessionStateEnabled}"
+                               Command="{Binding ToggleObjectLockedCommand}">
+                        <iconPacks:PackIconMaterial Kind="LockOutline"
+                                                    Style="{StaticResource ObjectReviewStateIconStyle}" />
+                    </ui:Button>
+                    <ui:Button x:Name="ToggleObjectPinnedButton"
                                Grid.Column="2"
-                               AutomationProperties.AutomationId="CancelSplitButton"
-                               AutomationProperties.Name="&#xC138;&#xADF8;&#xBA3C;&#xD2B8; &#xC808;&#xB2E8; &#xCDE8;&#xC18C;"
-                               Style="{StaticResource ObjectReviewButtonStyle}"
-                               MinWidth="44"
-                               Height="24"
+                               AutomationProperties.AutomationId="ToggleObjectPinnedButton"
+                               AutomationProperties.Name="&#xC120;&#xD0DD; &#xAC1D;&#xCCB4; &#xC774;&#xB3D9; &#xACE0;&#xC815; &#xC804;&#xD658;"
+                               Style="{StaticResource ObjectReviewStateButtonStyle}"
                                Margin="3,0,0,0"
-                               Padding="7,0"
-                               Content="&#xCDE8;&#xC18C;"
-                               ToolTip="&#xC808;&#xB2E8; &#xC704;&#xCE58; &#xC120;&#xD0DD; &#xCDE8;&#xC18C;"
-                               IsEnabled="{Binding IsSplitPending}"
-                               Command="{Binding CancelSplitCommand}" />
+                               ToolTip="&#xC774;&#xB3D9; &#xACE0;&#xC815;: &#xC804;&#xCCB4; &#xC704;&#xCE58; &#xC774;&#xB3D9;&#xB9CC; &#xB9C9;&#xACE0; &#xD06C;&#xAE30; &#xC870;&#xC808;, &#xBCF5;&#xC0AC;, &#xC0AD;&#xC81C;&#xB294; &#xD5C8;&#xC6A9;"
+                               Tag="{Binding IsSelectedObjectPinned}"
+                               IsEnabled="{Binding IsObjectSessionStateEnabled}"
+                               Command="{Binding ToggleObjectPinnedCommand}">
+                        <iconPacks:PackIconMaterial Kind="PinOutline"
+                                                    Style="{StaticResource ObjectReviewStateIconStyle}" />
+                    </ui:Button>
                 </Grid>
-                <TextBlock x:Name="SplitStatusText"
-                           AutomationProperties.AutomationId="SplitStatusText"
-                           Text="{Binding SplitStatusText}"
+                <TextBlock x:Name="ObjectSessionStateStatusText"
+                           AutomationProperties.AutomationId="ObjectSessionStateStatusText"
+                           Text="{Binding ObjectSessionStateStatusText}"
                            Foreground="{DynamicResource SecondaryTextBrush}"
                            FontFamily="Segoe UI"
                            FontSize="9.5"
                            Margin="0,4,0,0"
+                           Visibility="Collapsed"
                            TextWrapping="Wrap" />
-                <Grid Margin="0,6,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ui:Button x:Name="BeginAddHoleButton"
-                               AutomationProperties.AutomationId="BeginAddHoleButton"
-                               AutomationProperties.Name="&#xB0B4;&#xBD80; &#xAD6C;&#xBA4D; &#xB2E4;&#xAC01;&#xD615; &#xADF8;&#xB9AC;&#xAE30;"
-                               Style="{StaticResource ObjectReviewButtonStyle}"
-                               Height="24"
-                               Margin="0,0,3,0"
-                               Content="&#xAD6C;&#xBA4D; &#xADF8;&#xB9AC;&#xAE30;"
-                               ToolTip="&#xC120;&#xD0DD;&#xD55C; &#xC138;&#xADF8;&#xBA3C;&#xD2B8; &#xC548;&#xCABD;&#xC5D0; &#xB2E4;&#xAC01;&#xD615; &#xAD6C;&#xBA4D; &#xCD94;&#xAC00;"
-                               IsEnabled="{Binding IsHoleEditEnabled}"
-                               Command="{Binding BeginAddHoleCommand}" />
-                    <ui:Button x:Name="BeginRemoveHoleButton"
-                               Grid.Column="1"
-                               AutomationProperties.AutomationId="BeginRemoveHoleButton"
-                               AutomationProperties.Name="&#xB0B4;&#xBD80; &#xAD6C;&#xBA4D; &#xCC44;&#xC6B0;&#xAE30;"
-                               Style="{StaticResource ObjectReviewButtonStyle}"
-                               Height="24"
-                               Margin="3,0"
-                               Content="&#xAD6C;&#xBA4D; &#xCC44;&#xC6B0;&#xAE30;"
-                               ToolTip="&#xC120;&#xD0DD;&#xD55C; &#xC138;&#xADF8;&#xBA3C;&#xD2B8;&#xC758; &#xBE48; &#xB0B4;&#xBD80; &#xAD6C;&#xBA4D;&#xC744; &#xD074;&#xB9AD;&#xD574; &#xCC44;&#xC6B0;&#xAE30;"
-                               IsEnabled="{Binding IsHoleEditEnabled}"
-                               Command="{Binding BeginRemoveHoleCommand}" />
-                    <ui:Button x:Name="CancelHoleEditButton"
-                               Grid.Column="2"
-                               AutomationProperties.AutomationId="CancelHoleEditButton"
-                               AutomationProperties.Name="&#xB0B4;&#xBD80; &#xAD6C;&#xBA4D; &#xD3B8;&#xC9D1; &#xCDE8;&#xC18C;"
-                               Style="{StaticResource ObjectReviewButtonStyle}"
-                               MinWidth="44"
-                               Height="24"
-                               Margin="3,0,0,0"
-                               Padding="7,0"
-                               Content="&#xCDE8;&#xC18C;"
-                               ToolTip="&#xB0B4;&#xBD80; &#xAD6C;&#xBA4D; &#xD3B8;&#xC9D1; &#xCDE8;&#xC18C;"
-                               IsEnabled="{Binding IsHoleEditPending}"
-                               Command="{Binding CancelHoleEditCommand}" />
-                </Grid>
-                <TextBlock x:Name="HoleEditStatusText"
-                           AutomationProperties.AutomationId="HoleEditStatusText"
-                           Text="{Binding HoleEditStatusText}"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           FontFamily="Segoe UI"
-                           FontSize="9.5"
-                           Margin="0,4,0,0"
-                           TextWrapping="Wrap" />
+                <Expander x:Name="SegmentationAdvancedEditExpander"
+                          AutomationProperties.AutomationId="SegmentationAdvancedEditExpander"
+                          AutomationProperties.Name="&#xC138;&#xADF8;&#xBA3C;&#xD2B8; &#xACE0;&#xAE09; &#xD3B8;&#xC9D1;"
+                          Header="&#xC138;&#xADF8;&#xBA3C;&#xD2B8; &#xD3B8;&#xC9D1; &#xC635;&#xC158;"
+                          Margin="0,5,0,0"
+                          Foreground="{DynamicResource PrimaryTextBrush}"
+                          FontFamily="Segoe UI"
+                          FontSize="11"
+                          IsExpanded="{Binding IsSegmentAdvancedEditorOpen, Mode=TwoWay}"
+                          Visibility="{Binding IsSegmentContextVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Margin="0,3,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="MergeSelectionText"
+                                       AutomationProperties.AutomationId="MergeSelectionText"
+                                       Text="{Binding MergeSelectionText}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       FontSize="9.5"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+                            <ui:Button x:Name="MergeSelectedSegmentsButton"
+                                       Grid.Column="1"
+                                       AutomationProperties.AutomationId="MergeSelectedSegmentsButton"
+                                       AutomationProperties.Name="&#xC120;&#xD0DD; &#xB9C8;&#xC2A4;&#xD06C; &#xBCD1;&#xD569;"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Padding="7,0"
+                                       Margin="5,0,0,0"
+                                       Content="&#xBCD1;&#xD569;"
+                                       ToolTip="&#xAC19;&#xC740; &#xD074;&#xB798;&#xC2A4; &#xC138;&#xADF8;&#xBA3C;&#xD2B8; 2&#xAC1C; &#xC774;&#xC0C1; &#xBCD1;&#xD569;"
+                                       IsEnabled="{Binding IsMergeSelectedSegmentsEnabled}"
+                                       Command="{Binding MergeSelectedSegmentsCommand}" />
+                        </Grid>
+                        <StackPanel Margin="0,5,0,0"
+                                    Visibility="{Binding IsPolygonVertexContextVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ui:Button x:Name="BeginInsertVertexButton"
+                                           AutomationProperties.AutomationId="BeginInsertVertexButton"
+                                           AutomationProperties.Name="&#xD3F4;&#xB9AC;&#xACE4; &#xC815;&#xC810; &#xCD94;&#xAC00;"
+                                           Style="{StaticResource ObjectReviewButtonStyle}"
+                                           Height="24"
+                                           Margin="0,0,3,0"
+                                           Content="&#xC815;&#xC810; &#xCD94;&#xAC00;"
+                                           ToolTip="&#xCE94;&#xBC84;&#xC2A4;&#xC5D0;&#xC11C; &#xD3F4;&#xB9AC;&#xACE4; &#xBAA8;&#xC11C;&#xB9AC;&#xB97C; &#xD074;&#xB9AD;&#xD574; &#xC815;&#xC810; &#xCD94;&#xAC00;"
+                                           IsEnabled="{Binding IsVertexEditEnabled}"
+                                           Command="{Binding BeginInsertVertexCommand}" />
+                                <ui:Button x:Name="BeginDeleteVertexButton"
+                                           Grid.Column="1"
+                                           AutomationProperties.AutomationId="BeginDeleteVertexButton"
+                                           AutomationProperties.Name="&#xD3F4;&#xB9AC;&#xACE4; &#xC815;&#xC810; &#xC0AD;&#xC81C;"
+                                           Style="{StaticResource ObjectReviewButtonStyle}"
+                                           Height="24"
+                                           Margin="3,0"
+                                           Content="&#xC815;&#xC810; &#xC0AD;&#xC81C;"
+                                           ToolTip="&#xCE94;&#xBC84;&#xC2A4;&#xC5D0;&#xC11C; &#xD3F4;&#xB9AC;&#xACE4; &#xC815;&#xC810;&#xC744; &#xD074;&#xB9AD;&#xD574; &#xC0AD;&#xC81C;"
+                                           IsEnabled="{Binding IsVertexEditEnabled}"
+                                           Command="{Binding BeginDeleteVertexCommand}" />
+                                <ui:Button x:Name="CancelVertexEditButton"
+                                           Grid.Column="2"
+                                           AutomationProperties.AutomationId="CancelVertexEditButton"
+                                           Style="{StaticResource ObjectReviewButtonStyle}"
+                                           Height="24"
+                                           Margin="3,0,0,0"
+                                           Padding="7,0"
+                                           Content="&#xCDE8;&#xC18C;"
+                                           ToolTip="&#xC815;&#xC810; &#xD3B8;&#xC9D1; &#xC704;&#xCE58; &#xC120;&#xD0DD; &#xCDE8;&#xC18C;"
+                                           Visibility="{Binding IsVertexEditPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                           Command="{Binding CancelVertexEditCommand}" />
+                            </Grid>
+                            <TextBlock x:Name="VertexEditStatusText"
+                                       AutomationProperties.AutomationId="VertexEditStatusText"
+                                       Text="{Binding VertexEditStatusText}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       FontSize="9.5"
+                                       Margin="0,3,0,0"
+                                       Visibility="{Binding IsVertexEditPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Margin="0,5,0,0"
+                                    Visibility="{Binding IsPolygonVertexContextVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ui:Button x:Name="BeginIntelligentScissorsButton"
+                                           AutomationProperties.AutomationId="BeginIntelligentScissorsButton"
+                                           AutomationProperties.Name="&#xACBD;&#xACC4; &#xCD94;&#xC885; &#xBBF8;&#xB9AC;&#xBCF4;&#xAE30; &#xC2DC;&#xC791;"
+                                           Style="{StaticResource ObjectReviewButtonStyle}"
+                                           Height="24"
+                                           Margin="0,0,3,0"
+                                           Content="&#xACBD;&#xACC4; &#xCD94;&#xC885;"
+                                           ToolTip="&#xD3F4;&#xB9AC;&#xACE4; &#xBAA8;&#xC11C;&#xB9AC;&#xB97C; &#xD074;&#xB9AD;&#xD574; &#xC774;&#xBBF8;&#xC9C0; &#xACBD;&#xACC4; &#xACBD;&#xB85C;&#xB97C; &#xBBF8;&#xB9AC;&#xBCF4;&#xAE30;"
+                                           IsEnabled="{Binding IsIntelligentScissorsEnabled}"
+                                           Command="{Binding BeginIntelligentScissorsCommand}" />
+                                <ui:Button x:Name="ApplyIntelligentScissorsButton"
+                                           Grid.Column="1"
+                                           AutomationProperties.AutomationId="ApplyIntelligentScissorsButton"
+                                           AutomationProperties.Name="&#xACBD;&#xACC4; &#xACBD;&#xB85C; &#xC801;&#xC6A9;"
+                                           Style="{StaticResource ObjectReviewButtonStyle}"
+                                           Height="24"
+                                           Margin="3,0"
+                                           Content="&#xBBF8;&#xB9AC;&#xBCF4;&#xAE30; &#xC801;&#xC6A9;"
+                                           ToolTip="&#xCE94;&#xBC84;&#xC2A4;&#xC758; &#xBBF8;&#xB9AC;&#xBCF4;&#xAE30; &#xACBD;&#xB85C;&#xB97C; &#xD3F4;&#xB9AC;&#xACE4;&#xC5D0; &#xC801;&#xC6A9;"
+                                           IsEnabled="{Binding HasIntelligentScissorsPreview}"
+                                           Visibility="{Binding IsIntelligentScissorsPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                           Command="{Binding ApplyIntelligentScissorsCommand}" />
+                                <ui:Button x:Name="CancelIntelligentScissorsButton"
+                                           Grid.Column="2"
+                                           AutomationProperties.AutomationId="CancelIntelligentScissorsButton"
+                                           AutomationProperties.Name="&#xACBD;&#xACC4; &#xCD94;&#xC885; &#xCDE8;&#xC18C;"
+                                           Style="{StaticResource ObjectReviewButtonStyle}"
+                                           Height="24"
+                                           Margin="3,0,0,0"
+                                           Padding="7,0"
+                                           Content="&#xCDE8;&#xC18C;"
+                                           ToolTip="&#xACBD;&#xACC4; &#xC120;&#xD0DD; &#xB610;&#xB294; &#xBBF8;&#xB9AC;&#xBCF4;&#xAE30; &#xCDE8;&#xC18C;"
+                                           Visibility="{Binding IsIntelligentScissorsPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                           Command="{Binding CancelIntelligentScissorsCommand}" />
+                            </Grid>
+                            <TextBlock x:Name="IntelligentScissorsStatusText"
+                                       AutomationProperties.AutomationId="IntelligentScissorsStatusText"
+                                       Text="{Binding IntelligentScissorsStatusText}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       FontSize="9.5"
+                                       Margin="0,3,0,0"
+                                       Visibility="{Binding IsIntelligentScissorsPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Grid Margin="0,5,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:Button x:Name="BeginVerticalSplitButton"
+                                       AutomationProperties.AutomationId="BeginVerticalSplitButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="0,0,3,0"
+                                       Content="&#xC138;&#xB85C; &#xC808;&#xB2E8;"
+                                       ToolTip="&#xC138;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58;&#xB97C; &#xCE94;&#xBC84;&#xC2A4;&#xC5D0;&#xC11C; &#xC120;&#xD0DD;"
+                                       IsEnabled="{Binding IsSplitEnabled}"
+                                       Command="{Binding BeginVerticalSplitCommand}" />
+                            <ui:Button x:Name="BeginHorizontalSplitButton"
+                                       Grid.Column="1"
+                                       AutomationProperties.AutomationId="BeginHorizontalSplitButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="3,0"
+                                       Content="&#xAC00;&#xB85C; &#xC808;&#xB2E8;"
+                                       ToolTip="&#xAC00;&#xB85C; &#xC808;&#xB2E8; &#xC704;&#xCE58;&#xB97C; &#xCE94;&#xBC84;&#xC2A4;&#xC5D0;&#xC11C; &#xC120;&#xD0DD;"
+                                       IsEnabled="{Binding IsSplitEnabled}"
+                                       Command="{Binding BeginHorizontalSplitCommand}" />
+                            <ui:Button x:Name="CancelSplitButton"
+                                       Grid.Column="2"
+                                       AutomationProperties.AutomationId="CancelSplitButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="3,0,0,0"
+                                       Padding="7,0"
+                                       Content="&#xCDE8;&#xC18C;"
+                                       ToolTip="&#xC808;&#xB2E8; &#xC704;&#xCE58; &#xC120;&#xD0DD; &#xCDE8;&#xC18C;"
+                                       Visibility="{Binding IsSplitPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       Command="{Binding CancelSplitCommand}" />
+                        </Grid>
+                        <TextBlock x:Name="SplitStatusText"
+                                   AutomationProperties.AutomationId="SplitStatusText"
+                                   Text="{Binding SplitStatusText}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontSize="9.5"
+                                   Margin="0,3,0,0"
+                                   Visibility="{Binding IsSplitPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                   TextWrapping="Wrap" />
+                        <Grid Margin="0,5,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:Button x:Name="BeginAddHoleButton"
+                                       AutomationProperties.AutomationId="BeginAddHoleButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="0,0,3,0"
+                                       Content="&#xAD6C;&#xBA4D; &#xCD94;&#xAC00;"
+                                       ToolTip="&#xC120;&#xD0DD;&#xD55C; &#xC138;&#xADF8;&#xBA3C;&#xD2B8; &#xC548;&#xCABD;&#xC5D0; &#xAD6C;&#xBA4D; &#xCD94;&#xAC00;"
+                                       IsEnabled="{Binding IsHoleEditEnabled}"
+                                       Command="{Binding BeginAddHoleCommand}" />
+                            <ui:Button x:Name="BeginRemoveHoleButton"
+                                       Grid.Column="1"
+                                       AutomationProperties.AutomationId="BeginRemoveHoleButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="3,0"
+                                       Content="&#xAD6C;&#xBA4D; &#xCC44;&#xC6B0;&#xAE30;"
+                                       ToolTip="&#xBE48; &#xB0B4;&#xBD80; &#xAD6C;&#xBA4D;&#xC744; &#xD074;&#xB9AD;&#xD574; &#xCC44;&#xC6B0;&#xAE30;"
+                                       IsEnabled="{Binding IsHoleEditEnabled}"
+                                       Command="{Binding BeginRemoveHoleCommand}" />
+                            <ui:Button x:Name="CancelHoleEditButton"
+                                       Grid.Column="2"
+                                       AutomationProperties.AutomationId="CancelHoleEditButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="3,0,0,0"
+                                       Padding="7,0"
+                                       Content="&#xCDE8;&#xC18C;"
+                                       Visibility="{Binding IsHoleEditPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       Command="{Binding CancelHoleEditCommand}" />
+                        </Grid>
+                        <TextBlock x:Name="HoleEditStatusText"
+                                   AutomationProperties.AutomationId="HoleEditStatusText"
+                                   Text="{Binding HoleEditStatusText}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontSize="9.5"
+                                   Margin="0,3,0,0"
+                                   Visibility="{Binding IsHoleEditPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                   TextWrapping="Wrap" />
+                        <Grid Margin="0,5,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ui:Button x:Name="SendSegmentationToBackButton"
+                                       AutomationProperties.AutomationId="SendSegmentationToBackButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="0,0,3,0"
+                                       Content="&#xB9E8; &#xB4A4;"
+                                       ToolTip="&#xAC00;&#xC7A5; &#xB4A4;&#xB85C; &#xC774;&#xB3D9;"
+                                       IsEnabled="{Binding IsSendToBackEnabled}"
+                                       Command="{Binding SendToBackCommand}" />
+                            <ui:Button x:Name="SendSegmentationBackwardButton"
+                                       Grid.Column="1"
+                                       AutomationProperties.AutomationId="SendSegmentationBackwardButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="3,0"
+                                       Content="&#xD55C; &#xCE78; &#xB4A4;"
+                                       ToolTip="&#xD55C; &#xB2E8;&#xACC4; &#xB4A4;&#xB85C; &#xC774;&#xB3D9;"
+                                       IsEnabled="{Binding IsSendBackwardEnabled}"
+                                       Command="{Binding SendBackwardCommand}" />
+                            <ui:Button x:Name="BringSegmentationForwardButton"
+                                       Grid.Column="2"
+                                       AutomationProperties.AutomationId="BringSegmentationForwardButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="3,0"
+                                       Content="&#xD55C; &#xCE78; &#xC55E;"
+                                       ToolTip="&#xD55C; &#xB2E8;&#xACC4; &#xC55E;&#xC73C;&#xB85C; &#xC774;&#xB3D9;"
+                                       IsEnabled="{Binding IsBringForwardEnabled}"
+                                       Command="{Binding BringForwardCommand}" />
+                            <ui:Button x:Name="BringSegmentationToFrontButton"
+                                       Grid.Column="3"
+                                       AutomationProperties.AutomationId="BringSegmentationToFrontButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="3,0,0,0"
+                                       Content="&#xB9E8; &#xC55E;"
+                                       ToolTip="&#xAC00;&#xC7A5; &#xC55E;&#xC73C;&#xB85C; &#xC774;&#xB3D9;"
+                                       IsEnabled="{Binding IsBringToFrontEnabled}"
+                                       Command="{Binding BringToFrontCommand}" />
+                        </Grid>
+                        <TextBlock x:Name="ZOrderStatusText"
+                                   AutomationProperties.AutomationId="ZOrderStatusText"
+                                   Text="{Binding ZOrderStatusText}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontSize="9.5"
+                                   Margin="0,3,0,0"
+                                   TextWrapping="Wrap" />
+                        <Grid Margin="0,5,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:Button x:Name="PreviewRemoveUnderlyingButton"
+                                       AutomationProperties.AutomationId="PreviewRemoveUnderlyingButton"
+                                       Height="24"
+                                       Margin="0,0,3,0"
+                                       Content="&#xACB9;&#xCE68; &#xBD84;&#xC11D;"
+                                       ToolTip="&#xB4A4;&#xCABD; &#xACB9;&#xCE68; &#xC81C;&#xAC70; &#xC601;&#xD5A5; &#xBBF8;&#xB9AC;&#xBCF4;&#xAE30;"
+                                       IsEnabled="{Binding IsRemoveUnderlyingPreviewEnabled}"
+                                       Command="{Binding PreviewRemoveUnderlyingCommand}">
+                                <ui:Button.Style>
+                                    <Style TargetType="{x:Type ui:Button}"
+                                           BasedOn="{StaticResource ObjectReviewButtonStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsRemoveUnderlyingPreviewPending}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ui:Button.Style>
+                            </ui:Button>
+                            <ui:Button x:Name="ApplyRemoveUnderlyingButton"
+                                       Grid.Column="1"
+                                       AutomationProperties.AutomationId="ApplyRemoveUnderlyingButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="3,0"
+                                       Content="&#xD655;&#xC778; &#xD6C4; &#xC81C;&#xAC70;"
+                                       Visibility="{Binding IsRemoveUnderlyingPreviewPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       Command="{Binding ApplyRemoveUnderlyingCommand}" />
+                            <ui:Button x:Name="CancelRemoveUnderlyingButton"
+                                       Grid.Column="2"
+                                       AutomationProperties.AutomationId="CancelRemoveUnderlyingButton"
+                                       Style="{StaticResource ObjectReviewButtonStyle}"
+                                       Height="24"
+                                       Margin="3,0,0,0"
+                                       Content="&#xCDE8;&#xC18C;"
+                                       Visibility="{Binding IsRemoveUnderlyingPreviewPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       Command="{Binding CancelRemoveUnderlyingCommand}" />
+                        </Grid>
+                        <TextBlock x:Name="RemoveUnderlyingStatusText"
+                                   AutomationProperties.AutomationId="RemoveUnderlyingStatusText"
+                                   Text="{Binding RemoveUnderlyingStatusText}"
+                                   Foreground="#F59E0B"
+                                   FontSize="9.5"
+                                   FontWeight="SemiBold"
+                                   Margin="0,3,0,0"
+                                   Visibility="{Binding IsRemoveUnderlyingPreviewPending, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Expander>
             </StackPanel>
         </Border>
         <ListBox x:Name="ObjectListBox"
@@ -646,15 +948,25 @@ xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <CheckBox Style="{StaticResource ObjectReviewMergeCheckBoxStyle}"
                                   IsChecked="{Binding IsMergeSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  IsEnabled="{Binding CanMergeSelect}"
                                   Command="{Binding DataContext.MergeSelectionChangedCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                   CommandParameter="{Binding}" />
                         <TextBlock Grid.Column="1"
                                    Text="{Binding DisplayText}"
                                    ToolTip="{Binding ToolTip}"
+                                   Opacity="{Binding ContentOpacity}"
                                    TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding StateBadgeText}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontSize="9.5"
+                                   FontWeight="SemiBold"
+                                   Margin="6,0,0,0"
                                    VerticalAlignment="Center" />
                     </Grid>
                 </DataTemplate>
