@@ -125,21 +125,18 @@ Latest completed geometry slice:
 
 Immediate next priorities:
 
-1. Do not add persistent occluded/tag/group metadata until an operator
-   workflow and at least one Recipe/export/training/review consumer are named.
-   Prerequisite: explicit consumer contract.
-   Recommended model: none until the prerequisite exists
-   Reasoning effort: n/a
+1. Same-image Object Review grouping is Complete in
+   `docs/OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`. Do not reopen it
+   without a changed contract or focused regression. The remaining renderer
+   and field-adoption items below are prerequisite-blocked.
 
 Commercial-video priority ledger after that:
 
-5. Persistent `occluded`/tag/group metadata remains contract-dependent.
-   Prerequisite: name the operator workflow and at least one Recipe/export/
-   training/review consumer. Session-only hide/full-lock/movement-pin is
-   already complete and must not be converted into persistent metadata by
-   assumption.
-   Recommended model: none until the consumer contract is chosen
-   Reasoning effort: n/a
+5. Persistent `occluded`, Recipe-tag, and same-image group metadata are
+   Complete with Object Review as the named edit/filter/badge consumer.
+   Preserve the separate sidecar, explicit label-save boundary, dedicated
+   group selection, and session-only hide/full-lock/movement-pin separation;
+   training weighting and external interchange remain outside it.
 6. Exact polygon/raster cross-family z-order remains a renderer gap, but the
    Viewer/OpenGL path is protected. Reopen only with a reproduced visual-order
    defect and focused performance evidence.
@@ -265,8 +262,9 @@ workstation snapshot.
   rejected Smart Mask runs are historical evidence only. Read
   `docs\ACTUAL_EXE_VIDEO_AND_GITHUB_GIF_PLAN_20260728.md`. README/public media
   must remain unchanged unless the user explicitly approves replacement.
-  The labeling-only estimate is `3.4/5`; persistent object metadata, video
-  propagation, and collaboration still prevent CVAT/V7 parity.
+  The labeling-only estimate is `3.4/5`; bounded Object Review
+  `occluded`/tag/group persistence is now complete, while video propagation,
+  broader modalities, and collaboration still prevent CVAT/V7 parity.
   This remains separate from the focused local-workstation estimate of `4.0/5`.
   `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md` is the current
    implementation contract.
@@ -587,8 +585,8 @@ Full development sequence:
 4. P2 object state and precision geometry: contextual hide/full-lock/
    movement-pin correction, polygon vertex insert/delete, and bounded
    intelligent scissors are complete. The 4-point extreme-box contract and
-   bounded implementation are complete. Contract-backed
-   occlusion/tags/groups remain a later independent gate.
+   bounded implementation are complete. Contract-backed Object Review
+   `occluded`/tag/group persistence is complete.
 5. P3 display-only aids: `Complete`; brightness, contrast, gamma, invert,
    histogram/equalization, and overlay alignment preserve canonical source,
    disk file, history, and training pixels.
@@ -1093,14 +1091,14 @@ The authoritative ordering is:
    Recommended model: none until the prerequisite exists
    Reasoning effort: n/a
 
-2. Persistent object metadata contract. `occluded`, tags, and groups remain
-   unimplemented. They are not justified as decorative row icons. Name a
-   consumer in Recipe persistence, export, training, filtering, or review
-   before implementation. Existing hide/full-lock/movement-pin stays
-   session-only.
-   Prerequisite: explicit consumer and persistence/export semantics.
-   Recommended model: none until the contract is chosen
-   Reasoning effort: n/a
+2. Object Review persistent metadata. `occluded` and Recipe-defined tags are
+   Complete with editing, badges, combined filters, Recipe definition
+   save/reopen/reset, and separate per-image sidecars written only by explicit
+   label save. Existing hide/full-lock/movement-pin stays session-only.
+   Same-image group focus/filter/batch metadata is also Complete in
+   `docs/OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`, with schema-v2
+   save, v1 load, a dedicated selection set, and defined mutation rules.
+   Training behavior and external interchange remain deliberately excluded.
 
 3. Polygon/raster cross-family z-order. Current canonical order and each
    overlay family's order are verified, but exact cross-family composition is

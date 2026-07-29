@@ -12,9 +12,14 @@ namespace MvcVisionSystem
 {
     public sealed class WpfObjectReviewPanelViewModel : WpfObservableViewModel
     {
+        public const string AllMetadataTagsFilter = "\uC804\uCCB4 \uD0DC\uADF8";
+        public const string AllGroupsFilter = "\uC804\uCCB4 \uADF8\uB8F9";
+        public const string UngroupedFilter = "\uBBF8\uADF8\uB8F9";
+
         private static readonly Action NoOpCommand = () => { };
         private static readonly Action<object> NoOpSelectionCommand = _ => { };
         private static readonly Action<KeyInputCommandArgs> NoOpKeyCommand = _ => { };
+        private readonly List<string> recipeMetadataTags = new List<string>();
         private string summaryText = "\uD604\uC7AC \uC774\uBBF8\uC9C0 \uAC1D\uCCB4 \uC5C6\uC74C";
         private string selectedObjectTaskTitleText = "\uC120\uD0DD \uB77C\uBCA8 \uC5C6\uC74C";
         private string selectedObjectTaskDetailText = "\uCE94\uBC84\uC2A4\uB098 \uBAA9\uB85D\uC5D0\uC11C \uC218\uC815\uD560 \uB77C\uBCA8\uC744 \uC120\uD0DD\uD558\uC138\uC694.";
@@ -55,6 +60,22 @@ namespace MvcVisionSystem
         private bool isSelectedObjectLocked;
         private bool isSelectedObjectPinned;
         private string objectSessionStateStatusText = "\uC228\uAE40/\uC7A0\uAE08/\uC774\uB3D9 \uACE0\uC815\uC740 \uD604\uC7AC \uC774\uBBF8\uC9C0 \uC138\uC158\uC5D0\uB9CC \uC801\uC6A9\uB429\uB2C8\uB2E4.";
+        private bool isPersistentMetadataEnabled;
+        private bool isSelectedObjectOccluded;
+        private string selectedObjectTagsText = "\uD0DC\uADF8 \uC5C6\uC74C";
+        private string selectedMetadataTag = string.Empty;
+        private string selectedMetadataTagFilter = AllMetadataTagsFilter;
+        private bool isOccludedFilterActive;
+        private bool isRefreshingMetadataTagCatalog;
+        private string metadataFilterSummaryText = "\uBA54\uD0C0\uB370\uC774\uD130 \uD544\uD130 \uC5C6\uC74C";
+        private string selectedGroupFilter = AllGroupsFilter;
+        private bool isRefreshingGroupCatalog;
+        private string selectedObjectGroupText = "\uADF8\uB8F9 \uC5C6\uC74C";
+        private bool isGroupSelectionMode;
+        private int groupSelectionCount;
+        private string groupSelectionStatusText = "\uADF8\uB8F9 \uAD6C\uC131\uC744 \uC2DC\uC791\uD558\uBA74 \uC800\uC7A5 \uAC1D\uCCB4\uB97C 2\uAC1C \uC774\uC0C1 \uC120\uD0DD\uD569\uB2C8\uB2E4.";
+        private bool isCreateGroupEnabled;
+        private bool isSelectedObjectGrouped;
         private bool isSegmentContextVisible;
         private bool isSegmentAdvancedEditorOpen;
         private string qualityReviewStatusText = "이미지 없음";
@@ -92,12 +113,42 @@ namespace MvcVisionSystem
         private ICommand toggleObjectHiddenCommand = new RelayCommand(NoOpCommand);
         private ICommand toggleObjectLockedCommand = new RelayCommand(NoOpCommand);
         private ICommand toggleObjectPinnedCommand = new RelayCommand(NoOpCommand);
+        private ICommand togglePersistentOccludedCommand = new RelayCommand(NoOpCommand);
+        private ICommand togglePersistentTagCommand = new RelayCommand(NoOpCommand);
+        private ICommand resetRecipeMetadataTagsCommand = new RelayCommand(NoOpCommand);
+        private ICommand beginGroupSelectionCommand = new RelayCommand(NoOpCommand);
+        private ICommand cancelGroupSelectionCommand = new RelayCommand(NoOpCommand);
+        private ICommand createGroupCommand = new RelayCommand(NoOpCommand);
+        private ICommand groupSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
+        private ICommand removeSelectedFromGroupCommand = new RelayCommand(NoOpCommand);
+        private ICommand dissolveSelectedGroupCommand = new RelayCommand(NoOpCommand);
+        private ICommand toggleGroupOccludedCommand = new RelayCommand(NoOpCommand);
+        private ICommand toggleGroupTagCommand = new RelayCommand(NoOpCommand);
+        private ICommand toggleOccludedFilterCommand;
+        private ICommand resetMetadataFilterCommand;
         private ICommand objectSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
         private ICommand objectPreviewKeyDownCommand = new RelayCommand<KeyInputCommandArgs>(NoOpKeyCommand);
         private ICommand markQualityUnreviewedCommand = new RelayCommand(NoOpCommand);
         private ICommand markQualityNeedsFixCommand = new RelayCommand(NoOpCommand);
         private ICommand markQualityReviewedCommand = new RelayCommand(NoOpCommand);
         private ICommand exportQualityReviewReportCommand = new RelayCommand(NoOpCommand);
+
+        public WpfObjectReviewPanelViewModel()
+        {
+            MetadataTagFilters.Add(AllMetadataTagsFilter);
+            GroupFilters.Add(AllGroupsFilter);
+            GroupFilters.Add(UngroupedFilter);
+            toggleOccludedFilterCommand = new RelayCommand(() =>
+            {
+                IsOccludedFilterActive = !IsOccludedFilterActive;
+            });
+            resetMetadataFilterCommand = new RelayCommand(() =>
+            {
+                IsOccludedFilterActive = false;
+                SelectedMetadataTagFilter = AllMetadataTagsFilter;
+                SelectedGroupFilter = AllGroupsFilter;
+            });
+        }
 
         public string ViewName => nameof(WpfObjectReviewPanel);
 
@@ -114,6 +165,12 @@ namespace MvcVisionSystem
         public WpfBulkObservableCollection<WpfObjectReviewListItem> Objects { get; } = new WpfBulkObservableCollection<WpfObjectReviewListItem>();
 
         public ObservableCollection<string> ClassNames { get; } = new ObservableCollection<string>();
+
+        public ObservableCollection<string> MetadataTagOptions { get; } = new ObservableCollection<string>();
+
+        public ObservableCollection<string> MetadataTagFilters { get; } = new ObservableCollection<string>();
+
+        public ObservableCollection<string> GroupFilters { get; } = new ObservableCollection<string>();
 
         public ICommand DeleteObjectCommand
         {
@@ -270,6 +327,76 @@ namespace MvcVisionSystem
             get => toggleObjectPinnedCommand;
             private set => SetProperty(ref toggleObjectPinnedCommand, value);
         }
+
+        public ICommand TogglePersistentOccludedCommand
+        {
+            get => togglePersistentOccludedCommand;
+            private set => SetProperty(ref togglePersistentOccludedCommand, value);
+        }
+
+        public ICommand TogglePersistentTagCommand
+        {
+            get => togglePersistentTagCommand;
+            private set => SetProperty(ref togglePersistentTagCommand, value);
+        }
+
+        public ICommand ResetRecipeMetadataTagsCommand
+        {
+            get => resetRecipeMetadataTagsCommand;
+            private set => SetProperty(ref resetRecipeMetadataTagsCommand, value);
+        }
+
+        public ICommand BeginGroupSelectionCommand
+        {
+            get => beginGroupSelectionCommand;
+            private set => SetProperty(ref beginGroupSelectionCommand, value);
+        }
+
+        public ICommand CancelGroupSelectionCommand
+        {
+            get => cancelGroupSelectionCommand;
+            private set => SetProperty(ref cancelGroupSelectionCommand, value);
+        }
+
+        public ICommand CreateGroupCommand
+        {
+            get => createGroupCommand;
+            private set => SetProperty(ref createGroupCommand, value);
+        }
+
+        public ICommand GroupSelectionChangedCommand
+        {
+            get => groupSelectionChangedCommand;
+            private set => SetProperty(ref groupSelectionChangedCommand, value);
+        }
+
+        public ICommand RemoveSelectedFromGroupCommand
+        {
+            get => removeSelectedFromGroupCommand;
+            private set => SetProperty(ref removeSelectedFromGroupCommand, value);
+        }
+
+        public ICommand DissolveSelectedGroupCommand
+        {
+            get => dissolveSelectedGroupCommand;
+            private set => SetProperty(ref dissolveSelectedGroupCommand, value);
+        }
+
+        public ICommand ToggleGroupOccludedCommand
+        {
+            get => toggleGroupOccludedCommand;
+            private set => SetProperty(ref toggleGroupOccludedCommand, value);
+        }
+
+        public ICommand ToggleGroupTagCommand
+        {
+            get => toggleGroupTagCommand;
+            private set => SetProperty(ref toggleGroupTagCommand, value);
+        }
+
+        public ICommand ToggleOccludedFilterCommand => toggleOccludedFilterCommand;
+
+        public ICommand ResetMetadataFilterCommand => resetMetadataFilterCommand;
 
         public ICommand ObjectSelectionChangedCommand
         {
@@ -559,6 +686,126 @@ namespace MvcVisionSystem
             private set => SetProperty(ref objectSessionStateStatusText, value ?? string.Empty);
         }
 
+        public bool IsPersistentMetadataEnabled
+        {
+            get => isPersistentMetadataEnabled;
+            private set => SetProperty(ref isPersistentMetadataEnabled, value);
+        }
+
+        public bool IsSelectedObjectOccluded
+        {
+            get => isSelectedObjectOccluded;
+            private set => SetProperty(ref isSelectedObjectOccluded, value);
+        }
+
+        public string SelectedObjectTagsText
+        {
+            get => selectedObjectTagsText;
+            private set => SetProperty(ref selectedObjectTagsText, value ?? string.Empty);
+        }
+
+        public string SelectedMetadataTag
+        {
+            get => selectedMetadataTag;
+            set => SetProperty(
+                ref selectedMetadataTag,
+                WpfObjectMetadataStateService.NormalizeTag(value));
+        }
+
+        public string SelectedMetadataTagFilter
+        {
+            get => selectedMetadataTagFilter;
+            set
+            {
+                if (isRefreshingMetadataTagCatalog && string.IsNullOrWhiteSpace(value))
+                {
+                    return;
+                }
+
+                string normalized = string.IsNullOrWhiteSpace(value)
+                    ? AllMetadataTagsFilter
+                    : value.Trim();
+                if (SetProperty(ref selectedMetadataTagFilter, normalized))
+                {
+                    RefreshMetadataFilter();
+                }
+            }
+        }
+
+        public bool IsOccludedFilterActive
+        {
+            get => isOccludedFilterActive;
+            private set
+            {
+                if (SetProperty(ref isOccludedFilterActive, value))
+                {
+                    RefreshMetadataFilter();
+                }
+            }
+        }
+
+        public string MetadataFilterSummaryText
+        {
+            get => metadataFilterSummaryText;
+            private set => SetProperty(ref metadataFilterSummaryText, value ?? string.Empty);
+        }
+
+        public string SelectedGroupFilter
+        {
+            get => selectedGroupFilter;
+            set
+            {
+                if (isRefreshingGroupCatalog && string.IsNullOrWhiteSpace(value))
+                {
+                    return;
+                }
+
+                string normalized = string.IsNullOrWhiteSpace(value)
+                    ? AllGroupsFilter
+                    : value.Trim();
+                if (SetProperty(ref selectedGroupFilter, normalized))
+                {
+                    RefreshMetadataFilter();
+                }
+            }
+        }
+
+        public string SelectedObjectGroupText
+        {
+            get => selectedObjectGroupText;
+            private set => SetProperty(ref selectedObjectGroupText, value ?? string.Empty);
+        }
+
+        public bool IsGroupSelectionMode
+        {
+            get => isGroupSelectionMode;
+            private set => SetProperty(ref isGroupSelectionMode, value);
+        }
+
+        public int GroupSelectionCount
+        {
+            get => groupSelectionCount;
+            private set => SetProperty(ref groupSelectionCount, Math.Max(0, value));
+        }
+
+        public string GroupSelectionStatusText
+        {
+            get => groupSelectionStatusText;
+            private set => SetProperty(ref groupSelectionStatusText, value ?? string.Empty);
+        }
+
+        public bool IsCreateGroupEnabled
+        {
+            get => isCreateGroupEnabled;
+            private set => SetProperty(ref isCreateGroupEnabled, value);
+        }
+
+        public bool IsSelectedObjectGrouped
+        {
+            get => isSelectedObjectGrouped;
+            private set => SetProperty(ref isSelectedObjectGrouped, value);
+        }
+
         public bool IsSegmentContextVisible
         {
             get => isSegmentContextVisible;
@@ -662,7 +909,18 @@ namespace MvcVisionSystem
             Action cancelRemoveUnderlying = null,
             Action toggleObjectHidden = null,
             Action toggleObjectLocked = null,
-            Action toggleObjectPinned = null)
+            Action toggleObjectPinned = null,
+            Action togglePersistentOccluded = null,
+            Action<string> togglePersistentTag = null,
+            Action resetRecipeMetadataTags = null,
+            Action beginGroupSelection = null,
+            Action cancelGroupSelection = null,
+            Action createGroup = null,
+            Action<object> groupSelectionChanged = null,
+            Action removeSelectedFromGroup = null,
+            Action dissolveSelectedGroup = null,
+            Action toggleGroupOccluded = null,
+            Action<string> toggleGroupTag = null)
         {
             // The review panel exposes commands; the shell injects workflow actions without owning the view events.
             DeleteObjectCommand = new RelayCommand(deleteObject ?? NoOpCommand);
@@ -701,6 +959,23 @@ namespace MvcVisionSystem
             ToggleObjectHiddenCommand = new RelayCommand(toggleObjectHidden ?? NoOpCommand);
             ToggleObjectLockedCommand = new RelayCommand(toggleObjectLocked ?? NoOpCommand);
             ToggleObjectPinnedCommand = new RelayCommand(toggleObjectPinned ?? NoOpCommand);
+            TogglePersistentOccludedCommand = new RelayCommand(togglePersistentOccluded ?? NoOpCommand);
+            TogglePersistentTagCommand = new RelayCommand(
+                () => (togglePersistentTag ?? (_ => { }))(SelectedMetadataTag));
+            ResetRecipeMetadataTagsCommand = new RelayCommand(resetRecipeMetadataTags ?? NoOpCommand);
+            BeginGroupSelectionCommand = new RelayCommand(beginGroupSelection ?? NoOpCommand);
+            CancelGroupSelectionCommand = new RelayCommand(cancelGroupSelection ?? NoOpCommand);
+            CreateGroupCommand = new RelayCommand(createGroup ?? NoOpCommand);
+            GroupSelectionChangedCommand = new RelayCommand<object>(item =>
+            {
+                (groupSelectionChanged ?? NoOpSelectionCommand)(item);
+                RefreshGroupSelectionPresentation();
+            });
+            RemoveSelectedFromGroupCommand = new RelayCommand(removeSelectedFromGroup ?? NoOpCommand);
+            DissolveSelectedGroupCommand = new RelayCommand(dissolveSelectedGroup ?? NoOpCommand);
+            ToggleGroupOccludedCommand = new RelayCommand(toggleGroupOccluded ?? NoOpCommand);
+            ToggleGroupTagCommand = new RelayCommand(
+                () => (toggleGroupTag ?? (_ => { }))(SelectedMetadataTag));
         }
 
         public void SetSplitPending(WpfSegmentationSplitOrientation? orientation)
@@ -831,9 +1106,97 @@ namespace MvcVisionSystem
             // Large labeling sessions can have thousands of rows. Publish one Reset instead
             // of one CollectionChanged event per object so the side panel stays responsive.
             Objects.ReplaceAll(rows);
-            SelectedObject = selected ?? Objects.FirstOrDefault(item => item.IsEnabled);
+            ApplyGroupSelectionModeToRows();
+            RefreshMetadataTagCatalog();
+            RefreshGroupCatalog();
+            RefreshMetadataFilter(selectFirstMatch: false);
+            SelectedObject = selected?.IsMetadataFilterMatch == true
+                ? selected
+                : Objects.FirstOrDefault(item => item.IsEnabled && item.IsMetadataFilterMatch);
             RefreshActionState();
         }
+
+        public void SetMetadataTagDefinitions(IEnumerable<string> tags)
+        {
+            recipeMetadataTags.Clear();
+            recipeMetadataTags.AddRange(WpfObjectMetadataStateService.NormalizeTags(tags));
+            RefreshMetadataTagCatalog();
+        }
+
+        public void SetGroupSelectionMode(bool active)
+        {
+            IsGroupSelectionMode = active;
+            if (!active)
+            {
+                foreach (WpfObjectReviewListItem item in Objects)
+                {
+                    if (item != null)
+                    {
+                        item.IsGroupSelected = false;
+                    }
+                }
+            }
+
+            ApplyGroupSelectionModeToRows();
+            RefreshGroupSelectionPresentation();
+        }
+
+        public void RefreshGroupSelectionPresentation(string statusText = "")
+        {
+            List<WpfObjectReviewListItem> selectedRows = Objects
+                .Where(item => item?.IsGroupSelected == true && item.CanGroupSelect)
+                .ToList();
+            GroupSelectionCount = selectedRows.Count;
+            IsCreateGroupEnabled = IsGroupSelectionMode && GroupSelectionCount >= 2;
+            string selectedTypes = string.Join(
+                " / ",
+                selectedRows
+                    .GroupBy(GetGroupPreviewObjectType, StringComparer.Ordinal)
+                    .Select(group => $"{group.Key} {group.Count()}\uAC1C"));
+            string selectedClasses = string.Join(
+                ", ",
+                selectedRows
+                    .Select(GetGroupPreviewClassName)
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Take(3));
+            string preview = string.Join(
+                " \u00B7 ",
+                new[]
+                {
+                    $"\uADF8\uB8F9 \uC120\uD0DD {GroupSelectionCount}\uAC1C",
+                    selectedTypes,
+                    string.IsNullOrWhiteSpace(selectedClasses)
+                        ? string.Empty
+                        : $"\uD074\uB798\uC2A4 {selectedClasses}"
+                }.Where(value => !string.IsNullOrWhiteSpace(value)));
+            GroupSelectionStatusText = !string.IsNullOrWhiteSpace(statusText)
+                ? statusText.Trim()
+                : IsGroupSelectionMode
+                    ? $"{preview} \u00B7 2\uAC1C \uC774\uC0C1 \uC120\uD0DD \uD6C4 \uADF8\uB8F9 \uB9CC\uB4E4\uAE30"
+                    : "\uADF8\uB8F9 \uAD6C\uC131\uC744 \uC2DC\uC791\uD558\uBA74 \uC800\uC7A5 \uAC1D\uCCB4\uB97C 2\uAC1C \uC774\uC0C1 \uC120\uD0DD\uD569\uB2C8\uB2E4.";
+        }
+
+        private static string GetGroupPreviewObjectType(WpfObjectReviewListItem item)
+            => item?.IsManualSegment == true
+                ? item.IsManualPolygon ? "\uD3F4\uB9AC\uACE4" : "\uB9C8\uC2A4\uD06C"
+                : "\uBC15\uC2A4";
+
+        private static string GetGroupPreviewClassName(WpfObjectReviewListItem item)
+        {
+            string text = item?.DisplayText ?? string.Empty;
+            int prefixEnd = text.IndexOf(". ", StringComparison.Ordinal);
+            if (prefixEnd >= 0)
+            {
+                text = text.Substring(prefixEnd + 2);
+            }
+
+            int detailStart = text.IndexOf(" /", StringComparison.Ordinal);
+            return (detailStart >= 0 ? text.Substring(0, detailStart) : text).Trim();
+        }
+
+        public string GetSelectedObjectGroupId()
+            => SelectedObject?.GroupId ?? string.Empty;
 
         public void RefreshSelectedObjectSessionState()
         {
@@ -876,6 +1239,7 @@ namespace MvcVisionSystem
             // Brush/mask commits can insert the first segment row before AI rows. Keep
             // that path as one Replace/Insert event instead of resetting the whole list.
             bool segmentCollectionStateChanged = true;
+            bool groupCatalogChanged = !string.IsNullOrWhiteSpace(item.GroupId);
             if (Objects.Count == 1 && Objects[0]?.IsEnabled != true)
             {
                 Objects[0] = item;
@@ -884,6 +1248,7 @@ namespace MvcVisionSystem
                 && string.Equals(Objects[objectRowIndex]?.SourceKey, item.SourceKey, StringComparison.OrdinalIgnoreCase)
                 && Objects[objectRowIndex]?.SourceIndex == item.SourceIndex)
             {
+                groupCatalogChanged |= !string.IsNullOrWhiteSpace(Objects[objectRowIndex]?.GroupId);
                 segmentCollectionStateChanged =
                     Objects[objectRowIndex]?.IsManualSegment == true
                     || item.IsManualSegment;
@@ -910,6 +1275,13 @@ namespace MvcVisionSystem
             {
                 RefreshActionState(segmentCollectionStateChanged);
             }
+            RefreshMetadataTagCatalog();
+            item.SetGroupSelectionMode(IsGroupSelectionMode);
+            if (groupCatalogChanged)
+            {
+                RefreshGroupCatalog();
+            }
+            RefreshMetadataFilter();
             return true;
         }
 
@@ -924,6 +1296,8 @@ namespace MvcVisionSystem
             // rebuild every row after a single ROI delete.
             SummaryText = summary;
             bool segmentCollectionStateChanged = Objects[objectRowIndex]?.IsManualSegment == true;
+            bool groupCatalogChanged =
+                !string.IsNullOrWhiteSpace(Objects[objectRowIndex]?.GroupId);
             Objects.RemoveAt(objectRowIndex);
             bool actionStateRefreshed;
             if (Objects.Count == 0)
@@ -944,6 +1318,12 @@ namespace MvcVisionSystem
             {
                 RefreshActionState(segmentCollectionStateChanged);
             }
+            RefreshMetadataTagCatalog();
+            if (groupCatalogChanged)
+            {
+                RefreshGroupCatalog();
+            }
+            RefreshMetadataFilter();
             return true;
         }
 
@@ -1146,7 +1526,174 @@ namespace MvcVisionSystem
                     $"\uBCD1\uD569 \uC120\uD0DD {mergeSelectionCount}\uAC1C \u00B7 \uAC19\uC740 \uD074\uB798\uC2A4 2\uAC1C \uC774\uC0C1");
             }
             RefreshSelectedObjectSessionState();
+            RefreshSelectedObjectPersistentMetadata();
             RefreshSelectedObjectTaskText();
+        }
+
+        private void RefreshSelectedObjectPersistentMetadata()
+        {
+            bool supported = SelectedObject?.SupportsPersistentMetadata == true;
+            IsPersistentMetadataEnabled = supported;
+            IsSelectedObjectOccluded = supported && SelectedObject.IsOccluded;
+            SelectedObjectTagsText = supported && !string.IsNullOrWhiteSpace(SelectedObject.MetadataTagsText)
+                ? SelectedObject.MetadataTagsText
+                : "\uD0DC\uADF8 \uC5C6\uC74C";
+            IsSelectedObjectGrouped = supported && !string.IsNullOrWhiteSpace(SelectedObject.GroupId);
+            SelectedObjectGroupText = IsSelectedObjectGrouped
+                ? SelectedObject.GroupDisplayText
+                : "\uADF8\uB8F9 \uC5C6\uC74C";
+        }
+
+        private void RefreshMetadataTagCatalog()
+        {
+            IReadOnlyList<string> tags = WpfObjectMetadataStateService.NormalizeTags(
+                recipeMetadataTags.Concat(
+                    Objects.SelectMany(item => item?.MetadataTags ?? Array.Empty<string>())));
+            string selectedTag = SelectedMetadataTag;
+            string selectedFilter = SelectedMetadataTagFilter;
+            isRefreshingMetadataTagCatalog = true;
+            try
+            {
+                MetadataTagOptions.Clear();
+                foreach (string tag in tags)
+                {
+                    MetadataTagOptions.Add(tag);
+                }
+
+                MetadataTagFilters.Clear();
+                MetadataTagFilters.Add(AllMetadataTagsFilter);
+                foreach (string tag in tags)
+                {
+                    MetadataTagFilters.Add(tag);
+                }
+            }
+            finally
+            {
+                isRefreshingMetadataTagCatalog = false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(selectedTag))
+            {
+                SelectedMetadataTag = selectedTag;
+            }
+            else if (MetadataTagOptions.Count > 0)
+            {
+                SelectedMetadataTag = MetadataTagOptions[0];
+            }
+
+            if (!MetadataTagFilters.Any(tag =>
+                string.Equals(tag, selectedFilter, StringComparison.OrdinalIgnoreCase)))
+            {
+                selectedFilter = AllMetadataTagsFilter;
+            }
+
+            selectedMetadataTagFilter = selectedFilter;
+            OnPropertyChanged(nameof(SelectedMetadataTagFilter));
+        }
+
+        private void RefreshGroupCatalog()
+        {
+            string selectedFilter = SelectedGroupFilter;
+            List<IGrouping<string, WpfObjectReviewListItem>> groups = Objects
+                .Where(item => item?.IsEnabled == true && !string.IsNullOrWhiteSpace(item.GroupId))
+                .GroupBy(item => item.GroupId, StringComparer.Ordinal)
+                .OrderBy(group => Objects.IndexOf(group.First()))
+                .ToList();
+
+            isRefreshingGroupCatalog = true;
+            try
+            {
+                GroupFilters.Clear();
+                GroupFilters.Add(AllGroupsFilter);
+                GroupFilters.Add(UngroupedFilter);
+                int ordinal = 1;
+                foreach (IGrouping<string, WpfObjectReviewListItem> group in groups)
+                {
+                    string display = $"\uADF8\uB8F9 {ordinal} ({group.Count()}\uAC1C)";
+                    foreach (WpfObjectReviewListItem item in group)
+                    {
+                        item.ApplyGroupPresentation(display, group.Count());
+                    }
+                    GroupFilters.Add(display);
+                    ordinal++;
+                }
+
+                foreach (WpfObjectReviewListItem item in Objects.Where(item =>
+                    item?.IsEnabled == true && string.IsNullOrWhiteSpace(item.GroupId)))
+                {
+                    item.ApplyGroupPresentation(string.Empty, 0);
+                }
+            }
+            finally
+            {
+                isRefreshingGroupCatalog = false;
+            }
+
+            if (!GroupFilters.Any(value =>
+                string.Equals(value, selectedFilter, StringComparison.OrdinalIgnoreCase)))
+            {
+                selectedFilter = AllGroupsFilter;
+            }
+
+            selectedGroupFilter = selectedFilter;
+            OnPropertyChanged(nameof(SelectedGroupFilter));
+            RefreshSelectedObjectPersistentMetadata();
+        }
+
+        private void ApplyGroupSelectionModeToRows()
+        {
+            foreach (WpfObjectReviewListItem item in Objects)
+            {
+                item?.SetGroupSelectionMode(IsGroupSelectionMode);
+            }
+        }
+
+        private void RefreshMetadataFilter(bool selectFirstMatch = true)
+        {
+            string tagFilter = string.Equals(
+                SelectedMetadataTagFilter,
+                AllMetadataTagsFilter,
+                StringComparison.OrdinalIgnoreCase)
+                ? string.Empty
+                : SelectedMetadataTagFilter;
+            string groupFilter = SelectedGroupFilter;
+            int enabledCount = 0;
+            int visibleCount = 0;
+            foreach (WpfObjectReviewListItem item in Objects)
+            {
+                if (item?.IsEnabled != true)
+                {
+                    item?.ApplyMetadataFilter(true);
+                    continue;
+                }
+
+                enabledCount++;
+                bool matches = (!IsOccludedFilterActive || item.IsOccluded)
+                    && (string.IsNullOrWhiteSpace(tagFilter)
+                        || item.MetadataTags.Any(tag =>
+                            string.Equals(tag, tagFilter, StringComparison.OrdinalIgnoreCase)))
+                    && (string.Equals(groupFilter, AllGroupsFilter, StringComparison.OrdinalIgnoreCase)
+                        || (string.Equals(groupFilter, UngroupedFilter, StringComparison.OrdinalIgnoreCase)
+                            && string.IsNullOrWhiteSpace(item.GroupId))
+                        || string.Equals(groupFilter, item.GroupDisplayText, StringComparison.OrdinalIgnoreCase));
+                item.ApplyMetadataFilter(matches);
+                if (matches)
+                {
+                    visibleCount++;
+                }
+            }
+
+            MetadataFilterSummaryText = !IsOccludedFilterActive
+                && string.IsNullOrWhiteSpace(tagFilter)
+                && string.Equals(groupFilter, AllGroupsFilter, StringComparison.OrdinalIgnoreCase)
+                ? $"\uC804\uCCB4 {enabledCount}\uAC1C"
+                : $"\uD544\uD130 {visibleCount}/{enabledCount}\uAC1C";
+            if (selectFirstMatch
+                && SelectedObject?.IsMetadataFilterMatch != true)
+            {
+                SelectedObject = Objects.FirstOrDefault(item =>
+                    item?.IsEnabled == true && item.IsMetadataFilterMatch);
+            }
         }
 
         private void RefreshSelectedObjectTaskText()
@@ -1228,8 +1775,18 @@ namespace MvcVisionSystem
         private bool isHidden;
         private bool isLocked;
         private bool isPinned;
+        private bool isOccluded;
+        private bool isMetadataFilterMatch = true;
+        private bool isGroupSelectionVisible;
+        private bool isGroupSelected;
         private string objectSessionStateText = "\uC138\uC158 \uC0C1\uD0DC \uC5C6\uC74C";
+        private string sessionStateBadgeText = string.Empty;
+        private string persistentMetadataBadgeText = string.Empty;
+        private string groupBadgeText = string.Empty;
+        private string groupId = string.Empty;
+        private string groupDisplayText = string.Empty;
         private string stateBadgeText = string.Empty;
+        private IReadOnlyList<string> metadataTags = Array.Empty<string>();
 
         public WpfObjectReviewListItem(
             string displayText,
@@ -1272,6 +1829,41 @@ namespace MvcVisionSystem
             && (string.Equals(SourceKey, WpfObjectReviewSource.ManualRoi.ToString(), StringComparison.OrdinalIgnoreCase)
                 || string.Equals(SourceKey, WpfObjectReviewSource.ManualSegment.ToString(), StringComparison.OrdinalIgnoreCase));
 
+        public bool SupportsPersistentMetadata => SupportsSessionState;
+
+        public string GroupId
+        {
+            get => groupId;
+            private set => SetProperty(ref groupId, value ?? string.Empty);
+        }
+
+        public string GroupDisplayText
+        {
+            get => groupDisplayText;
+            private set => SetProperty(ref groupDisplayText, value ?? string.Empty);
+        }
+
+        public bool IsGroupSelectionVisible
+        {
+            get => isGroupSelectionVisible;
+            private set
+            {
+                if (SetProperty(ref isGroupSelectionVisible, value))
+                {
+                    OnPropertyChanged(nameof(IsMergeSelectionVisible));
+                }
+            }
+        }
+
+        public bool CanGroupSelect => SupportsPersistentMetadata
+            && string.IsNullOrWhiteSpace(GroupId);
+
+        public bool IsGroupSelected
+        {
+            get => isGroupSelected;
+            set => SetProperty(ref isGroupSelected, value);
+        }
+
         public bool IsHidden
         {
             get => isHidden;
@@ -1304,7 +1896,29 @@ namespace MvcVisionSystem
 
         public double ContentOpacity => IsHidden ? 0.5D : IsLocked ? 0.72D : 1D;
 
+        public bool IsOccluded
+        {
+            get => isOccluded;
+            private set => SetProperty(ref isOccluded, value);
+        }
+
+        public IReadOnlyList<string> MetadataTags
+        {
+            get => metadataTags;
+            private set => SetProperty(ref metadataTags, value ?? Array.Empty<string>());
+        }
+
+        public string MetadataTagsText => string.Join(", ", MetadataTags);
+
+        public bool IsMetadataFilterMatch
+        {
+            get => isMetadataFilterMatch;
+            private set => SetProperty(ref isMetadataFilterMatch, value);
+        }
+
         public bool CanMergeSelect => IsManualSegment && !IsHidden && !IsLocked;
+
+        public bool IsMergeSelectionVisible => CanMergeSelect && !IsGroupSelectionVisible;
 
         public bool IsMergeSelected
         {
@@ -1318,16 +1932,60 @@ namespace MvcVisionSystem
             IsHidden = state.IsHidden;
             IsLocked = state.IsLocked;
             IsPinned = state.IsPinned;
-            StateBadgeText = state.BadgeText;
+            sessionStateBadgeText = state.BadgeText;
+            RefreshStateBadgeText();
             ObjectSessionStateText = state.IsDefault
                 ? "\uC138\uC158 \uC0C1\uD0DC \uC5C6\uC74C \u00B7 \uC800\uC7A5/\uB0B4\uBCF4\uB0B4\uAE30 \uBE44\uC624\uC5FC"
                 : $"{state.BadgeText} \u00B7 \uD604\uC7AC \uC774\uBBF8\uC9C0 \uC138\uC158\uB9CC";
             OnPropertyChanged(nameof(ContentOpacity));
             OnPropertyChanged(nameof(CanMergeSelect));
+            OnPropertyChanged(nameof(IsMergeSelectionVisible));
             if (!CanMergeSelect)
             {
                 IsMergeSelected = false;
             }
+        }
+
+        public void ApplyPersistentMetadata(WpfPersistentObjectMetadata metadata)
+        {
+            metadata ??= WpfPersistentObjectMetadata.Default;
+            IsOccluded = metadata.IsOccluded;
+            MetadataTags = metadata.Tags.ToList();
+            GroupId = metadata.GroupId;
+            persistentMetadataBadgeText = metadata.BadgeText;
+            OnPropertyChanged(nameof(MetadataTagsText));
+            OnPropertyChanged(nameof(CanGroupSelect));
+            RefreshStateBadgeText();
+        }
+
+        public void ApplyGroupPresentation(string displayText, int memberCount)
+        {
+            GroupDisplayText = displayText;
+            groupBadgeText = string.IsNullOrWhiteSpace(displayText)
+                ? string.Empty
+                : displayText.Replace($" ({Math.Max(0, memberCount)}\uAC1C)", string.Empty);
+            OnPropertyChanged(nameof(CanGroupSelect));
+            RefreshStateBadgeText();
+        }
+
+        public void SetGroupSelectionMode(bool active)
+        {
+            IsGroupSelectionVisible = active && SupportsPersistentMetadata;
+            if (!IsGroupSelectionVisible || !CanGroupSelect)
+            {
+                IsGroupSelected = false;
+            }
+        }
+
+        public void ApplyMetadataFilter(bool matches)
+            => IsMetadataFilterMatch = matches;
+
+        private void RefreshStateBadgeText()
+        {
+            StateBadgeText = string.Join(
+                " \u00B7 ",
+                new[] { groupBadgeText, persistentMetadataBadgeText, sessionStateBadgeText }
+                    .Where(text => !string.IsNullOrWhiteSpace(text)));
         }
 
         public static WpfObjectReviewListItem Empty(string text)

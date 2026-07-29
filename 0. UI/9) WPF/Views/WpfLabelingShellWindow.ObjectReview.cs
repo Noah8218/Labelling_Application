@@ -36,6 +36,7 @@ namespace MvcVisionSystem
                 FormatCandidateDetail);
 
             ApplyObjectSessionStates(presentation.Rows);
+            ApplyObjectPersistentMetadata(presentation.Rows);
             SetObjectReviewObjects(presentation.Rows, presentation.Summary, presentation.SelectedItem);
             UpdateObjectReviewActionState();
         }
@@ -49,6 +50,7 @@ namespace MvcVisionSystem
                 manualRoiOverlayIds,
                 index);
             row?.ApplySessionState(objectSessionStateService.GetManualRoiState(index));
+            row?.ApplyPersistentMetadata(objectMetadataStateService.GetManualRoiMetadata(index));
             return row;
         }
 
@@ -117,6 +119,11 @@ namespace MvcVisionSystem
                 manualSegments,
                 manualSegmentIndex);
             row?.ApplySessionState(GetManualSegmentSessionState(manualSegmentIndex));
+            if (manualSegmentIndex >= 0 && manualSegmentIndex < manualSegments.Count)
+            {
+                row?.ApplyPersistentMetadata(
+                    objectMetadataStateService.GetManualSegmentMetadata(manualSegments[manualSegmentIndex]));
+            }
             return row;
         }
 

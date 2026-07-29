@@ -826,6 +826,31 @@ Smart Mask timing stay with their existing owners. The high-frequency
 Viewer/OpenGL mouse-move, ROI drag/resize, brush, and eraser paths are not part
 of this feature.
 
+### Object Review persistent metadata ownership
+
+`Services/ObjectReview/WpfObjectMetadataService.cs` owns normalized persistent
+`occluded`/tag/group state, group invariants, schema-v1-compatible load, and
+schema-v2 sidecar serialization. Sidecars live under
+`data/<split>/object-metadata/<image-stem>.json`, separate from YOLO labels and
+canonical segmentation files. Boxes reconnect by class, bounds, and duplicate
+occurrence; segmentation objects reconnect by stable object ID.
+
+`Services/ObjectReview/WpfObjectReviewGroupSelectionService.cs` owns the
+dedicated pending group member set and create validation. It is intentionally
+separate from segmentation merge selection because grouping changes review
+metadata rather than geometry.
+
+`WpfObjectReviewPanelViewModel` owns the selected-row metadata presentation,
+Recipe tag/group filter catalogs, row badges, combined `occluded` plus tag plus
+group filters, pending selection preview, and explicit resets.
+`WpfLabelingShellWindow.ObjectMetadata.cs` is the workflow adapter that
+restores Recipe definitions, applies group batch actions, marks edits dirty,
+and routes persistence through the existing explicit label-save operation.
+
+Do not extend this owner to session-only hide/full-lock/movement-pin, geometry
+merge/shared movement, training weighting, external interchange, team review,
+or automatic save.
+
 ## 완료 보고 전 확인
 
 구조 변경을 완료했다고 보고하기 전에는 최소한 아래를 확인합니다.

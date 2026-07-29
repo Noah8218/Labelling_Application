@@ -32,10 +32,16 @@ implementation are Complete in
 `docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md` and
 `docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.
 
-Persistent metadata remains blocked on a named consumer. Polygon/raster
-cross-family renderer work remains blocked on a reproduced defect. Production
-model adoption remains blocked on provenance-confirmed independent
-production-camera or cross-session ground truth.
+Object Review persistent `occluded` plus Recipe-tag metadata is Complete in
+`docs/OBJECT_METADATA_REVIEW_CONSUMER_P4_20260729.md`. Same-image physical or
+review-unit grouping is separately Complete in
+`docs/OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`. Both use the separate
+per-image sidecar and existing explicit label-save boundary; training,
+external interchange, cross-image/video, and collaboration semantics were not
+added.
+Polygon/raster cross-family renderer work remains blocked on a reproduced
+defect. Production model adoption remains blocked on provenance-confirmed
+independent production-camera or cross-session ground truth.
 
 ## Current Source Of Truth (2026-07-22)
 

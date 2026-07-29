@@ -76,7 +76,113 @@ Boundary / next dependency:
 
 - Dataset Health remains read-only and routes edits to the existing editor;
 - this does not add per-object issues, reviewer workflow, or cloud assignment;
-- persistent metadata remains blocked on a named consumer.
+- the later Object Review record completes bounded persistent `occluded`/tag
+  metadata without changing this Dataset Health boundary.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
+## 2026-07-29 Object Group Review
+
+Status: `Complete`
+
+Decision:
+
+- define a group as two or more saved manual objects on one image that belong
+  to one physical part or operator review unit;
+- use Object Review as the named group focus/filter/badge and atomic
+  group-level `occluded`/Recipe-tag consumer;
+- keep a dedicated pending group-selection set separate from single-object
+  commands and segmentation merge selection;
+- persist opaque group IDs in a backward-compatible object-metadata sidecar
+  v2 only after explicit label save;
+- preserve precise delete/duplicate/merge/split/identity mutation rules.
+
+Explicit exclusions:
+
+- geometry merge or shared movement;
+- cross-image/video relations;
+- training, interchange, team review, and automatic save/grouping.
+
+Acceptance criteria:
+
+- consumer, operator flow, identity, persistence, mutation, UI, ownership, and
+  implementation verification gates are explicit: pass;
+- current source and commercial-video evidence were checked: pass;
+- implementation began only after user acceptance: pass;
+- dedicated selection preview, group filters/badges, member removal/dissolve,
+  and group-level metadata actions: pass;
+- schema-v2 save/reopen and schema-v1 compatibility: pass;
+- delete/merge/split/orphan mutation rules: pass;
+- 100,000-row ordinary object replacement/removal incremental boundary: pass;
+- default internal suite: 260/260 pass.
+
+Evidence:
+
+- `docs\OBJECT_GROUP_REVIEW_CONTRACT_P5_20260729.md`;
+- `docs\OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`;
+- `tests\LabelingApplication.Tests\Program.ObjectMetadata.cs`;
+- `artifacts\ui\object-group-review-20260729`;
+- `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`;
+- user-provided analysis checklist and CVAT/V7/Encord transcripts;
+- current Object Review metadata and merge-selection source.
+
+Boundary / next dependency:
+
+- training, interchange, shared geometry movement, cross-image/video, and
+  collaboration remain excluded;
+- exact polygon/raster renderer ordering still requires a reproduced defect;
+- production model adoption still requires independent data.
+
+## 2026-07-29 Object Review Persistent Metadata Consumer
+
+Status: `Complete`
+
+Scope:
+
+- make Object Review the named consumer for persistent `occluded` and
+  Recipe-defined per-object tags;
+- expose selected-row editing, combined review filters, badges, and explicit
+  filter/Recipe-definition reset paths;
+- keep metadata in `data/<split>/object-metadata/<image-stem>.json`, separate
+  from YOLO labels and canonical segmentation artifacts;
+- save only through the existing explicit label-save action and restore on
+  image reopen.
+
+Acceptance criteria:
+
+- box duplicate-occurrence and segment object-ID round trips: pass;
+- Recipe tag save/reopen/normalization/reset contract: pass;
+- Object Review edit/filter/badge consumer: pass;
+- existing YOLO label content unchanged and stale default sidecar removal:
+  pass;
+- group behavior is separately owned by completed P5; training, export,
+  collaboration, and automatic-save exclusions remain pass.
+
+Verification:
+
+- isolated Debug test build: warning 0, error 0;
+- `--object-metadata-review`, Object Review, session-state, shell,
+  annotation-object, and project-config focused gates: pass;
+- default internal suite: 259/259 pass;
+- `--priority-workflow-docs` and `git diff --check`: pass;
+- Object Review responsive layout at 1920x1080 and 1366x768: pass;
+- current-source 1920x1080 and 1366x768 visual evidence: pass.
+
+Evidence:
+
+- `docs\OBJECT_METADATA_REVIEW_CONSUMER_P4_20260729.md`;
+- `tests\LabelingApplication.Tests\Program.ObjectMetadata.cs`;
+- `artifacts\ui\object-metadata-review-20260729`.
+
+Boundary / next dependency:
+
+- the separately owned same-image group implementation is Complete in
+  `docs\OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`;
+- training weighting and external interchange remain unchanged;
+- independent field adoption still requires provenance-confirmed images and
+  trustworthy ground truth.
 
 Recommended model: `gpt-5.6-terra`
 
@@ -128,8 +234,9 @@ Boundary / next dependency:
 - no free quadrilateral, rotated-box type, per-object source-point
   persistence, or new label schema was introduced;
 - Dataset Health canonical class filtering is Complete in the preceding record;
-- persistent metadata, cross-family z-order, and field adoption remain blocked
-  by their documented prerequisites.
+- the following Object Review records complete bounded persistent
+  `occluded`/tag/group metadata; cross-family z-order and field adoption remain
+  blocked by their documented prerequisites.
 
 Recommended model: `gpt-5.6-terra`
 
@@ -19039,7 +19146,8 @@ Current completed state:
 Ordered remaining queue:
 
 1. Dataset Health class filtering only after a recorded review-session need;
-2. persistent occluded/tag/group only after a named consumer contract;
+2. persistent `occluded`/tag metadata is Complete with Object Review as its
+   named consumer; group expansion still requires its own contract;
 3. cross-family polygon/raster z-order only after a reproduced renderer defect;
 4. independent detection/anomaly evaluation only after approved field data.
 
@@ -19121,7 +19229,8 @@ Decision:
 
 Blocked:
 
-- persistent object metadata until a named consumer exists;
+- same-image Object Review grouping is Complete; reopen only for a changed
+  contract or focused regression;
 - polygon/raster cross-family renderer changes until a defect is reproduced;
 - field model adoption until independent provenance-confirmed camera/session
   ground truth exists;

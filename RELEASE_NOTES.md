@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Object Review now supports persistent per-object `가림` and Recipe-defined
+  tags for saved manual boxes and segmentation objects, with row badges,
+  combined review filters, explicit reset paths, and a separate per-image
+  sidecar written only through `라벨 저장`.
+- Saved manual objects on one image can now form a persistent Object Review
+  group with a dedicated selection preview, group badges/filtering, member
+  removal/dissolve, and group-level `가림` or Recipe-tag actions. Schema-v2
+  sidecars remain backward-compatible with v1 and write only on explicit
+  label save.
 - Integration hardening: never-loaded startup/test shells no longer open an
   operator close dialog, while loaded main windows retain safe close.
   Non-segmentation object-review row replacement/removal also preserves

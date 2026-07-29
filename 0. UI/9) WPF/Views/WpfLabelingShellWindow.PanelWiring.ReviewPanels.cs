@@ -40,7 +40,18 @@ namespace MvcVisionSystem
                 cancelRemoveUnderlying: ExecuteCancelSegmentationRemoveUnderlyingCommand,
                 toggleObjectHidden: ExecuteToggleObjectHiddenCommand,
                 toggleObjectLocked: ExecuteToggleObjectLockedCommand,
-                toggleObjectPinned: ExecuteToggleObjectPinnedCommand);
+                toggleObjectPinned: ExecuteToggleObjectPinnedCommand,
+                togglePersistentOccluded: ExecuteTogglePersistentOccludedCommand,
+                togglePersistentTag: ExecuteTogglePersistentTagCommand,
+                resetRecipeMetadataTags: ExecuteResetRecipeMetadataTagsCommand,
+                beginGroupSelection: ExecuteBeginObjectGroupSelectionCommand,
+                cancelGroupSelection: ExecuteCancelObjectGroupSelectionCommand,
+                createGroup: ExecuteCreateObjectGroupCommand,
+                groupSelectionChanged: ExecuteObjectGroupSelectionChangedCommand,
+                removeSelectedFromGroup: ExecuteRemoveSelectedObjectFromGroupCommand,
+                dissolveSelectedGroup: ExecuteDissolveSelectedObjectGroupCommand,
+                toggleGroupOccluded: ExecuteToggleObjectGroupOccludedCommand,
+                toggleGroupTag: ExecuteToggleObjectGroupTagCommand);
             RefreshAttachedCommandBindings(
                 ObjectListBox,
                 InputCommandBehaviors.SelectedItemChangedCommandProperty,
@@ -88,6 +99,24 @@ namespace MvcVisionSystem
             RegisterObjectReviewName(nameof(ToggleObjectLockedButton), ToggleObjectLockedButton);
             RegisterObjectReviewName(nameof(ToggleObjectPinnedButton), ToggleObjectPinnedButton);
             RegisterObjectReviewName(nameof(ObjectSessionStateStatusText), ObjectSessionStateStatusText);
+            RegisterObjectReviewName(nameof(ObjectMetadataExpander), ObjectMetadataExpander);
+            RegisterObjectReviewName(nameof(TogglePersistentOccludedButton), TogglePersistentOccludedButton);
+            RegisterObjectReviewName(nameof(ObjectMetadataTagBox), ObjectMetadataTagBox);
+            RegisterObjectReviewName(nameof(TogglePersistentTagButton), TogglePersistentTagButton);
+            RegisterObjectReviewName(nameof(ToggleOccludedFilterButton), ToggleOccludedFilterButton);
+            RegisterObjectReviewName(nameof(ObjectMetadataTagFilterBox), ObjectMetadataTagFilterBox);
+            RegisterObjectReviewName(nameof(ResetObjectMetadataFilterButton), ResetObjectMetadataFilterButton);
+            RegisterObjectReviewName(nameof(ResetRecipeMetadataTagsButton), ResetRecipeMetadataTagsButton);
+            RegisterObjectReviewName(nameof(BeginObjectGroupSelectionButton), BeginObjectGroupSelectionButton);
+            RegisterObjectReviewName(nameof(CreateObjectGroupButton), CreateObjectGroupButton);
+            RegisterObjectReviewName(nameof(CancelObjectGroupSelectionButton), CancelObjectGroupSelectionButton);
+            RegisterObjectReviewName(nameof(ObjectGroupSelectionStatusText), ObjectGroupSelectionStatusText);
+            RegisterObjectReviewName(nameof(SelectedObjectGroupText), SelectedObjectGroupText);
+            RegisterObjectReviewName(nameof(RemoveObjectFromGroupButton), RemoveObjectFromGroupButton);
+            RegisterObjectReviewName(nameof(DissolveObjectGroupButton), DissolveObjectGroupButton);
+            RegisterObjectReviewName(nameof(ToggleObjectGroupOccludedButton), ToggleObjectGroupOccludedButton);
+            RegisterObjectReviewName(nameof(ToggleObjectGroupTagButton), ToggleObjectGroupTagButton);
+            RegisterObjectReviewName(nameof(ObjectGroupFilterBox), ObjectGroupFilterBox);
             RegisterObjectReviewName(nameof(ObjectQualityReviewExpander), ObjectQualityReviewExpander);
             RegisterObjectReviewName(nameof(SegmentationAdvancedEditExpander), SegmentationAdvancedEditExpander);
             RegisterObjectReviewName(nameof(ObjectListBox), ObjectListBox);

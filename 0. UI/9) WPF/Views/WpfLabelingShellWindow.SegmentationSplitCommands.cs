@@ -114,9 +114,19 @@ namespace MvcVisionSystem
                 return true;
             }
 
+            string inheritedGroupId = objectMetadataStateService
+                .GetManualSegmentMetadata(source)
+                .GroupId;
+            CancelObjectGroupSelection(updateStatus: false);
             WpfAnnotationHistorySnapshot beforeChange = CaptureAnnotationHistory("\uC138\uADF8\uBA3C\uD2B8 \uC808\uB2E8");
             manualSegments.RemoveAt(sourceIndex);
             manualSegments.InsertRange(sourceIndex, splitResult.Segments);
+            objectMetadataStateService.RemoveManualSegment(source);
+            foreach (LabelingSegmentationObject segment in splitResult.Segments)
+            {
+                objectMetadataStateService.SetManualSegmentGroupId(segment, inheritedGroupId);
+            }
+            objectMetadataStateService.DissolveInvalidGroups(manualRois.Count, manualSegments);
             PushAnnotationHistorySnapshot(beforeChange);
             CancelPendingSegmentationSplit(updateStatus: false);
             MainCanvasViewModel?.ClearMaskStrokePreview(refresh: false, clearTexture: true);

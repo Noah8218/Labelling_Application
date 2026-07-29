@@ -152,6 +152,16 @@ namespace MvcVisionSystem
                 return;
             }
 
+            CancelObjectGroupSelection(updateStatus: false);
+            List<WpfPersistentObjectMetadata> sourceMetadata = mergeResult.SourceIndices
+                .Select(index => objectMetadataStateService.GetManualSegmentMetadata(manualSegments[index]))
+                .ToList();
+            string inheritedGroupId = sourceMetadata.Count > 0
+                && sourceMetadata.All(metadata =>
+                    !string.IsNullOrWhiteSpace(metadata.GroupId)
+                    && string.Equals(metadata.GroupId, sourceMetadata[0].GroupId, StringComparison.Ordinal))
+                ? sourceMetadata[0].GroupId
+                : string.Empty;
             WpfAnnotationHistorySnapshot beforeChange = CaptureAnnotationHistory("\uC138\uADF8\uBA3C\uD2B8 \uBCD1\uD569");
             foreach (int index in mergeResult.SourceIndices.OrderByDescending(index => index))
             {
@@ -160,6 +170,10 @@ namespace MvcVisionSystem
 
             int insertIndex = Math.Max(0, Math.Min(mergeResult.InsertIndex, manualSegments.Count));
             manualSegments.Insert(insertIndex, mergeResult.MergedSegment);
+            objectMetadataStateService.SetManualSegmentGroupId(
+                mergeResult.MergedSegment,
+                inheritedGroupId);
+            objectMetadataStateService.DissolveInvalidGroups(manualRois.Count, manualSegments);
             PushAnnotationHistorySnapshot(beforeChange);
             MainCanvasViewModel?.ClearMaskStrokePreview(refresh: false, clearTexture: true);
             RefreshPolygonOverlays();
@@ -210,6 +224,7 @@ namespace MvcVisionSystem
             WpfAnnotationHistorySnapshot beforeChange = item.Source == WpfObjectReviewSource.ManualRoi
                 ? CaptureManualRoiHistory("\uB77C\uBCA8 \uC0AD\uC81C")
                 : CaptureAnnotationHistory("\uB77C\uBCA8 \uC0AD\uC81C");
+            CancelObjectGroupSelection(updateStatus: false);
             if (!WpfObjectReviewEditService.TryDelete(
                 item,
                 manualRois,
@@ -224,11 +239,14 @@ namespace MvcVisionSystem
             if (item.Source == WpfObjectReviewSource.ManualRoi)
             {
                 objectSessionStateService.ShiftRoiStatesAfterRemoval(item.Index);
+                objectMetadataStateService.ShiftRoiMetadataAfterRemoval(item.Index);
             }
             else if (item.Source == WpfObjectReviewSource.ManualSegment)
             {
                 objectSessionStateService.RemoveManualSegment(deletedSegment);
+                objectMetadataStateService.RemoveManualSegment(deletedSegment);
             }
+            objectMetadataStateService.DissolveInvalidGroups(manualRois.Count, manualSegments);
 
             PushAnnotationHistorySnapshot(beforeChange);
             if (item.Source == WpfObjectReviewSource.ManualRoi)

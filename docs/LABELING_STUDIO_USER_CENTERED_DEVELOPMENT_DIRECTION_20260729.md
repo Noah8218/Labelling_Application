@@ -295,8 +295,11 @@ contract, or reproduced regression:
 
 ## 5. Blocked Or Conditional Work
 
-- Persistent `occluded`/tag/group metadata: blocked until a named
-  Recipe/export/training/review consumer exists.
+- Persistent `occluded` plus Recipe-tag metadata: Complete with Object Review
+  as the named consumer.
+- Persistent group metadata: same-image Object Review focus/filter/batch
+  metadata is Complete in
+  `docs/OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`.
 - Exact polygon/raster cross-family interleaving: blocked until a visual-order
   defect is reproduced with focused performance evidence.
 - Detection, segmentation, and anomaly production adoption: blocked until
@@ -333,7 +336,8 @@ Completion requires measured task outcomes, not feature presence alone.
 ### Phase 3. Contract-Based Geometry And Field Evidence
 
 - four-point extreme-box contract and bounded implementation: `Complete`;
-- persistent metadata only with a named consumer;
+- preserve completed `occluded`/tag/group metadata and its explicit-save,
+  same-image review-unit boundary;
 - cross-session model evaluation only with approved independent data.
 
 Annotation format changes are incomplete until save/reopen, Undo/Redo,

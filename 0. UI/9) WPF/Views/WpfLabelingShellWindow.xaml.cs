@@ -129,6 +129,9 @@ namespace MvcVisionSystem
         private readonly WpfSegmentationRemoveUnderlyingService segmentationRemoveUnderlyingService = new WpfSegmentationRemoveUnderlyingService();
         private WpfSegmentationRemoveUnderlyingPlan pendingSegmentationRemoveUnderlyingPlan;
         private readonly WpfObjectSessionStateService objectSessionStateService = new WpfObjectSessionStateService();
+        private readonly WpfObjectMetadataStateService objectMetadataStateService = new WpfObjectMetadataStateService();
+        private readonly WpfObjectMetadataPersistenceService objectMetadataPersistenceService = new WpfObjectMetadataPersistenceService();
+        private readonly WpfObjectReviewGroupSelectionService objectGroupSelectionService = new WpfObjectReviewGroupSelectionService();
         private LabelingSegmentationObject pendingSegmentationSplitSource;
         private int pendingSegmentationSplitSourceIndex = -1;
         private WpfSegmentationSplitOrientation? pendingSegmentationSplitOrientation;

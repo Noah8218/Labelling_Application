@@ -137,6 +137,18 @@ Do not claim complete if the required verification did not run or did not pass.
   option, fourth-point-only ordinary Rectangle/history/Smart Mask handoff, and
   rotated Label Studio/CVAT import rejection. Do not reopen it as
   free-quadrilateral or rotated-box geometry.
+- Object Review persistent `occluded` plus Recipe-tag metadata is Complete in
+  `docs/OBJECT_METADATA_REVIEW_CONSUMER_P4_20260729.md`. Preserve the separate
+  per-image sidecar, explicit label-save boundary, box occurrence/segment ID
+  reconnect rules, visible/editable/resettable Recipe definitions, and
+  combined review filters.
+- Same-image Object Review grouping is Complete in
+  `docs/OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`. Preserve the
+  two-member minimum, one-group-per-object rule, schema-v2/v1-compatible
+  sidecar, explicit save, dedicated selection set, group filters/badges,
+  orphan dissolution, and documented merge/split mutation rules. Keep
+  grouping separate from geometry merge, shared movement, training,
+  interchange, collaboration, and automatic save.
 - Continue improving OpenVisionLab Labeling Studio as a full workflow tool: dataset setup, image queue, class setup, object detection/segmentation/anomaly labeling, template labeling, training, inference, model runtime setup, and model comparison.
 - Avoid repeating items already documented in `docs/WORK_TRACKING.md` and `docs/STABLE_VERIFIED_AREAS.md`.
 - Keep verified items documented after completion.

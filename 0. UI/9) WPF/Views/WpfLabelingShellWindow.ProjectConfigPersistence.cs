@@ -59,6 +59,7 @@ namespace MvcVisionSystem
                 PopulateYoloEditorFields();
                 PopulateTrainingEditorFields();
                 PopulateClassList();
+                RestoreObjectMetadataTagsFromProject();
                 RefreshCandidateList();
                 RefreshObjectList();
                 RefreshTrainingReadinessPanel(refreshYaml: false);

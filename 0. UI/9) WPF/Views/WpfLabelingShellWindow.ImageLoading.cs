@@ -52,7 +52,9 @@ namespace MvcVisionSystem
             CancelPendingSegmentationRemoveUnderlying(updateStatus: false);
             CancelPendingPolygonVertexEdit(updateStatus: false);
             CancelPendingIntelligentScissors(updateStatus: false);
+            CancelObjectGroupSelection(updateStatus: false);
             objectSessionStateService.Clear();
+            objectMetadataStateService.Clear();
             Stopwatch loadStopwatch = Stopwatch.StartNew();
             long stepStartTicks = loadStopwatch.ElapsedTicks;
             bool cacheHit = false;
@@ -134,6 +136,7 @@ namespace MvcVisionSystem
                 UpdateDetectionResultOverlay();
                 int loadedSavedBoxCount = LoadSavedBoxAnnotationsForActiveImage(imagePath);
                 int loadedSavedSegmentCount = LoadSavedSegmentationAnnotationsForActiveImage(imagePath);
+                LoadObjectMetadataForActiveImage(imagePath);
                 int loadedSavedAnnotationCount = loadedSavedBoxCount + loadedSavedSegmentCount;
                 annotationResetMilliseconds = WpfImageLoadDiagnosticsService.TakeElapsedMilliseconds(loadStopwatch, ref stepStartTicks);
                 if (populateQueue)
@@ -224,7 +227,9 @@ namespace MvcVisionSystem
             CancelPendingSegmentationRemoveUnderlying(updateStatus: false);
             CancelPendingPolygonVertexEdit(updateStatus: false);
             CancelPendingIntelligentScissors(updateStatus: false);
+            CancelObjectGroupSelection(updateStatus: false);
             objectSessionStateService.Clear();
+            objectMetadataStateService.Clear();
             activeImageBitmap?.Dispose();
             activeImageBitmap = null;
             activeImagePath = string.Empty;

@@ -326,6 +326,20 @@ internal static partial class Program
                 TestFourPointExtremeBoxWorkflow);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--object-metadata-review", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "persistent occluded and Recipe tags round-trip through Object Review",
+                TestObjectMetadataReviewWorkflow);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--object-group-review", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "same-image saved objects form persistent Object Review groups",
+                TestObjectGroupReviewWorkflow);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--wpf-undo-redo-shortcuts", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("WPF shell undo/redo keyboard shortcuts restore annotation state", TestWpfShellUndoRedoRestoresAnnotationState);
@@ -1394,6 +1408,8 @@ internal static partial class Program
             ("CData creates YOLO dataset directories and data.yaml", TestCreateYoloDataset),
             ("Project settings persist dataset purpose in recipe config", TestLabelingProjectSettingsDatasetPurposePersistence),
             ("Four-point extreme input creates one ordinary axis-aligned Rectangle", TestFourPointExtremeBoxWorkflow),
+            ("Persistent occluded and Recipe tags round-trip through Object Review", TestObjectMetadataReviewWorkflow),
+            ("Same-image saved objects form persistent Object Review groups", TestObjectGroupReviewWorkflow),
             ("YOLO dataset split service assigns train valid and test exclusively", TestYoloDatasetSplitService),
             ("YOLO dataset validator rejects invalid training configuration", TestYoloDatasetValidatorConfiguration),
             ("YOLO dataset validator accepts saved training files", TestYoloDatasetValidatorTrainingFiles),
@@ -1899,6 +1915,8 @@ internal static partial class Program
         string applySegmentationZOrder = GetArgumentValue(args, "--apply-segmentation-zorder", string.Empty);
         bool previewSegmentationRemoveUnderlying = HasArgument(args, "--preview-segmentation-remove-underlying");
         bool showObjectSessionState = HasArgument(args, "--show-object-session-state");
+        bool showObjectMetadata = HasArgument(args, "--show-object-metadata");
+        bool showObjectGroup = HasArgument(args, "--show-object-group");
         bool openHeaderToolsMenu = HasArgument(args, "--open-header-tools-menu");
         bool showWorkspaceLayoutControls = HasArgument(args, "--show-workspace-layout-controls");
         bool showTrainingRecoveryStatus = HasArgument(args, "--show-training-recovery-status");
@@ -2224,6 +2242,57 @@ internal static partial class Program
                             item.IsMergeSelected = true;
                             window.ObjectReviewViewModel.MergeSelectionChangedCommand.Execute(item);
                         }
+                    }
+
+                    if (showObjectMetadata)
+                    {
+                        WpfObjectMetadataStateService metadataState =
+                            GetPrivateField<WpfObjectMetadataStateService>(
+                                window,
+                                "objectMetadataStateService");
+                        metadataState.ToggleManualRoiOccluded(0);
+                        metadataState.ToggleManualRoiTag(0, "\uAC80\uC218 \uD544\uC694");
+                        window.ObjectReviewViewModel.SetMetadataTagDefinitions(
+                            new[] { "\uAC80\uC218 \uD544\uC694", "\uACBD\uACC4 \uD655\uC778" });
+                        InvokePrivateResult<object>(window, "RefreshObjectList");
+                        window.ObjectReviewViewModel.SelectedMetadataTagFilter = "\uAC80\uC218 \uD544\uC694";
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(150));
+                    }
+
+                    if (showObjectGroup)
+                    {
+                        WpfObjectMetadataStateService metadataState =
+                            GetPrivateField<WpfObjectMetadataStateService>(
+                                window,
+                                "objectMetadataStateService");
+                        List<System.Drawing.Rectangle> visualRois =
+                            GetPrivateField<List<System.Drawing.Rectangle>>(window, "manualRois");
+                        List<string> visualRoiClasses =
+                            GetPrivateField<List<string>>(window, "manualRoiClassNames");
+                        if (visualRois.Count == 1)
+                        {
+                            System.Drawing.Rectangle firstBounds = visualRois[0];
+                            visualRois.Add(new System.Drawing.Rectangle(
+                                firstBounds.X + Math.Max(12, firstBounds.Width / 2),
+                                firstBounds.Y + Math.Max(12, firstBounds.Height / 2),
+                                firstBounds.Width,
+                                firstBounds.Height));
+                            visualRoiClasses.Add(visualRoiClasses.FirstOrDefault() ?? "Defect");
+                            InvokePrivate(window, "RedrawReviewRois");
+                        }
+                        string groupId = Guid.NewGuid().ToString("N");
+                        if (visualRois.Count > 1)
+                        {
+                            metadataState.SetManualRoiGroupId(0, groupId);
+                            metadataState.SetManualRoiGroupId(1, groupId);
+                        }
+                        window.ObjectReviewViewModel.SetMetadataTagDefinitions(
+                            new[] { "\uAC80\uC218 \uD544\uC694", "\uACBD\uACC4 \uD655\uC778" });
+                        InvokePrivateResult<object>(window, "RefreshObjectList");
+                        window.ObjectReviewViewModel.SelectedObject =
+                            window.ObjectReviewViewModel.Objects.FirstOrDefault(item =>
+                                string.Equals(item.GroupId, groupId, StringComparison.Ordinal));
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(150));
                     }
 
                     SelectVisualSmokeReviewTab(window, reviewTab);

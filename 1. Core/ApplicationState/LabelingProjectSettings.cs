@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MvcVisionSystem
 {
@@ -22,6 +24,8 @@ namespace MvcVisionSystem
         public bool SmartMaskAutoContourEnabled { get; set; }
 
         public LabelingBoxDrawingMethod BoxDrawingMethod { get; set; } = LabelingBoxDrawingMethod.TwoPointDrag;
+
+        public List<string> ObjectReviewTags { get; set; } = new List<string>();
 
         public YoloDatasetSettings YoloDataset { get; set; } = new YoloDatasetSettings();
 
@@ -50,6 +54,14 @@ namespace MvcVisionSystem
             {
                 BoxDrawingMethod = LabelingBoxDrawingMethod.TwoPointDrag;
             }
+
+            ObjectReviewTags = (ObjectReviewTags ?? new List<string>())
+                .Select(tag => tag?.Trim() ?? string.Empty)
+                .Where(tag => !string.IsNullOrWhiteSpace(tag))
+                .Select(tag => tag.Length <= 32 ? tag : tag.Substring(0, 32))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(16)
+                .ToList();
 
             YoloDataset ??= new YoloDatasetSettings();
             ExternalYoloDataset ??= new ExternalYoloDatasetSettings();

@@ -195,8 +195,12 @@ Source-of-truth/operator-document synchronization and Dataset Health split
 filtering are Complete in the current worktree. The four-point extreme-box
 contract and bounded axis-aligned implementation are also Complete under
 `docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md` and
-`docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`. Other remaining video-derived gaps are consumer-backed
-persistent object metadata and conditional polygon/raster cross-family z-order.
+`docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`. Object Review
+`occluded` plus Recipe-tag persistence is Complete under
+`docs/OBJECT_METADATA_REVIEW_CONSUMER_P4_20260729.md`. Same-image Object Review
+grouping is Complete under
+`docs/OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`. The remaining
+conditional editor gap is exact polygon/raster cross-family z-order.
 Independent detection/anomaly adoption is blocked on new
 production-camera/cross-session data. P0-A through P5-B and the current Smart
 Mask safety/efficiency slices are not future priorities unless their contracts
@@ -426,7 +430,7 @@ These are directional maturity estimates based on the verified local workflow an
 | Product scope | Maturity | Decision |
 | --- | ---: | --- |
 | Focused local single-operator industrial image workflow | 4.0/5, about 80% | Strong enough to use and stabilize. Stop repeating completed labeling, queue, local training/inference, and model-review implementation work. |
-| General commercial image-labeling suite | 3.4/5, about 68% | Competitive in the intended image workflow after contextual Object Review, precision geometry, and compact display-only aids, but still behind broad suites in persistent metadata, modalities, extensibility, and team operations. |
+| General commercial image-labeling suite | 3.4/5, about 68% | Competitive in the intended image workflow after contextual Object Review, precision geometry, compact display-only aids, and bounded persistent `occluded`/tag/group review metadata, but still behind broad suites in propagation, modalities, extensibility, and team operations. |
 | Enterprise/team labeling platform | 1.2/5, about 24% | Intentionally outside the current product direction. Do not spend current-priority effort on workforce/cloud parity. |
 
 Current strengths:
@@ -510,7 +514,8 @@ It is not a general CVAT/Label Studio/Roboflow/Labelbox replacement. Against
 full image-labeling-suite expectations, the current estimate is 3.4/5 after
 contextual Object Review, polygon vertex editing, and bounded edge-aware
 scissors and compact display-only image-aid verification closed. Import/export
-breadth is no longer the primary gap; the main gaps are persistent metadata,
+breadth is no longer the primary gap; bounded persistent `occluded`/tag
+metadata is now consumed by Object Review. The main gaps are richer group and
 object-level QA/audit depth,
 collaboration operations, broader modalities, and independent production
 SEG/anomaly evidence.
@@ -840,10 +845,12 @@ Smart Mask correction/recovery, Recipe-scoped automatic contour, canvas layout
 auto-fit, and the declared YOLO11 runtime slices are complete. The current
 sequence is:
 
-1. Persistent occluded/tag/group metadata remains blocked until an operator
-   workflow and at least one Recipe/export/training/review consumer are named.
-   Recommended model: none until the consumer contract exists
-   Reasoning effort: n/a
+1. Persistent `occluded`, Recipe-tag, and same-image group metadata are
+   Complete with Object Review as the named consumer. Preserve the separate
+   sidecar, explicit label-save boundary, dedicated group selection, combined
+   filters, and mutation rules. Training and external interchange remain
+   excluded. Evidence:
+   `docs/OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`.
 3. Polygon/raster cross-family z-order remains blocked until a renderer defect
    is reproduced with focused performance evidence.
    Recommended model: none until the prerequisite exists

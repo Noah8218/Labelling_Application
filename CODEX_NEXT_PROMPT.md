@@ -75,8 +75,10 @@ Product direction:
   display-only brightness/contrast/gamma/invert/equalization then passed
   source/file/history/overlay invariants and current-build 1920/1366 gates, so
   the current estimate is `3.4/5`.
-  It remains materially below CVAT/V7 because persistent object metadata,
-  propagation, and collaboration are still absent or intentionally excluded.
+  It remains materially below CVAT/V7 despite bounded Object Review
+  `occluded`/tag/group persistence because propagation, broader modalities,
+  extensibility, and collaboration are still absent or intentionally
+  excluded.
 - Synthetic-first evidence may complete product features when the declared-origin, locked-split, SHA-256 non-overlap/source-immutability, runtime-provenance, normalized-result, and non-adopting decision gates in `docs/SYNTHETIC_EVIDENCE_CONTRACT.md` pass. Independent production-camera/cross-session data is an optional field-adoption gate, not an implementation blocker.
 - The supplied circular-disk 500 OK / 500 NG package is complete synthetic workflow evidence: exact metadata-backed 5-class detection data, YOLOv5/YOLOv8 one-epoch connectivity, a controlled 20-epoch 150-image test benchmark, and a new 20-epoch anomaly candidate. The anomaly candidate remains `hold`; the detection benchmark favors YOLOv8n (`mAP50/mAP50-95 0.955/0.678`, 27.575ms) over YOLOv5s (`0.900/0.567`, 52.45ms) but is explicitly `engine-benchmark`, not adoption. The fixed comparison cleanup preserves the exact source-tree SHA-256. The package is derived from one earlier OK source image; do not present it as independent camera evidence. Read `docs/CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
 
@@ -129,8 +131,11 @@ Current immediate priority:
   `docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md` and
   `docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.
 - No remaining commercial-video coding priority is currently unblocked.
-  Persistent metadata needs a named consumer; cross-family z-order needs a
-  reproduced renderer defect; field adoption needs independent data.
+  Object Review `occluded`, Recipe-tag, and same-image group persistence are
+  Complete. Group evidence is in
+  `docs/OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md`;
+  cross-family z-order needs a reproduced renderer defect and field adoption
+  needs independent data.
   Recommended model: none until a prerequisite exists; reasoning effort: n/a.
 - Recipe-scoped automatic contour and canvas layout auto-fit are Complete in
   committed source. The current Debug EXE completed the workflow without
@@ -152,8 +157,9 @@ Current immediate priority:
   P0-P5 pass:
   1. four-point extreme-box contract and bounded axis-aligned implementation
      are Complete;
-  2. persistent occluded/tag/group requires a named Recipe/export/training/
-     review consumer;
+  2. persistent `occluded`, Recipe-tag, and same-image group metadata are
+     Complete with Object Review as the named consumer, while training and
+     interchange expansion remain excluded;
   3. polygon/raster cross-family z-order requires a reproduced renderer defect;
   4. detection/anomaly adoption requires independent camera/session data.
   Read `docs/NEXT_THREAD_HANDOFF.md` section 0 and section 10. P3, P4, P5-A,

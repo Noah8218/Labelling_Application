@@ -33,6 +33,11 @@ namespace MvcVisionSystem
             }
 
             bool saved = LabelingAnnotationPersistence.SaveCurrent(activeImageBitmap, roisByClass, segmentsByClass, global.Data);
+            if (saved && !TrySaveCurrentObjectMetadata())
+            {
+                return false;
+            }
+
             if (saved)
             {
                 MarkAnnotationsSaved($"라벨 저장 완료: 객체 {savedCount}개");
@@ -58,6 +63,11 @@ namespace MvcVisionSystem
                 new Dictionary<string, List<CRectangleObject>>(StringComparer.OrdinalIgnoreCase),
                 new Dictionary<string, List<LabelingSegmentationObject>>(StringComparer.OrdinalIgnoreCase),
                 global.Data);
+            if (saved && !TrySaveCurrentObjectMetadata())
+            {
+                return false;
+            }
+
             if (saved)
             {
                 MarkAnnotationsSaved("\uBE48 \uB77C\uBCA8 \uD30C\uC77C \uC800\uC7A5 \uC644\uB8CC");
