@@ -21,6 +21,11 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (selectedToolItem.Tool != WpfAnnotationTool.Rectangle)
+            {
+                CancelFourPointBoxDraft(updateStatus: false);
+            }
+
             if (pendingSegmentationRemoveUnderlyingPlan != null)
             {
                 CancelPendingSegmentationRemoveUnderlying(updateStatus: false);
@@ -91,7 +96,15 @@ namespace MvcVisionSystem
                     SetWorkflowMode(WorkflowMode.Labeling);
                     FocusLabelingSidePanelForTool(action.Tool);
                     MainCanvasViewModel.DrawingShapeKind = action.ShapeKind;
-                    MainCanvasViewModel.IsTeachingMode = true;
+                    if (action.Tool == WpfAnnotationTool.Rectangle)
+                    {
+                        ApplyRectangleDrawingInputMode();
+                    }
+                    else
+                    {
+                        MainCanvasViewModel.IsImagePointInputMode = false;
+                        MainCanvasViewModel.IsTeachingMode = true;
+                    }
                     SetModelStatus(action.ModelStatusText);
                     SetYoloCommandStatus(action.CommandStatusText, isBusy: false);
                     AppendLog(action.LogText);

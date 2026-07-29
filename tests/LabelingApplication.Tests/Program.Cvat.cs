@@ -192,6 +192,15 @@ internal static class CvatTests
                             new XAttribute("xbr", "10.00"),
                             new XAttribute("ybr", "20.00"),
                             new XAttribute("occluded", "0"),
+                            new XAttribute("z_order", "0")),
+                        new XElement("box",
+                            new XAttribute("label", "NG"),
+                            new XAttribute("xtl", "10.00"),
+                            new XAttribute("ytl", "20.00"),
+                            new XAttribute("xbr", "40.00"),
+                            new XAttribute("ybr", "60.00"),
+                            new XAttribute("rotation", "22.5"),
+                            new XAttribute("occluded", "0"),
                             new XAttribute("z_order", "0"))),
                     new XElement("image",
                         new XAttribute("id", 1),
@@ -228,7 +237,7 @@ internal static class CvatTests
             AssertEqual(1, result.ImportedBoxCount);
             AssertEqual(2, result.CategoryCount);
             AssertEqual(0, result.SkippedImageCount);
-            AssertEqual(1, result.SkippedBoxCount);
+            AssertEqual(2, result.SkippedBoxCount);
             AssertEqual(2, data.ClassNamedList.Count);
             AssertEqual("OK", data.ClassNamedList[0].Text);
             AssertEqual("NG", data.ClassNamedList[1].Text);
@@ -251,6 +260,20 @@ internal static class CvatTests
                 new Size(100, 200));
             AssertTrue(loaded.ContainsKey("NG"), "CVAT import label should load as NG");
             AssertEqual(new Rectangle(10, 20, 30, 40), loaded["NG"][0]);
+
+            DatasetInterchangePreflightReport preflight = new DatasetInterchangePreflightService().DryRun(
+                new DatasetInterchangeRequest
+                {
+                    Data = data,
+                    FormatKey = "cvat-detection-import",
+                    SourcePath = archivePath,
+                    TargetSplit = YoloDatasetSplitService.TrainMode
+                });
+            AssertTrue(!preflight.CanApply, "CVAT rotated detection input should block Apply");
+            AssertEqual(2, preflight.SkippedCount);
+            AssertTrue(
+                preflight.Issues.Any(issue => issue.Contains("2", StringComparison.Ordinal)),
+                "CVAT preflight should expose the unsupported rotated/invalid box count");
         }
         finally
         {

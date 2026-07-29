@@ -150,7 +150,9 @@ namespace MvcVisionSystem.Yolo
                 || !TryReadDouble(boxElement, "xtl", out double xtl)
                 || !TryReadDouble(boxElement, "ytl", out double ytl)
                 || !TryReadDouble(boxElement, "xbr", out double xbr)
-                || !TryReadDouble(boxElement, "ybr", out double ybr))
+                || !TryReadDouble(boxElement, "ybr", out double ybr)
+                || (TryReadDouble(boxElement, "rotation", out double rotation)
+                    && Math.Abs(rotation) > double.Epsilon))
             {
                 return false;
             }

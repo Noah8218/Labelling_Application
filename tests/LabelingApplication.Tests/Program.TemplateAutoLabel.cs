@@ -748,6 +748,7 @@ internal static class TemplateAutoLabelTests
         }
         finally
         {
+            SetPrivateField(window, "isApplicationCloseApproved", true);
             window.Close();
             CGlobal.Inst.Data = previousData;
         }
@@ -848,6 +849,7 @@ internal static class TemplateAutoLabelTests
             }
             finally
             {
+                SetPrivateField(window, "isApplicationCloseApproved", true);
                 window.Close();
             }
         }

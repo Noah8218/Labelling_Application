@@ -84,7 +84,7 @@ namespace MvcVisionSystem.Yolo
         public string Origin { get; set; } = string.Empty;
 
         [JsonProperty("image_rotation")]
-        public int ImageRotation { get; set; }
+        public double ImageRotation { get; set; }
 
         [JsonProperty("original_width")]
         public int OriginalWidth { get; set; }
@@ -108,7 +108,7 @@ namespace MvcVisionSystem.Yolo
         public double Height { get; set; }
 
         [JsonProperty("rotation")]
-        public int Rotation { get; set; }
+        public double Rotation { get; set; }
 
         [JsonProperty("rectanglelabels")]
         public string[] RectangleLabels { get; set; } = Array.Empty<string>();

@@ -9,11 +9,19 @@ namespace MvcVisionSystem
         AnomalyDetection
     }
 
+    public enum LabelingBoxDrawingMethod
+    {
+        TwoPointDrag,
+        FourPointExtreme
+    }
+
     public class LabelingProjectSettings
     {
         public LabelingDatasetPurpose DatasetPurpose { get; set; } = LabelingDatasetPurpose.ObjectDetection;
 
         public bool SmartMaskAutoContourEnabled { get; set; }
+
+        public LabelingBoxDrawingMethod BoxDrawingMethod { get; set; } = LabelingBoxDrawingMethod.TwoPointDrag;
 
         public YoloDatasetSettings YoloDataset { get; set; } = new YoloDatasetSettings();
 
@@ -36,6 +44,11 @@ namespace MvcVisionSystem
             if (!Enum.IsDefined(typeof(LabelingDatasetPurpose), DatasetPurpose))
             {
                 DatasetPurpose = LabelingDatasetPurpose.ObjectDetection;
+            }
+
+            if (!Enum.IsDefined(typeof(LabelingBoxDrawingMethod), BoxDrawingMethod))
+            {
+                BoxDrawingMethod = LabelingBoxDrawingMethod.TwoPointDrag;
             }
 
             YoloDataset ??= new YoloDatasetSettings();

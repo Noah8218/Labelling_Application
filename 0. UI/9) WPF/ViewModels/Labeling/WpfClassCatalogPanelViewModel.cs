@@ -50,7 +50,7 @@ namespace MvcVisionSystem
         {
             get
             {
-                string selected = SelectedClass?.Text;
+                string selected = SelectedClass?.CanonicalDisplayText;
                 if (string.IsNullOrWhiteSpace(selected))
                 {
                     selected = "\uC5C6\uC74C";
@@ -66,7 +66,7 @@ namespace MvcVisionSystem
         {
             get
             {
-                string selected = SelectedClass?.Text;
+                string selected = SelectedClass?.CanonicalDisplayText;
                 return string.IsNullOrWhiteSpace(selected)
                     ? "\uC120\uD0DD\uB41C \uD074\uB798\uC2A4\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. OK, NG\uCC98\uB7FC \uBAA8\uB378\uC774 \uBC30\uC6B8 \uD074\uB798\uC2A4\uB97C \uBA3C\uC800 \uCD94\uAC00\uD558\uC138\uC694."
                     : $"{selected} - \uCE94\uBC84\uC2A4\uC5D0\uC11C \uC0C8 \uBC15\uC2A4\uB97C \uADF8\uB9AC\uBA74 \uC774 \uD074\uB798\uC2A4\uAC00 \uAE30\uBCF8 \uC801\uC6A9\uB429\uB2C8\uB2E4.";
@@ -85,9 +85,11 @@ namespace MvcVisionSystem
 
         public string ClassColorSectionTitleText => "\uC120\uD0DD \uD074\uB798\uC2A4 \uC0C9\uC0C1(\uD544\uC694 \uC2DC)";
 
-        public string RecipeClassListTitleText => "\uB808\uC2DC\uD53C \uD074\uB798\uC2A4";
+        public string RecipeClassListTitleText => "\uB808\uC2DC\uD53C \uD074\uB798\uC2A4 (YOLO \uC778\uB371\uC2A4)";
 
-        public string RecipeClassListGuideText => "\uC774 \uBAA9\uB85D\uC740 \uD604\uC7AC \uB808\uC2DC\uD53C\uC758 \uB77C\uBCA8 \uC2A4\uD0A4\uB9C8\uC785\uB2C8\uB2E4. \uB2E4\uC74C\uC5D0 \uADF8\uB9B4 \uB77C\uBCA8 \uD074\uB798\uC2A4\uC640 \uD559\uC2B5 \uD074\uB798\uC2A4\uAC00 \uC774 \uBAA9\uB85D\uC744 \uB530\uB985\uB2C8\uB2E4.";
+        public string RecipeClassListGuideText => "\uC774 \uBAA9\uB85D \uC21C\uC11C\uAC00 data.yaml, YOLO \uB77C\uBCA8, \uD559\uC2B5, AI \uACB0\uACFC \uB9E4\uD551\uC758 \uD074\uB798\uC2A4 \uC778\uB371\uC2A4\uC785\uB2C8\uB2E4.";
+
+        public string ClassIndexContractText => "\uC22B\uC790\uB294 \uC800\uC7A5\u00B7\uD559\uC2B5\uC5D0 \uC4F0\uB294 YOLO \uC778\uB371\uC2A4\uC785\uB2C8\uB2E4. \uC774\uB984 \uBCC0\uACBD\uC740 \uBC88\uD638\uB97C \uC720\uC9C0\uD558\uACE0, \uCD94\uAC00\u00B7\uC0AD\uC81C\uB294 \uC2A4\uD0A4\uB9C8\uB97C \uBC14\uAFC9\uB2C8\uB2E4. \uCE94\uBC84\uC2A4 1~9\uB294 \uADF8\uB9B4 \uD074\uB798\uC2A4 \uC120\uD0DD \uB2E8\uCD95\uD0A4\uC785\uB2C8\uB2E4.";
 
         public ObservableCollection<WpfClassCatalogListItem> Classes { get; } = new ObservableCollection<WpfClassCatalogListItem>();
 
@@ -201,11 +203,16 @@ namespace MvcVisionSystem
             SelectedClass = null;
             Classes.Clear();
 
-            foreach (CClassItem classItem in (classItems ?? Array.Empty<CClassItem>())
-                .Where(item => item != null && !string.IsNullOrWhiteSpace(item.Text))
-                .OrderBy(item => item.Text, StringComparer.OrdinalIgnoreCase))
+            int canonicalIndex = 0;
+            foreach (CClassItem classItem in classItems ?? Array.Empty<CClassItem>())
             {
-                var listItem = new WpfClassCatalogListItem(classItem);
+                int currentIndex = canonicalIndex++;
+                if (classItem == null || string.IsNullOrWhiteSpace(classItem.Text))
+                {
+                    continue;
+                }
+
+                var listItem = new WpfClassCatalogListItem(classItem, currentIndex);
                 Classes.Add(listItem);
                 if (!string.IsNullOrWhiteSpace(normalizedSelectedName)
                     && string.Equals(listItem.Text, normalizedSelectedName, StringComparison.OrdinalIgnoreCase))
@@ -271,9 +278,10 @@ namespace MvcVisionSystem
 
     public sealed class WpfClassCatalogListItem
     {
-        public WpfClassCatalogListItem(CClassItem classItem)
+        public WpfClassCatalogListItem(CClassItem classItem, int canonicalIndex = 0)
         {
             Text = ClassCatalogService.NormalizeClassName(classItem?.Text);
+            CanonicalIndex = Math.Max(0, canonicalIndex);
             DrawColor = classItem?.DrawColor ?? DrawingColor.LimeGreen;
             var brush = new MediaSolidColorBrush(MediaColor.FromRgb(DrawColor.R, DrawColor.G, DrawColor.B));
             brush.Freeze();
@@ -282,9 +290,13 @@ namespace MvcVisionSystem
 
         public string Text { get; }
 
-        public string DisplayText => Text;
+        public int CanonicalIndex { get; }
 
-        public string ToolTip => $"\uD074\uB798\uC2A4: {Text}";
+        public string CanonicalDisplayText => $"{CanonicalIndex} \u00B7 {Text}";
+
+        public string DisplayText => CanonicalDisplayText;
+
+        public string ToolTip => $"YOLO \uC778\uB371\uC2A4 {CanonicalIndex}: {Text}\n\uC774 \uC22B\uC790\uAC00 \uC800\uC7A5\u00B7\uD559\uC2B5\u00B7AI \uACB0\uACFC \uB9E4\uD551\uC5D0 \uC0AC\uC6A9\uB429\uB2C8\uB2E4.";
 
         public DrawingColor DrawColor { get; }
 

@@ -626,6 +626,7 @@ internal static class AnomalyClassificationTests
             }
             finally
             {
+                SetPrivateField(dashboardWindow, "isApplicationCloseApproved", true);
                 dashboardWindow.Close();
             }
 
@@ -695,6 +696,7 @@ internal static class AnomalyClassificationTests
             }
             finally
             {
+                SetPrivateField(window, "isApplicationCloseApproved", true);
                 window.Close();
             }
         }

@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace LabelingApplication.Tests;
 
@@ -54,6 +55,7 @@ internal static class ExeYoloV8DetectRestartSmokeTests
             string sourceImagePath = Path.GetFullPath(GetArgumentValue(args, "--image", YoloV8DetectDefaultImage));
             string externalDataYamlPath = GetArgumentValue(args, "--external-data-yaml", string.Empty);
             bool allowEmptyCandidates = args.Any(arg => string.Equals(arg, "--allow-empty-candidates", StringComparison.OrdinalIgnoreCase));
+            bool verifySafeClose = args.Any(arg => string.Equals(arg, "--verify-safe-close", StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrWhiteSpace(externalDataYamlPath))
             {
                 externalDataYamlPath = Path.GetFullPath(externalDataYamlPath);
@@ -279,6 +281,85 @@ internal static class ExeYoloV8DetectRestartSmokeTests
             CData inferredData = ReadRecipeData(visionPath);
             AssertYoloV8DetectRecipeSettings(inferredData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine);
             string inferredVisionHash = TestSupport.ComputeFileSha256(visionPath);
+            if (verifySafeClose)
+            {
+                AssertTrue(
+                    !allowEmptyCandidates && !inferenceStatus.Contains("\uD6C4\uBCF4 0", StringComparison.Ordinal),
+                    "candidate-only safe-close verification requires at least one pending candidate");
+                string smokeStem = Path.GetFileNameWithoutExtension(smokeImagePath);
+                bool HasSavedCandidateLabel()
+                    => Directory.Exists(outputRoot)
+                        && Directory.EnumerateFiles(
+                                outputRoot,
+                                smokeStem + ".txt",
+                                SearchOption.AllDirectories)
+                            .Any();
+                AssertTrue(
+                    !HasSavedCandidateLabel(),
+                    "pending candidate should not have a label file before application close");
+
+                Task<IntPtr> cancelCloseRequest = Task.Run(
+                    () => SendMessage(restartedHandle, WmClose, IntPtr.Zero, IntPtr.Zero));
+                System.Windows.Automation.AutomationElement candidateCloseDialog = null;
+                AssertTrue(
+                    WaitUntil(
+                        () =>
+                        {
+                            candidateCloseDialog = FindProcessWindowByName(
+                                restartedProcess,
+                                "\uD655\uC778\uB418\uC9C0 \uC54A\uC740 \uC791\uC5C5\uC774 \uC788\uC2B5\uB2C8\uB2E4");
+                            return candidateCloseDialog != null;
+                        },
+                        TimeSpan.FromSeconds(5)),
+                    "actual EXE candidate-only close did not open discard/cancel");
+                CaptureWorkflowStep(
+                    RefreshAutomationRoot(restartedProcess, restartedHandle, bringToFront: false),
+                    screenshotDirectory,
+                    "05_candidate_only_safe_close");
+                AssertTrue(
+                    FindVisibleAutomationElementByName(
+                        candidateCloseDialog,
+                        "\uC800\uC7A5 \uD6C4 \uC885\uB8CC",
+                        maximumWidth: 240D,
+                        maximumHeight: 80D) == null,
+                    "candidate-only close must not offer save-and-close");
+                AssertTrue(
+                    TryInvokeAutomationButton(candidateCloseDialog, "\uACC4\uC18D \uC791\uC5C5"),
+                    "candidate-only cancel was not invokable");
+                AssertTrue(
+                    cancelCloseRequest.Wait(TimeSpan.FromSeconds(3)),
+                    "candidate-only cancel did not release the close request");
+                AssertTrue(
+                    !restartedProcess.HasExited && !HasSavedCandidateLabel(),
+                    "candidate-only cancel must keep the EXE open without writing a label");
+
+                Task<IntPtr> discardCloseRequest = Task.Run(
+                    () => SendMessage(restartedHandle, WmClose, IntPtr.Zero, IntPtr.Zero));
+                System.Windows.Automation.AutomationElement discardDialog = null;
+                AssertTrue(
+                    WaitUntil(
+                        () =>
+                        {
+                            discardDialog = FindProcessWindowByName(
+                                restartedProcess,
+                                "\uD655\uC778\uB418\uC9C0 \uC54A\uC740 \uC791\uC5C5\uC774 \uC788\uC2B5\uB2C8\uB2E4");
+                            return discardDialog != null;
+                        },
+                        TimeSpan.FromSeconds(5)),
+                    "actual EXE candidate-only discard did not reopen safe close");
+                AssertTrue(
+                    TryInvokeAutomationButton(discardDialog, "\uD3D0\uAE30\uD558\uACE0 \uC885\uB8CC"),
+                    "candidate-only discard-and-close was not invokable");
+                AssertTrue(
+                    WaitUntil(() => restartedProcess.HasExited, TimeSpan.FromSeconds(8)),
+                    "candidate-only discard did not close the actual EXE");
+                AssertTrue(
+                    discardCloseRequest.Wait(TimeSpan.FromSeconds(3)),
+                    "candidate-only discard did not release the close request");
+                AssertTrue(
+                    !HasSavedCandidateLabel(),
+                    "candidate-only discard must not write or auto-confirm the pending candidate");
+            }
 
             string summaryPath = Path.Combine(artifactRoot, "summary.txt");
             File.WriteAllLines(summaryPath, new[]
@@ -296,6 +377,7 @@ internal static class ExeYoloV8DetectRestartSmokeTests
                 "confidence=" + reopenedData.ProjectSettings.PythonModel.MinimumDetectionConfidence.ToString(CultureInfo.InvariantCulture),
                 "inferenceImageSize=" + reopenedData.ProjectSettings.PythonModel.InferenceImageSize.ToString(CultureInfo.InvariantCulture),
                 "allowEmptyCandidates=" + allowEmptyCandidates.ToString(CultureInfo.InvariantCulture),
+                "safeCloseVerified=" + verifySafeClose.ToString(CultureInfo.InvariantCulture),
                 "inferenceStatus=" + inferenceStatus,
                 "screenshots=" + screenshotDirectory
             }, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));

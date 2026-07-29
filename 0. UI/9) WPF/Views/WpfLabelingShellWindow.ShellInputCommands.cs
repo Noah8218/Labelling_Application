@@ -56,6 +56,24 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (e.Modifiers == ModifierKeys.None && e.Key == Key.Escape)
+            {
+                e.Handled = CancelFourPointBoxDraft(updateStatus: true);
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+
+            if (e.Modifiers == ModifierKeys.None && e.Key == Key.Back)
+            {
+                e.Handled = RemoveLastFourPointBoxPoint();
+                if (e.Handled)
+                {
+                    return;
+                }
+            }
+
             if ((e.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
                 if (e.Key == Key.Z)

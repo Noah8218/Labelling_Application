@@ -17,6 +17,9 @@ namespace MvcVisionSystem
             "도구  V 선택  R 박스  P 폴리곤  B 브러시  E 지우개  H 이동\n"
             + "클래스  1~9 빠른 선택  0 클래스 관리\n"
             + "반복/편집  N 마지막 도구+클래스  Ctrl+D 선택 복제  Ctrl+Z/Y 실행 취소/다시 실행\n"
+            + "Smart Mask  세그멘테이션에서 자동 윤곽 켜기 → R 박스 → 후보 검토\n"
+            + "보정  포함/제외점 1개씩 → 후보 다시 생성 → 이전/현재 후보 비교 → 확정 또는 스킵\n"
+            + "저장  후보 생성·복원은 저장하지 않으며, 확정은 표시 중인 후보를 정답 파일에 저장합니다.\n"
             + "F1 도움말 닫기 · 입력 상자 편집 중에는 라벨링 단축키가 실행되지 않습니다.";
 
         public static WpfAnnotationShortcut ResolveShortcut(Key key, ModifierKeys modifiers)

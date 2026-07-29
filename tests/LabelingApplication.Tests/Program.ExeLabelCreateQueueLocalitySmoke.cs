@@ -9,6 +9,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Automation;
 
 namespace LabelingApplication.Tests;
@@ -32,6 +33,8 @@ internal static class ExeLabelCreateQueueLocalitySmokeTests
 
         try
         {
+            bool verifySafeClose = args.Any(arg =>
+                string.Equals(arg, "--verify-safe-close", StringComparison.OrdinalIgnoreCase));
             string root = FindRepositoryRoot();
             string exePath = Path.GetFullPath(GetArgumentValue(
                 args,
@@ -206,6 +209,48 @@ internal static class ExeLabelCreateQueueLocalitySmokeTests
                 screenshotDirectory,
                 "02_after_label_create_queue_preserved");
 
+            if (verifySafeClose)
+            {
+                Task<IntPtr> closeRequest = Task.Run(
+                    () => SendMessage(stableHandle, WmClose, IntPtr.Zero, IntPtr.Zero));
+                AutomationElement closeDialog = null;
+                AssertTrue(
+                    WaitUntil(
+                        () =>
+                        {
+                            closeDialog = FindProcessWindowByName(
+                                process,
+                                "\uC800\uC7A5\uD558\uC9C0 \uC54A\uC740 \uB77C\uBCA8\uC774 \uC788\uC2B5\uB2C8\uB2E4");
+                            return closeDialog != null;
+                        },
+                        TimeSpan.FromSeconds(4)),
+                    "dirty-label application close did not open the safe-close dialog");
+                CaptureWorkflowStep(
+                    RefreshAutomationRoot(process, stableHandle, bringToFront: false),
+                    screenshotDirectory,
+                    "03_safe_close_dialog");
+                AssertTrue(
+                    TryInvokeAutomationButton(closeDialog, "\uACC4\uC18D \uC791\uC5C5"),
+                    "safe-close cancel action was not invokable");
+                AssertTrue(
+                    WaitUntil(
+                        () => !process.HasExited
+                            && FindProcessWindowByName(
+                                process,
+                                "\uC800\uC7A5\uD558\uC9C0 \uC54A\uC740 \uB77C\uBCA8\uC774 \uC788\uC2B5\uB2C8\uB2E4") == null,
+                        TimeSpan.FromSeconds(3)),
+                    "safe-close cancel did not return to the labeling window");
+                AssertTrue(
+                    closeRequest.Wait(TimeSpan.FromSeconds(3)),
+                    "safe-close cancel did not release the original close request");
+                string dirtyStatusAfterCancel = GetAutomationValueByAutomationId(
+                    RefreshAutomationRoot(process, stableHandle, bringToFront: false),
+                    "AnnotationSaveStatusText");
+                AssertTrue(
+                    dirtyStatusAfterCancel.Contains("\uD544\uC694", StringComparison.Ordinal),
+                    "safe-close cancel should preserve the unsaved-label state");
+            }
+
             Volatile.Write(ref measuringSave, true);
             rootElement = RefreshAutomationRoot(process, stableHandle, bringToFront: false);
             AssertTrue(
@@ -239,7 +284,43 @@ internal static class ExeLabelCreateQueueLocalitySmokeTests
             CaptureWorkflowStep(
                 RefreshAutomationRoot(process, stableHandle, bringToFront: false),
                 screenshotDirectory,
-                "03_after_label_save_queue_preserved");
+                verifySafeClose
+                    ? "04_after_label_save_queue_preserved"
+                    : "03_after_label_save_queue_preserved");
+            if (verifySafeClose)
+            {
+                Task<IntPtr> cleanCloseRequest = Task.Run(
+                    () => SendMessage(stableHandle, WmClose, IntPtr.Zero, IntPtr.Zero));
+                AssertTrue(
+                    WaitUntil(() => process.HasExited, TimeSpan.FromSeconds(6)),
+                    "clean saved state should close without another dialog");
+                AssertTrue(
+                    cleanCloseRequest.Wait(TimeSpan.FromSeconds(3)),
+                    "clean close request did not finish");
+
+                process = StartYoloV8RuntimeSmokeExe(exePath, out stableHandle);
+                AssertTrue(
+                    WaitUntil(
+                        () =>
+                        {
+                            AutomationElement latestRoot =
+                                RefreshAutomationRoot(process, stableHandle, bringToFront: false);
+                            string datasetStatus =
+                                GetAutomationValueByAutomationId(latestRoot, "DatasetStatusText");
+                            return datasetStatus.Contains("125/125", StringComparison.Ordinal)
+                                && datasetStatus.Contains("queue-local-000", StringComparison.OrdinalIgnoreCase);
+                        },
+                        TimeSpan.FromSeconds(15)),
+                    "saved label did not reopen in the actual EXE after safe close");
+                AssertTrue(
+                    File.Exists(labelPath)
+                        && File.ReadLines(labelPath).Count(line => !string.IsNullOrWhiteSpace(line)) == 1,
+                    "reopened safe-close label file should contain exactly one saved object");
+                CaptureWorkflowStep(
+                    RefreshAutomationRoot(process, stableHandle, bringToFront: false),
+                    screenshotDirectory,
+                    "05_reopened_saved_label");
+            }
 
             string exeHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(exePath)));
             string summaryPath = Path.Combine(artifactRoot, "summary.txt");
@@ -256,6 +337,7 @@ internal static class ExeLabelCreateQueueLocalitySmokeTests
                 $"saveInvalidations={saveInvalidations}",
                 $"saveBulkChanges={saveBulkChanges}",
                 FormattableString.Invariant($"scrollAfterSave={scrollAfterSave:F2}"),
+                "safeCloseVerified=" + verifySafeClose,
                 "labelPath=" + labelPath,
                 "screenshots=" + screenshotDirectory
             }, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));

@@ -148,7 +148,9 @@ namespace MvcVisionSystem.Yolo
             if (item == null
                 || !string.Equals(item.Type, "rectanglelabels", StringComparison.OrdinalIgnoreCase)
                 || item.Value?.RectangleLabels == null
-                || item.Value.RectangleLabels.Length == 0)
+                || item.Value.RectangleLabels.Length == 0
+                || Math.Abs(item.ImageRotation) > double.Epsilon
+                || Math.Abs(item.Value.Rotation) > double.Epsilon)
             {
                 return false;
             }

@@ -168,6 +168,7 @@ namespace MvcVisionSystem
         private readonly WpfSmartMaskPromptSessionService smartMaskPromptSession = new WpfSmartMaskPromptSessionService();
         private readonly WpfAnomalyClassificationEvaluationRunService anomalyClassificationEvaluationRunService = new WpfAnomalyClassificationEvaluationRunService();
         private readonly WpfWorkspaceLayoutSettingsService workspaceLayoutSettingsService = new WpfWorkspaceLayoutSettingsService();
+        private readonly WpfApplicationClosePolicyService applicationClosePolicyService = new WpfApplicationClosePolicyService();
         private readonly WpfTrainingGuideHistoryService trainingGuideHistoryService = new WpfTrainingGuideHistoryService();
         private readonly WpfMaskEditStateService maskEditStateService = new WpfMaskEditStateService();
         private readonly WpfMaskStrokeHistoryDraftService maskStrokeHistoryDraftService = new WpfMaskStrokeHistoryDraftService();
@@ -229,6 +230,8 @@ namespace MvcVisionSystem
         private bool activeSegmentDragChanged;
         private bool suppressAnnotationHistory;
         private string annotationDirtyReason = string.Empty;
+        private bool isApplicationCloseApproved;
+        private bool isApplicationClosePromptOpen;
         private string activeRoiEditHistoryOverlayId = string.Empty;
         private int canvasLayoutAutoFitVersion;
         private readonly WpfLabelingShellViewModels viewModels;

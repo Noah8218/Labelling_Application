@@ -39,6 +39,8 @@ namespace MvcVisionSystem
                 () => ShowClassCatalogWorkflowView(WpfShellWorkflowStage.Labeling));
             CanvasPanelViewModel.ConfigureDisplayModeSelection(
                 ExecuteCanvasDisplayModeSelectionChanged);
+            CanvasPanelViewModel.ConfigureBoxDrawingMethod(
+                ExecuteSetBoxDrawingMethod);
             CanvasPanelViewModel.ConfigureBrushSizeCommands(
                 ExecuteDecreaseBrushSizeCommand,
                 ExecuteIncreaseBrushSizeCommand);
@@ -183,6 +185,13 @@ namespace MvcVisionSystem
 
             if (effectiveStep == WpfLearningStep.Label)
             {
+                if (selectedTool?.Tool == WpfAnnotationTool.Rectangle
+                    && CanvasPanelViewModel?.SelectedBoxDrawingMethod?.Method
+                        == LabelingBoxDrawingMethod.FourPointExtreme)
+                {
+                    return "\uBC15\uC2A4 \uB77C\uBCA8\uB9C1: \uAC1D\uCCB4\uC758 \uC704 \u2192 \uC544\uB798 \u2192 \uC67C\uCABD \u2192 \uC624\uB978\uCABD \uADF9\uC810\uC744 \uC21C\uC11C\uB300\uB85C \uB204\uB974\uC138\uC694. Backspace\uB294 \uC774\uC804 \uC810, Esc\uB294 \uCD08\uC548 \uCDE8\uC18C\uC785\uB2C8\uB2E4.";
+                }
+
                 return selectedTool?.Tool switch
                 {
                     WpfAnnotationTool.Rectangle => "박스 라벨링: 캔버스에서 드래그하고 클래스가 맞는지 확인한 뒤 라벨 저장을 누르세요.",

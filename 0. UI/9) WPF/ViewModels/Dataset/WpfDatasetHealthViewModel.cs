@@ -12,7 +12,10 @@ namespace MvcVisionSystem
 {
     public sealed class WpfDatasetHealthViewModel : WpfObservableViewModel
     {
+        public const string AllVisualQaSplits = "전체";
+        public const string AllVisualQaClasses = "전체";
         private static readonly Action NoOpCommand = () => { };
+        private static readonly string[] VisualQaSplitOrder = { "train", "valid", "test" };
         private readonly WpfDatasetVisualQaService visualQaService = new WpfDatasetVisualQaService();
         private readonly List<WpfDatasetVisualQaItem> visualQaCatalogItems = new List<WpfDatasetVisualQaItem>();
         private CData data;
@@ -29,7 +32,15 @@ namespace MvcVisionSystem
         private bool hasClasses;
         private bool hasVisualQaItems;
         private bool isVisualQaLoaded;
+        private bool isRefreshingVisualQa;
         private bool showOnlyVisualQaProblems;
+        private IReadOnlyList<string> visualQaSplitFilters = new[] { AllVisualQaSplits };
+        private string selectedVisualQaSplitFilter = AllVisualQaSplits;
+        private IReadOnlyList<WpfDatasetVisualQaClassFilterItem> visualQaClassFilters =
+            new[] { new WpfDatasetVisualQaClassFilterItem(null, string.Empty) };
+        private WpfDatasetVisualQaClassFilterItem selectedVisualQaClassFilter =
+            new WpfDatasetVisualQaClassFilterItem(null, string.Empty);
+        private string visualQaCatalogStatusText = "시각 QA 탭을 열면 저장 라벨 문제와 표본을 읽습니다.";
         private string visualQaStatusText = "저장된 이미지를 점검하면 문제 후보와 표본이 표시됩니다.";
         private WpfDatasetVisualQaItem selectedVisualQaItem;
         private ICommand refreshCommand = new RelayCommand(NoOpCommand);
@@ -52,6 +63,20 @@ namespace MvcVisionSystem
         public ObservableCollection<WpfDatasetHealthIssueItem> Issues { get; } = new ObservableCollection<WpfDatasetHealthIssueItem>();
 
         public ObservableCollection<WpfDatasetVisualQaItem> VisualQaItems { get; } = new ObservableCollection<WpfDatasetVisualQaItem>();
+
+        public IReadOnlyList<string> VisualQaSplitFilters
+        {
+            get => visualQaSplitFilters;
+            private set => SetProperty(ref visualQaSplitFilters, value ?? Array.Empty<string>());
+        }
+
+        public IReadOnlyList<WpfDatasetVisualQaClassFilterItem> VisualQaClassFilters
+        {
+            get => visualQaClassFilters;
+            private set => SetProperty(
+                ref visualQaClassFilters,
+                value ?? Array.Empty<WpfDatasetVisualQaClassFilterItem>());
+        }
 
         public string DatasetName
         {
@@ -143,6 +168,42 @@ namespace MvcVisionSystem
             }
         }
 
+        public string SelectedVisualQaSplitFilter
+        {
+            get => selectedVisualQaSplitFilter;
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value)
+                    ? AllVisualQaSplits
+                    : value.Trim();
+                if (SetProperty(ref selectedVisualQaSplitFilter, normalized))
+                {
+                    RefreshVisibleVisualQaItems();
+                }
+            }
+        }
+
+        public bool IsVisualQaSplitFilterEnabled => VisualQaSplitFilters.Count > 1;
+
+        public WpfDatasetVisualQaClassFilterItem SelectedVisualQaClassFilter
+        {
+            get => selectedVisualQaClassFilter;
+            set
+            {
+                WpfDatasetVisualQaClassFilterItem normalized =
+                    value ?? VisualQaClassFilters.FirstOrDefault(item => !item.ClassIndex.HasValue)
+                    ?? new WpfDatasetVisualQaClassFilterItem(null, string.Empty);
+                if (SetProperty(ref selectedVisualQaClassFilter, normalized)
+                    && isVisualQaLoaded
+                    && !isRefreshingVisualQa)
+                {
+                    RefreshVisualQa();
+                }
+            }
+        }
+
+        public bool IsVisualQaClassFilterEnabled => VisualQaClassFilters.Count > 1;
+
         public string VisualQaStatusText
         {
             get => visualQaStatusText;
@@ -228,47 +289,120 @@ namespace MvcVisionSystem
 
         private void RefreshVisualQa()
         {
+            isRefreshingVisualQa = true;
             isVisualQaLoaded = true;
             try
             {
-                WpfDatasetVisualQaCatalog catalog = visualQaService.BuildCatalog(data);
+                RefreshVisualQaClassFilters();
+                int? selectedClassIndex = SelectedVisualQaClassFilter?.ClassIndex;
+                WpfDatasetVisualQaCatalog catalog =
+                    visualQaService.BuildCatalog(data, selectedClassIndex);
                 visualQaCatalogItems.Clear();
                 visualQaCatalogItems.AddRange(catalog.Items);
                 string truncationText = catalog.IsTruncated
                     ? $" · 최대 {WpfDatasetVisualQaService.MaximumCatalogItemCount}개 표시"
                     : string.Empty;
-                VisualQaStatusText =
-                    $"검사 {catalog.ScannedImageCount}장 · 문제 {catalog.ProblemCount}장 · 표본 포함 {catalog.Items.Count}장{truncationText}";
+                visualQaCatalogStatusText = selectedClassIndex.HasValue
+                    ? $"검사 {catalog.ScannedImageCount}장 · 클래스 일치 {catalog.MatchedImageCount}장"
+                        + $" · 문제 {catalog.ProblemCount}장 · 목록 {catalog.Items.Count}장{truncationText}"
+                    : $"검사 {catalog.ScannedImageCount}장 · 문제 {catalog.ProblemCount}장"
+                        + $" · 표본 포함 {catalog.Items.Count}장{truncationText}";
             }
             catch (Exception ex)
             {
                 visualQaCatalogItems.Clear();
-                VisualQaStatusText = "시각 QA 목록 생성 실패: " + ex.Message;
+                visualQaCatalogStatusText = "시각 QA 목록 생성 실패: " + ex.Message;
+            }
+            finally
+            {
+                isRefreshingVisualQa = false;
             }
 
+            RefreshVisualQaSplitFilters();
             RefreshVisibleVisualQaItems();
         }
 
         private void ResetVisualQa()
         {
             visualQaCatalogItems.Clear();
-            VisualQaStatusText = "시각 QA 탭을 열면 저장 라벨 문제와 표본을 읽습니다.";
+            visualQaCatalogStatusText = "시각 QA 탭을 열면 저장 라벨 문제와 표본을 읽습니다.";
+            RefreshVisualQaClassFilters();
+            RefreshVisualQaSplitFilters();
             RefreshVisibleVisualQaItems();
+        }
+
+        private void RefreshVisualQaClassFilters()
+        {
+            WpfDatasetVisualQaClassFilterItem previous = SelectedVisualQaClassFilter;
+            var filters = new List<WpfDatasetVisualQaClassFilterItem>
+            {
+                new WpfDatasetVisualQaClassFilterItem(null, string.Empty)
+            };
+            if (data?.ProjectSettings?.DatasetPurpose != LabelingDatasetPurpose.AnomalyDetection)
+            {
+                for (int index = 0; index < (data?.ClassNamedList?.Count ?? 0); index++)
+                {
+                    string className = data.ClassNamedList[index]?.Text?.Trim() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(className))
+                    {
+                        filters.Add(new WpfDatasetVisualQaClassFilterItem(index, className));
+                    }
+                }
+            }
+
+            VisualQaClassFilters = filters;
+            SelectedVisualQaClassFilter = filters.FirstOrDefault(item => item.HasSameIdentity(previous))
+                ?? filters[0];
+            OnPropertyChanged(nameof(SelectedVisualQaClassFilter));
+            OnPropertyChanged(nameof(IsVisualQaClassFilterEnabled));
+        }
+
+        private void RefreshVisualQaSplitFilters()
+        {
+            string previous = SelectedVisualQaSplitFilter;
+            var filters = new List<string> { AllVisualQaSplits };
+            foreach (string split in VisualQaSplitOrder.Where(split =>
+                visualQaCatalogItems.Any(item =>
+                    string.Equals(item.SplitText, split, StringComparison.OrdinalIgnoreCase))))
+            {
+                filters.Add(split);
+            }
+
+            VisualQaSplitFilters = filters;
+            SelectedVisualQaSplitFilter = filters.Contains(previous)
+                ? previous
+                : AllVisualQaSplits;
+            OnPropertyChanged(nameof(SelectedVisualQaSplitFilter));
+            OnPropertyChanged(nameof(IsVisualQaSplitFilterEnabled));
         }
 
         private void RefreshVisibleVisualQaItems()
         {
-            WpfDatasetVisualQaItem previous = SelectedVisualQaItem;
+            string previousImagePath = SelectedVisualQaItem?.ImagePath ?? string.Empty;
             VisualQaItems.Clear();
-            foreach (WpfDatasetVisualQaItem item in visualQaCatalogItems.Where(item => !ShowOnlyVisualQaProblems || item.IsProblem))
+            foreach (WpfDatasetVisualQaItem item in visualQaCatalogItems.Where(item =>
+                (!ShowOnlyVisualQaProblems || item.IsProblem)
+                && (string.Equals(SelectedVisualQaSplitFilter, AllVisualQaSplits, StringComparison.Ordinal)
+                    || string.Equals(item.SplitText, SelectedVisualQaSplitFilter, StringComparison.OrdinalIgnoreCase))))
             {
                 VisualQaItems.Add(item);
             }
 
             HasVisualQaItems = VisualQaItems.Count > 0;
-            SelectedVisualQaItem = previous != null && VisualQaItems.Contains(previous)
-                ? previous
-                : VisualQaItems.FirstOrDefault(item => item.IsProblem) ?? VisualQaItems.FirstOrDefault();
+            SelectedVisualQaItem = VisualQaItems.FirstOrDefault(item =>
+                    string.Equals(item.ImagePath, previousImagePath, StringComparison.OrdinalIgnoreCase))
+                ?? VisualQaItems.FirstOrDefault(item => item.IsProblem)
+                ?? VisualQaItems.FirstOrDefault();
+            VisualQaStatusText = !isVisualQaLoaded
+                ? visualQaCatalogStatusText
+                : $"{visualQaCatalogStatusText} · 표시 {VisualQaItems.Count}장 · "
+                    + (string.Equals(SelectedVisualQaSplitFilter, AllVisualQaSplits, StringComparison.Ordinal)
+                        ? "전체 분할"
+                        : $"{SelectedVisualQaSplitFilter} 분할")
+                    + (SelectedVisualQaClassFilter?.ClassIndex.HasValue == true
+                        ? $" · 클래스 {SelectedVisualQaClassFilter.Text}"
+                        : string.Empty)
+                    + (ShowOnlyVisualQaProblems ? " · 문제만" : string.Empty);
         }
 
         private void OpenSelectedVisualQaImage()

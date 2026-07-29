@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Integration hardening: never-loaded startup/test shells no longer open an
+  operator close dialog, while loaded main windows retain safe close.
+  Non-segmentation object-review row replacement/removal also preserves
+  unchanged segmentation aggregate state instead of rescanning very large
+  lists.
+
 Current focus:
 
 - Local industrial labeling workflow for object detection and segmentation.
@@ -13,9 +19,22 @@ Current focus:
 
 Recent verified areas:
 
+- Dataset Health Visual QA canonical class filter: `전체` plus Recipe-ordered
+  `index · name` classes compose with split and `문제만`; selecting a class
+  rebuilds a read-only catalog bounded at 500 matching images while the
+  unfiltered view keeps its existing 48-item balanced sample policy.
+- Dataset Health Visual QA existing-data split filter: `전체` plus only actual
+  train/valid/test values compose with `문제만`, refresh safely preserves or
+  resets the selection, and balanced healthy sampling prevents a large train
+  split from hiding valid/test within the bounded catalog.
 - Recipe-scoped segmentation `자동 윤곽` mode: enable it once, then each new
   rectangle starts a Smart Mask candidate automatically. Candidate approval
-  and label save remain explicit.
+  remains explicit; `확정` saves the displayed candidate through the canonical
+  label-save path, while generation, comparison, restore, and skip do not
+  write that candidate.
+- Smart Mask operator guidance in README, tutorial, MobileSAM guide, and F1
+  help now uses the same auto-first correction, previous/current comparison,
+  explicit confirm/skip, and Recipe restore contract.
 - Canvas layout auto-fit after side-panel collapse, expansion, or other
   viewport-size changes; ordinary operator zoom and pan remain unchanged.
 - Local YOLOv5/YOLOv8 Detect comparison with separate runtimes, test-preferred/validation-reference split handling, and Candidate Review metrics/Takt presentation.

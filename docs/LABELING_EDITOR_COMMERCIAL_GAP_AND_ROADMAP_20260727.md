@@ -671,15 +671,19 @@ Reasoning effort: `medium`
    Recommended model: `gpt-5.6-terra`
    Reasoning effort: `low`
 
-### Contract-dependent backlog
+### Contract completion and bounded implementation
 
 2. Four-point box creation
    - commercial evidence: CVAT bounding-box overview;
-   - prerequisite contract: axis-aligned versus rotated meaning, four-click
-     interaction, cancellation, undo/redo, canonical save, YOLO/COCO/CVAT
-     representation and loss warnings;
-   - safety boundary: do not change the existing Rectangle contract or
-     introduce rotated geometry implicitly.
+   - contract: `Complete` in
+     `docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md`;
+   - selected meaning: top/bottom/left/right extreme points create the existing
+     axis-aligned Rectangle;
+   - implementation boundary: Recipe-scoped input preference, four-click
+     progress/cancellation, one-step history, Smart Mask after the fourth
+     point, existing save/export behavior, and rotated-import rejection;
+   - safety boundary: no free quadrilateral, rotated geometry, or protected
+     Viewer/OpenGL/ROI drag/resize change.
    Recommended model: `gpt-5.6-sol`
    Reasoning effort: `high`
 

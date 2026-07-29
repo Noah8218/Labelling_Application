@@ -2,6 +2,188 @@
 
 This document records code paths that have already been performance- or UX-verified and should not be casually refactored. Treat these areas as protected product behavior: change them only when the user reports a new issue in that exact path, or when a focused verification gate proves the change is necessary.
 
+## 2026-07-29 Current Worktree Integration Contract
+
+Status: stable and Complete.
+
+Protected behavior:
+
+- a loaded operator main window retains the safe-close decision contract;
+- a shell that has never entered a loaded operator session closes without an
+  operator modal during startup failure or test cleanup;
+- replacing/removing one non-segmentation object-review row does not rescan
+  the full list for unchanged segmentation aggregate state;
+- segment changes and segment selection still refresh merge, z-order,
+  remove-underlying, and session-state actions.
+
+Protected gates: zero-warning/error isolated and current Debug app builds,
+19 completed-slice focused switches, 258/258 default internal regressions,
+three consecutive `--wpf-settings-viewmodels` passes,
+`--segmentation-merge`, `--segmentation-zorder`,
+`--segmentation-remove-underlying`, `--object-session-state`,
+`--application-close`, `--priority-workflow-docs`, and `git diff --check`.
+
+Evidence:
+`docs/CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md` and
+`artifacts/integration-verification-20260729/default-suite-complete.stdout.log`.
+
+Boundary: this contract does not weaken loaded-window close protection or
+claim field-model accuracy.
+
+## 2026-07-29 Dataset Health Canonical Class Filter Contract
+
+Status: stable and Complete.
+
+Protected behavior:
+
+- Visual QA exposes `전체` plus canonical Recipe `index · name` classes;
+- class selection rebuilds the read-only catalog across stored images and
+  keeps at most 500 matching rows;
+- split and `문제만` compose with the selected class;
+- refresh preserves the same canonical index/name and otherwise falls back to
+  `전체`;
+- unfiltered Visual QA retains problem-first plus 48-item split-balanced
+  sampling;
+- Detection uses stored YOLO class indexes and Segmentation uses canonical
+  segment JSON class indexes;
+- filtering and refresh do not write dataset files.
+
+Protected gates: zero-warning/error isolated build, `--dataset-health`,
+`--wpf-dataset-health-window`, `--wpf-labeling-shell`,
+`--priority-workflow-docs`, `git diff --check`, fixture full-tree SHA-256
+immutability, and current-build real-Recipe captures under
+`artifacts/ui/dataset-health-class-filter-20260729`.
+
+Evidence: `docs/DATASET_HEALTH_CLASS_FILTER_20260729.md`.
+
+Boundary: Dataset Health remains read-only and is not a second annotation
+editor, per-object issue tracker, reviewer workflow, or cloud assignment
+surface.
+
+## 2026-07-29 Dataset Health Existing-Data Split Filter Contract
+
+Status: stable and Complete.
+
+Protected behavior:
+
+- Visual QA exposes `전체` plus only the train/valid/test values carried by the
+  current bounded catalog;
+- the selected split composes with `문제만`;
+- refresh retains an available split and otherwise falls back to `전체`;
+- problem rows remain first and healthy sampling is balanced across existing
+  splits so one large split cannot hide the others;
+- filtering, problem-only composition, and refresh do not write any dataset
+  file;
+- editing routes to the existing labeling workbench; Dataset Health does not
+  become a second annotation editor.
+
+Protected gates: zero-warning/error isolated and current app builds,
+`--dataset-health`, `--wpf-dataset-health-window`, `--wpf-labeling-shell`,
+`--priority-workflow-docs`, `git diff --check`, full-tree relative-path plus
+SHA-256 immutability coverage, and fresh 1920x1080/1366x768 captures under
+`artifacts/ui/dataset-health-split-filter-p3-20260729`.
+
+Evidence: `docs/DATASET_HEALTH_SPLIT_FILTER_P3_20260729.md`.
+
+Boundary: canonical class filtering is now covered by the preceding protected
+contract. Do not add write actions, reviewer accounts, assignment, comments,
+consensus, or cloud workflow to this contract.
+
+## 2026-07-29 Smart Mask Operator Documentation Truth Contract
+
+Status: stable and Complete.
+
+Protected behavior:
+
+- Recipe-scoped `자동 윤곽` is the shortest normal Smart Mask start path;
+- completing a Rectangle starts the candidate when the option is enabled;
+- correction adds positive/negative points and explicitly reruns the candidate;
+- previous/current candidate switching never writes a label;
+- Confirm saves the displayed candidate through the canonical annotation-save
+  path; Skip does not save the candidate;
+- option restoration is visible/editable but causes no inference,
+  confirmation, or persistence side effect;
+- README, tutorial, MobileSAM guide, and F1 help must describe the same
+  contract;
+- the approved public GIF is not replaced without explicit user approval.
+
+Protected gates: zero-warning/error isolated and current app builds,
+`--labeling-productivity`, `--mobile-sam-box-prompt`,
+`--smart-mask-candidate-compare-restore`, `--wpf-canvas-panel-commands`,
+`--priority-workflow-docs`, `--exe-labeling-productivity-smoke`,
+`git diff --check`, and fresh 1920x1080 F1 before/after evidence.
+
+Evidence:
+`docs/SMART_MASK_OPERATOR_DOCUMENTATION_TRUTH_P2_20260729.md`.
+
+Boundary: this contract is operator guidance and visible help; it does not
+change inference, candidate, persistence, or field-accuracy behavior.
+
+## 2026-07-29 Canonical Class Index Presentation Contract
+
+Status: stable and Complete.
+
+Protected behavior:
+
+- `CData.ClassNamedList` order is the visible and persisted canonical class
+  order; Class Catalog and canvas class setup do not alphabetically sort it;
+- Class Catalog rows and selected summary show `zero-based index · name`;
+- the canvas next-label card shows the same canonical index;
+- canvas `1~9` numbers remain class-selection shortcuts, not YOLO indices;
+- rename preserves the class object/index; add/delete change schema and no
+  reorder or migration is implied;
+- existing YAML, annotation, training, Batch AI, and reopen owners retain
+  their ordered mapping contracts.
+
+Protected gates: zero-warning/error isolated build,
+`--canonical-class-index`, `--wpf-class-catalog-panel`,
+`--wpf-canvas-panel-commands`, `--labeling-productivity`,
+`--wpf-batch-detection-preflight`, `--exe-canonical-class-index-visual`,
+`--priority-workflow-docs`,
+`git diff --check`, and fresh 1920x1080/1366x768 captures under
+`artifacts/canonical-class-index-p1-20260729`.
+
+Evidence: `docs/CANONICAL_CLASS_INDEX_VISIBILITY_P1_20260729.md`.
+
+Boundary: do not add drag reorder or promise external-label migration without
+a separate destructive-schema contract.
+
+## 2026-07-29 Main-Window Safe Close Contract
+
+Status: stable and Complete.
+
+Protected behavior:
+
+- clean idle close has no dialog;
+- dirty annotation or pending mask work offers `저장 후 종료`,
+  `저장하지 않고 종료`, and `계속 작업`;
+- candidate-only close offers `폐기하고 종료` and `계속 작업`, never a save
+  action;
+- pending candidates are not confirmed, moved to confirmed state, or written
+  by the close path;
+- failed canonical annotation save leaves close approval false and keeps the
+  window open;
+- the decision contract starts after the main window has entered a loaded
+  operator session; a never-loaded startup/test shell closes without a modal;
+- active work is named before approval and existing `Closed` cleanup owns
+  cancellation/resource release;
+- annotation formats and Viewer/OpenGL/ROI/brush/eraser hot paths remain
+  unchanged.
+
+Protected gates: zero-warning/error isolated and app builds,
+`--application-close`, actual-EXE
+`--exe-label-create-queue-locality-smoke --verify-safe-close`, actual-EXE
+`--exe-yolov8-detect-restart-smoke --verify-safe-close`,
+`--priority-workflow-docs`, `git diff --check`, and the fresh evidence under
+`artifacts/ui/safe-close-p0-20260729`,
+`artifacts/exe-safe-close-p0-20260729`, and
+`artifacts/exe-safe-close-p0-20260729-candidate-only`.
+
+Evidence: `docs/SAFE_APPLICATION_CLOSE_P0_20260729.md`.
+
+Boundary: this contract does not add crash recovery, autosave, candidate
+approval, or multi-user recovery.
+
 ## 2026-07-28 P5-B Batch AI Preflight Contract
 
 Status: stable and Complete.
@@ -3211,3 +3393,4 @@ Latest review recheck: `--wpf-image-queue-10k-responsive` returned in `16.1ms`; 
 2026-07-28 Smart Mask candidate compare/restore contract: `Complete` in the current uncommitted worktree; field validation is `Not evaluated`. The current session retains only initial/latest candidate references; `이전 후보 보기` and `현재 후보 보기` replace the one visible Candidate Review pending candidate without changing dirty state or writing labels. Confirm/skip resolves comparison history, and context/session reset clears it. The focused integration proves no segment JSON before confirmation and proves that restoring the initial candidate writes its selected first point `(60,72)` after explicit confirmation. The actual current Debug EXE then used real MobileSAM on Kolektor `kos14/Part7` to execute automatic candidate -> positive/negative rerun -> previous candidate restore -> explicit Confirm -> save -> next image -> saved-image reopen. The reopened state contained exactly one saved 96-point polygon and a 7,931-pixel mask, with no pending confirmation. Covered by the isolated/app builds, `--mobile-sam-box-prompt`, `--smart-mask-candidate-compare-restore`, `--smart-mask-auto-boundary-presentation`, `--wpf-labeling-shell`, `--priority-workflow-docs`, `--exe-operator-video-smoke --verify-candidate-restore`, `git diff --check`, current-source 1920x1080 latest/restored captures, and full-duration application-only visual review. Evidence: `docs/SMART_MASK_CANDIDATE_COMPARE_RESTORE_20260728.md`, `artifacts/smart-mask-candidate-compare-restore/20260728-210121`, `artifacts/ui/smart-mask-candidate-compare-restore-20260728`, and `artifacts/operator-video/20260728-smartmask-restore-save-retry1`. The saved mask IoU is `0.3927`; this closes selection/persistence safety, not field accuracy, and it is not a request to replace the approved public GIF.
 
 2026-07-28 Recipe-scoped automatic-contour and canvas layout auto-fit contract: `Complete` in the current uncommitted worktree; field validation is `Not evaluated`. Segmentation exposes `라벨링 옵션 · 자동 윤곽`; the operator selects it once, a newly completed Rectangle immediately starts the existing MobileSAM candidate path, inference/review locks additional teaching, and explicit confirm/skip returns directly to the next Rectangle while keeping the mode enabled. `LabelingProjectSettings.SmartMaskAutoContourEnabled` persists the visible/editable preference at Recipe scope; restore is side-effect free and a new Recipe defaults to regular box mode. The manual Smart Mask start button is hidden before a session and remains only as `후보 다시 생성` during correction. `MainCanvasView.SizeChanged` schedules a version-coalesced `ZoomToFit` at `ContextIdle`, so app-created panel/toolbar/viewport size changes no longer require a Fit click; user zoom/pan alone does not fire the size-change path. The actual current Debug EXE used no Fit action and completed option selection -> automatic layout centering -> rough box -> automatic candidate -> positive/negative rerun -> previous restore -> explicit confirm -> save -> reopen on `kos14/Part7`. Covered by zero-warning/error isolated/app builds, Recipe XML save/load/default checks, `--mobile-sam-box-prompt`, `--smart-mask-candidate-compare-restore`, `--smart-mask-auto-boundary-presentation`, `--wpf-labeling-shell`, actual-EXE `--verify-auto-contour-mode --verify-candidate-restore`, 1920x1080 before/after review, and `git diff --check`. Evidence: `docs/SMART_CONTOUR_AUTO_MODE_AND_LAYOUT_FIT_20260728.md`, `artifacts/ui/smart-contour-auto-mode-20260728`, and `artifacts/operator-video/20260728-smart-contour-auto-fit`. The saved mask IoU remains `0.3927`; this closes interaction/persistence safety, not field accuracy, and it does not authorize automatic approval/save or public-GIF replacement.
+2026-07-29 four-point extreme-box implementation contract: `Complete`; field validation is `Not evaluated`. The Rectangle tool exposes a Recipe-scoped `2점 드래그` default and `4점 극점` alternative. Four-point input accepts top, bottom, left, and right extremes, shows display-only guides/progress, supports Backspace and right-click/Esc cancellation, cancels on tool/image/Recipe/purpose/class/method changes, and creates no object/history until the fourth valid point. Point four hands one ordinary axis-aligned Rectangle through `RoiImageCanvasViewModel.AddCompletedImageRectangle` and the existing `RoiAdded` path, producing one Undo/Redo step and reaching automatic Smart Mask at most once. Existing completed-object edit/save/reopen behavior remains authoritative. Label Studio detection import skips non-zero image or rectangle rotation; CVAT detection import skips non-zero box rotation; existing skipped-record preflight blocks Apply. No free-quadrilateral/rotated geometry or high-frequency Viewer/OpenGL/ROI drag/resize/brush/eraser change was introduced. Covered by the zero-warning/error isolated build, `--four-point-extreme-box`, `--label-studio-detection-import`, `--cvat-detection-import`, and current-build 1920x1080/1366x768 captures under `artifacts/four-point-extreme-box-20260729`. Evidence: `docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.

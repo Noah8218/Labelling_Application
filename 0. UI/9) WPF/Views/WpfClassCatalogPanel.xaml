@@ -114,6 +114,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -294,8 +295,18 @@
                    ToolTip="{Binding RecipeClassListGuideText}"
                    Style="{StaticResource ClassCatalogSectionLabelStyle}"
                    Margin="0,2,0,5" />
+        <TextBlock x:Name="ClassIndexContractText"
+                   Grid.Row="6"
+                   AutomationProperties.AutomationId="ClassIndexContractText"
+                   Text="{Binding ClassIndexContractText}"
+                   ToolTip="{Binding RecipeClassListGuideText}"
+                   Foreground="{DynamicResource SecondaryTextBrush}"
+                   FontFamily="Segoe UI"
+                   FontSize="10.5"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,5" />
         <ListBox x:Name="ClassListBox"
-                 Grid.Row="6"
+                 Grid.Row="7"
                  Background="Transparent"
                  BorderThickness="0"
                  Foreground="{DynamicResource SecondaryTextBrush}"

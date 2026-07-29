@@ -27,7 +27,7 @@ Required start order:
 Current checkpoint:
 - Workspace: C:\Git\Labelling_Application
 - Branch: main. Live HEAD at the latest handoff is
-  `f7751c5 feat: advance labeling QA and smart mask workflow`; `main` and
+  `e1465d6 feat: streamline smart mask labeling workflow`; `main` and
   `origin/main` are `0/0` at that commit. The
   labeling-editor structure workflow through P1-C
   merge/join and axis-aligned split/slice is committed and pushed as
@@ -39,11 +39,10 @@ Current checkpoint:
   `ed0f826 feat: complete labeling precision and display aids`. P4 Dataset
   Health visual QA, P5-A dataset-interchange preflight, P5-B batch-AI
   preflight, field-data intake contracts, and approved Smart Mask public media
-  are committed in `f7751c5`.
-- The current worktree intentionally contains uncommitted Smart Mask
-  auto-first contextual correction, real correction-effectiveness evaluation,
-  previous/current candidate compare/restore, Recipe-scoped automatic contour,
-  and canvas layout auto-fit. Preserve these changes.
+  are committed in `f7751c5`. Smart Mask auto-first contextual correction,
+  real correction-effectiveness evaluation, previous/current candidate
+  compare/restore, Recipe-scoped automatic contour, canvas layout auto-fit,
+  and operator/source-of-truth synchronization are committed in `e1465d6`.
   `.proofline/STATE.md` and `.proofline/dashboard/` are local/user-owned and
   must remain untouched. No commit or push is authorized by this handoff.
   Verify live hashes before work and do not push without a new explicit
@@ -82,20 +81,59 @@ Product direction:
 - The supplied circular-disk 500 OK / 500 NG package is complete synthetic workflow evidence: exact metadata-backed 5-class detection data, YOLOv5/YOLOv8 one-epoch connectivity, a controlled 20-epoch 150-image test benchmark, and a new 20-epoch anomaly candidate. The anomaly candidate remains `hold`; the detection benchmark favors YOLOv8n (`mAP50/mAP50-95 0.955/0.678`, 27.575ms) over YOLOv5s (`0.900/0.567`, 52.45ms) but is explicitly `engine-benchmark`, not adoption. The fixed comparison cleanup preserves the exact source-tree SHA-256. The package is derived from one earlier OK source image; do not present it as independent camera evidence. Read `docs/CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
 
 Current immediate priority:
-- The operator/source-of-truth synchronization is Complete in the current
-  worktree. It corrects the one-click queue rule, updates Release Notes and
+- The combined current worktree integration verification is Complete.
+  Isolated/current Debug builds have zero warnings/errors, 19/19 focused
+  switches pass, and the default internal suite passes 258/258 with empty
+  stderr. The verification corrected never-loaded test-window close cleanup
+  and unnecessary 100,000-row non-segmentation object-review aggregate scans.
+  Evidence:
+  `docs/CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md` and
+  `artifacts/integration-verification-20260729/default-suite-complete.stdout.log`.
+- The operator/source-of-truth synchronization is Complete in committed
+  source. It corrects the one-click queue rule, updates Release Notes and
   Code Structure ownership, removes completed Dataset Health/P5/Smart Mask
   work from active `Next` wording, and refreshes the Smart Mask operator guide
   without replacing the approved public GIF. Treat older dated alternatives
   as historical when they conflict with `docs/NEXT_THREAD_HANDOFF.md`
   section 0.
-- The next ready product priority is the four-point-box geometry/export
-  contract. Define exact axis-aligned or rotated semantics, canonical storage,
-  supported exports, editing behavior, and backward compatibility before
-  implementation. Do not silently change the existing Rectangle contract.
-  Recommended model: `gpt-5.6-sol`; reasoning effort: `high`.
+- Main-window safe close is Complete. Dirty annotations/pending mask work use
+  explicit save/discard/cancel; candidate-only close offers discard/cancel and
+  never writes or confirms the candidate; active work is named and canceled
+  only after close approval. Actual Debug EXE dirty and YOLOv8 candidate-only
+  evidence is recorded in `docs/SAFE_APPLICATION_CLOSE_P0_20260729.md`.
+- Canonical class-index visibility is Complete. Class Catalog and the
+  next-label context show the Recipe/YOLO index, preserve ordered schema, and
+  keep `1~9` as drawing shortcuts. Evidence:
+  `docs/CANONICAL_CLASS_INDEX_VISIBILITY_P1_20260729.md`.
+- Smart Mask operator-documentation truth is Complete. README, tutorial,
+  MobileSAM guide, and visible F1 help agree on Recipe-scoped automatic
+  contour, one-point correction, previous/current candidate comparison,
+  explicit Confirm/Skip, canonical Confirm save, and side-effect-free option
+  restoration. Evidence:
+  `docs/SMART_MASK_OPERATOR_DOCUMENTATION_TRUTH_P2_20260729.md`.
+- Dataset Health existing-data split filtering is Complete. Visual QA exposes
+  only actual train/valid/test values after `전체`, composes with `문제만`,
+  balances the bounded healthy sample budget across splits, and remains
+  byte-for-byte read-only under the focused full-tree hash gate. Evidence:
+  `docs/DATASET_HEALTH_SPLIT_FILTER_P3_20260729.md`.
+- Dataset Health canonical class filtering is Complete. The recorded real
+  125-image SEG `OK`/`NG` review satisfied the prerequisite; class, split, and
+  `문제만` now compose, refresh falls back safely, and the actual `1 · NG`
+  replay narrows to 14 images without writing dataset files. Evidence:
+  `docs/DATASET_HEALTH_CLASS_FILTER_20260729.md`.
+- The four-point extreme-box contract and implementation are Complete. They use
+  a Recipe-scoped `2점 드래그` / `4점 극점` choice and select an axis-aligned
+  `top -> bottom -> left -> right` input method that creates the existing
+  Rectangle, preserves current save/edit/export behavior, and explicitly
+  excludes free quadrilateral and rotated geometry. Evidence:
+  `docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md` and
+  `docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.
+- No remaining commercial-video coding priority is currently unblocked.
+  Persistent metadata needs a named consumer; cross-family z-order needs a
+  reproduced renderer defect; field adoption needs independent data.
+  Recommended model: none until a prerequisite exists; reasoning effort: n/a.
 - Recipe-scoped automatic contour and canvas layout auto-fit are Complete in
-  the current worktree. The current Debug EXE completed the workflow without
+  committed source. The current Debug EXE completed the workflow without
   a Fit click and without a separate Smart Mask start click after drawing the
   rectangle. Evidence:
   `artifacts\operator-video\20260728-smart-contour-auto-fit`. Recipe
@@ -112,7 +150,8 @@ Current immediate priority:
   validity changes.
 - After that, the remaining commercial-video backlog is not another broad
   P0-P5 pass:
-  1. four-point box requires an explicit geometry/export contract;
+  1. four-point extreme-box contract and bounded axis-aligned implementation
+     are Complete;
   2. persistent occluded/tag/group requires a named Recipe/export/training/
      review consumer;
   3. polygon/raster cross-family z-order requires a reproduced renderer defect;
@@ -251,10 +290,9 @@ Current immediate priority:
 - P1-C, P2, P3, P4, P5-A, and P5-B are complete. The next model-adoption
   dependency is independently acquired production-camera/cross-session
   evidence; do not spend implementation tokens pretending UI work can satisfy
-  it. The actual-EXE Smart Mask restore/save and automatic-contour/layout-fit
-  regressions are also complete; reopen them only if their source, contract,
-  runtime, or evidence validity changes. The four-point-box contract remains
-  the next ready editor priority.
+  it. The actual-EXE Smart Mask restore/save, automatic-contour/layout-fit, and
+  bounded four-point extreme-box regressions are complete; reopen them only if
+  their source, contract, runtime, or evidence validity changes.
   The reusable intake manifest, directory layouts, leakage rules, approval
   checklist, and execution order are in
   `docs\FIELD_DATA_INTAKE_PREREQUISITE_20260728.md`.

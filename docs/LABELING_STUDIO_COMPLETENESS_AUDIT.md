@@ -2,6 +2,77 @@
 
 Date: 2026-07-27
 
+## User-Centered Direction Update (2026-07-29)
+
+Status: `Complete` for analysis and prioritization; listed product changes are
+not complete until separately implemented and verified.
+
+The detailed evidence and development contract are in
+`docs/LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md`.
+The live source checkpoint is
+`e1465d6 feat: streamline smart mask labeling workflow`.
+
+The remaining order after completed P0/P1/P2/P3, Dataset Health class
+filtering, and four-point work starts with contract-dependent persistent
+metadata. No metadata implementation begins until a consumer is named.
+
+The combined current worktree integration is also `Complete`. Required
+isolated/current Debug builds pass with zero warnings/errors, 19/19 focused
+switches pass, and the default internal regression suite passes 258/258 with
+empty stderr. The integration run corrected never-loaded test-window close
+cleanup and unnecessary segmentation aggregate scans during 100,000-row
+non-segmentation object replacement/removal. See
+`docs/CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md`.
+
+The P0 close item is now `Complete`. The main window has a cancelable
+pre-close policy for dirty annotations/pending mask work, unconfirmed
+candidates, and named active work. A failed save leaves the window open, and
+actual Debug EXE evidence proves candidate-only cancel/discard does not create
+a label file or confirm the candidate. See
+`docs/SAFE_APPLICATION_CLOSE_P0_20260729.md`.
+
+The P1 canonical class-index item is also `Complete`. Class Catalog preserves
+Recipe order and displays `0 · name`; the selected and next-label contexts show
+the same canonical index while `1~9` remain drawing shortcuts. Rename preserves
+the index, add/delete are disclosed as schema changes, and no reorder or
+migration behavior was added. See
+`docs/CANONICAL_CLASS_INDEX_VISIBILITY_P1_20260729.md`.
+
+The P2 Smart Mask operator-documentation item is `Complete`. README, tutorial,
+MobileSAM guide, and visible F1 help now agree on Recipe-scoped automatic
+contour, box-completion generation, one-point correction, previous/current
+candidate comparison, explicit Confirm/Skip, canonical Confirm save, and
+side-effect-free option restoration. See
+`docs/SMART_MASK_OPERATOR_DOCUMENTATION_TRUTH_P2_20260729.md`.
+
+The four-point-box product contract and bounded implementation are also
+`Complete`. The supplied CVAT
+narration and frames prove that its four-point method uses top, bottom, left,
+and right extremes to create an axis-aligned Rectangle; rotation is a separate
+later edit. The contract preserves the existing Rectangle and rejects free
+quadrilateral or implicit rotated geometry. See
+`docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md`.
+Implementation evidence is in
+`docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.
+
+The P3 Dataset Health split-filter item is `Complete`. Visual QA now exposes
+`전체` plus existing train/valid/test values, composes them with `문제만`,
+retains valid selection across refresh, and balances its bounded healthy
+samples across splits. Focused full-tree hashes prove filtering and refresh do
+not write dataset files. See
+`docs/DATASET_HEALTH_SPLIT_FILTER_P3_20260729.md`.
+
+The later real 125-image SEG `OK`/`NG` review satisfied the class-filter
+prerequisite. Canonical class filtering is also `Complete`: class, split, and
+`문제만` compose; selected class refreshes safely; filtering remains
+byte-for-byte read-only; and the actual `1 · NG` replay narrows the worklist to
+14 images. See `docs/DATASET_HEALTH_CLASS_FILTER_20260729.md`.
+
+This direction does not change the focused-workstation `4.0/5` or
+labeling-editor `3.4/5` estimates. It does not change model quality. Detection,
+segmentation, anomaly, and Smart Mask field claims still require independent
+production-camera or cross-session evidence.
+
 ## Commercial Video Reassessment (2026-07-27)
 
 Status: `Complete` for the comparison and development-contract scope. This is
@@ -120,10 +191,12 @@ is unchanged. The current Debug EXE completed the flow without a separate
 Smart Mask start click or Fit click. Evidence:
 `artifacts\operator-video\20260728-smart-contour-auto-fit`.
 
-Source-of-truth/operator-document synchronization is Complete in the current
-worktree. The next ready feature is the four-point-box geometry/export
-contract. Other remaining video-derived gaps are consumer-backed persistent
-object metadata and conditional polygon/raster cross-family z-order.
+Source-of-truth/operator-document synchronization and Dataset Health split
+filtering are Complete in the current worktree. The four-point extreme-box
+contract and bounded axis-aligned implementation are also Complete under
+`docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md` and
+`docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`. Other remaining video-derived gaps are consumer-backed
+persistent object metadata and conditional polygon/raster cross-family z-order.
 Independent detection/anomaly adoption is blocked on new
 production-camera/cross-session data. P0-A through P5-B and the current Smart
 Mask safety/efficiency slices are not future priorities unless their contracts
@@ -767,20 +840,14 @@ Smart Mask correction/recovery, Recipe-scoped automatic contour, canvas layout
 auto-fit, and the declared YOLO11 runtime slices are complete. The current
 sequence is:
 
-1. Define the four-point-box geometry/export contract before implementation.
-   Specify axis-aligned, rotated, or quadrilateral semantics, canonical
-   storage, supported exports, editing behavior, and backward compatibility.
-   Keep Viewer/OpenGL/ROI/brush/eraser behavior protected.
-   Recommended model: `gpt-5.6-sol`
-   Reasoning effort: `high`
-2. Persistent occluded/tag/group metadata remains blocked until an operator
+1. Persistent occluded/tag/group metadata remains blocked until an operator
    workflow and at least one Recipe/export/training/review consumer are named.
    Recommended model: none until the consumer contract exists
    Reasoning effort: n/a
 3. Polygon/raster cross-family z-order remains blocked until a renderer defect
    is reproduced with focused performance evidence.
-   Recommended model: `gpt-5.6-sol`
-   Reasoning effort: `high`
+   Recommended model: none until the prerequisite exists
+   Reasoning effort: n/a
 4. When an approved NG-rich object-detection camera/session source with
    trustworthy boxes becomes available, create a content-separated held-out
    split and rerun the frozen fingerprint/comparison/error-review path.

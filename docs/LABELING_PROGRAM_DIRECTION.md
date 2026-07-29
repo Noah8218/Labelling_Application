@@ -1,5 +1,42 @@
 # Labeling Program Direction
 
+## User-Centered Development Update (2026-07-29)
+
+The current detailed direction is
+`docs/LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md`.
+It was selected from live source at `e1465d6`, current UI/EXE evidence, and
+full-timeline review of the ten supplied commercial labeling videos.
+
+The current order is:
+
+1. Preserve the completed Dataset Health canonical class filter recorded in
+   `docs/DATASET_HEALTH_CLASS_FILTER_20260729.md`.
+2. Preserve the completed bounded axis-aligned four-point extreme-box input
+   and non-zero Label Studio/CVAT rotation rejection guards recorded in
+   `docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.
+
+Main-window safe close, P0-A through P5-B, Smart Mask correction/recovery,
+Recipe-scoped automatic contour, canvas layout auto-fit, Dataset Version v2,
+TP/FP/FN review, canonical class-index visibility, and model adoption guards
+are completed foundations and must not be re-proposed under new names. The
+class-index completion record is
+`docs/CANONICAL_CLASS_INDEX_VISIBILITY_P1_20260729.md`.
+Smart Mask operator documentation truth is Complete in
+`docs/SMART_MASK_OPERATOR_DOCUMENTATION_TRUTH_P2_20260729.md`.
+Dataset Health existing-data split filtering is Complete in
+`docs/DATASET_HEALTH_SPLIT_FILTER_P3_20260729.md`.
+Dataset Health canonical class filtering is Complete in
+`docs/DATASET_HEALTH_CLASS_FILTER_20260729.md`.
+The four-point extreme-box product/geometry/interchange contract and bounded
+implementation are Complete in
+`docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md` and
+`docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.
+
+Persistent metadata remains blocked on a named consumer. Polygon/raster
+cross-family renderer work remains blocked on a reproduced defect. Production
+model adoption remains blocked on provenance-confirmed independent
+production-camera or cross-session ground truth.
+
 ## Current Source Of Truth (2026-07-22)
 
 This section overrides older migration plans and dated priority notes later in this document. Use project guidance in this order when the documents disagree:

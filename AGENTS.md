@@ -108,6 +108,35 @@ Do not claim complete if the required verification did not run or did not pass.
 
 ## Current Project Priorities
 
+- The combined current worktree passed 19/19 focused integration switches and
+  the default internal suite at 258/258 in
+  `docs/CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md`. Preserve the
+  loaded-window safe-close boundary, never-loaded cleanup behavior, and
+  non-segmentation object-row aggregate-scan optimization.
+- Follow
+  `docs/LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md`.
+  Main-window safe close is Complete in
+  `docs/SAFE_APPLICATION_CLOSE_P0_20260729.md`; do not reopen it without a
+  changed requirement or focused regression.
+- Canonical class-index visibility is Complete in
+  `docs/CANONICAL_CLASS_INDEX_VISIBILITY_P1_20260729.md`; do not add reorder or
+  schema migration without a separate contract.
+- Smart Mask operator-documentation truth is Complete in
+  `docs/SMART_MASK_OPERATOR_DOCUMENTATION_TRUTH_P2_20260729.md`; preserve the
+  auto-first, correction/restore, explicit Confirm/Skip, and save-state wording.
+- Dataset Health existing-data split filtering is Complete in
+  `docs/DATASET_HEALTH_SPLIT_FILTER_P3_20260729.md`; preserve read-only
+  split/problem composition, refresh fallback, and balanced per-split healthy
+  sampling. Canonical read-only class filtering is also Complete in
+  `docs/DATASET_HEALTH_CLASS_FILTER_20260729.md`; preserve class/split/problem
+  composition, class-scoped 500-row bounds, refresh fallback, and source
+  immutability.
+- The four-point extreme-box implementation is Complete in
+  `docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`. Preserve the
+  Recipe-scoped `2점 드래그` / axis-aligned `top -> bottom -> left -> right`
+  option, fourth-point-only ordinary Rectangle/history/Smart Mask handoff, and
+  rotated Label Studio/CVAT import rejection. Do not reopen it as
+  free-quadrilateral or rotated-box geometry.
 - Continue improving OpenVisionLab Labeling Studio as a full workflow tool: dataset setup, image queue, class setup, object detection/segmentation/anomaly labeling, template labeling, training, inference, model runtime setup, and model comparison.
 - Avoid repeating items already documented in `docs/WORK_TRACKING.md` and `docs/STABLE_VERIFIED_AREAS.md`.
 - Keep verified items documented after completion.

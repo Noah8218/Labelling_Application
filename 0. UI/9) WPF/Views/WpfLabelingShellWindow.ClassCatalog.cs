@@ -135,6 +135,7 @@ namespace MvcVisionSystem
 
         private void ClassListBox_SelectionChanged(object sender, object selectedItem)
         {
+            CancelFourPointBoxDraft(updateStatus: false);
             string className = (selectedItem as WpfClassCatalogListItem)?.Text ?? GetSelectedClassName();
             if (string.IsNullOrWhiteSpace(className))
             {
@@ -152,6 +153,7 @@ namespace MvcVisionSystem
 
         private void CanvasLabelClass_SelectionChanged(object sender, object selectedItem)
         {
+            CancelFourPointBoxDraft(updateStatus: false);
             string className = (selectedItem as WpfCanvasLabelClassItem)?.Text
                 ?? CanvasPanelViewModel?.SelectedLabelClass?.Text;
             if (string.IsNullOrWhiteSpace(className))
@@ -223,7 +225,6 @@ namespace MvcVisionSystem
 
             List<CClassItem> classItems = global.Data.ClassNamedList
                 .Where(item => item != null && !string.IsNullOrWhiteSpace(item.Text))
-                .OrderBy(item => item.Text, StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
             string effectiveSelectedName = ClassCatalogService.NormalizeClassName(selectedName);

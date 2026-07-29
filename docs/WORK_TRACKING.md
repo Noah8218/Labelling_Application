@@ -1,6 +1,373 @@
 # Work Tracking
 
-Last updated: 2026-07-28
+Last updated: 2026-07-29
+
+## 2026-07-29 Current Worktree Integration Verification
+
+Status: Complete
+
+Scope:
+
+- integrate the current safe-close, class-index, Smart Mask documentation,
+  Dataset Health filter, and four-point-box worktree;
+- run the default internal suite rather than stopping at focused gates;
+- correct never-loaded test-window close cleanup;
+- remove unnecessary segmentation aggregate scans from 100,000-row manual ROI
+  replacement/removal.
+
+Acceptance criteria:
+
+- isolated and current Debug app builds: warning 0, error 0;
+- completed-slice focused switches: 19/19 pass;
+- default internal suite: 258/258 pass, stderr empty;
+- 100,000-row ViewModel performance: three consecutive focused passes;
+- safe close and segmentation aggregate-state regressions: pass.
+
+Verification:
+
+- `docs\CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md`;
+- `artifacts\integration-verification-20260729\default-suite-complete.stdout.log`;
+- `artifacts\integration-verification-20260729\default-suite-complete.stderr.log`.
+
+Boundary / next dependency:
+
+- no new labeling feature, model-quality claim, commit, or push is included;
+- remaining feature priorities stay prerequisite-blocked.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
+## 2026-07-29 Dataset Health Canonical Class Filter
+
+Status: Complete
+
+Scope:
+
+- use the recorded real 125-image SEG `OK`/`NG` review as the prerequisite;
+- expose `전체` plus canonical Recipe `index · name` classes in Visual QA;
+- rebuild a class-scoped read-only catalog bounded at 500 matching images;
+- compose class selection with the existing split and `문제만` filters;
+- preserve valid selections on refresh and fall back when a class disappears;
+- keep the existing unfiltered problem-first, 48-item split-balanced policy.
+
+Acceptance criteria:
+
+- Detection and Segmentation canonical class matching: pass;
+- class/split/problem composition and refresh fallback: pass;
+- full fixture tree byte-for-byte immutability: pass;
+- real 125-image Recipe `1 · NG` reduction to 14 images: pass;
+- current-build 1920x1080 and 1366x768 layouts: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--dataset-health`: pass;
+- `--wpf-dataset-health-window`: pass;
+- current-build real-Recipe visual replay: pass.
+
+Evidence:
+
+- `docs\DATASET_HEALTH_CLASS_FILTER_20260729.md`;
+- `tests\LabelingApplication.Tests\Program.DatasetHealth.cs`;
+- `artifacts\ui\dataset-health-class-filter-20260729`.
+
+Boundary / next dependency:
+
+- Dataset Health remains read-only and routes edits to the existing editor;
+- this does not add per-object issues, reviewer workflow, or cloud assignment;
+- persistent metadata remains blocked on a named consumer.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
+## 2026-07-29 Four-Point Extreme Box Implementation
+
+Status: Complete
+
+Scope:
+
+- expose Recipe-scoped `2점 드래그` / `4점 극점` box input with explicit reset;
+- accept `위 -> 아래 -> 왼쪽 -> 오른쪽`, display progress and draft
+  point/edge guides, support Backspace and right-click/Esc cancellation;
+- cancel drafts on tool, image, Recipe, dataset-purpose, class, or method
+  changes;
+- create one existing ordinary Rectangle/history step only on point four and
+  reuse the existing `RoiAdded` Smart Mask path;
+- reject non-zero Label Studio image/rectangle rotation and CVAT box rotation;
+- preserve the high-frequency Viewer/OpenGL/ROI drag/resize/brush/eraser paths.
+
+Acceptance criteria:
+
+- deterministic/reversed geometry, outside rejection, and degenerate fourth
+  point retry: pass;
+- zero object/history before point four and exactly one on completion: pass;
+- one-step Undo/Redo and ordinary Rectangle bounds: pass;
+- Recipe save/reload/default/stale fallback and restore without action
+  callback: pass;
+- Label Studio/CVAT rotated record skip plus preflight Apply block: pass;
+- current-build 1920x1080 and 1366x768 option/progress layout: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--four-point-extreme-box`: pass;
+- `--label-studio-detection-import`: pass;
+- `--cvat-detection-import`: pass;
+- current-build visual smokes at 1920x1080 and 1366x768: pass.
+
+Evidence:
+
+- `docs\FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`;
+- `tests\LabelingApplication.Tests\Program.FourPointExtremeBox.cs`;
+- `artifacts\four-point-extreme-box-20260729`.
+
+Boundary / next dependency:
+
+- no free quadrilateral, rotated-box type, per-object source-point
+  persistence, or new label schema was introduced;
+- Dataset Health canonical class filtering is Complete in the preceding record;
+- persistent metadata, cross-family z-order, and field adoption remain blocked
+  by their documented prerequisites.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `low`
+
+## 2026-07-29 Four-Point Extreme Box Product Contract
+
+Status: Complete
+
+Scope:
+
+- resolve axis-aligned, rotated, and free-quadrilateral ambiguity from the
+  supplied CVAT source;
+- define `top -> bottom -> left -> right` extreme-point input as an alternative
+  creator for the existing axis-aligned Rectangle;
+- define Recipe preference, draft/cancellation, one-step history, editing,
+  Smart Mask timing, canonical save/reopen, and current-format behavior;
+- require non-zero Label Studio/CVAT rotation rejection instead of silent
+  flattening;
+- define implementation ownership and focused acceptance gates without
+  changing product behavior.
+
+Acceptance criteria:
+
+- supplied narration and frames distinguish four-point creation from later
+  rotation: pass;
+- current Rectangle/YOLO/COCO/Pascal VOC/Label Studio/CVAT code boundaries
+  inspected: pass;
+- exactly one geometry meaning and canonical representation selected: pass;
+- implementation, safety, persistence, and interchange matrix documented:
+  pass.
+
+Verification:
+
+- local CVAT subtitle/video frame inspection: pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `docs\FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md`;
+- `artifacts\four-point-box-contract-20260729\cvat-frames`.
+
+Boundary / next dependency: this record completed the contract only. The later
+four-point input, setting, import guard, and UI implementation is Complete in
+the preceding implementation record.
+
+Recommended model: `gpt-5.6-sol`
+
+Reasoning effort: `high`
+
+## 2026-07-29 P3 Dataset Health Existing-Data Split Filter
+
+Status: Complete
+
+Scope:
+
+- expose `전체` plus only existing train/valid/test values in Visual QA;
+- compose split selection with the existing `문제만` filter;
+- retain a valid split across refresh and fall back safely when it disappears;
+- balance the bounded healthy-sample budget across existing splits;
+- keep editing routed to the existing labeling workbench and preserve
+  byte-for-byte read-only behavior.
+
+Acceptance criteria:
+
+- existing split order and five-item-to-two-item valid filtering: pass;
+- split plus problem-only composition and refresh behavior: pass;
+- more than 48 train samples cannot hide valid/test: pass;
+- full dataset tree remains byte-identical after filtering and refresh: pass;
+- 1920x1080 and 1366x768 current-build layouts: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- current Debug app build: warning 0, error 0;
+- `--dataset-health`: pass;
+- `--wpf-dataset-health-window`: pass;
+- `--wpf-labeling-shell`: pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `docs\DATASET_HEALTH_SPLIT_FILTER_P3_20260729.md`;
+- `artifacts\ui\dataset-health-split-filter-p3-20260729`.
+
+Boundary / next dependency: the later real SEG `OK`/`NG` observation satisfied
+the prerequisite and canonical class filtering is Complete in the latest
+record. The four-point extreme-box contract and implementation are also
+Complete.
+
+Recommended model: `gpt-5.6-sol`
+
+Reasoning effort: `high`
+
+## 2026-07-29 P2 Smart Mask Operator Documentation Truth
+
+Status: Complete
+
+Scope:
+
+- synchronize README, tutorial, MobileSAM guide, and visible F1 help;
+- document Recipe-scoped automatic contour and rectangle-completion
+  generation as the normal path;
+- document one-point correction, rerun, previous/current comparison, explicit
+  Confirm/Skip, and actual save-state behavior;
+- preserve the approved public GIF and existing runtime behavior.
+
+Acceptance criteria:
+
+- four operator surfaces agree with current source: pass;
+- option restore causes no inference, confirmation, or save: pass;
+- generation/candidate restore versus Confirm/Skip persistence is explicit:
+  pass;
+- current Debug EXE F1 help is readable without clipping: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- current Debug app build: warning 0, error 0;
+- `--labeling-productivity`: pass;
+- `--mobile-sam-box-prompt`: pass;
+- `--smart-mask-candidate-compare-restore`: pass;
+- `--wpf-canvas-panel-commands`: pass;
+- `--priority-workflow-docs`: pass;
+- `--exe-labeling-productivity-smoke`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `docs\SMART_MASK_OPERATOR_DOCUMENTATION_TRUTH_P2_20260729.md`;
+- `artifacts\ui\smart-mask-operator-doc-truth-20260729`.
+
+Boundary / next dependency: no inference, candidate, persistence, or public
+media behavior changed. Its historical next dependency, the bounded
+existing-data split filter for Dataset Health Visual QA, is Complete in the
+preceding P3 record.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
+## 2026-07-29 P1 Canonical Class Index Visibility
+
+Status: Complete
+
+Scope:
+
+- preserve Recipe class order in Class Catalog and canvas class selection;
+- display canonical YOLO index in catalog rows, selected summary, and
+  next-label context;
+- keep `1~9` as drawing shortcuts and explain that they do not change schema;
+- disclose rename as index-preserving and add/delete as schema-changing;
+- exclude reorder and schema migration.
+
+Acceptance criteria:
+
+- add/rename/delete/save/reopen expected index: pass;
+- `data.yaml` and YOLO label index after rename: pass;
+- class shortcut and Batch AI preflight regression: pass;
+- 1920x1080 and 1366x768 current-build visibility without clipping: pass;
+- current Debug EXE restored-Recipe catalog and next-label index: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--canonical-class-index`: pass;
+- `--wpf-class-catalog-panel`: pass;
+- `--wpf-canvas-panel-commands`: pass;
+- `--labeling-productivity`: pass;
+- `--wpf-batch-detection-preflight`: pass;
+- `--exe-canonical-class-index-visual`: pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `docs\CANONICAL_CLASS_INDEX_VISIBILITY_P1_20260729.md`;
+- `artifacts\canonical-class-index-p1-20260729\before`;
+- `artifacts\canonical-class-index-p1-20260729\after`.
+
+Boundary / next dependency: deletion visibly shifts later indices and remains a
+destructive schema change; this slice does not migrate old external labels.
+Next is operator documentation truth synchronization for the existing Smart
+Mask workflow.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `low`
+
+## 2026-07-29 P0 Safe Application Close
+
+Status: Complete
+
+Scope:
+
+- close clean idle state without a prompt;
+- resolve dirty annotations/pending mask work through save, discard, or cancel;
+- resolve candidate-only state through discard or cancel without automatic
+  confirmation or label persistence;
+- name active Smart Mask, inference, Batch AI, training, runtime setup,
+  comparison, and anomaly work before approved close cleanup;
+- keep the window open when canonical annotation save fails.
+
+Acceptance criteria:
+
+- focused clean/dirty/candidate/combined/failed-save policy and shell adapter:
+  pass;
+- actual Debug EXE dirty close -> cancel -> save -> clean close -> saved-label
+  reopen: pass;
+- actual Debug EXE YOLOv8 candidate-only cancel/discard with no label file:
+  pass;
+- fresh current-source and actual-EXE visual evidence: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- application build: warning 0, error 0;
+- `--application-close`: pass;
+- `--exe-label-create-queue-locality-smoke --verify-safe-close`: pass;
+- `--exe-yolov8-detect-restart-smoke --verify-safe-close`: pass;
+- `--priority-workflow-docs`: pass;
+- `git diff --check`: pass.
+
+Evidence:
+
+- `docs\SAFE_APPLICATION_CLOSE_P0_20260729.md`;
+- `artifacts\ui\safe-close-p0-20260729`;
+- `artifacts\exe-safe-close-p0-20260729`;
+- `artifacts\exe-safe-close-p0-20260729-candidate-only`.
+
+Boundary / next dependency: this is close-state safety, not crash recovery or
+autosave. Canonical class-index visibility is now separately Complete.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
 
 ## 2026-07-28 Actual EXE Video and GitHub GIF Design
 
@@ -166,9 +533,10 @@ Boundary / next dependency:
   accuracy or field-model adoption;
 - no automatic approval/save, commit, push, or public GIF replacement is
   included;
-- the next ready product item is the four-point-box geometry/export contract,
-  after the remaining dated-document cleanup is treated as maintenance rather
-  than feature work.
+- the historical next ready item, the four-point-box geometry/export contract,
+  is Complete in `docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md`; its
+  bounded implementation is Complete in
+  `docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.
 
 ## 2026-07-28 Field Data Intake Prerequisite Audit
 
@@ -18194,8 +18562,8 @@ Boundary / next dependency:
 - two P3 presentation observations remain in the artifact review and do not
   block the workflow;
 - the approved public GIF remains unchanged;
-- next priority is source-of-truth/operator-document synchronization, followed
-  by the four-point box product contract.
+- the historical source-of-truth synchronization, four-point box product
+  contract, and bounded implementation are Complete.
 
 Recommended model: `gpt-5.6-terra`
 
@@ -18670,12 +19038,10 @@ Current completed state:
 
 Ordered remaining queue:
 
-1. synchronize the remaining operator/source-of-truth documents with the
-   verified Smart Mask restore/save/reopen result;
-2. four-point box only after geometry/export contract;
-3. persistent occluded/tag/group only after a named consumer contract;
-4. cross-family polygon/raster z-order only after a reproduced renderer defect;
-5. independent detection/anomaly evaluation only after approved field data.
+1. Dataset Health class filtering only after a recorded review-session need;
+2. persistent occluded/tag/group only after a named consumer contract;
+3. cross-family polygon/raster z-order only after a reproduced renderer defect;
+4. independent detection/anomaly evaluation only after approved field data.
 
 Explicit exclusions:
 
@@ -18722,3 +19088,56 @@ Boundary / next dependency:
 Recommended model: `gpt-5.6-terra`
 
 Reasoning effort: `low`
+
+## 2026-07-29 User-centered development direction
+
+Status: `Complete` for the analysis and durable direction record. No product
+code is changed by this entry.
+
+Scope:
+
+- compare live source at `e1465d6` with the current product/handoff/completeness
+  documents and the full timelines of ten supplied commercial labeling
+  videos;
+- remove proposals already completed by P0-A through P5-B and the latest Smart
+  Mask safety/efficiency slices;
+- select only source-, workflow-, contract-, or data-grounded future work.
+
+Decision:
+
+1. P0: reproduce and close the main-window exit-safety gap. Image navigation
+   protects pending annotations, but the main window currently exposes
+   post-close cleanup without a cancelable pre-close decision for dirty labels,
+   pending mask-stroke work, an unconfirmed Smart Mask candidate, or active
+   long-running work. Never auto-confirm or auto-save a candidate.
+2. P1: expose the canonical class index without changing the ordered schema.
+3. P2: synchronize README/tutorial/MobileSAM/F1 wording with committed
+   automatic-contour, correction, candidate-restore, explicit confirmation,
+   and separate save behavior.
+4. P2: Dataset Health split filtering is Complete; class filtering remains
+   observation-gated.
+5. Four-point extreme-box contract and bounded axis-aligned implementation are
+   Complete.
+
+Blocked:
+
+- persistent object metadata until a named consumer exists;
+- polygon/raster cross-family renderer changes until a defect is reproduced;
+- field model adoption until independent provenance-confirmed camera/session
+  ground truth exists;
+- Viewer/OpenGL/ROI/brush/eraser restructuring until a protected-path defect is
+  reproduced.
+
+Evidence:
+
+- `docs/LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md`;
+- `docs/NEXT_THREAD_HANDOFF.md`;
+- `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md`;
+- `docs/LABELING_PROGRAM_DIRECTION.md`.
+
+Boundary / next dependency:
+
+- this record defines development direction only;
+- each product change requires its own focused tests, actual current Debug EXE
+  evidence when UI/workflow behavior changes, documentation update, and
+  durable completion record.

@@ -1,10 +1,10 @@
 # Next Thread Handoff
 
-Last updated: 2026-07-28 KST
+Last updated: 2026-07-29 KST
 
 This is the current operational handoff for C:\Git\Labelling_Application. It is intentionally shorter than the historical journal. Use it to choose the next task; use the linked records only for the detailed evidence behind a claim.
 
-## 0. 2026-07-28 Current Source-of-Truth Capsule
+## 0. 2026-07-29 Current Source-of-Truth Capsule
 
 This section supersedes older priority wording later in this file when the two
 conflict.
@@ -19,17 +19,25 @@ Current product:
 
 Current Git/worktree:
 
-- live HEAD at this handoff: `f7751c5 feat: advance labeling QA and smart mask workflow`;
-- `main` and `origin/main` are `0/0` at that commit; only the current uncommitted
-  worktree is ahead in behavior;
-- the worktree contains verified but uncommitted Smart Mask contextual
-  correction, real correction-effectiveness evidence, candidate
-  compare/restore, Recipe-scoped automatic-contour, and canvas layout auto-fit
-  changes;
-- preserve all tracked changes and the untracked project documents/tests;
+- live HEAD at this handoff:
+  `e1465d6 feat: streamline smart mask labeling workflow`;
+- `main` and `origin/main` are `0/0` at that commit;
+- Smart Mask contextual correction, real correction-effectiveness evidence,
+  candidate compare/restore, Recipe-scoped automatic contour, canvas layout
+  auto-fit, and the earlier source-of-truth synchronization are committed;
+- safe close, canonical class-index presentation, current Smart Mask
+  operator-documentation truth, and Dataset Health existing-data split
+  filtering are Complete in the current uncommitted worktree and have their
+  own verification records;
+- the current combined worktree passed zero-warning/error isolated and Debug
+  app builds, 19/19 focused integration switches, and the default internal
+  suite at 258/258. Integration verification also corrected never-loaded
+  test-window close cleanup and unnecessary 100,000-row manual-ROI
+  segmentation aggregate scans. Read
+  `docs/CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md`;
 - `.proofline/STATE.md` and `.proofline/dashboard/` are local/user-owned and
   must remain untouched;
-- no commit or push was requested after the latest implementation.
+- no product change or push is authorized by this handoff.
 
 Latest completed Smart Mask slices:
 
@@ -63,31 +71,81 @@ Read before reopening these slices:
 - `docs/SMART_MASK_CANDIDATE_COMPARE_RESTORE_20260728.md`.
 - `docs/SMART_CONTOUR_AUTO_MODE_AND_LAYOUT_FIT_20260728.md`.
 
-Immediate next priority:
+Latest completed safety slice:
 
-1. Define the four-point-box geometry/export contract before implementation.
-   Decide whether the interaction creates an axis-aligned rectangle, rotated
-   rectangle, or quadrilateral; define canonical storage, supported exports,
-   editing behavior, and backward compatibility. Do not silently change the
-   existing Rectangle contract.
-   Recommended model: `gpt-5.6-sol`
-   Reasoning effort: `high`
+- Main-window safe close is `Complete`. Dirty labels/pending mask work use
+  explicit save/discard/cancel; candidate-only close uses discard/cancel and
+  never confirms or saves the candidate; active work is named before existing
+  cleanup runs. Actual Debug EXE dirty cancel/save/reopen and YOLOv8
+  candidate-only cancel/discard evidence passed. Read
+  `docs/SAFE_APPLICATION_CLOSE_P0_20260729.md`.
+
+Latest completed class-schema presentation slice:
+
+- Canonical class-index visibility is `Complete`. Class Catalog now preserves
+  Recipe order, displays `0 · name`, and explains rename versus add/delete
+  schema behavior. The canvas keeps `1~9` drawing shortcuts while the
+  next-label card shows the canonical YOLO index. Focused YAML/YOLO/reopen/
+  shortcut/Batch AI gates, 1920x1080/1366x768 current-build visual review, and
+  a current Debug EXE restored-Recipe capture passed. Read
+  `docs/CANONICAL_CLASS_INDEX_VISIBILITY_P1_20260729.md`.
+
+Latest completed operator-documentation slice:
+
+- Smart Mask README, tutorial, MobileSAM guide, and visible F1 help now use the
+  same Recipe-scoped auto-first, one-point correction, previous/current
+  candidate comparison, explicit Confirm/Skip, and save-state contract.
+  Current Debug EXE F1 before/after evidence and focused gates passed. The
+  approved public GIF was not replaced. Read
+  `docs/SMART_MASK_OPERATOR_DOCUMENTATION_TRUTH_P2_20260729.md`.
+
+Latest completed Dataset Health slice:
+
+- Visual QA now offers `전체` plus only the existing train/valid/test splits,
+  composes the split with `문제만`, preserves or safely resets the selection on
+  refresh, and balances the bounded healthy sample budget across splits.
+  Full-tree SHA-256 coverage proves filtering and refresh do not write dataset
+  files. Read `docs/DATASET_HEALTH_SPLIT_FILTER_P3_20260729.md`.
+- The recorded real 125-image SEG `OK`/`NG` review satisfied the class-filter
+  prerequisite. Visual QA now exposes canonical Recipe `index · name`
+  classes, rebuilds a class-scoped catalog bounded at 500 rows, composes with
+  split and `문제만`, and keeps source files byte-identical. The real replay
+  reduced `1 · NG` to 14 images. Read
+  `docs/DATASET_HEALTH_CLASS_FILTER_20260729.md`.
+
+Latest completed geometry slice:
+
+- `4점 극점` is defined and implemented as an axis-aligned
+  `위 -> 아래 -> 왼쪽 -> 오른쪽` input method that creates the existing
+  Rectangle. It is not a free quadrilateral or rotated box. Recipe persistence,
+  cancellation, one-step history, Smart Mask timing, current interchange, and
+  rotated-import rejection gates pass. Read
+  `docs/FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md` and
+  `docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.
+
+Immediate next priorities:
+
+1. Do not add persistent occluded/tag/group metadata until an operator
+   workflow and at least one Recipe/export/training/review consumer are named.
+   Prerequisite: explicit consumer contract.
+   Recommended model: none until the prerequisite exists
+   Reasoning effort: n/a
 
 Commercial-video priority ledger after that:
 
-2. Persistent `occluded`/tag/group metadata remains contract-dependent.
+5. Persistent `occluded`/tag/group metadata remains contract-dependent.
    Prerequisite: name the operator workflow and at least one Recipe/export/
    training/review consumer. Session-only hide/full-lock/movement-pin is
    already complete and must not be converted into persistent metadata by
    assumption.
    Recommended model: none until the consumer contract is chosen
    Reasoning effort: n/a
-3. Exact polygon/raster cross-family z-order remains a renderer gap, but the
+6. Exact polygon/raster cross-family z-order remains a renderer gap, but the
    Viewer/OpenGL path is protected. Reopen only with a reproduced visual-order
    defect and focused performance evidence.
    Recommended model: `gpt-5.6-sol`
    Reasoning effort: `high`
-4. Object-detection and anomaly model adoption remain blocked on newly
+7. Object-detection and anomaly model adoption remain blocked on newly
    approved independent production-camera/cross-session data with provenance
    and content-separated ground truth.
    Recommended model: none until data is available
@@ -528,8 +586,9 @@ Full development sequence:
    z-order, and remove-underlying are complete.
 4. P2 object state and precision geometry: contextual hide/full-lock/
    movement-pin correction, polygon vertex insert/delete, and bounded
-   intelligent scissors are complete. Contract-backed
-   occlusion/tags/groups and 4-point boxes remain later independent gates.
+   intelligent scissors are complete. The 4-point extreme-box contract and
+   bounded implementation are complete. Contract-backed
+   occlusion/tags/groups remain a later independent gate.
 5. P3 display-only aids: `Complete`; brightness, contrast, gamma, invert,
    histogram/equalization, and overlay alignment preserve canonical source,
    disk file, history, and training pixels.
@@ -1027,24 +1086,14 @@ external YOLO11 runtimes and production accuracy remain unverified.
 
 The authoritative ordering is:
 
-1. Documentation source-of-truth synchronization. Align current operator
-   instructions, release notes, code-structure navigation, Smart Mask guidance,
-   and dated superseded priority wording with the completed P0-P5 and actual
-   EXE restore/save evidence. Keep historical evidence but remove ambiguity
-   about the current queue.
-   Recommended model: `gpt-5.6-terra`
-   Reasoning effort: `low`
+1. Dataset Health class-filter observation gate. Do not implement until a
+   real Detection or Segmentation review session reproduces a task that the
+   existing split plus problem filters cannot reduce.
+   Prerequisite: recorded operator-review observation.
+   Recommended model: none until the prerequisite exists
+   Reasoning effort: n/a
 
-2. Four-point box product contract. The commercial video shows a higher-
-   productivity box path, but the current product has no agreed rotated-box or
-   four-click canonical/export meaning. First decide exact geometry,
-   interaction, undo/redo, save/reopen, YOLO/COCO/CVAT loss behavior, and
-   whether this is axis-aligned only. Implement only after that contract is
-   explicit.
-   Recommended model: `gpt-5.6-sol`
-   Reasoning effort: `high`
-
-3. Persistent object metadata contract. `occluded`, tags, and groups remain
+2. Persistent object metadata contract. `occluded`, tags, and groups remain
    unimplemented. They are not justified as decorative row icons. Name a
    consumer in Recipe persistence, export, training, filtering, or review
    before implementation. Existing hide/full-lock/movement-pin stays
@@ -1053,15 +1102,16 @@ The authoritative ordering is:
    Recommended model: none until the contract is chosen
    Reasoning effort: n/a
 
-4. Polygon/raster cross-family z-order. Current canonical order and each
+3. Polygon/raster cross-family z-order. Current canonical order and each
    overlay family's order are verified, but exact cross-family composition is
    not. Because this touches a protected renderer path, require a reproduced
    visual-order defect, before/after current-build evidence, and focused
    performance gates.
-   Recommended model: `gpt-5.6-sol`
-   Reasoning effort: `high`
+   Prerequisite: reproduced renderer defect.
+   Recommended model: none until the prerequisite exists
+   Reasoning effort: n/a
 
-5. Independent object-detection field evaluation.
+4. Independent object-detection field evaluation.
    Prerequisite: a newly approved NG-rich camera/session source with
    trustworthy boxes, provenance, and content-separated held-out data. The
    operator-excluded `D:\기타이미지\2022.11.16_SIT 이미지` path must not be
@@ -1069,7 +1119,7 @@ The authoritative ordering is:
    Recommended model: none until data is available
    Reasoning effort: n/a
 
-6. Independent anomaly field evaluation.
+5. Independent anomaly field evaluation.
    Prerequisite: balanced normal/abnormal production-camera and cross-session
    data kept outside training initially. YOLOv8 `90/104` and YOLO11 `82/104`
    on the same circular synthetic test both remain `hold`; do not tune against
@@ -1078,8 +1128,8 @@ The authoritative ordering is:
    Reasoning effort: n/a
 
 Do not list P3, P4, P5-A, or P5-B as future implementation. They are complete.
-Do not reopen P0-A/P0-B/P1/P2 for general polish. Use the explicit contract-
-dependent gaps above.
+Do not reopen P0-A/P0-B/P1/P2 for general polish. Use the explicit ready and
+prerequisite-blocked gaps above.
 
 The detailed current contract is
 `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`. Keep the task
@@ -1633,8 +1683,8 @@ Boundary / next dependency:
   -> explicit Confirm -> canonical save -> saved-image reopen, with exactly
   one saved 96-point polygon and a 7,931-pixel mask;
 - this proves workflow and persistence safety, not MobileSAM field accuracy;
-- the next maintenance priority is documentation source-of-truth
-  synchronization, followed by the four-point box contract;
+- the historical documentation synchronization, four-point box contract, and
+  bounded extreme-box implementation are Complete;
 - the approved public GitHub GIF remains unchanged.
 
 Recommended model: `gpt-5.6-terra`

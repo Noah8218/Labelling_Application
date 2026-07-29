@@ -168,7 +168,7 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 
 | 경로 | 대표 파일 | 역할 |
 | --- | --- | --- |
-| `Services/Annotation` | `WpfAnnotationProductivityService`, `WpfAnnotationProductivityContracts`, `WpfSmartMaskPromptSessionService`, `WpfAnnotationHistoryService`, `WpfMask*`, `WpfPolygonAnnotationService`, `WpfIntelligentScissorsService` | annotation 단축키/반복/안전한 복제 정책, Smart Mask prompt/generation session, mask 편집 상태와 undo/redo, polygon 유효성/정점 변경, bounded image-edge path 계산. |
+| `Services/Annotation` | `WpfAnnotationProductivityService`, `WpfAnnotationProductivityContracts`, `WpfSmartMaskPromptSessionService`, `WpfFourPointBoxService`, `WpfAnnotationHistoryService`, `WpfMask*`, `WpfPolygonAnnotationService`, `WpfIntelligentScissorsService` | annotation 단축키/반복/안전한 복제 정책, Smart Mask prompt/generation session, four-point extreme-box draft/geometry, mask 편집 상태와 undo/redo, polygon 유효성/정점 변경, bounded image-edge path 계산. |
 | `Services/Anomaly` | `WpfAnomaly*` | anomaly 평가와 dashboard 표시. |
 | `Services/CandidateReview` | `WpfCandidateReview*`, `WpfCandidateConfirmationService` | AI 후보 row/detail, review state, confirm/skip 정책. |
 | `Services/Dataset` | `WpfDataset*`, `WpfRecipeDatasetVersionPresentationService` | dataset setup, 상태, 품질, version 표시. |
@@ -179,7 +179,7 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | `Services/Project` | `WpfProjectRecipe*` | recipe path와 session 상태. |
 | `Services/Training` | `WpfTraining*`, `WpfWorkflow*` | training readiness/progress와 workflow command state. |
 | `Services/Runtime` | `WpfYolo*` | YOLO runtime/settings 상태와 command 표시. |
-| `Services/Infrastructure` | `WpfFileDialogService`, `WpfWorkspaceLayoutSettingsService` | WPF 공통 dialog와 workspace layout 설정. |
+| `Services/Infrastructure` | `WpfFileDialogService`, `WpfWorkspaceLayoutSettingsService`, `WpfApplicationClosePolicyService` | WPF 공통 dialog, workspace layout 설정, 안전 종료 상태/결정 정책. |
 
 새 UI 요구사항이 생기면 먼저 Presenter/Selection/State service로 분리할 수 있는지 봅니다. Shell partial에는 “어느 service를 언제 호출할지” 정도만 남기는 것이 목표입니다.
 
@@ -527,7 +527,7 @@ Python worker 통신은 `3. Communication/TCP`가 담당합니다.
 `tests/LabelingApplication.Tests/Program.cs`는 단일 콘솔 테스트 러너와 기존 호출을 위한 얇은 전달 메서드만 둡니다. 공통 테스트 도구는 `TestSupport.cs`가, 도메인 검증은 `Program.<Domain>.cs`의 독립 테스트 클래스가 소유합니다. 일반 실행은 전체 회귀를, flag는 집중 smoke를 실행합니다.
 
 - WPF UI: `Program.WpfShellStructure.cs` (`WpfShellStructureTests`), `Program.WpfSettingsViewModels.cs` (`WpfSettingsViewModelTests`), `Program.WpfReviewServices.cs` (`ReviewServicesTests`), `Program.WpfTrainingDatasetReadiness.cs` (`WpfTrainingDatasetReadinessTests`)
-- 라벨링 생산성: `Program.LabelingProductivity.cs` (`LabelingProductivityTests`; tool/class 단축키, 마지막 tool+class 상태, box/polygon/raster-mask 복제 geometry, help UI 계약). 실제 shell key routing, 한 단계 undo/redo, canonical save 연결은 `--wpf-undo-redo-shortcuts`가 함께 검증합니다.
+- 라벨링 생산성: `Program.LabelingProductivity.cs` (`LabelingProductivityTests`; tool/class 단축키, 마지막 tool+class 상태, box/polygon/raster-mask 복제 geometry, help UI 계약). 클래스 저장 순서/index/YAML/reopen/shortcut 정합성은 `Program.cs`의 `--canonical-class-index`가 검증하고, 실제 shell key routing, 한 단계 undo/redo, canonical save 연결은 `--wpf-undo-redo-shortcuts`가 함께 검증합니다.
 - Smart Mask correction: `Program.SmartMaskPoint.cs` (actual EXE의 box,
   positive/negative point, rerun, confirm, next-instance/new-box 흐름)와
   `Program.MobileSamBoxPrompt.cs` (worker request/result, prompt session,
@@ -610,9 +610,10 @@ axis-aligned split/slice, enclosed hole add/fill, saved-object z-order,
 remove-underlying, P2 session-only hide/full-lock/movement-pin contextual UI
 정정, polygon vertex insert/delete, bounded intelligent scissors, P3
 display-only image aids, P4 Dataset Health visual label QA는
-완료되었습니다. 다음 bounded 기능은
-`docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`의 P5
-interchange/batch preflight입니다.
+완료되었습니다. P5 interchange/batch preflight, main-window safe close,
+canonical class-index visibility도 완료되었습니다. 현재 다음 우선순위는
+구조 변경이 아니라 README/tutorial/MobileSAM/F1의 operator truth
+동기화입니다.
 
 - Current owner:
   - tool capability는 `WpfAnnotationToolCapabilityService`
@@ -692,10 +693,14 @@ WinForms 호환 경계는 현재 기능 우선순위가 아닙니다.
 `Services/Dataset/WpfDatasetVisualQaService.cs` owns read-only image-level
 classification and selected-preview composition. It reuses canonical
 detection, segmentation, raster-boundary, and anomaly-review services and does
-not write labels. `ViewModels/Dataset/WpfDatasetVisualQaItems.cs` owns the
-bounded catalog rows and one-shot lazy `PreviewSource`.
-`WpfDatasetHealthViewModel` owns filtering, selection, status, and the
-navigation command. `WpfDatasetHealthWindow` remains presentation-only, while
+not write labels. Problem rows remain first; healthy rows are selected
+round-robin across the existing train/valid/test splits so one large split
+cannot consume the bounded healthy-sample budget.
+`ViewModels/Dataset/WpfDatasetVisualQaItems.cs` owns the bounded catalog rows
+and one-shot lazy `PreviewSource`. `WpfDatasetHealthViewModel` owns available
+split values, selected split, split-plus-`문제만` composition, selection,
+visible-count status, refresh retention/fallback, and the navigation command.
+`WpfDatasetHealthWindow` remains presentation-only, while
 `WpfLabelingShellWindow.DatasetHealth` adapts the command to the existing
 labeling workbench and `TryLoadImage`.
 
@@ -729,6 +734,24 @@ history, dirty state, and selection restoration are owned by
 `WpfLabelingShellWindow.PolygonVertexCommands`. Polygon-only contextual
 enablement and status are owned by `WpfObjectReviewPanelViewModel`.
 Focused coverage is in `Program.PolygonVertex.cs`.
+
+### Canonical class-index presentation ownership
+
+`CData.ClassNamedList`와 기존 YAML/annotation/training/Batch AI owner가
+zero-based canonical index의 source-of-truth를 계속 소유합니다.
+`WpfClassCatalogPanelViewModel`은 Recipe 순서를 그대로 받은 indexed row,
+선택 summary, rename/add/delete schema 안내를 소유합니다.
+`WpfCanvasPanelViewModel`은 canonical index와 `1~9` drawing shortcut을
+별도 속성으로 표현하고 next-label card를 소유합니다.
+`WpfLabelingShellWindow.ClassCatalog`은 Recipe order를 바꾸지 않고 두
+ViewModel에 전달하는 adapter입니다.
+
+이 경계는 reorder, old-label migration, YAML/annotation persistence owner를
+추가하지 않습니다. Focused coverage는 `Program.cs`의
+`--canonical-class-index`, `--wpf-class-catalog-panel`,
+`--wpf-canvas-panel-commands`, actual Debug EXE coverage는
+`--exe-canonical-class-index-visual`이며 durable record는
+`docs/CANONICAL_CLASS_INDEX_VISIBILITY_P1_20260729.md`입니다.
 
 ### Smart Mask automatic-contour and canvas layout-fit ownership
 
@@ -789,6 +812,19 @@ existing-label policy, results, and Start enablement.
 cancellation, queue review-state, Candidate Review, or label-save behavior.
 P5-B does not own checkpoint-metadata extraction, model quality, cloud/team, or
 video workflows.
+
+### Four-point extreme-box ownership
+
+`Services/Annotation/WpfFourPointBoxService.cs` owns the four semantic click
+roles, deterministic axis-aligned bounds, degenerate rejection, Backspace,
+and draft cancellation. `WpfCanvasPanelViewModel` owns the visible
+Recipe-scoped method selector and progress. `WpfLabelingShellWindow.FourPointBox`
+is the click/lifecycle adapter and hands one completed image Rectangle to
+`RoiImageCanvasViewModel.AddCompletedImageRectangle`; that narrow API raises
+the existing `RoiAdded` contract so history, Object Review, color, and optional
+Smart Mask timing stay with their existing owners. The high-frequency
+Viewer/OpenGL mouse-move, ROI drag/resize, brush, and eraser paths are not part
+of this feature.
 
 ## 완료 보고 전 확인
 

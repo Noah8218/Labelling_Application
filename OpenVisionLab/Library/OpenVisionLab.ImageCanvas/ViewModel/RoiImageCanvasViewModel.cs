@@ -4279,6 +4279,26 @@ namespace OpenVisionLab.ImageCanvas.ViewModels
 			return rect;
 		}
 
+		public CanvasRect<float> AddCompletedImageRectangle(System.Drawing.Rectangle roi, string userTag = "")
+		{
+			CanvasRect<float> rect = AddInitialRoi(
+				roi,
+				CanvasRoiShapeKind.Rectangle,
+				drawColor: null,
+				userTag);
+			if (rect == null) { return null; }
+
+			CanvasOverlayItem parentOverlay = _imageViewer.GetLastGroup();
+			if (parentOverlay == null)
+			{
+				_imageViewer.DeleteOverlay(rect.UniqueId, rect.GroupType ?? string.Empty);
+				return null;
+			}
+
+			OnRoiAdded(rect, parentOverlay);
+			return rect;
+		}
+
 		public bool SetRoiOverlayUserTag(string uniqueId, string userTag)
 		{
 			if (string.IsNullOrWhiteSpace(uniqueId))

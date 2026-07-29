@@ -210,6 +210,44 @@ internal static class LabelStudioDetectionTests
                             Height = 10,
                             RectangleLabels = new[] { "NG" }
                         }
+                    },
+                    new LabelStudioDetectionResult
+                    {
+                        Id = "rotated-image",
+                        FromName = "bbox",
+                        ToName = "image",
+                        Source = "$image",
+                        Type = "rectanglelabels",
+                        ImageRotation = 90,
+                        OriginalWidth = 100,
+                        OriginalHeight = 200,
+                        Value = new LabelStudioDetectionValue
+                        {
+                            X = 10,
+                            Y = 10,
+                            Width = 30,
+                            Height = 20,
+                            RectangleLabels = new[] { "NG" }
+                        }
+                    },
+                    new LabelStudioDetectionResult
+                    {
+                        Id = "rotated-box",
+                        FromName = "bbox",
+                        ToName = "image",
+                        Source = "$image",
+                        Type = "rectanglelabels",
+                        OriginalWidth = 100,
+                        OriginalHeight = 200,
+                        Value = new LabelStudioDetectionValue
+                        {
+                            X = 10,
+                            Y = 10,
+                            Width = 30,
+                            Height = 20,
+                            Rotation = 15,
+                            RectangleLabels = new[] { "NG" }
+                        }
                     }
                 }
             });
@@ -235,7 +273,7 @@ internal static class LabelStudioDetectionTests
             AssertEqual(1, result.ImportedResultCount);
             AssertEqual(2, result.CategoryCount);
             AssertEqual(0, result.SkippedTaskCount);
-            AssertEqual(1, result.SkippedResultCount);
+            AssertEqual(3, result.SkippedResultCount);
             AssertEqual(2, data.ClassNamedList.Count);
             AssertEqual("OK", data.ClassNamedList[0].Text);
             AssertEqual("NG", data.ClassNamedList[1].Text);
@@ -258,6 +296,21 @@ internal static class LabelStudioDetectionTests
                 new Size(100, 200));
             AssertTrue(loaded.ContainsKey("NG"), "Label Studio import label should load as NG");
             AssertEqual(new Rectangle(10, 20, 30, 40), loaded["NG"][0]);
+
+            DatasetInterchangePreflightReport preflight = new DatasetInterchangePreflightService().DryRun(
+                new DatasetInterchangeRequest
+                {
+                    Data = data,
+                    FormatKey = "label-studio-detection-import",
+                    SourcePath = taskJsonPath,
+                    ImageRoot = sourceRoot,
+                    TargetSplit = YoloDatasetSplitService.TrainMode
+                });
+            AssertTrue(!preflight.CanApply, "Label Studio rotated detection input should block Apply");
+            AssertEqual(3, preflight.SkippedCount);
+            AssertTrue(
+                preflight.Issues.Any(issue => issue.Contains("3", StringComparison.Ordinal)),
+                "Label Studio preflight should expose the unsupported rotated/invalid record count");
         }
         finally
         {

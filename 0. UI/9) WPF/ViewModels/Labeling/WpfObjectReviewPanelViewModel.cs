@@ -358,13 +358,7 @@ namespace MvcVisionSystem
         public WpfObjectReviewListItem SelectedObject
         {
             get => selectedObject;
-            set
-            {
-                if (SetProperty(ref selectedObject, value))
-                {
-                    RefreshActionState();
-                }
-            }
+            set => SetSelectedObject(value, refreshSegmentCollectionState: true);
         }
 
         public string SelectedClassName
@@ -881,6 +875,7 @@ namespace MvcVisionSystem
 
             // Brush/mask commits can insert the first segment row before AI rows. Keep
             // that path as one Replace/Insert event instead of resetting the whole list.
+            bool segmentCollectionStateChanged = true;
             if (Objects.Count == 1 && Objects[0]?.IsEnabled != true)
             {
                 Objects[0] = item;
@@ -889,6 +884,9 @@ namespace MvcVisionSystem
                 && string.Equals(Objects[objectRowIndex]?.SourceKey, item.SourceKey, StringComparison.OrdinalIgnoreCase)
                 && Objects[objectRowIndex]?.SourceIndex == item.SourceIndex)
             {
+                segmentCollectionStateChanged =
+                    Objects[objectRowIndex]?.IsManualSegment == true
+                    || item.IsManualSegment;
                 Objects[objectRowIndex] = item;
             }
             else if (objectRowIndex <= Objects.Count)
@@ -900,12 +898,18 @@ namespace MvcVisionSystem
                 return false;
             }
 
+            bool actionStateRefreshed = false;
             if (select)
             {
-                SelectedObject = item;
+                actionStateRefreshed = SetSelectedObject(
+                    item,
+                    refreshSegmentCollectionState: segmentCollectionStateChanged);
             }
 
-            RefreshActionState();
+            if (!actionStateRefreshed)
+            {
+                RefreshActionState(segmentCollectionStateChanged);
+            }
             return true;
         }
 
@@ -919,18 +923,27 @@ namespace MvcVisionSystem
             // Large object lists must emit one Remove event, not a Reset that forces WPF to
             // rebuild every row after a single ROI delete.
             SummaryText = summary;
+            bool segmentCollectionStateChanged = Objects[objectRowIndex]?.IsManualSegment == true;
             Objects.RemoveAt(objectRowIndex);
+            bool actionStateRefreshed;
             if (Objects.Count == 0)
             {
-                SelectedObject = null;
+                actionStateRefreshed = SetSelectedObject(
+                    null,
+                    refreshSegmentCollectionState: segmentCollectionStateChanged);
             }
             else
             {
                 int clampedSelection = Math.Max(0, Math.Min(selectedRowIndex, Objects.Count - 1));
-                SelectedObject = Objects[clampedSelection];
+                actionStateRefreshed = SetSelectedObject(
+                    Objects[clampedSelection],
+                    refreshSegmentCollectionState: segmentCollectionStateChanged);
             }
 
-            RefreshActionState();
+            if (!actionStateRefreshed)
+            {
+                RefreshActionState(segmentCollectionStateChanged);
+            }
             return true;
         }
 
@@ -1014,6 +1027,22 @@ namespace MvcVisionSystem
         }
 
         public void RefreshActionState()
+            => RefreshActionState(refreshSegmentCollectionState: true);
+
+        private bool SetSelectedObject(
+            WpfObjectReviewListItem value,
+            bool refreshSegmentCollectionState)
+        {
+            if (!SetProperty(ref selectedObject, value, nameof(SelectedObject)))
+            {
+                return false;
+            }
+
+            RefreshActionState(refreshSegmentCollectionState);
+            return true;
+        }
+
+        private void RefreshActionState(bool refreshSegmentCollectionState)
         {
             bool hasSelectedObject = SelectedObject?.IsEnabled == true;
             bool selectedLocked = SelectedObject?.IsLocked == true;
@@ -1060,46 +1089,62 @@ namespace MvcVisionSystem
                 && !IsVertexEditPending
                 && !IsIntelligentScissorsPending
                 && !IsRemoveUnderlyingPreviewPending;
-            int manualSegmentCount = Objects.Count(item => item?.IsManualSegment == true);
-            int selectedSegmentIndex = SelectedObject?.IsManualSegment == true
-                ? SelectedObject.SourceIndex
-                : -1;
-            bool canChangeZOrder = selectedSegmentIndex >= 0
-                && selectedSegmentIndex < manualSegmentCount
-                && !selectedLocked
-                && !selectedHidden
-                && !IsSplitPending
-                && !IsHoleEditPending
-                && !IsVertexEditPending
-                && !IsIntelligentScissorsPending
-                && !IsRemoveUnderlyingPreviewPending;
-            IsSendToBackEnabled = canChangeZOrder && selectedSegmentIndex > 0;
-            IsSendBackwardEnabled = canChangeZOrder && selectedSegmentIndex > 0;
-            IsBringForwardEnabled = canChangeZOrder && selectedSegmentIndex < manualSegmentCount - 1;
-            IsBringToFrontEnabled = canChangeZOrder && selectedSegmentIndex < manualSegmentCount - 1;
-            ZOrderStatusText = canChangeZOrder
-                ? FormattableString.Invariant(
-                    $"\uD45C\uC2DC \uC21C\uC11C {selectedSegmentIndex + 1}/{manualSegmentCount} \u00B7 \uC22B\uC790\uAC00 \uD074\uC218\uB85D \uC55E")
-                : "\uC120\uD0DD\uD55C \uC138\uADF8\uBA3C\uD2B8\uC758 \uC55E\uB4A4 \uD45C\uC2DC \uC21C\uC11C\uB97C \uBCC0\uACBD\uD569\uB2C8\uB2E4.";
-            IsRemoveUnderlyingPreviewEnabled = selectedSegmentIndex >= 0
-                && manualSegmentCount >= 2
-                && !selectedLocked
-                && !selectedHidden
-                && !IsSplitPending
-                && !IsHoleEditPending
-                && !IsVertexEditPending
-                && !IsIntelligentScissorsPending
-                && !IsRemoveUnderlyingPreviewPending;
-            int mergeSelectionCount = Objects.Count(item => item?.IsManualSegment == true
-                && item.IsMergeSelected
-                && !item.IsHidden
-                && !item.IsLocked);
-            IsMergeSelectedSegmentsEnabled = mergeSelectionCount >= 2
-                && !IsVertexEditPending
-                && !IsIntelligentScissorsPending
-                && !IsRemoveUnderlyingPreviewPending;
-            MergeSelectionText = FormattableString.Invariant(
-                $"\uBCD1\uD569 \uC120\uD0DD {mergeSelectionCount}\uAC1C \u00B7 \uAC19\uC740 \uD074\uB798\uC2A4 2\uAC1C \uC774\uC0C1");
+            if (refreshSegmentCollectionState || IsSegmentContextVisible)
+            {
+                int manualSegmentCount = Objects.Count(item => item?.IsManualSegment == true);
+                int selectedSegmentIndex = SelectedObject?.IsManualSegment == true
+                    ? SelectedObject.SourceIndex
+                    : -1;
+                bool canChangeZOrder = selectedSegmentIndex >= 0
+                    && selectedSegmentIndex < manualSegmentCount
+                    && !selectedLocked
+                    && !selectedHidden
+                    && !IsSplitPending
+                    && !IsHoleEditPending
+                    && !IsVertexEditPending
+                    && !IsIntelligentScissorsPending
+                    && !IsRemoveUnderlyingPreviewPending;
+                IsSendToBackEnabled = canChangeZOrder && selectedSegmentIndex > 0;
+                IsSendBackwardEnabled = canChangeZOrder && selectedSegmentIndex > 0;
+                IsBringForwardEnabled = canChangeZOrder && selectedSegmentIndex < manualSegmentCount - 1;
+                IsBringToFrontEnabled = canChangeZOrder && selectedSegmentIndex < manualSegmentCount - 1;
+                ZOrderStatusText = canChangeZOrder
+                    ? FormattableString.Invariant(
+                        $"\uD45C\uC2DC \uC21C\uC11C {selectedSegmentIndex + 1}/{manualSegmentCount} \u00B7 \uC22B\uC790\uAC00 \uD074\uC218\uB85D \uC55E")
+                    : "\uC120\uD0DD\uD55C \uC138\uADF8\uBA3C\uD2B8\uC758 \uC55E\uB4A4 \uD45C\uC2DC \uC21C\uC11C\uB97C \uBCC0\uACBD\uD569\uB2C8\uB2E4.";
+                IsRemoveUnderlyingPreviewEnabled = selectedSegmentIndex >= 0
+                    && manualSegmentCount >= 2
+                    && !selectedLocked
+                    && !selectedHidden
+                    && !IsSplitPending
+                    && !IsHoleEditPending
+                    && !IsVertexEditPending
+                    && !IsIntelligentScissorsPending
+                    && !IsRemoveUnderlyingPreviewPending;
+            }
+            else
+            {
+                IsSendToBackEnabled = false;
+                IsSendBackwardEnabled = false;
+                IsBringForwardEnabled = false;
+                IsBringToFrontEnabled = false;
+                ZOrderStatusText = "\uC120\uD0DD\uD55C \uC138\uADF8\uBA3C\uD2B8\uC758 \uC55E\uB4A4 \uD45C\uC2DC \uC21C\uC11C\uB97C \uBCC0\uACBD\uD569\uB2C8\uB2E4.";
+                IsRemoveUnderlyingPreviewEnabled = false;
+            }
+
+            if (refreshSegmentCollectionState)
+            {
+                int mergeSelectionCount = Objects.Count(item => item?.IsManualSegment == true
+                    && item.IsMergeSelected
+                    && !item.IsHidden
+                    && !item.IsLocked);
+                IsMergeSelectedSegmentsEnabled = mergeSelectionCount >= 2
+                    && !IsVertexEditPending
+                    && !IsIntelligentScissorsPending
+                    && !IsRemoveUnderlyingPreviewPending;
+                MergeSelectionText = FormattableString.Invariant(
+                    $"\uBCD1\uD569 \uC120\uD0DD {mergeSelectionCount}\uAC1C \u00B7 \uAC19\uC740 \uD074\uB798\uC2A4 2\uAC1C \uC774\uC0C1");
+            }
             RefreshSelectedObjectSessionState();
             RefreshSelectedObjectTaskText();
         }

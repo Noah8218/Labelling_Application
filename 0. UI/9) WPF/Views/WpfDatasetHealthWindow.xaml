@@ -480,16 +480,63 @@
                                        FontSize="9.5"
                                        Margin="0,4,0,0" />
                         </StackPanel>
-                        <CheckBox x:Name="DatasetHealthVisualQaProblemsOnlyCheckBox"
-                                  Grid.Column="1"
-                                  Content="문제만"
-                                  IsChecked="{Binding ShowOnlyVisualQaProblems}"
-                                  Foreground="{DynamicResource SecondaryTextBrush}"
-                                  FontFamily="Segoe UI"
-                                  FontSize="10.5"
-                                  VerticalAlignment="Center"
-                                  AutomationProperties.Name="문제 이미지만 표시"
-                                  ToolTip="라벨 누락, 손상 또는 미검토 이미지로 목록을 좁힙니다." />
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="클래스"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       FontFamily="Segoe UI"
+                                       FontSize="10.5"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,6,0"
+                                       VerticalAlignment="Center" />
+                            <ComboBox x:Name="DatasetHealthVisualQaClassFilter"
+                                      Width="126"
+                                      Height="28"
+                                      ItemsSource="{Binding VisualQaClassFilters}"
+                                      SelectedItem="{Binding SelectedVisualQaClassFilter, Mode=TwoWay}"
+                                      DisplayMemberPath="Text"
+                                      IsEnabled="{Binding IsVisualQaClassFilterEnabled}"
+                                      Foreground="{DynamicResource PrimaryTextBrush}"
+                                      Background="{DynamicResource ToolbarButtonBrush}"
+                                      BorderBrush="{DynamicResource ToolbarButtonBorderBrush}"
+                                      FontFamily="Segoe UI"
+                                      FontSize="10.5"
+                                      AutomationProperties.AutomationId="DatasetHealthVisualQaClassFilter"
+                                      AutomationProperties.Name="시각 QA 클래스 필터"
+                                      ToolTip="현재 Recipe의 실제 클래스 중 하나를 선택해 해당 저장 객체가 있는 이미지만 읽기 전용으로 다시 읽습니다." />
+                            <TextBlock Text="분할"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       FontFamily="Segoe UI"
+                                       FontSize="10.5"
+                                       FontWeight="SemiBold"
+                                       Margin="14,0,6,0"
+                                       VerticalAlignment="Center" />
+                            <ComboBox x:Name="DatasetHealthVisualQaSplitFilter"
+                                      Width="104"
+                                      Height="28"
+                                      ItemsSource="{Binding VisualQaSplitFilters}"
+                                      SelectedItem="{Binding SelectedVisualQaSplitFilter, Mode=TwoWay}"
+                                      IsEnabled="{Binding IsVisualQaSplitFilterEnabled}"
+                                      Foreground="{DynamicResource PrimaryTextBrush}"
+                                      Background="{DynamicResource ToolbarButtonBrush}"
+                                      BorderBrush="{DynamicResource ToolbarButtonBorderBrush}"
+                                      FontFamily="Segoe UI"
+                                      FontSize="10.5"
+                                      AutomationProperties.AutomationId="DatasetHealthVisualQaSplitFilter"
+                                      AutomationProperties.Name="시각 QA 데이터 분할 필터"
+                                      ToolTip="현재 목록에 실제로 있는 train, valid, test 분할로 읽기 전용 검토 범위를 좁힙니다." />
+                            <CheckBox x:Name="DatasetHealthVisualQaProblemsOnlyCheckBox"
+                                      Content="문제만"
+                                      IsChecked="{Binding ShowOnlyVisualQaProblems}"
+                                      Foreground="{DynamicResource SecondaryTextBrush}"
+                                      FontFamily="Segoe UI"
+                                      FontSize="10.5"
+                                      Margin="14,0,0,0"
+                                      VerticalAlignment="Center"
+                                      AutomationProperties.Name="문제 이미지만 표시"
+                                      ToolTip="선택한 분할 안에서 라벨 누락, 손상 또는 미검토 이미지로 목록을 좁힙니다." />
+                        </StackPanel>
                     </Grid>
 
                     <Grid Grid.Row="1" Margin="0,10,0,0">

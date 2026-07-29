@@ -34,6 +34,7 @@ namespace MvcVisionSystem
 
         private void ApplyProjectRecipeFromPanel()
         {
+            CancelFourPointBoxDraft(updateStatus: false);
             string recipeName = ProjectConfigViewModel?.RecipeName?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(recipeName))
             {

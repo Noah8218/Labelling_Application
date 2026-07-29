@@ -43,7 +43,24 @@ namespace MvcVisionSystem
 
             bool showSavedLabels = ShouldShowLabelOverlays();
             bool showSmartMaskPrompts = smartMaskPromptSession.HasSession;
-            if ((!showSavedLabels && !showSmartMaskPrompts) || !IsSegmentationDatasetPurposeActive())
+            bool showFourPointBoxDraft = fourPointBoxService.HasDraft;
+            if (!IsSegmentationDatasetPurposeActive())
+            {
+                if (!showFourPointBoxDraft)
+                {
+                    ClearSegmentationOverlays();
+                    return;
+                }
+
+                var fourPointOnlyOverlays = new List<RoiImageCanvasPolygonOverlay>();
+                AppendFourPointBoxDraftOverlays(fourPointOnlyOverlays);
+                MainCanvasViewModel.SetSegmentationOverlays(
+                    fourPointOnlyOverlays,
+                    Array.Empty<RoiImageCanvasMaskOverlay>());
+                return;
+            }
+
+            if (!showSavedLabels && !showSmartMaskPrompts && !showFourPointBoxDraft)
             {
                 ClearSegmentationOverlays();
                 return;
@@ -144,8 +161,56 @@ namespace MvcVisionSystem
             }
 
             AppendSmartMaskPromptOverlays(overlays);
+            AppendFourPointBoxDraftOverlays(overlays);
             AppendPendingSmartMaskCandidateMask(maskOverlays, maskOpacity);
             MainCanvasViewModel.SetSegmentationOverlays(overlays, maskOverlays);
+        }
+
+        private void AppendFourPointBoxDraftOverlays(List<RoiImageCanvasPolygonOverlay> overlays)
+        {
+            if (overlays == null || !fourPointBoxService.HasDraft || activeImageSize.IsEmpty)
+            {
+                return;
+            }
+
+            IReadOnlyList<System.Drawing.Point> points = fourPointBoxService.Points;
+            string[] roles = { "\uC704", "\uC544\uB798", "\uC67C\uCABD", "\uC624\uB978\uCABD" };
+            for (int index = 0; index < points.Count; index++)
+            {
+                System.Drawing.Point point = points[index];
+                bool horizontal = index < 2;
+                var guidePoints = horizontal
+                    ? new[]
+                    {
+                        new System.Drawing.Point(0, point.Y),
+                        new System.Drawing.Point(activeImageSize.Width - 1, point.Y)
+                    }
+                    : new[]
+                    {
+                        new System.Drawing.Point(point.X, 0),
+                        new System.Drawing.Point(point.X, activeImageSize.Height - 1)
+                    };
+                overlays.Add(new RoiImageCanvasPolygonOverlay(
+                    guidePoints,
+                    $"4P {index + 1}/4 {roles[index]}",
+                    System.Drawing.Color.DeepSkyBlue,
+                    isClosed: false,
+                    isDraft: true));
+
+                const int markerRadius = 4;
+                overlays.Add(new RoiImageCanvasPolygonOverlay(
+                    new[]
+                    {
+                        new System.Drawing.Point(Math.Max(0, point.X - markerRadius), point.Y),
+                        new System.Drawing.Point(point.X, Math.Max(0, point.Y - markerRadius)),
+                        new System.Drawing.Point(Math.Min(activeImageSize.Width - 1, point.X + markerRadius), point.Y),
+                        new System.Drawing.Point(point.X, Math.Min(activeImageSize.Height - 1, point.Y + markerRadius))
+                    },
+                    $"4P {index + 1}",
+                    System.Drawing.Color.White,
+                    isClosed: true,
+                    isDraft: true));
+            }
         }
 
         private void AppendPendingSmartMaskCandidateMask(

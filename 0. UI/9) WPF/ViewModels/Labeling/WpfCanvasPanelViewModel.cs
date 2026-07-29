@@ -38,6 +38,20 @@ namespace MvcVisionSystem
         public string Text { get; }
     }
 
+    public sealed class WpfBoxDrawingMethodItem
+    {
+        public WpfBoxDrawingMethodItem(LabelingBoxDrawingMethod method, string text, string toolTip)
+        {
+            Method = method;
+            Text = text ?? string.Empty;
+            ToolTip = toolTip ?? string.Empty;
+        }
+
+        public LabelingBoxDrawingMethod Method { get; }
+        public string Text { get; }
+        public string ToolTip { get; }
+    }
+
     public sealed class WpfCanvasPanelViewModel : WpfObservableViewModel
     {
         private static readonly Action NoOpCommand = () => { };
@@ -136,6 +150,8 @@ namespace MvcVisionSystem
         private ICommand showInitialSmartMaskCandidateCommand = new RelayCommand(NoOpCommand);
         private ICommand showLatestSmartMaskCandidateCommand = new RelayCommand(NoOpCommand);
         private ICommand toggleSmartMaskAutoContourCommand;
+        private ICommand boxDrawingMethodSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
+        private ICommand resetBoxDrawingMethodCommand;
         private ICommand toggleSmartMaskCorrectionOptionsCommand;
         private ICommand toggleShortcutHelpCommand;
         private System.Windows.Visibility smartMaskVisibility = System.Windows.Visibility.Collapsed;
@@ -149,6 +165,12 @@ namespace MvcVisionSystem
         private bool isSmartMaskEnabled;
         private bool isSmartMaskAutoContourEnabled;
         private bool isSmartMaskAutoContourToggleEnabled;
+        private WpfBoxDrawingMethodItem selectedBoxDrawingMethod;
+        private System.Windows.Visibility boxDrawingMethodVisibility = System.Windows.Visibility.Collapsed;
+        private System.Windows.Visibility fourPointBoxProgressVisibility = System.Windows.Visibility.Collapsed;
+        private string fourPointBoxProgressText = "4\uC810 \uADF9\uC810 \u00B7 \uC704 0/4";
+        private Action<LabelingBoxDrawingMethod> boxDrawingMethodChanged = _ => { };
+        private bool isRestoringBoxDrawingMethod;
         private string smartMaskActionText = "박스 → 스마트 마스크";
         private string smartMaskToolTip = "결함 둘레에 박스를 그린 뒤 MobileSAM 후보 마스크를 만듭니다.";
         private string smartMaskPromptSummaryText = "박스를 그려 첫 후보를 만드세요.";
@@ -200,6 +222,19 @@ namespace MvcVisionSystem
             new WpfSmartMaskDetailItem(WpfSmartMaskPolygonDetail.Balanced, "균형 · 96점"),
             new WpfSmartMaskDetailItem(WpfSmartMaskPolygonDetail.Detailed, "정밀 · 256점")
         };
+
+        public ObservableCollection<WpfBoxDrawingMethodItem> BoxDrawingMethods { get; } =
+            new ObservableCollection<WpfBoxDrawingMethodItem>
+            {
+                new WpfBoxDrawingMethodItem(
+                    LabelingBoxDrawingMethod.TwoPointDrag,
+                    "2\uC810 \uB4DC\uB798\uADF8",
+                    "\uC2DC\uC791\uC810\uC5D0\uC11C \uB05D\uC810\uAE4C\uC9C0 \uB4DC\uB798\uADF8\uD574 \uBC15\uC2A4\uB97C \uB9CC\uB4ED\uB2C8\uB2E4."),
+                new WpfBoxDrawingMethodItem(
+                    LabelingBoxDrawingMethod.FourPointExtreme,
+                    "4\uC810 \uADF9\uC810",
+                    "\uC704, \uC544\uB798, \uC67C\uCABD, \uC624\uB978\uCABD \uADF9\uC810\uC744 \uC21C\uC11C\uB300\uB85C \uB20C\uB7EC \uBC15\uC2A4\uB97C \uB9CC\uB4ED\uB2C8\uB2E4.")
+            };
 
         public ICommand FitCommand
         {
@@ -491,6 +526,65 @@ namespace MvcVisionSystem
                     IsSmartMaskAutoContourEnabled = !IsSmartMaskAutoContourEnabled;
                     smartMaskAutoContourChanged(IsSmartMaskAutoContourEnabled);
                 });
+
+        public ICommand BoxDrawingMethodSelectionChangedCommand
+        {
+            get => boxDrawingMethodSelectionChangedCommand;
+            private set => SetProperty(ref boxDrawingMethodSelectionChangedCommand, value);
+        }
+
+        public ICommand ResetBoxDrawingMethodCommand
+            => resetBoxDrawingMethodCommand ??= new RelayCommand(
+                () =>
+                {
+                    if (SelectedBoxDrawingMethod?.Method == LabelingBoxDrawingMethod.TwoPointDrag)
+                    {
+                        return;
+                    }
+
+                    RestoreBoxDrawingMethod(LabelingBoxDrawingMethod.TwoPointDrag);
+                    boxDrawingMethodChanged(LabelingBoxDrawingMethod.TwoPointDrag);
+                });
+
+        public WpfBoxDrawingMethodItem SelectedBoxDrawingMethod
+        {
+            get => selectedBoxDrawingMethod;
+            set
+            {
+                if (value == null || !BoxDrawingMethods.Contains(value))
+                {
+                    return;
+                }
+
+                if (SetProperty(ref selectedBoxDrawingMethod, value))
+                {
+                    OnPropertyChanged(nameof(BoxDrawingMethodToolTip));
+                }
+            }
+        }
+
+        public System.Windows.Visibility BoxDrawingMethodVisibility
+        {
+            get => boxDrawingMethodVisibility;
+            private set => SetProperty(ref boxDrawingMethodVisibility, value);
+        }
+
+        public System.Windows.Visibility FourPointBoxProgressVisibility
+        {
+            get => fourPointBoxProgressVisibility;
+            private set => SetProperty(ref fourPointBoxProgressVisibility, value);
+        }
+
+        public string FourPointBoxProgressText
+        {
+            get => fourPointBoxProgressText;
+            private set => SetProperty(ref fourPointBoxProgressText, value ?? string.Empty);
+        }
+
+        public string BoxDrawingMethodToolTip
+            => SelectedBoxDrawingMethod?.ToolTip
+                ?? "\uBC15\uC2A4\uB97C \uB9CC\uB4DC\uB294 \uC785\uB825 \uBC29\uC2DD\uC744 \uC120\uD0DD\uD569\uB2C8\uB2E4.";
+
         public ICommand ToggleSmartMaskCorrectionOptionsCommand
             => toggleSmartMaskCorrectionOptionsCommand ??= new RelayCommand(
                 () => IsSmartMaskCorrectionOptionsExpanded = !IsSmartMaskCorrectionOptionsExpanded);
@@ -655,6 +749,59 @@ namespace MvcVisionSystem
         public void RestoreSmartMaskAutoContourMode(bool enabled)
         {
             IsSmartMaskAutoContourEnabled = enabled;
+        }
+
+        public void ConfigureBoxDrawingMethod(Action<LabelingBoxDrawingMethod> drawingMethodChanged)
+        {
+            boxDrawingMethodChanged = drawingMethodChanged ?? (_ => { });
+            BoxDrawingMethodSelectionChangedCommand = new RelayCommand<object>(
+                selected =>
+                {
+                    WpfBoxDrawingMethodItem item = selected as WpfBoxDrawingMethodItem
+                        ?? SelectedBoxDrawingMethod;
+                    if (item != null && !isRestoringBoxDrawingMethod)
+                    {
+                        boxDrawingMethodChanged(item.Method);
+                    }
+                });
+            RestoreBoxDrawingMethod(
+                SelectedBoxDrawingMethod?.Method ?? LabelingBoxDrawingMethod.TwoPointDrag);
+        }
+
+        public void RestoreBoxDrawingMethod(LabelingBoxDrawingMethod method)
+        {
+            LabelingBoxDrawingMethod normalized = Enum.IsDefined(typeof(LabelingBoxDrawingMethod), method)
+                ? method
+                : LabelingBoxDrawingMethod.TwoPointDrag;
+            isRestoringBoxDrawingMethod = true;
+            try
+            {
+                SelectedBoxDrawingMethod = BoxDrawingMethods.First(item => item.Method == normalized);
+                SetFourPointBoxProgress(0);
+            }
+            finally
+            {
+                isRestoringBoxDrawingMethod = false;
+            }
+        }
+
+        public void SetFourPointBoxProgress(int acceptedPointCount)
+        {
+            int normalized = Math.Clamp(acceptedPointCount, 0, 4);
+            string nextRole = normalized switch
+            {
+                0 => "\uC704",
+                1 => "\uC544\uB798",
+                2 => "\uC67C\uCABD",
+                3 => "\uC624\uB978\uCABD",
+                _ => "\uC644\uB8CC"
+            };
+            FourPointBoxProgressText = $"4\uC810 \uADF9\uC810 \u00B7 {nextRole} {normalized}/4";
+            FourPointBoxProgressVisibility =
+                SelectedBoxDrawingMethod?.Method == LabelingBoxDrawingMethod.FourPointExtreme
+                && BoxDrawingMethodVisibility == System.Windows.Visibility.Visible
+                    ? System.Windows.Visibility.Visible
+                    : System.Windows.Visibility.Collapsed;
         }
 
         public string SmartMaskActionText
@@ -1259,11 +1406,16 @@ namespace MvcVisionSystem
 
             LabelClasses.Clear();
             int shortcutIndex = 1;
-            foreach (CClassItem classItem in (classItems ?? Enumerable.Empty<CClassItem>())
-                .Where(item => item != null && !string.IsNullOrWhiteSpace(item.Text))
-                .OrderBy(item => item.Text, StringComparer.OrdinalIgnoreCase))
+            int canonicalIndex = 0;
+            foreach (CClassItem classItem in classItems ?? Enumerable.Empty<CClassItem>())
             {
-                var labelItem = new WpfCanvasLabelClassItem(classItem, shortcutIndex++);
+                int currentIndex = canonicalIndex++;
+                if (classItem == null || string.IsNullOrWhiteSpace(classItem.Text))
+                {
+                    continue;
+                }
+
+                var labelItem = new WpfCanvasLabelClassItem(classItem, currentIndex, shortcutIndex++);
                 LabelClasses.Add(labelItem);
                 if (!string.IsNullOrWhiteSpace(normalizedSelectedName)
                     && string.Equals(labelItem.Text, normalizedSelectedName, StringComparison.OrdinalIgnoreCase))
@@ -1411,6 +1563,7 @@ namespace MvcVisionSystem
                     lastDrawingTool = selectedTool.Tool;
                 }
                 RefreshMaskBrushControlVisibility();
+                RefreshBoxDrawingMethodVisibility();
             }
         }
 
@@ -1420,6 +1573,14 @@ namespace MvcVisionSystem
             MaskBrushControlVisibility = tool == WpfAnnotationTool.Brush || tool == WpfAnnotationTool.Eraser
                 ? System.Windows.Visibility.Visible
                 : System.Windows.Visibility.Collapsed;
+        }
+
+        private void RefreshBoxDrawingMethodVisibility()
+        {
+            BoxDrawingMethodVisibility = SelectedAnnotationTool?.Tool == WpfAnnotationTool.Rectangle
+                ? System.Windows.Visibility.Visible
+                : System.Windows.Visibility.Collapsed;
+            SetFourPointBoxProgress(0);
         }
 
         public void SetWorkflowContext(string stepText, string toolText, string actionText)
@@ -1476,8 +1637,9 @@ namespace MvcVisionSystem
             }
 
             IsLabelClassSetupMissing = false;
-            ActiveLabelClassTitleText = string.Format("\uB2E4\uC74C \uB77C\uBCA8: {0}", className);
-            ActiveLabelClassDetailText = string.Format("\uC0C8\uB85C \uADF8\uB9AC\uB294 \uBC15\uC2A4/\uB9C8\uC2A4\uD06C\uB294 {0} \uD074\uB798\uC2A4\uB85C \uC800\uC7A5\uB429\uB2C8\uB2E4. \uBC14\uAFB8\uB824\uBA74 \uD074\uB798\uC2A4 \uAD00\uB9AC\uB97C \uC5EC\uC138\uC694.", className);
+            string canonicalDisplayText = SelectedLabelClass.CanonicalDisplayText;
+            ActiveLabelClassTitleText = string.Format("\uB2E4\uC74C \uB77C\uBCA8: {0}", canonicalDisplayText);
+            ActiveLabelClassDetailText = string.Format("\uC0C8\uB85C \uADF8\uB9AC\uB294 \uBC15\uC2A4/\uB9C8\uC2A4\uD06C\uB294 {0} \uD074\uB798\uC2A4\uB85C \uC800\uC7A5\uB429\uB2C8\uB2E4. \uCE94\uBC84\uC2A4 1~9\uB294 \uC120\uD0DD \uB2E8\uCD95\uD0A4\uC774\uBA70 YOLO \uC778\uB371\uC2A4\uB97C \uBC14\uAFB8\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.", canonicalDisplayText);
             ActiveLabelClassActionText = "\uD074\uB798\uC2A4 \uAD00\uB9AC";
             ActiveLabelClassActionToolTip = "\uC624\uB978\uCABD \uD074\uB798\uC2A4 \uD328\uB110\uC744 \uC5F4\uC5B4 \uC0C8 \uB77C\uBCA8 \uC774\uB984\uC744 \uCD94\uAC00\uD558\uAC70\uB098 \uB2E4\uC74C \uB77C\uBCA8 \uD074\uB798\uC2A4\uB97C \uBC14\uAFC9\uB2C8\uB2E4.";
         }
@@ -1541,9 +1703,10 @@ namespace MvcVisionSystem
 
     public sealed class WpfCanvasLabelClassItem
     {
-        public WpfCanvasLabelClassItem(CClassItem classItem, int shortcutIndex = 0)
+        public WpfCanvasLabelClassItem(CClassItem classItem, int canonicalIndex = 0, int shortcutIndex = 0)
         {
             Text = ClassCatalogService.NormalizeClassName(classItem?.Text);
+            CanonicalIndex = Math.Max(0, canonicalIndex);
             ShortcutIndex = shortcutIndex is >= 1 and <= 9 ? shortcutIndex : 0;
             DrawColor = classItem?.DrawColor ?? DrawingColor.LimeGreen;
             var brush = new MediaSolidColorBrush(MediaColor.FromRgb(DrawColor.R, DrawColor.G, DrawColor.B));
@@ -1553,13 +1716,17 @@ namespace MvcVisionSystem
 
         public string Text { get; }
 
+        public int CanonicalIndex { get; }
+
         public int ShortcutIndex { get; }
 
         public string DisplayText => ShortcutIndex > 0 ? $"{ShortcutIndex} {Text}" : Text;
 
+        public string CanonicalDisplayText => $"{CanonicalIndex} \u00B7 {Text}";
+
         public string ToolTip => ShortcutIndex > 0
-            ? $"단축키 {ShortcutIndex} · 다음 박스/마스크 클래스: {Text}"
-            : $"다음 박스/마스크 클래스: {Text} · 0 키로 클래스 관리를 엽니다.";
+            ? $"\uB2E8\uCD95\uD0A4 {ShortcutIndex} \u00B7 YOLO \uC778\uB371\uC2A4 {CanonicalIndex} \u00B7 \uB2E4\uC74C \uBC15\uC2A4/\uB9C8\uC2A4\uD06C: {Text}"
+            : $"YOLO \uC778\uB371\uC2A4 {CanonicalIndex} \u00B7 \uB2E4\uC74C \uBC15\uC2A4/\uB9C8\uC2A4\uD06C: {Text}";
 
         public DrawingColor DrawColor { get; }
 

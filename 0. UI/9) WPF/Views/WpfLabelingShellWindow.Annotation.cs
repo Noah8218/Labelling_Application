@@ -18,6 +18,11 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (TryHandleFourPointBoxInput(e))
+            {
+                return;
+            }
+
             if (TryApplyPendingPolygonVertexEdit(e))
             {
                 return;

@@ -55,6 +55,17 @@ internal static class LabelingProductivityTests
             WpfAnnotationShortcutKind.None,
             WpfAnnotationProductivityService.ResolveShortcut(Key.R, ModifierKeys.Shift).Kind,
             "drawing shortcuts with modifiers");
+        AssertTrue(
+            WpfAnnotationProductivityService.ShortcutHelpText.Contains(
+                "자동 윤곽 켜기 → R 박스 → 후보 검토",
+                StringComparison.Ordinal)
+            && WpfAnnotationProductivityService.ShortcutHelpText.Contains(
+                "이전/현재 후보 비교 → 확정 또는 스킵",
+                StringComparison.Ordinal)
+            && WpfAnnotationProductivityService.ShortcutHelpText.Contains(
+                "후보 생성·복원은 저장하지 않으며",
+                StringComparison.Ordinal),
+            "F1 help should expose the current automatic-contour review and save contract");
     }
 
     private static void TestCanvasRepeatAndClassState()

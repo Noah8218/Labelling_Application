@@ -38,6 +38,102 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
+        <Style x:Key="CanvasBoxDrawingMethodComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Height" Value="23" />
+            <Setter Property="Background" Value="{DynamicResource ToolbarButtonBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButtonBorderBrush}" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Padding" Value="7,0,22,0" />
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Text}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   FontFamily="Segoe UI"
+                                   FontSize="10"
+                                   VerticalAlignment="Center" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Background" Value="{DynamicResource InputBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                        <Setter Property="Padding" Value="7,4" />
+                        <Style.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ComboBox}">
+                        <Grid SnapsToDevicePixels="True">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="3" />
+                            <TextBlock Text="{Binding SelectedItem.Text, RelativeSource={RelativeSource TemplatedParent}}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       FontFamily="{TemplateBinding FontFamily}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       Margin="{TemplateBinding Padding}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       IsHitTestVisible="False" />
+                            <ToggleButton Focusable="False"
+                                          ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          Background="Transparent"
+                                          BorderThickness="0">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                                        <Border Background="Transparent">
+                                            <ContentPresenter />
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                                <Path Data="M 0 0 L 4 4 L 8 0 Z"
+                                      Width="8"
+                                      Height="4"
+                                      Stretch="Fill"
+                                      Fill="{TemplateBinding Foreground}"
+                                      HorizontalAlignment="Right"
+                                      VerticalAlignment="Center"
+                                      Margin="0,0,7,0" />
+                            </ToggleButton>
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Fade">
+                                <Border MinWidth="{TemplateBinding ActualWidth}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                        Background="{DynamicResource InputBrush}"
+                                        BorderBrush="{DynamicResource InputBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="3">
+                                    <ScrollViewer CanContentScroll="True">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="SmartMaskPointToggleStyle" TargetType="ToggleButton">
             <Setter Property="Height" Value="26" />
             <Setter Property="MinWidth" Value="82" />
@@ -852,6 +948,67 @@
                                 </ItemsPanelTemplate>
                             </ListBox.ItemsPanel>
                         </ListBox>
+                        <Border x:Name="CanvasBoxDrawingMethodOptions"
+                                Visibility="{Binding BoxDrawingMethodVisibility}"
+                                Background="{DynamicResource CanvasBrush}"
+                                BorderBrush="{DynamicResource ToolbarButtonBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="5,0"
+                                Margin="4,0,2,0"
+                                Height="29"
+                                VerticalAlignment="Center"
+                                ToolTip="{Binding BoxDrawingMethodToolTip}"
+                                AutomationProperties.AutomationId="CanvasBoxDrawingMethodOptions">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xBC15;&#xC2A4; &#xC785;&#xB825;"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           FontFamily="Segoe UI"
+                                           FontSize="10"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,5,0"
+                                           VerticalAlignment="Center" />
+                                <ComboBox x:Name="CanvasBoxDrawingMethodComboBox"
+                                          Style="{StaticResource CanvasBoxDrawingMethodComboBoxStyle}"
+                                          Width="104"
+                                          ItemsSource="{Binding BoxDrawingMethods}"
+                                          SelectedItem="{Binding SelectedBoxDrawingMethod, Mode=TwoWay}"
+                                          ToolTip="{Binding BoxDrawingMethodToolTip}"
+                                          AutomationProperties.AutomationId="CanvasBoxDrawingMethodComboBox"
+                                          AutomationProperties.Name="&#xBC15;&#xC2A4; &#xC785;&#xB825; &#xBC29;&#xC2DD;"
+                                          mvvm:InputCommandBehaviors.SelectedItemChangedCommand="{Binding BoxDrawingMethodSelectionChangedCommand}" />
+                                <ui:Button x:Name="CanvasResetBoxDrawingMethodButton"
+                                           Style="{StaticResource CanvasAnnotationCommandButtonStyle}"
+                                           Width="24"
+                                           MinWidth="24"
+                                           Margin="3,0,0,0"
+                                           ToolTip="2&#xC810; &#xB4DC;&#xB798;&#xADF8; &#xAE30;&#xBCF8;&#xAC12;&#xC73C;&#xB85C; &#xCD08;&#xAE30;&#xD654;"
+                                           AutomationProperties.AutomationId="CanvasResetBoxDrawingMethodButton"
+                                           AutomationProperties.Name="&#xBC15;&#xC2A4; &#xC785;&#xB825; &#xCD08;&#xAE30;&#xD654;"
+                                           Command="{Binding ResetBoxDrawingMethodCommand}">
+                                    <iconPacks:PackIconMaterial Kind="Restore" Width="13" Height="13" />
+                                </ui:Button>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="CanvasFourPointBoxProgress"
+                                Visibility="{Binding FourPointBoxProgressVisibility}"
+                                Background="#15243B"
+                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="7,3"
+                                Margin="2,0,2,0"
+                                Height="29"
+                                VerticalAlignment="Center"
+                                ToolTip="&#xC21C;&#xC11C;: &#xC704; &#x2192; &#xC544;&#xB798; &#x2192; &#xC67C;&#xCABD; &#x2192; &#xC624;&#xB978;&#xCABD;. Backspace: &#xC774;&#xC804; &#xC810;, Esc/&#xC624;&#xB978;&#xCABD; &#xD074;&#xB9AD;: &#xCDE8;&#xC18C;"
+                                AutomationProperties.AutomationId="CanvasFourPointBoxProgress">
+                            <TextBlock Text="{Binding FourPointBoxProgressText}"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       FontFamily="Segoe UI"
+                                       FontSize="10"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </Border>
                         <Border x:Name="CanvasSmartMaskLabelingOptions"
                                 Visibility="{Binding SmartMaskVisibility}"
                                 Background="{DynamicResource CanvasBrush}"
@@ -1057,7 +1214,7 @@
                                 Padding="7,3"
                                 Margin="4,0,0,0"
                                 VerticalAlignment="Center"
-                                Visibility="Collapsed"
+                                Visibility="{Binding AnnotationWorkspaceVisibility}"
                                 ToolTip="{Binding ActiveLabelClassDetailText}">
                             <StackPanel>
                                     <TextBlock x:Name="CanvasActiveLabelClassTitleText"

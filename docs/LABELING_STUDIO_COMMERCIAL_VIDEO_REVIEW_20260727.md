@@ -15,10 +15,12 @@ Latest implementation synchronization: 2026-07-28
   workstation `4.0/5`.
 - Actual Debug EXE restore/save/reopen replay is complete under
   `artifacts\operator-video\20260728-smartmask-restore-save-retry1`.
-  Documentation source-of-truth synchronization is the next maintenance item.
-  Four-point box, persistent object metadata, and polygon/raster cross-family
-  z-order remain contract-dependent backlog; independent model adoption
-  remains data-blocked.
+  Documentation source-of-truth synchronization is complete.
+- The four-point box contract and bounded implementation are complete as an
+  axis-aligned top/bottom/left/right extreme-point input method;
+  persistent object metadata and polygon/raster cross-family z-order remain
+  contract- or evidence-dependent. Independent model adoption remains
+  data-blocked.
 
 ## 1. 목적과 정정 사항
 
@@ -301,9 +303,10 @@ Reasoning effort: n/a
 6. Smart Mask auto-first contextual correction, real correction-effectiveness,
    previous/current candidate restore, and actual Debug EXE real-candidate
    restore/save/reopen are complete.
-7. Four-point box, persistent object metadata, and exact polygon/raster
-   cross-family z-order remain contract-dependent backlog, not permission for
-   speculative implementation.
+7. The four-point extreme-box contract is Complete and authorizes only its
+   bounded axis-aligned implementation. Persistent object metadata and exact
+   polygon/raster cross-family z-order remain contract/evidence-dependent, not
+   permission for speculative implementation.
 8. Detection/anomaly model adoption requires independent production-camera/
    cross-session data.
 
@@ -333,7 +336,7 @@ Reasoning effort: n/a
 | Dataset Health visual QA | Complete | read-only 유지 |
 | interchange dry-run/Apply | Complete | 새 포맷 추가보다 기존 계약 보호 |
 | batch AI preflight | Complete | Candidate Review/no-autosave 보호 |
-| 4-point box | Contract-dependent backlog | geometry/export 계약부터 정의 |
+| 4-point extreme box | Contract Complete; implementation-ready | 기존 axis-aligned Rectangle을 생성하며 free quadrilateral/rotation은 제외 |
 | occluded/tag/group persistence | Blocked by consumer contract | Recipe/export/training/review 소비자 지정 |
 | polygon/raster exact cross-family z-order | Conditional backlog | 재현 defect와 renderer 성능 gate 필요 |
 | production detection/anomaly adoption | Blocked by data | 독립 camera/session 정답 데이터 확보 |

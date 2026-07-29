@@ -48,6 +48,7 @@ namespace MvcVisionSystem
             }
 
             displayAdjustmentRefreshTimer.Stop();
+            CancelFourPointBoxDraft(updateStatus: false);
             CancelPendingSegmentationRemoveUnderlying(updateStatus: false);
             CancelPendingPolygonVertexEdit(updateStatus: false);
             CancelPendingIntelligentScissors(updateStatus: false);

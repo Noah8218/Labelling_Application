@@ -29,25 +29,32 @@ namespace MvcVisionSystem
         private static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" }, StringComparer.OrdinalIgnoreCase);
 
-        public WpfDatasetVisualQaCatalog BuildCatalog(CData data)
+        public WpfDatasetVisualQaCatalog BuildCatalog(CData data, int? classIndex = null)
         {
             if (data == null)
             {
-                return new WpfDatasetVisualQaCatalog(Array.Empty<WpfDatasetVisualQaItem>(), 0, 0, false);
+                return new WpfDatasetVisualQaCatalog(Array.Empty<WpfDatasetVisualQaItem>(), 0, 0, 0, false);
             }
 
             data.NormalizeOutputPaths();
             return data.ProjectSettings?.DatasetPurpose == LabelingDatasetPurpose.AnomalyDetection
                 ? BuildAnomalyCatalog(data)
-                : BuildYoloCatalog(data);
+                : BuildYoloCatalog(data, NormalizeClassIndex(data, classIndex));
         }
 
-        private static WpfDatasetVisualQaCatalog BuildYoloCatalog(CData data)
+        private static WpfDatasetVisualQaCatalog BuildYoloCatalog(CData data, int? classIndex)
         {
             var problems = new List<WpfDatasetVisualQaItem>();
-            var samples = new List<WpfDatasetVisualQaItem>();
+            var samplesBySplit = Splits.ToDictionary(
+                split => split,
+                _ => new List<WpfDatasetVisualQaItem>(),
+                StringComparer.OrdinalIgnoreCase);
             int scanned = 0;
+            int matched = 0;
             int problemCount = 0;
+            int healthySampleLimit = classIndex.HasValue
+                ? MaximumCatalogItemCount
+                : HealthySampleCount;
             foreach (string split in Splits)
             {
                 string imageDirectory = Path.Combine(data.OutputRootPath ?? string.Empty, "data", split, "images");
@@ -55,6 +62,12 @@ namespace MvcVisionSystem
                 {
                     scanned++;
                     WpfDatasetVisualQaItem item = BuildYoloItem(data, split, imagePath);
+                    if (classIndex.HasValue && !item.ContainsClassIndex(classIndex.Value))
+                    {
+                        continue;
+                    }
+
+                    matched++;
                     if (item.IsProblem)
                     {
                         problemCount++;
@@ -63,13 +76,15 @@ namespace MvcVisionSystem
                             problems.Add(item);
                         }
                     }
-                    else if (samples.Count < HealthySampleCount)
+                    else if (samplesBySplit[split].Count < healthySampleLimit)
                     {
-                        samples.Add(item);
+                        samplesBySplit[split].Add(item);
                     }
                 }
             }
 
+            IReadOnlyList<WpfDatasetVisualQaItem> samples =
+                SelectHealthySamplesAcrossSplits(samplesBySplit, healthySampleLimit);
             WpfDatasetVisualQaItem[] items = problems
                 .Concat(samples)
                 .Take(MaximumCatalogItemCount)
@@ -77,8 +92,43 @@ namespace MvcVisionSystem
             return new WpfDatasetVisualQaCatalog(
                 items,
                 scanned,
+                matched,
                 problemCount,
-                problemCount > problems.Count || problems.Count + samples.Count > MaximumCatalogItemCount);
+                classIndex.HasValue
+                    ? matched > items.Length
+                    : problemCount > problems.Count || problems.Count + samples.Count > MaximumCatalogItemCount);
+        }
+
+        private static IReadOnlyList<WpfDatasetVisualQaItem> SelectHealthySamplesAcrossSplits(
+            IReadOnlyDictionary<string, List<WpfDatasetVisualQaItem>> samplesBySplit,
+            int maximumCount)
+        {
+            int boundedMaximum = Math.Clamp(maximumCount, 0, MaximumCatalogItemCount);
+            var selected = new List<WpfDatasetVisualQaItem>(boundedMaximum);
+            for (int index = 0; selected.Count < boundedMaximum; index++)
+            {
+                bool added = false;
+                foreach (string split in Splits)
+                {
+                    if (samplesBySplit.TryGetValue(split, out List<WpfDatasetVisualQaItem> samples)
+                        && index < samples.Count)
+                    {
+                        selected.Add(samples[index]);
+                        added = true;
+                        if (selected.Count >= boundedMaximum)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (!added)
+                {
+                    break;
+                }
+            }
+
+            return selected;
         }
 
         private static WpfDatasetVisualQaItem BuildYoloItem(CData data, string split, string imagePath)
@@ -116,11 +166,74 @@ namespace MvcVisionSystem
                         : status.ObjectCount == 0
                             ? "배경 이미지로 의도한 빈 라벨인지 확인하세요."
                             : "저장된 geometry를 읽기 전용으로 확인합니다.";
-                return CreateItem(data, imagePath, split, statusText, detail, status.ObjectCount, isProblem);
+                return CreateItem(
+                    data,
+                    imagePath,
+                    split,
+                    statusText,
+                    detail,
+                    status.ObjectCount,
+                    isProblem,
+                    ReadClassIndexes(status.LabelPath, imageSize, isSegmentation, data?.ClassNamedList?.Count ?? 0));
             }
             catch (Exception ex)
             {
-                return CreateItem(data, imagePath, split, "파일/annotation 오류", ex.Message, 0, true);
+                return CreateItem(
+                    data,
+                    imagePath,
+                    split,
+                    "파일/annotation 오류",
+                    ex.Message,
+                    0,
+                    true,
+                    Array.Empty<int>());
+            }
+        }
+
+        private static IReadOnlyList<int> ReadClassIndexes(
+            string annotationPath,
+            DrawingSize imageSize,
+            bool isSegmentation,
+            int classCount)
+        {
+            if (string.IsNullOrWhiteSpace(annotationPath) || !File.Exists(annotationPath))
+            {
+                return Array.Empty<int>();
+            }
+
+            try
+            {
+                IEnumerable<int> indexes;
+                if (isSegmentation)
+                {
+                    SegmentationAnnotationFile annotation =
+                        JsonConvert.DeserializeObject<SegmentationAnnotationFile>(File.ReadAllText(annotationPath));
+                    indexes = annotation?.Polygons?
+                        .Where(record => record != null)
+                        .Select(record => record.ClassIndex)
+                        ?? Enumerable.Empty<int>();
+                }
+                else
+                {
+                    indexes = File.ReadLines(annotationPath)
+                        .Select(line => YoloAnnotationService.TryParseYoloLine(
+                            line,
+                            imageSize,
+                            out int parsedClassIndex,
+                            out _)
+                            ? parsedClassIndex
+                            : -1);
+                }
+
+                return indexes
+                    .Where(index => index >= 0 && (classCount <= 0 || index < classCount))
+                    .Distinct()
+                    .OrderBy(index => index)
+                    .ToArray();
+            }
+            catch
+            {
+                return Array.Empty<int>();
             }
         }
 
@@ -168,10 +281,12 @@ namespace MvcVisionSystem
                     item.IsReviewed ? "저장된 이미지 판정 표본입니다." : "학습 전에 정상 또는 이상으로 판정하세요.",
                     0,
                     !item.IsReviewed,
+                    Array.Empty<int>(),
                     () => CreatePreview(item.ImagePath, data)))
                 .ToArray();
             return new WpfDatasetVisualQaCatalog(
                 items,
+                imagePaths.Length,
                 imagePaths.Length,
                 problemCount,
                 imagePaths.Length > MaximumCatalogItemCount);
@@ -184,7 +299,8 @@ namespace MvcVisionSystem
             string status,
             string detail,
             int objectCount,
-            bool isProblem)
+            bool isProblem,
+            IEnumerable<int> classIndexes)
             => new WpfDatasetVisualQaItem(
                 imagePath,
                 split,
@@ -192,7 +308,18 @@ namespace MvcVisionSystem
                 detail,
                 objectCount,
                 isProblem,
+                classIndexes,
                 () => CreatePreview(imagePath, data));
+
+        private static int? NormalizeClassIndex(CData data, int? classIndex)
+        {
+            int classCount = data?.ClassNamedList?.Count ?? 0;
+            return classIndex.HasValue
+                && classIndex.Value >= 0
+                && classIndex.Value < classCount
+                    ? classIndex
+                    : null;
+        }
 
         internal static ImageSource CreatePreview(string imagePath, CData data)
         {

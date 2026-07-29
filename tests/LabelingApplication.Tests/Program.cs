@@ -8,6 +8,7 @@ using OpenVisionLab.ImageCanvas.Canvas;
 using OpenVisionLab.ImageCanvas.CanvasShapes;
 using OpenVisionLab.ImageCanvas.Model;
 using OpenVisionLab.ImageCanvas.ViewModels;
+using OpenVisionLab.Wpf.MessageDialogs;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -233,6 +234,13 @@ internal static partial class Program
             return RunWpfVisualSmoke(args);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--application-close", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "WPF application close protects unsaved labels and unconfirmed work",
+                TestApplicationClosePolicyAndShellAdapter);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--wpf-responsive-layout", StringComparison.OrdinalIgnoreCase)))
         {
             return RunWpfResponsiveLayoutSmoke(args);
@@ -289,6 +297,11 @@ internal static partial class Program
             return RunExeDatasetWizardSmoke(args);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--exe-canonical-class-index-visual", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunExeCanonicalClassIndexVisual(args);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--wpf-queue-click-perf", StringComparison.OrdinalIgnoreCase)))
         {
             return RunWpfQueueClickPerformanceSmoke(args);
@@ -304,6 +317,13 @@ internal static partial class Program
             return RunSingleSmoke(
                 "labeling productivity shortcuts, repeat state, duplicate geometry, and help UI",
                 LabelingProductivityTests.TestLabelingProductivity);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--four-point-extreme-box", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "four-point extreme input creates one ordinary axis-aligned Rectangle",
+                TestFourPointExtremeBoxWorkflow);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-undo-redo-shortcuts", StringComparison.OrdinalIgnoreCase)))
@@ -954,6 +974,13 @@ internal static partial class Program
             return RunSingleSmoke("WPF class catalog panel declares class edit controls", TestWpfClassCatalogPanelDeclaresClassEditControls);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--canonical-class-index", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Canonical class indices stay aligned across catalog, canvas, YOLO, and recipe reopen",
+                TestCanonicalClassIndexPersistence);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--wpf-model-comparison-heldout", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("WPF model comparison button requires held-out test split", WpfTrainingDatasetReadinessTests.TestWpfModelComparisonButtonRequiresHeldOutTestSplit);
@@ -1352,6 +1379,7 @@ internal static partial class Program
         {
             ("YOLO path normalization uses forward slashes", TestNormalizeYamlPath),
             ("Class catalog normalizes names and rejects duplicates", TestClassCatalogService),
+            ("Canonical class indices stay aligned across catalog, canvas, YOLO, and recipe reopen", TestCanonicalClassIndexPersistence),
             ("WPF object review edit service applies and deletes objects", ReviewServicesTests.TestWpfObjectReviewEditService),
             ("WPF object review selection service keeps row policy stable", ReviewServicesTests.TestWpfObjectReviewSelectionService),
             ("WPF object review presentation service builds rows and delete plans", ReviewServicesTests.TestWpfObjectReviewPresentationService),
@@ -1365,6 +1393,7 @@ internal static partial class Program
             ("MVVM infrastructure shares observable and command helpers", TestMvvmInfrastructure),
             ("CData creates YOLO dataset directories and data.yaml", TestCreateYoloDataset),
             ("Project settings persist dataset purpose in recipe config", TestLabelingProjectSettingsDatasetPurposePersistence),
+            ("Four-point extreme input creates one ordinary axis-aligned Rectangle", TestFourPointExtremeBoxWorkflow),
             ("YOLO dataset split service assigns train valid and test exclusively", TestYoloDatasetSplitService),
             ("YOLO dataset validator rejects invalid training configuration", TestYoloDatasetValidatorConfiguration),
             ("YOLO dataset validator accepts saved training files", TestYoloDatasetValidatorTrainingFiles),
@@ -1843,6 +1872,8 @@ internal static partial class Program
         string anomalyClassificationEvaluationSummaryPath = GetArgumentValue(args, "--anomaly-classification-evaluation-summary", string.Empty);
         string theme = GetArgumentValue(args, "--theme", "dark");
         string annotationTool = GetArgumentValue(args, "--annotation-tool", string.Empty);
+        string boxDrawingMethod = GetArgumentValue(args, "--box-drawing-method", string.Empty);
+        string fourPointBoxClicks = GetArgumentValue(args, "--four-point-box-clicks", string.Empty);
         string datasetPurpose = GetArgumentValue(args, "--dataset-purpose", string.Empty);
         string datasetOutputRoot = GetArgumentValue(args, "--dataset-output-root", string.Empty);
         string datasetClasses = GetArgumentValue(args, "--dataset-classes", string.Empty);
@@ -1888,6 +1919,8 @@ internal static partial class Program
         bool openDatasetInterchange = HasArgument(args, "--open-dataset-interchange");
         bool openBatchDetectionPreflight = HasArgument(args, "--open-batch-detection-preflight");
         bool showDatasetHealthVisualQa = HasArgument(args, "--dataset-health-visual-qa");
+        string datasetHealthVisualQaSplit = GetArgumentValue(args, "--dataset-health-visual-qa-split", string.Empty);
+        string datasetHealthVisualQaClass = GetArgumentValue(args, "--dataset-health-visual-qa-class", string.Empty);
         bool includeAnomalyInModelBenchmark = HasArgument(args, "--model-benchmark-include-anomaly");
         bool anomalyReviewOnly = HasArgument(args, "--anomaly-review-only");
         bool showModelBenchmarkConditions = HasArgument(args, "--model-benchmark-conditions");
@@ -1913,6 +1946,7 @@ internal static partial class Program
         bool displayInvert = HasArgument(args, "--display-invert");
         bool displayEqualize = HasArgument(args, "--display-equalize");
         bool screenCapture = HasArgument(args, "--screen-capture");
+        bool showApplicationCloseDialog = HasArgument(args, "--show-application-close-dialog");
         bool labelsOnly = HasArgument(args, "--labels-only");
         bool segmentationCandidates = HasArgument(args, "--segmentation-candidates");
         bool smartMaskCandidate = HasArgument(args, "--smart-mask-candidate");
@@ -2296,6 +2330,31 @@ internal static partial class Program
                         PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
                     }
                     ApplyVisualSmokeAnnotationTool(window, annotationTool, imageSize);
+                    if (!string.IsNullOrWhiteSpace(boxDrawingMethod))
+                    {
+                        LabelingBoxDrawingMethod visualBoxMethod =
+                            boxDrawingMethod.Contains("four", StringComparison.OrdinalIgnoreCase)
+                                || boxDrawingMethod.Contains("4", StringComparison.OrdinalIgnoreCase)
+                                ? LabelingBoxDrawingMethod.FourPointExtreme
+                                : LabelingBoxDrawingMethod.TwoPointDrag;
+                        window.CanvasPanelViewModel.RestoreBoxDrawingMethod(visualBoxMethod);
+                        InvokePrivateResult<object>(window, "SelectAnnotationTool", WpfAnnotationTool.Rectangle, true);
+                        InvokePrivateResult<object>(window, "ApplyRectangleDrawingInputMode");
+                        foreach (Point point in ParseVisualSmokePoints(fourPointBoxClicks))
+                        {
+                            InvokePrivateResult<object>(
+                                window,
+                                "MainCanvasViewModel_ImagePointClicked",
+                                window.MainCanvasViewModel,
+                                new CanvasImagePointEventArgs(
+                                    CanvasPointerButton.Left,
+                                    1,
+                                    0,
+                                    0,
+                                    point,
+                                    PointF.Empty));
+                        }
+                    }
                     PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
                     if (smartMaskAutoContourEnabled
                         && !window.CanvasPanelViewModel.IsSmartMaskAutoContourEnabled)
@@ -2661,6 +2720,25 @@ internal static partial class Program
                             && datasetHealthWindow.FindName("DatasetHealthVisualQaTab") is System.Windows.Controls.TabItem visualQaTab)
                         {
                             healthTabs.SelectedItem = visualQaTab;
+                            if (!string.IsNullOrWhiteSpace(datasetHealthVisualQaSplit))
+                            {
+                                datasetHealthWindow.ViewModel.SelectedVisualQaSplitFilter =
+                                    datasetHealthVisualQaSplit.Trim();
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(datasetHealthVisualQaClass))
+                            {
+                                string requestedClass = datasetHealthVisualQaClass.Trim();
+                                WpfDatasetVisualQaClassFilterItem classFilter =
+                                    datasetHealthWindow.ViewModel.VisualQaClassFilters.FirstOrDefault(item =>
+                                        string.Equals(item.ClassName, requestedClass, StringComparison.OrdinalIgnoreCase)
+                                        || string.Equals(item.ClassIndex?.ToString(CultureInfo.InvariantCulture), requestedClass, StringComparison.OrdinalIgnoreCase)
+                                        || string.Equals(item.Text, requestedClass, StringComparison.OrdinalIgnoreCase));
+                                if (classFilter != null)
+                                {
+                                    datasetHealthWindow.ViewModel.SelectedVisualQaClassFilter = classFilter;
+                                }
+                            }
                         }
                         datasetHealthWindow.UpdateLayout();
                         datasetHealthWindow.Activate();
@@ -2747,6 +2825,30 @@ internal static partial class Program
                         ?? (System.Windows.Window)datasetHealthWindow
                         ?? (System.Windows.Window)modelBenchmarkWindow
                         ?? window;
+                    if (showApplicationCloseDialog)
+                    {
+                        bool dialogCaptured = false;
+                        window.Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            WpfMessageDialogWindow closeDialog = System.Windows.Application.Current.Windows
+                                .OfType<WpfMessageDialogWindow>()
+                                .FirstOrDefault(candidate => ReferenceEquals(candidate.Owner, window));
+                            AssertTrue(closeDialog != null, "application-close dialog was not visible for capture");
+                            closeDialog.UpdateLayout();
+                            closeDialog.Activate();
+                            PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
+                            CaptureWindowFromScreen(window, outputPath);
+                            dialogCaptured = true;
+                            closeDialog.Close();
+                        }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
+                        window.Close();
+                        AssertTrue(dialogCaptured, "application-close dialog capture did not complete");
+                        AssertTrue(window.IsVisible, "closing the application-close dialog should cancel the window close");
+                        Console.WriteLine($"WPF application-close visual smoke captured: {outputPath}");
+                        return 0;
+                    }
+
                     if (screenCapture)
                     {
                         CaptureWindowFromScreen(captureTarget, outputPath);
@@ -2760,6 +2862,7 @@ internal static partial class Program
                 }
                 finally
                 {
+                    SetPrivateField(window, "isApplicationCloseApproved", true);
                     window.Close();
                 }
             }
@@ -3146,6 +3249,27 @@ internal static partial class Program
             "anom" or "anomaly" or "anomaly-detection" => LabelingDatasetPurpose.AnomalyDetection,
             _ => LabelingDatasetPurpose.ObjectDetection
         };
+    }
+
+    private static IReadOnlyList<Point> ParseVisualSmokePoints(string value)
+    {
+        var points = new List<Point>();
+        foreach (string pair in (value ?? string.Empty).Split(
+            ';',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            string[] coordinates = pair.Split(
+                ',',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (coordinates.Length == 2
+                && int.TryParse(coordinates[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int x)
+                && int.TryParse(coordinates[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int y))
+            {
+                points.Add(new Point(x, y));
+            }
+        }
+
+        return points;
     }
 
     private static void OpenVisualSmokeHeaderToolsMenu(WpfLabelingShellWindow window)
@@ -4232,6 +4356,74 @@ internal static partial class Program
             Console.Error.WriteLine($"FAIL EXE dataset wizard smoke: {ex.Message}");
             Console.Error.WriteLine(ex.ToString());
             return 1;
+        }
+    }
+
+    private static int RunExeCanonicalClassIndexVisual(string[] args)
+    {
+        Process process = null;
+        try
+        {
+            string rootPath = FindRepositoryRoot();
+            string exePath = Path.GetFullPath(GetArgumentValue(
+                args,
+                "--exe",
+                Path.Combine(rootPath, "artifacts", "run", "Debug", "OpenVisionLab.LabelingStudio.exe")));
+            string outputPath = Path.GetFullPath(GetArgumentValue(
+                args,
+                "--output",
+                Path.Combine(rootPath, "artifacts", "ui", "exe-canonical-class-index.png")));
+            AssertTrue(File.Exists(exePath), "canonical class-index EXE target was not found");
+
+            process = Process.Start(new ProcessStartInfo
+            {
+                FileName = exePath,
+                WorkingDirectory = Path.GetDirectoryName(exePath),
+                UseShellExecute = true
+            });
+            AssertTrue(process != null, "canonical class-index EXE process did not start");
+
+            IntPtr handle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(25));
+            AssertTrue(handle != IntPtr.Zero, "canonical class-index EXE window did not appear");
+            SetWindowPos(handle, HwndTopMost, 0, 0, VisualSmokeDefaultWindowWidth, VisualSmokeDefaultWindowHeight, SwpShowWindow);
+            BringNativeWindowToFront(handle);
+
+            System.Windows.Automation.AutomationElement automationRoot = RefreshAutomationRoot(process, handle);
+            bool openedClassCatalog = TryInvokeAutomationButtonByAutomationId(automationRoot, "RightWorkflowClassCatalogButton");
+            if (!openedClassCatalog)
+            {
+                openedClassCatalog =
+                    SelectAutomationTabByAutomationId(automationRoot, "ClassesReviewTab")
+                    || SelectTabItemByName(automationRoot, "\uD074\uB798\uC2A4");
+            }
+            AssertTrue(openedClassCatalog, "canonical class-index EXE could not open Class Catalog");
+
+            AssertTrue(
+                WaitUntil(
+                    () =>
+                    {
+                        var currentRoot = RefreshAutomationRoot(process, handle, bringToFront: false);
+                        return ContainsAutomationText(currentRoot, "YOLO \uC778\uB371\uC2A4")
+                            && ContainsAutomationText(currentRoot, "0 \u00B7 ")
+                            && ContainsAutomationText(currentRoot, "\uB2E4\uC74C \uB77C\uBCA8: 0 \u00B7 ");
+                    },
+                    TimeSpan.FromSeconds(8)),
+                "canonical class-index EXE did not show matching catalog and next-label indices");
+
+            automationRoot = RefreshAutomationRoot(process, handle, bringToFront: false);
+            CaptureAutomationRoot(automationRoot, outputPath);
+            Console.WriteLine($"EXE canonical class-index visual captured: {outputPath}");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"FAIL EXE canonical class-index visual: {ex.Message}");
+            Console.Error.WriteLine(ex.ToString());
+            return 1;
+        }
+        finally
+        {
+            CloseExeSmokeProcess(process);
         }
     }
 
@@ -12697,6 +12889,100 @@ internal static partial class Program
         AssertEqual(0, data.ClassNamedList.Count);
     }
 
+    private static void TestCanonicalClassIndexPersistence()
+    {
+        string recipeName = "codex_class_index_" + Guid.NewGuid().ToString("N");
+        string recipeDirectory = Path.Combine(AppContext.BaseDirectory, "RECIPE", recipeName);
+        string datasetRoot = CreateTempRoot();
+
+        try
+        {
+            var data = new CData();
+            data.ConfigureOutputRoot(datasetRoot);
+            AssertTrue(ClassCatalogService.TryAddClass(data, "Scratch", out CClassItem scratch), "canonical class 0 was not added");
+            AssertTrue(ClassCatalogService.TryAddClass(data, "OK", out CClassItem ok), "canonical class 1 was not added");
+            AssertTrue(ClassCatalogService.TryAddClass(data, "Crack", out CClassItem crack), "canonical class 2 was not added");
+
+            var catalogViewModel = new WpfClassCatalogPanelViewModel();
+            catalogViewModel.SetClasses(data.ClassNamedList, "OK");
+            AssertEqual("0 \u00B7 Scratch", catalogViewModel.Classes[0].DisplayText);
+            AssertEqual("1 \u00B7 OK", catalogViewModel.Classes[1].DisplayText);
+            AssertEqual("2 \u00B7 Crack", catalogViewModel.Classes[2].DisplayText);
+            AssertEqual(1, catalogViewModel.SelectedClass.CanonicalIndex);
+            AssertTrue(catalogViewModel.ClassCatalogSummaryText.Contains("1 \u00B7 OK", StringComparison.Ordinal), "catalog summary should expose the selected canonical index");
+            AssertTrue(catalogViewModel.ClassIndexContractText.Contains("1~9", StringComparison.Ordinal), "catalog should distinguish drawing shortcuts from canonical indices");
+
+            var canvasViewModel = new WpfCanvasPanelViewModel();
+            canvasViewModel.SetLabelClasses(data.ClassNamedList, "OK");
+            AssertEqual("1 Scratch", canvasViewModel.LabelClasses[0].DisplayText);
+            AssertEqual("0 \u00B7 Scratch", canvasViewModel.LabelClasses[0].CanonicalDisplayText);
+            AssertEqual(1, canvasViewModel.SelectedLabelClass.CanonicalIndex);
+            AssertTrue(canvasViewModel.ActiveLabelClassTitleText.Contains("1 \u00B7 OK", StringComparison.Ordinal), "active class context should expose the selected canonical index");
+            AssertTrue(canvasViewModel.TrySelectLabelClassByShortcut(2), "third drawing shortcut should select the third canonical class");
+            AssertEqual("Crack", canvasViewModel.SelectedLabelClass.Text);
+            AssertEqual(2, canvasViewModel.SelectedLabelClass.CanonicalIndex);
+
+            AssertTrue(ClassCatalogService.TryRenameClass(data, "OK", "Pass", out CClassItem renamed), "canonical class rename failed");
+            AssertTrue(ReferenceEquals(ok, renamed), "rename should preserve the class object and canonical index");
+            AssertEqual("Pass", data.ClassNamedList[1].Text);
+
+            var rois = new Dictionary<string, List<CRectangleObject>>
+            {
+                ["Pass"] = new List<CRectangleObject>
+                {
+                    new CRectangleObject
+                    {
+                        Roi = new Rectangle(10, 10, 20, 20),
+                        cClassItem = renamed
+                    }
+                }
+            };
+            List<string> annotationLines = YoloAnnotationService.BuildAnnotationLines(
+                rois,
+                data.ClassNamedList,
+                new Size(100, 100));
+            AssertEqual(1, annotationLines.Count);
+            AssertTrue(annotationLines[0].StartsWith("1 ", StringComparison.Ordinal), "YOLO label save should use renamed class canonical index 1");
+
+            data.SaveYoloDataYaml();
+            data.SaveConfig(recipeName);
+            string yaml = File.ReadAllText(data.DataYamlFilePath);
+            int scratchYamlIndex = yaml.IndexOf("Scratch", StringComparison.Ordinal);
+            int passYamlIndex = yaml.IndexOf("Pass", StringComparison.Ordinal);
+            int crackYamlIndex = yaml.IndexOf("Crack", StringComparison.Ordinal);
+            AssertTrue(
+                scratchYamlIndex >= 0 && scratchYamlIndex < passYamlIndex && passYamlIndex < crackYamlIndex,
+                "data.yaml should preserve canonical class order after rename");
+
+            CData reopened = new CData().LoadConfig(recipeName);
+            AssertEqual("Scratch,Pass,Crack", string.Join(",", reopened.ClassNamedList.Select(item => item.Text)));
+            var reopenedCatalog = new WpfClassCatalogPanelViewModel();
+            reopenedCatalog.SetClasses(reopened.ClassNamedList, "Pass");
+            AssertEqual("1 \u00B7 Pass", reopenedCatalog.SelectedClass.DisplayText);
+
+            AssertTrue(ClassCatalogService.RemoveClass(reopened, "Scratch"), "canonical class delete failed");
+            AssertEqual("Pass", reopened.ClassNamedList[0].Text);
+            AssertEqual("Crack", reopened.ClassNamedList[1].Text);
+            reopened.SaveYoloDataYaml();
+            reopened.SaveConfig(recipeName);
+
+            CData reopenedAfterDelete = new CData().LoadConfig(recipeName);
+            var shiftedCatalog = new WpfClassCatalogPanelViewModel();
+            shiftedCatalog.SetClasses(reopenedAfterDelete.ClassNamedList, "Pass");
+            AssertEqual("0 \u00B7 Pass", shiftedCatalog.SelectedClass.DisplayText);
+            AssertEqual("1 \u00B7 Crack", shiftedCatalog.Classes[1].DisplayText);
+        }
+        finally
+        {
+            if (Directory.Exists(recipeDirectory))
+            {
+                Directory.Delete(recipeDirectory, recursive: true);
+            }
+
+            DeleteTempRoot(datasetRoot);
+        }
+    }
+
     private static void TestCreateYoloDataset()
     {
         string root = CreateTempRoot();
@@ -14480,6 +14766,7 @@ internal static partial class Program
         finally
         {
             SetPrivateField(window, "activeImageBitmap", null);
+            SetPrivateField(window, "isApplicationCloseApproved", true);
             window.Close();
             bitmap.Dispose();
             CGlobal.Inst.Data = previousData;
@@ -15750,6 +16037,7 @@ internal static partial class Program
         finally
         {
             SetPrivateField(window, "activeImageBitmap", null);
+            SetPrivateField(window, "isApplicationCloseApproved", true);
             window.Close();
             bitmap.Dispose();
             CGlobal.Inst.Data = previousData;
@@ -20312,6 +20600,7 @@ internal static partial class Program
             }
             finally
             {
+                SetPrivateField(window, "isApplicationCloseApproved", true);
                 window.Close();
             }
         }
@@ -20427,6 +20716,7 @@ internal static partial class Program
             }
             finally
             {
+                SetPrivateField(window, "isApplicationCloseApproved", true);
                 window.Close();
             }
         }
@@ -21039,7 +21329,7 @@ internal static partial class Program
         AssertNamedXamlBinding(xaml, xName, "CanvasSelectedToolText", "Text", "SelectedAnnotationTool.Text");
         AssertNamedXamlValue(xaml, xName, "CanvasLayerModeDetailText", "Visibility", "Collapsed");
         AssertNamedXamlValue(xaml, xName, "CanvasAnnotationSaveStatusDetailText", "Visibility", "Collapsed");
-        AssertNamedXamlValue(xaml, xName, "CanvasActiveLabelClassCard", "Visibility", "Collapsed");
+        AssertNamedXamlBinding(xaml, xName, "CanvasActiveLabelClassCard", "Visibility", "AnnotationWorkspaceVisibility");
         AssertNamedXamlValue(xaml, xName, "CanvasActiveLabelClassDetailText", "Visibility", "Collapsed");
         AssertNamedXamlValue(xaml, xName, "CanvasActiveLabelClassActionText", "Visibility", "Collapsed");
         AssertNamedXamlValue(xaml, xName, "CanvasSelectedToolChip", "Visibility", "Collapsed");
@@ -21207,6 +21497,8 @@ internal static partial class Program
         AssertTrue(mainCanvasIndex > canvasToolbarToolListIndex,
             "the ROI canvas should remain beside the annotation tool rail");
         AssertTrue(viewModelCode.Contains("IsOneShotCommandTool", StringComparison.Ordinal), "canvas ViewModel should keep one-shot commands out of the selected-tool list");
+        AssertTrue(!viewModelCode.Contains(".OrderBy(item => item.Text", StringComparison.Ordinal), "canvas class selector should preserve canonical recipe order instead of sorting names");
+        AssertTrue(viewModelCode.Contains("CanonicalDisplayText", StringComparison.Ordinal), "canvas active-class presentation should expose canonical YOLO indices");
         AssertTrue(!panelCode.Contains("FitRequested", StringComparison.Ordinal), "canvas panel code-behind should not relay fit events");
         AssertTrue(!panelCode.Contains("Click(", StringComparison.Ordinal), "canvas panel code-behind should not contain button click relays");
         AssertTrue(shellSource.Contains("ConfigureCanvasPanelCommands", StringComparison.Ordinal), "WPF shell should inject canvas commands through the canvas ViewModel");
@@ -21331,19 +21623,25 @@ internal static partial class Program
         canvasViewModel.SetLabelClasses(
             new[]
             {
-                new CClassItem { Text = "Defect", DrawColor = Color.FromArgb(239, 68, 68) },
-                new CClassItem { Text = "OK", DrawColor = Color.FromArgb(34, 197, 94) }
+                new CClassItem { Text = "Scratch", DrawColor = Color.FromArgb(239, 68, 68) },
+                new CClassItem { Text = "OK", DrawColor = Color.FromArgb(34, 197, 94) },
+                new CClassItem { Text = "Crack", DrawColor = Color.FromArgb(59, 130, 246) }
             },
             "OK");
-        AssertEqual(2, canvasViewModel.LabelClasses.Count);
+        AssertEqual(3, canvasViewModel.LabelClasses.Count);
+        AssertEqual("Scratch", canvasViewModel.LabelClasses[0].Text);
+        AssertEqual(0, canvasViewModel.LabelClasses[0].CanonicalIndex);
+        AssertEqual(1, canvasViewModel.LabelClasses[0].ShortcutIndex);
+        AssertEqual("1 Scratch", canvasViewModel.LabelClasses[0].DisplayText);
         AssertEqual("OK", canvasViewModel.SelectedLabelClass.Text);
+        AssertEqual(1, canvasViewModel.SelectedLabelClass.CanonicalIndex);
         AssertTrue(!canvasViewModel.IsLabelClassSetupMissing, "canvas should clear missing-class state after classes are loaded");
-        AssertTrue(canvasViewModel.ActiveLabelClassTitleText.Contains("OK", StringComparison.Ordinal), "canvas should show which class will be used for the next drawn label");
-        canvasViewModel.SelectLabelClass("Defect");
-        AssertEqual("Defect", canvasViewModel.SelectedLabelClass.Text);
-        AssertTrue(canvasViewModel.ActiveLabelClassDetailText.Contains("Defect", StringComparison.Ordinal), "active class detail should update when the canvas class chip changes");
+        AssertTrue(canvasViewModel.ActiveLabelClassTitleText.Contains("1 \u00B7 OK", StringComparison.Ordinal), "canvas should show which canonical class will be used for the next drawn label");
+        canvasViewModel.SelectLabelClass("Scratch");
+        AssertEqual("Scratch", canvasViewModel.SelectedLabelClass.Text);
+        AssertTrue(canvasViewModel.ActiveLabelClassDetailText.Contains("0 \u00B7 Scratch", StringComparison.Ordinal), "active class detail should update with the canonical index when the canvas class chip changes");
         canvasViewModel.LabelClassSelectionChangedCommand.Execute(canvasViewModel.SelectedLabelClass);
-        AssertEqual("Defect", ((WpfCanvasLabelClassItem)selectedLabelCommandParameter).Text);
+        AssertEqual("Scratch", ((WpfCanvasLabelClassItem)selectedLabelCommandParameter).Text);
         canvasViewModel.SetLabelClasses(
             new[]
             {
@@ -23359,9 +23657,14 @@ internal static partial class Program
         string anomalyWorkflowPath = Path.Combine(root, "docs", "ANOMALY_DETECTION_FLOW.md");
         string completenessAuditPath = Path.Combine(root, "docs", "LABELING_STUDIO_COMPLETENESS_AUDIT.md");
         string syntheticEvidenceContractPath = Path.Combine(root, "docs", "SYNTHETIC_EVIDENCE_CONTRACT.md");
+        string fourPointExtremeBoxContractPath = Path.Combine(root, "docs", "FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md");
+        string fourPointExtremeBoxImplementationPath = Path.Combine(root, "docs", "FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md");
+        string datasetHealthClassFilterPath = Path.Combine(root, "docs", "DATASET_HEALTH_CLASS_FILTER_20260729.md");
+        string currentWorktreeIntegrationPath = Path.Combine(root, "docs", "CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md");
         string releaseNotesPath = Path.Combine(root, "RELEASE_NOTES.md");
         string ciWorkflowPath = Path.Combine(root, ".github", "workflows", "ci.yml");
         string tutorialReadmePath = Path.Combine(root, "docs", "tutorial", "README.md");
+        string mobileSamGuidePath = Path.Combine(root, "docs", "MOBILE_SAM_SMART_MASK.md");
         string tutorialHtmlPath = Path.Combine(root, "docs", "tutorial", "labeling-workbench-tutorial.html");
         string tutorialStandaloneHtmlPath = Path.Combine(root, "docs", "tutorial", "labeling-workbench-tutorial-standalone.html");
 
@@ -23373,9 +23676,14 @@ internal static partial class Program
         AssertTrue(File.Exists(anomalyWorkflowPath), "anomaly detection flow document should exist");
         AssertTrue(File.Exists(completenessAuditPath), "product completeness audit document should exist");
         AssertTrue(File.Exists(syntheticEvidenceContractPath), "synthetic-first evidence contract should exist");
+        AssertTrue(File.Exists(fourPointExtremeBoxContractPath), "four-point extreme-box product contract should exist");
+        AssertTrue(File.Exists(fourPointExtremeBoxImplementationPath), "four-point extreme-box implementation record should exist");
+        AssertTrue(File.Exists(datasetHealthClassFilterPath), "Dataset Health class-filter completion record should exist");
+        AssertTrue(File.Exists(currentWorktreeIntegrationPath), "current-worktree integration completion record should exist");
         AssertTrue(File.Exists(releaseNotesPath), "release notes document should exist");
         AssertTrue(File.Exists(ciWorkflowPath), "CI workflow should exist");
         AssertTrue(File.Exists(tutorialReadmePath), "tutorial README should exist");
+        AssertTrue(File.Exists(mobileSamGuidePath), "MobileSAM operator guide should exist");
         AssertTrue(File.Exists(tutorialHtmlPath), "tutorial HTML guide should exist");
         AssertTrue(File.Exists(tutorialStandaloneHtmlPath), "standalone tutorial HTML guide should exist");
 
@@ -23392,9 +23700,14 @@ internal static partial class Program
         string anomalyWorkflow = File.ReadAllText(anomalyWorkflowPath, Encoding.UTF8);
         string completenessAudit = File.ReadAllText(completenessAuditPath, Encoding.UTF8);
         string syntheticEvidenceContract = File.ReadAllText(syntheticEvidenceContractPath, Encoding.UTF8);
+        string fourPointExtremeBoxContract = File.ReadAllText(fourPointExtremeBoxContractPath, Encoding.UTF8);
+        string fourPointExtremeBoxImplementation = File.ReadAllText(fourPointExtremeBoxImplementationPath, Encoding.UTF8);
+        string datasetHealthClassFilter = File.ReadAllText(datasetHealthClassFilterPath, Encoding.UTF8);
+        string currentWorktreeIntegration = File.ReadAllText(currentWorktreeIntegrationPath, Encoding.UTF8);
         string releaseNotes = File.ReadAllText(releaseNotesPath, Encoding.UTF8);
         string ciWorkflow = File.ReadAllText(ciWorkflowPath, Encoding.UTF8);
         string tutorialReadme = File.ReadAllText(tutorialReadmePath, Encoding.UTF8);
+        string mobileSamGuide = File.ReadAllText(mobileSamGuidePath, Encoding.UTF8);
         string tutorialHtml = File.ReadAllText(tutorialHtmlPath, Encoding.UTF8);
         string tutorialStandaloneHtml = File.ReadAllText(tutorialStandaloneHtmlPath, Encoding.UTF8);
 
@@ -23474,11 +23787,64 @@ internal static partial class Program
         AssertTrue(syntheticEvidenceContract.Contains("Field validation: Deferred", StringComparison.Ordinal), "synthetic evidence contract should keep field validation separate from feature completion");
         AssertTrue(syntheticEvidenceContract.Contains("Production accuracy is not claimed", StringComparison.Ordinal), "synthetic evidence contract should forbid production-accuracy claims");
         AssertTrue(syntheticEvidenceContract.Contains("comparisonKind=engine-benchmark", StringComparison.Ordinal), "synthetic evidence contract should keep cross-engine decisions non-adopting");
+        AssertTrue(
+            fourPointExtremeBoxContract.Contains("alternative input method for the existing axis-aligned", StringComparison.Ordinal)
+                && fourPointExtremeBoxContract.Contains("click the object's top extreme", StringComparison.Ordinal)
+                && fourPointExtremeBoxContract.Contains("click the bottom extreme", StringComparison.Ordinal)
+                && fourPointExtremeBoxContract.Contains("click the left extreme", StringComparison.Ordinal)
+                && fourPointExtremeBoxContract.Contains("click the right extreme", StringComparison.Ordinal)
+                && fourPointExtremeBoxContract.Contains("do not create or imply a rotated rectangle", StringComparison.Ordinal),
+            "four-point contract should select one axis-aligned extreme-point meaning");
+        AssertTrue(
+            fourPointExtremeBoxContract.Contains("Label Studio import must reject or skip", StringComparison.Ordinal)
+                && fourPointExtremeBoxContract.Contains("CVAT detection import must reject or skip", StringComparison.Ordinal)
+                && fourPointExtremeBoxContract.Contains("prohibited to silently flatten", StringComparison.Ordinal),
+            "four-point contract should reject unsupported non-zero rotation instead of flattening it");
+        AssertTrue(
+            direction.Contains("FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md", StringComparison.Ordinal)
+                && direction.Contains("FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md", StringComparison.Ordinal)
+                && completenessAudit.Contains("FOUR_POINT_EXTREME_BOX_CONTRACT_20260729.md", StringComparison.Ordinal)
+                && completenessAudit.Contains("FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md", StringComparison.Ordinal)
+                && fourPointExtremeBoxImplementation.Contains("Status: Complete", StringComparison.Ordinal),
+            "current direction, completeness audit, and durable implementation record should treat four-point box input as complete");
+        AssertTrue(
+            direction.Contains("DATASET_HEALTH_CLASS_FILTER_20260729.md", StringComparison.Ordinal)
+                && completenessAudit.Contains("DATASET_HEALTH_CLASS_FILTER_20260729.md", StringComparison.Ordinal)
+                && datasetHealthClassFilter.Contains("Status: Complete", StringComparison.Ordinal)
+                && datasetHealthClassFilter.Contains("Class, split, and `문제만` compose", StringComparison.Ordinal)
+                && datasetHealthClassFilter.Contains("leave every dataset file byte-identical", StringComparison.Ordinal),
+            "current direction, completeness audit, and durable record should preserve the completed read-only Dataset Health class filter");
+        AssertTrue(
+            currentWorktreeIntegration.Contains("Status: Complete", StringComparison.Ordinal)
+                && currentWorktreeIntegration.Contains("258 / 258", StringComparison.Ordinal)
+                && currentWorktreeIntegration.Contains("never-loaded shell", StringComparison.OrdinalIgnoreCase)
+                && currentWorktreeIntegration.Contains("100,000-row object-review edit", StringComparison.Ordinal),
+            "integration record should preserve the complete default-suite and regression-fix evidence");
         AssertTrue(anomalyWorkflow.Contains("--wpf-anomaly-queue-focus", StringComparison.Ordinal)
             && anomalyWorkflow.Contains("--anomaly-classification-training-workflow", StringComparison.Ordinal)
             && anomalyWorkflow.Contains("--wpf-yolov8-anomaly-classification-runtime-smoke", StringComparison.Ordinal),
             "anomaly criteria should preserve the current review, classification-training, and runtime gates");
         AssertTrue(tutorialReadme.Contains("캔버스 왼쪽 도구 레일에서 `박스`", StringComparison.Ordinal), "tutorial README should point box labeling to the fixed canvas tool rail");
+        AssertTrue(
+            readme.Contains("Recipe를 다시", StringComparison.Ordinal)
+                && readme.Contains("자동 윤곽", StringComparison.Ordinal)
+                && readme.Contains("이전 후보 보기", StringComparison.Ordinal)
+                && readme.Contains("후보 생성과", StringComparison.Ordinal),
+            "README should explain the current Recipe-scoped automatic-contour, restore, and no-save-before-confirm flow");
+        AssertTrue(
+            tutorialReadme.Contains("`라벨링 옵션`", StringComparison.Ordinal)
+                && tutorialReadme.Contains("`자동 윤곽`", StringComparison.Ordinal)
+                && tutorialReadme.Contains("`후보 다시 생성`", StringComparison.Ordinal)
+                && tutorialReadme.Contains("`이전 후보 보기`", StringComparison.Ordinal)
+                && tutorialReadme.Contains("`현재 후보 보기`", StringComparison.Ordinal)
+                && tutorialReadme.Contains("`확정`은 현재 표시 중인 후보", StringComparison.Ordinal),
+            "tutorial README should preserve the automatic-contour correction, comparison, and explicit-confirm save contract");
+        AssertTrue(
+            mobileSamGuide.Contains("사각형을 완성하면", StringComparison.Ordinal)
+                && mobileSamGuide.Contains("한 번에", StringComparison.Ordinal)
+                && mobileSamGuide.Contains("`이전 후보 보기`", StringComparison.Ordinal)
+                && mobileSamGuide.Contains("복원 자체는 도구 선택", StringComparison.Ordinal),
+            "MobileSAM guide should document automatic generation, one-point correction, candidate restore, and side-effect-free option restore");
         AssertTrue(tutorialHtml.Contains("캔버스 왼쪽 도구 레일에서 <strong>박스</strong>", StringComparison.Ordinal), "tutorial HTML should point box labeling to the fixed canvas tool rail");
         AssertTrue(tutorialStandaloneHtml.Contains("캔버스 왼쪽 도구 레일에서 <strong>박스</strong>", StringComparison.Ordinal), "standalone tutorial should match the fixed canvas tool rail instruction");
 
@@ -27100,6 +27466,9 @@ internal static partial class Program
         XElement recipeClassListHeader = xaml.Descendants()
             .FirstOrDefault(element => element.Name.LocalName == "TextBlock"
                 && string.Equals((string)element.Attribute(xName), "RecipeClassListHeader", StringComparison.Ordinal));
+        XElement classIndexContractText = xaml.Descendants()
+            .FirstOrDefault(element => element.Name.LocalName == "TextBlock"
+                && string.Equals((string)element.Attribute(xName), "ClassIndexContractText", StringComparison.Ordinal));
         AssertTrue(guidePanel != null, "WPF class catalog should show a purpose guide before editing controls");
         AssertTrue(guideTitleText != null, "WPF class catalog guide title was not found");
         AssertNamedXamlBinding(xaml, xName, "ClassCatalogGuideTitleText", "Text", "ClassCatalogGuideTitleText");
@@ -27144,6 +27513,9 @@ internal static partial class Program
         AssertTrue(recipeClassListHeader != null, "WPF recipe class-list header was not found in class catalog XAML");
         AssertNamedXamlBinding(xaml, xName, "RecipeClassListHeader", "Text", "RecipeClassListTitleText");
         AssertNamedXamlBinding(xaml, xName, "RecipeClassListHeader", "ToolTip", "RecipeClassListGuideText");
+        AssertTrue(classIndexContractText != null, "WPF class catalog should show the canonical-index contract beside the class list");
+        AssertNamedXamlBinding(xaml, xName, "ClassIndexContractText", "Text", "ClassIndexContractText");
+        AssertNamedXamlBinding(xaml, xName, "ClassIndexContractText", "ToolTip", "RecipeClassListGuideText");
         AssertTrue(classListBox != null, "WPF class list was not found in class catalog XAML");
         AssertTrue(classListBox.Attribute("SelectionChanged") == null, "WPF class list should route selection through a behavior command");
         AssertNamedXamlAttachedBinding(xaml, xName, "ClassListBox", "SelectedItemChangedCommand", "ClassSelectionChangedCommand");
@@ -27155,6 +27527,7 @@ internal static partial class Program
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
         string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
         string classViewModelSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "ViewModels", "Labeling", "WpfClassCatalogPanelViewModel.cs"));
+        string classCatalogShellSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.ClassCatalog.cs"));
         AssertTrue(shellSource.Contains("ClassCatalogViewModel?.SetClasses", StringComparison.Ordinal)
             || shellSource.Contains("ClassCatalogViewModel.SetClasses", StringComparison.Ordinal),
             "WPF class catalog should populate the view model collection");
@@ -27170,6 +27543,9 @@ internal static partial class Program
         AssertTrue(classViewModelSource.Contains("CurrentDrawingClassDetailText", StringComparison.Ordinal), "class catalog ViewModel should own the current drawing class guidance");
         AssertTrue(classViewModelSource.Contains("ClassColorSectionTitleText", StringComparison.Ordinal), "class catalog ViewModel should label color controls as a secondary panel");
         AssertTrue(classViewModelSource.Contains("RecipeClassListGuideText", StringComparison.Ordinal), "class catalog ViewModel should explain that classes belong to the recipe");
+        AssertTrue(classViewModelSource.Contains("ClassIndexContractText", StringComparison.Ordinal), "class catalog ViewModel should own the canonical-index contract wording");
+        AssertTrue(!classViewModelSource.Contains(".OrderBy(item => item.Text", StringComparison.Ordinal), "class catalog ViewModel should preserve canonical recipe order instead of sorting names");
+        AssertTrue(!classCatalogShellSource.Contains(".OrderBy(item => item.Text", StringComparison.Ordinal), "class catalog shell adapter should preserve canonical recipe order before binding");
         var classCatalogViewModel = new WpfClassCatalogPanelViewModel();
         AssertTrue(classCatalogViewModel.ClassCatalogGuideDetailText.Contains("\uB370\uC774\uD130\uC14B \uD648", StringComparison.Ordinal), "class catalog guide should route storage-folder decisions to the dataset home");
         AssertTrue(classCatalogViewModel.ClassCatalogSummaryText.Contains("0", StringComparison.Ordinal), "class catalog summary should show zero classes before setup");
@@ -27177,12 +27553,16 @@ internal static partial class Program
         AssertTrue(classCatalogViewModel.ClassCatalogActionText.Contains("OK", StringComparison.Ordinal), "class catalog empty action should tell the operator to add OK/NG style classes");
         classCatalogViewModel.SetClasses(new[]
         {
-            new CClassItem { Text = "OK", DrawColor = System.Drawing.Color.LimeGreen },
-            new CClassItem { Text = "NG", DrawColor = System.Drawing.Color.Red }
-        }, "NG");
-        AssertTrue(classCatalogViewModel.ClassCatalogSummaryText.Contains("2", StringComparison.Ordinal), "class catalog summary should update after classes are loaded");
-        AssertTrue(classCatalogViewModel.ClassCatalogSummaryText.Contains("NG", StringComparison.Ordinal), "class catalog summary should show selected class");
-        AssertTrue(classCatalogViewModel.CurrentDrawingClassDetailText.Contains("NG", StringComparison.Ordinal), "class catalog current drawing class guidance should show selected class");
+            new CClassItem { Text = "Scratch", DrawColor = System.Drawing.Color.LimeGreen },
+            new CClassItem { Text = "OK", DrawColor = System.Drawing.Color.Red },
+            new CClassItem { Text = "Crack", DrawColor = System.Drawing.Color.Blue }
+        }, "OK");
+        AssertTrue(classCatalogViewModel.ClassCatalogSummaryText.Contains("3", StringComparison.Ordinal), "class catalog summary should update after classes are loaded");
+        AssertTrue(classCatalogViewModel.ClassCatalogSummaryText.Contains("1 \u00B7 OK", StringComparison.Ordinal), "class catalog summary should show selected class with its canonical index");
+        AssertEqual("0 \u00B7 Scratch", classCatalogViewModel.Classes[0].DisplayText);
+        AssertEqual("1 \u00B7 OK", classCatalogViewModel.Classes[1].DisplayText);
+        AssertEqual("2 \u00B7 Crack", classCatalogViewModel.Classes[2].DisplayText);
+        AssertTrue(classCatalogViewModel.CurrentDrawingClassDetailText.Contains("1 \u00B7 OK", StringComparison.Ordinal), "class catalog current drawing class guidance should show selected canonical index");
         AssertTrue(classCatalogViewModel.CurrentDrawingClassDetailText.Contains("\uC0C8 \uBC15\uC2A4", StringComparison.Ordinal), "class catalog current drawing class guidance should explain the next drawn box");
 
         if (System.Windows.Application.Current == null)
