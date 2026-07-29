@@ -362,6 +362,20 @@ namespace MvcVisionSystem
             RefreshAttachedCommandBindings(LabelingWorkbenchStageButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
             RefreshAttachedCommandBindings(InferenceReviewStageButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
             RefreshAttachedCommandBindings(TrainingModelStageButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowDockToggleButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowDatasetHomeButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowSavedLabelsButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowGuideToolsButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowClassCatalogButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowInferenceCandidatesButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowInferenceInspectButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowTrainingModelButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowTrainingReviewCandidateButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowTrainingInspectButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowRailOpenButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowRailSavedLabelsButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowRailGuideToolsButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(RightWorkflowRailClassCatalogButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
         }
     }
 }

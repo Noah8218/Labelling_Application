@@ -3398,3 +3398,48 @@ Latest review recheck: `--wpf-image-queue-10k-responsive` returned in `16.1ms`; 
 
 2026-07-28 Recipe-scoped automatic-contour and canvas layout auto-fit contract: `Complete` in the current uncommitted worktree; field validation is `Not evaluated`. Segmentation exposes `라벨링 옵션 · 자동 윤곽`; the operator selects it once, a newly completed Rectangle immediately starts the existing MobileSAM candidate path, inference/review locks additional teaching, and explicit confirm/skip returns directly to the next Rectangle while keeping the mode enabled. `LabelingProjectSettings.SmartMaskAutoContourEnabled` persists the visible/editable preference at Recipe scope; restore is side-effect free and a new Recipe defaults to regular box mode. The manual Smart Mask start button is hidden before a session and remains only as `후보 다시 생성` during correction. `MainCanvasView.SizeChanged` schedules a version-coalesced `ZoomToFit` at `ContextIdle`, so app-created panel/toolbar/viewport size changes no longer require a Fit click; user zoom/pan alone does not fire the size-change path. The actual current Debug EXE used no Fit action and completed option selection -> automatic layout centering -> rough box -> automatic candidate -> positive/negative rerun -> previous restore -> explicit confirm -> save -> reopen on `kos14/Part7`. Covered by zero-warning/error isolated/app builds, Recipe XML save/load/default checks, `--mobile-sam-box-prompt`, `--smart-mask-candidate-compare-restore`, `--smart-mask-auto-boundary-presentation`, `--wpf-labeling-shell`, actual-EXE `--verify-auto-contour-mode --verify-candidate-restore`, 1920x1080 before/after review, and `git diff --check`. Evidence: `docs/SMART_CONTOUR_AUTO_MODE_AND_LAYOUT_FIT_20260728.md`, `artifacts/ui/smart-contour-auto-mode-20260728`, and `artifacts/operator-video/20260728-smart-contour-auto-fit`. The saved mask IoU remains `0.3927`; this closes interaction/persistence safety, not field accuracy, and it does not authorize automatic approval/save or public-GIF replacement.
 2026-07-29 four-point extreme-box implementation contract: `Complete`; field validation is `Not evaluated`. The Rectangle tool exposes a Recipe-scoped `2점 드래그` default and `4점 극점` alternative. Four-point input accepts top, bottom, left, and right extremes, shows display-only guides/progress, supports Backspace and right-click/Esc cancellation, cancels on tool/image/Recipe/purpose/class/method changes, and creates no object/history until the fourth valid point. Point four hands one ordinary axis-aligned Rectangle through `RoiImageCanvasViewModel.AddCompletedImageRectangle` and the existing `RoiAdded` path, producing one Undo/Redo step and reaching automatic Smart Mask at most once. Existing completed-object edit/save/reopen behavior remains authoritative. Label Studio detection import skips non-zero image or rectangle rotation; CVAT detection import skips non-zero box rotation; existing skipped-record preflight blocks Apply. No free-quadrilateral/rotated geometry or high-frequency Viewer/OpenGL/ROI drag/resize/brush/eraser change was introduced. Covered by the zero-warning/error isolated build, `--four-point-extreme-box`, `--label-studio-detection-import`, `--cvat-detection-import`, and current-build 1920x1080/1366x768 captures under `artifacts/four-point-extreme-box-20260729`. Evidence: `docs/FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md`.
+
+2026-07-29 right-workflow injected-command binding contract: `Complete`. After shell command injection, the expanded/collapsed work-panel toggle, dataset/labeling/inference/training shortcuts, and collapsed rail saved-label/guide/class shortcuts refresh their attached command bindings together with the four stage buttons. A current Debug EXE actual-user replay opened the collapsed labeling work panel, entered Saved Labels, created and explicitly saved a two-box group, moved to another image, reopened the source image, and restored both `그룹 1` memberships. A separate stage replay clicked all four stages and seven enabled visible shortcuts with zero invoke fallback. Preserve the injected ViewModel command identity and do not move workflow state into code-behind. Covered by the zero-warning/error builds, `--wpf-labeling-shell`, `--exe-top-subnavigation-smoke`, and `--exe-dataset-wizard-smoke --verify-object-group`. Evidence: `docs/ACTUAL_EXE_USER_FUNCTION_AUDIT_20260729.md` and `artifacts/user-audit/20260729`.
+
+## Manual-client diagnostic fallback wait (2026-07-29)
+
+Status: Complete
+
+- `RunInteractiveDetectionAsync` passes its explicit smoke-fallback contract to
+  the interactive worker-connect timeout helper.
+- Normal current-image inference, batch inference, model restart, and training
+  keep the existing 120-300 second model preload window.
+- Only `allowSmokeFallback=true` with `AutoStartClient=false` uses the configured
+  detection timeout clamped to 1-30 seconds before direct diagnostic fallback.
+- Latest actual EXE evidence produced one candidate, focused it, and selected
+  the overlapping object row in `9693.9ms` for the diagnostic segment.
+- Focused verification: `--wpf-single-detection-path` and
+  `--wpf-labeling-shell` pass; solution/test builds report 0 warnings and 0
+  errors.
+
+Boundary: this is diagnostic wait behavior, not a model-accuracy, worker startup,
+or production-runtime performance claim.
+
+## Actual-EXE auxiliary workflow verification (2026-07-30)
+
+Status: Complete
+
+- Purpose switching preserves the segmentation labels, hides them in object
+  detection, rejects a box fully outside the fitted image, accepts an inside
+  box, and restores the segmentation display after switching back.
+- Candidate focus applies the Recipe, explicitly opens it through the dataset
+  selector, loads the dedicated image, creates the overlapping guide box, runs
+  the diagnostic candidate, focuses the current label, and selects its Object
+  Review row.
+- Template batch explicitly opens its Recipe through the dataset selector and
+  selects the Part class before drawing. It saves one parseable target box,
+  preserves an existing label, skips the active source, and reaches a visible
+  completed state.
+- Foreground `CopyFromScreen` captures preserve the composed WPF/D3D viewer;
+  `PrintWindow` remains only the non-foreground fallback.
+- Evidence: `docs/ACTUAL_EXE_USER_FUNCTION_AUDIT_20260729.md` and
+  `artifacts/user-audit/20260730/feature-matrix`.
+
+Boundary: these deterministic local flows prove workflow, state, and persistence
+safety. They do not prove field-model accuracy, GPU throughput, or production
+deployment readiness.

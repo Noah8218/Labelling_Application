@@ -43,7 +43,7 @@ namespace MvcVisionSystem
                         targetImagePath,
                         applyToCanvas: true,
                         CancellationToken.None,
-                        GetInteractiveWorkerConnectTimeoutMilliseconds())
+                        GetInteractiveWorkerConnectTimeoutMilliseconds(allowSmokeFallback))
                     .ConfigureAwait(true);
                 if (!result.Succeeded && allowSmokeFallback)
                 {

@@ -19250,3 +19250,67 @@ Boundary / next dependency:
 - each product change requires its own focused tests, actual current Debug EXE
   evidence when UI/workflow behavior changes, documentation update, and
   durable completion record.
+
+## 2026-07-29 Actual EXE user-function audit
+
+Status: `Complete`
+
+Scope:
+
+- operate the current Debug EXE as a user across dataset creation, stage
+  navigation, box/ROI/mask labeling, Smart Mask correction, object grouping,
+  save, image navigation, reopen, candidate focus, template batch, and
+  model-center entry;
+- record current videos/screenshots and compare observable state with persisted
+  files;
+- repair the reproduced collapsed/expanded right-workflow command-binding gap;
+- shorten only the manual-client diagnostic fallback wait while preserving the
+  normal inference, batch, and training worker-start contract.
+
+Acceptance criteria:
+
+- current Debug EXE build and identity -> Pass;
+- core labeling, Smart Mask, and same-image group video/photo evidence -> Pass;
+- stage 1-4 and visible subnavigation using real clicks without invoke fallback
+  -> Pass;
+- collapsed work-panel open and shortcuts after injected ViewModel setup ->
+  Pass after binding refresh and focused structure coverage;
+- candidate focus -> Pass: Recipe apply followed by the explicit dataset
+  selector/open path, dedicated sample, center box, runtime test, one candidate,
+  focus, and overlapping object-row selection; diagnostic path `9693.9ms`;
+- template batch -> Pass: explicit dataset selection and Part-class selection,
+  source ROI, target save, one parsed Part box, existing-label preservation,
+  active-source skip, and visible completion; batch save `594.5ms`;
+- purpose switching -> Pass: segmentation label hide/restore, outside-image box
+  rejection, and inside-image box creation in the current EXE;
+- user-reviewable purpose/candidate/template final screenshots -> Pass:
+  1920x1080 CopyFromScreen-first captures contain the complete WPF/D3D composed
+  content without the former gray omission.
+
+Verification:
+
+- zero-warning/error solution and focused test builds;
+- `--wpf-labeling-shell`, `--wpf-single-detection-path`,
+  `--object-group-review`, and `--priority-workflow-docs`: pass;
+- default internal suite: `260/260` pass with zero failure markers and empty
+  stderr under the extended-timeout replay;
+- actual EXE dataset wizard/group save-reopen, top/subnavigation, ROI,
+  brush/eraser, class-index, dataset-version, candidate focus, and template
+  batch runs: pass;
+- actual EXE popup-HWND sample loading and foreground-owner rejection with
+  offending PID, process name, and executable path: pass;
+- candidate/template runners now clean their exact per-run GUID Recipe/DATA
+  roots on success and failure.
+
+Evidence:
+
+- `docs\ACTUAL_EXE_USER_FUNCTION_AUDIT_20260729.md`;
+- `artifacts\user-audit\20260729`;
+- `artifacts\user-audit\20260730\feature-matrix`.
+
+Boundary / next dependency:
+
+- existing historical `codex_*` audit folders were not deleted because their
+  ownership is ambiguous;
+- real field model quality still requires operator-selected train/valid/test
+  data, runtime/weights, and GPU.

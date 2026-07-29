@@ -28,8 +28,15 @@ namespace MvcVisionSystem
             return startupTimeoutSeconds * 1000;
         }
 
-        private int GetInteractiveWorkerConnectTimeoutMilliseconds()
+        private int GetInteractiveWorkerConnectTimeoutMilliseconds(bool allowSmokeFallback)
         {
+            bool autoStartClient = global.Data?.ProjectSettings?.PythonModel?.AutoStartClient != false;
+            if (allowSmokeFallback && !autoStartClient)
+            {
+                int detectionTimeoutSeconds = global.Data?.ProjectSettings?.PythonModel?.DetectionTimeoutSeconds ?? 30;
+                return Math.Clamp(detectionTimeoutSeconds, 1, 30) * 1000;
+            }
+
             return GetWorkerConnectTimeoutMilliseconds();
         }
 

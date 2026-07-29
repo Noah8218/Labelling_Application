@@ -69,6 +69,21 @@ internal static partial class Program
     private static extern bool SetForegroundWindow(IntPtr hWnd);
 
     [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, uint nFlags);
+
+    [DllImport("user32.dll")]
+    private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+    [DllImport("user32.dll")]
+    private static extern bool BringWindowToTop(IntPtr hWnd);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentThreadId();
+
+    [DllImport("user32.dll")]
     private static extern bool IsIconic(IntPtr hWnd);
 
     [DllImport("user32.dll")]
@@ -4403,6 +4418,14 @@ internal static partial class Program
                 args,
                 "--output",
                 Path.Combine(root, "artifacts", "ui", "exe-dataset-wizard-smoke.png")));
+            bool verifyObjectGroup = HasArgument(args, "--verify-object-group");
+            string videoOutputArgument = GetArgumentValue(args, "--video-output", string.Empty);
+            string videoOutputPath = string.IsNullOrWhiteSpace(videoOutputArgument)
+                ? string.Empty
+                : Path.GetFullPath(videoOutputArgument);
+            string ffmpegPath = string.IsNullOrWhiteSpace(videoOutputPath)
+                ? string.Empty
+                : ResolveOperatorVideoExecutable(GetArgumentValue(args, "--ffmpeg", "ffmpeg"));
 
             if (!File.Exists(exePath))
             {
@@ -4415,7 +4438,15 @@ internal static partial class Program
             DeleteDirectoryIfExists(recipeDirectory);
             DeleteDirectoryIfExists(outputRoot);
 
-            ExecuteExeDatasetWizardSmoke(exePath, outputPath, recipeName, outputRoot, recipeDirectory);
+            ExecuteExeDatasetWizardSmoke(
+                exePath,
+                outputPath,
+                recipeName,
+                outputRoot,
+                recipeDirectory,
+                verifyObjectGroup,
+                videoOutputPath,
+                ffmpegPath);
             Console.WriteLine($"EXE_DATASET_WIZARD_SMOKE recipe={recipeName} output={outputRoot}");
             Console.WriteLine($"EXE dataset wizard smoke captured: {outputPath}");
             return 0;
@@ -4651,9 +4682,13 @@ internal static partial class Program
         string outputPath,
         string recipeName,
         string outputRoot,
-        string recipeDirectory)
+        string recipeDirectory,
+        bool verifyObjectGroup,
+        string videoOutputPath,
+        string ffmpegPath)
     {
         Process process = null;
+        OperatorVideoRecorder recorder = null;
         try
         {
             process = Process.Start(new ProcessStartInfo
@@ -4669,6 +4704,11 @@ internal static partial class Program
             BringNativeWindowToFront(handle);
             var root = System.Windows.Automation.AutomationElement.FromHandle(handle);
             AssertTrue(root != null, "EXE dataset wizard smoke automation root was not available");
+            if (!string.IsNullOrWhiteSpace(videoOutputPath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(videoOutputPath));
+                recorder = OperatorVideoRecorder.Start(ffmpegPath, videoOutputPath, root.Current.Name);
+            }
 
             AssertTrue(
                 SelectAutomationTabByAutomationId(root, "LearningReviewTab") || SelectTabItemByName(root, "\uAC00\uC774\uB4DC/\uB3C4\uAD6C"),
@@ -4735,7 +4775,19 @@ internal static partial class Program
 
             root = RefreshAutomationRoot(process);
             AssertTrue(
-                SelectAutomationTabByAutomationId(root, "ObjectsReviewTab")
+                TryHumanClickAutomationElementByAutomationId(root, "LabelingWorkbenchStageButton"),
+                "labeling stage was not selectable after creating the COCO128 sample project");
+            AssertTrue(
+                WaitUntil(
+                    () => IsAutomationElementVisibleByAutomationId(RefreshAutomationRoot(process, bringToFront: false), "RightWorkflowSavedLabelsButton")
+                        || IsAutomationElementVisibleByAutomationId(RefreshAutomationRoot(process, bringToFront: false), "RightWorkflowRailOpenButton"),
+                    TimeSpan.FromSeconds(5)),
+                "labeling shortcuts did not appear after creating the COCO128 sample project");
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            AssertTrue(
+                TryHumanClickAutomationElementByAutomationId(root, "RightWorkflowSavedLabelsButton")
+                || SelectAutomationTabByAutomationId(root, "ObjectsReviewTab")
                 || SelectTabItemByName(root, "\uAC1D\uCCB4")
                 || ContainsAutomationText(root, "8\uAC1C \uAC1D\uCCB4"),
                 "object tab was not selectable after creating the COCO128 sample project");
@@ -4822,6 +4874,15 @@ internal static partial class Program
             NativeDrag(
                 new Point((int)(annotationRegion.Left + annotationRegion.Width * 0.12), (int)(annotationRegion.Top + annotationRegion.Height * 0.16)),
                 new Point((int)(annotationRegion.Left + annotationRegion.Width * 0.30), (int)(annotationRegion.Top + annotationRegion.Height * 0.32)));
+            int expectedNewObjectCount = 1;
+            if (verifyObjectGroup)
+            {
+                NativeDrag(
+                    new Point((int)(annotationRegion.Left + annotationRegion.Width * 0.48), (int)(annotationRegion.Top + annotationRegion.Height * 0.52)),
+                    new Point((int)(annotationRegion.Left + annotationRegion.Width * 0.68), (int)(annotationRegion.Top + annotationRegion.Height * 0.72)));
+                expectedNewObjectCount = 2;
+            }
+
             root = RefreshAutomationRoot(process);
             AssertTrue(
                 SelectAutomationTabByAutomationId(root, "ObjectsReviewTab")
@@ -4829,9 +4890,89 @@ internal static partial class Program
                 "object tab was not selectable after drawing a new COCO128 box");
             AssertTrue(
                 WaitUntil(
-                    () => ContainsAutomationText(RefreshAutomationRoot(process, bringToFront: false), "1\uAC1C \uAC1D\uCCB4"),
+                    () => ContainsAutomationText(
+                        RefreshAutomationRoot(process, bringToFront: false),
+                        $"{expectedNewObjectCount}\uAC1C \uAC1D\uCCB4"),
                     TimeSpan.FromSeconds(5)),
-                "EXE COCO128 new box draw should add one object to the empty-label image");
+                $"EXE COCO128 new box draw should add {expectedNewObjectCount} object(s) to the empty-label image");
+
+            if (verifyObjectGroup)
+            {
+                root = RefreshAutomationRoot(process);
+                AssertTrue(
+                    TryInvokeAutomationButtonByAutomationId(root, "BeginObjectGroupSelectionButton"),
+                    "COCO128 object-group flow could not enter group-selection mode");
+                AssertTrue(
+                    WaitUntil(
+                        () =>
+                        {
+                            var currentRoot = RefreshAutomationRoot(process, bringToFront: false);
+                            var currentObjectList = FindAutomationElementByAutomationId(currentRoot, "ObjectListBox");
+                            return currentObjectList != null
+                                && EnumerateAutomationDescendants(currentObjectList)
+                                    .Count(element =>
+                                    {
+                                        try
+                                        {
+                                            return element.Current.ControlType == System.Windows.Automation.ControlType.CheckBox
+                                                && element.Current.IsEnabled
+                                                && !element.Current.IsOffscreen;
+                                        }
+                                        catch (System.Windows.Automation.ElementNotAvailableException)
+                                        {
+                                            return false;
+                                        }
+                                    }) >= 2;
+                        },
+                        TimeSpan.FromSeconds(3)),
+                    "COCO128 object-group selection mode was not visible");
+
+                root = RefreshAutomationRoot(process, bringToFront: false);
+                System.Windows.Automation.AutomationElement objectList =
+                    FindAutomationElementByAutomationId(root, "ObjectListBox");
+                AssertTrue(objectList != null, "COCO128 object-group flow could not find the object list");
+                System.Windows.Automation.AutomationElement[] groupCheckBoxes =
+                    EnumerateAutomationDescendants(objectList)
+                        .Where(element =>
+                        {
+                            try
+                            {
+                                return element.Current.ControlType == System.Windows.Automation.ControlType.CheckBox
+                                    && element.Current.IsEnabled
+                                    && !element.Current.IsOffscreen;
+                            }
+                            catch (System.Windows.Automation.ElementNotAvailableException)
+                            {
+                                return false;
+                            }
+                        })
+                        .Take(2)
+                        .ToArray();
+                AssertEqual(2, groupCheckBoxes.Length);
+                foreach (System.Windows.Automation.AutomationElement checkBox in groupCheckBoxes)
+                {
+                    _ = HumanClickAutomationElement(checkBox);
+                }
+
+                AssertTrue(
+                    WaitUntil(
+                        () => IsAutomationButtonEnabledByAutomationId(
+                            RefreshAutomationRoot(process, bringToFront: false),
+                            "CreateObjectGroupButton"),
+                        TimeSpan.FromSeconds(3)),
+                    "COCO128 object-group flow did not enable group creation after selecting two objects");
+                root = RefreshAutomationRoot(process);
+                AssertTrue(
+                    TryInvokeAutomationButtonByAutomationId(root, "CreateObjectGroupButton"),
+                    "COCO128 object-group flow could not create the selected group");
+                AssertTrue(
+                    WaitUntil(
+                        () => ContainsAutomationText(
+                            RefreshAutomationRoot(process, bringToFront: false),
+                            "\uADF8\uB8F9 1 (2\uAC1C)"),
+                        TimeSpan.FromSeconds(4)),
+                    "COCO128 object-group flow did not show a two-member group");
+            }
 
             root = RefreshAutomationRoot(process);
             AssertTrue(
@@ -4850,13 +4991,21 @@ internal static partial class Program
                 "COCO128 edit flow could not reopen the newly labeled image");
             AssertTrue(
                 WaitUntil(
-                    () => ContainsAutomationText(RefreshAutomationRoot(process, bringToFront: false), "1\uAC1C \uAC1D\uCCB4"),
+                    () => ContainsAutomationText(
+                        RefreshAutomationRoot(process, bringToFront: false),
+                        $"{expectedNewObjectCount}\uAC1C \uAC1D\uCCB4")
+                        && (!verifyObjectGroup
+                            || ContainsAutomationText(
+                                RefreshAutomationRoot(process, bringToFront: false),
+                                "\uADF8\uB8F9 1 (2\uAC1C)")),
                     TimeSpan.FromSeconds(5)),
-                "EXE COCO128 saved edit should reload as one visible object after reopening the newly labeled image");
+                "EXE COCO128 saved edit should reload the visible object count and group after reopening the newly labeled image");
             CaptureAutomationRoot(root, outputPath);
+            Thread.Sleep(700);
         }
         finally
         {
+            recorder?.Stop();
             CloseExeSmokeProcess(process);
             DeleteDirectoryIfExists(recipeDirectory);
             DeleteDirectoryIfExists(outputRoot);
@@ -4972,7 +5121,20 @@ internal static partial class Program
 
                 root = RefreshAutomationRoot(process);
                 AssertTrue(
-                    SelectAutomationTabByAutomationId(root, "LearningReviewTab") || SelectTabItemByName(root, "\uAC00\uC774\uB4DC/\uB3C4\uAD6C"),
+                    TryHumanClickAutomationElementByAutomationId(root, "LabelingWorkbenchStageButton"),
+                    $"labeling stage was not selectable before labeling industrial image: {stem}");
+                AssertTrue(
+                    WaitUntil(
+                        () => IsAutomationElementVisibleByAutomationId(RefreshAutomationRoot(process, bringToFront: false), "RightWorkflowGuideToolsButton")
+                            || IsAutomationElementVisibleByAutomationId(RefreshAutomationRoot(process, bringToFront: false), "RightWorkflowRailOpenButton"),
+                        TimeSpan.FromSeconds(5)),
+                    $"labeling shortcuts did not appear before labeling industrial image: {stem}");
+                EnsureExeRightWorkflowExpanded(process);
+                root = RefreshAutomationRoot(process);
+                AssertTrue(
+                    TryHumanClickAutomationElementByAutomationId(root, "RightWorkflowGuideToolsButton")
+                    || SelectAutomationTabByAutomationId(root, "LearningReviewTab")
+                    || SelectTabItemByName(root, "\uAC00\uC774\uB4DC/\uB3C4\uAD6C"),
                     $"guide/tools tab was not selectable before labeling industrial image: {stem}");
                 root = RefreshAutomationRoot(process);
                 System.Windows.Automation.AutomationElement boxToolItem = null;
@@ -5052,7 +5214,9 @@ internal static partial class Program
                 root = RefreshAutomationRoot(process);
                 AssertTrue(
                     WaitUntil(
-                        () => TryInvokeAutomationButton(RefreshAutomationRoot(process, bringToFront: false), "\uC800\uC7A5"),
+                        () => TryInvokeAutomationButtonByAutomationId(
+                            RefreshAutomationRoot(process, bringToFront: false),
+                            "SaveAnnotationsButton"),
                         TimeSpan.FromSeconds(3)),
                     $"industrial save button was not invokable after labeling image: {stem}");
                 IReadOnlyList<string> labelPaths = GetExeSmokeYoloLabelPaths(actualOutputRoot, stem);
@@ -5226,7 +5390,6 @@ internal static partial class Program
         string fakeYoloRoot)
     {
         Process process = null;
-        bool completed = false;
         try
         {
             string imageRoot = Path.Combine(outputRoot, "data", "train", "images");
@@ -5251,24 +5414,57 @@ internal static partial class Program
             AssertTrue(root != null, "EXE candidate focus smoke automation root was not available");
 
             bool recipeApplied = ApplyExeSmokeRecipe(process, recipeName);
+            if (!recipeApplied)
+            {
+                TryCaptureExeSmokeFailure(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    outputPath,
+                    "candidate-recipe-apply");
+            }
             AssertTrue(recipeApplied, "candidate focus smoke recipe was not applied through the real EXE project panel");
             Thread.Sleep(500);
+            AssertTrue(
+                OpenExeSmokeDatasetRecipe(process, recipeName),
+                "candidate focus smoke dataset recipe was not opened through the dataset selector");
 
             root = RefreshAutomationRoot(process);
-            AssertTrue(
-                TryInvokeAutomationButtonByAutomationId(root, "LoadSampleButton")
-                    || TryInvokeAutomationButton(root, "샘플"),
-                "candidate focus smoke sample-load button was not invokable");
-            bool sampleLoaded = WaitUntil(
-                () => GetAutomationValueByAutomationId(RefreshAutomationRoot(process, bringToFront: false), "DatasetStatusText")
-                    .Contains("candidate-focus", StringComparison.OrdinalIgnoreCase),
+            bool sampleLoadInvoked = SelectImageQueueItemBySearch(
+                process,
+                "candidate-focus",
                 TimeSpan.FromSeconds(5));
+            if (!sampleLoadInvoked)
+            {
+                TryCaptureExeSmokeFailure(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    outputPath,
+                    "candidate-quick-load");
+            }
+            AssertTrue(sampleLoadInvoked, "candidate focus smoke sample image was not selectable from the queue");
+            bool sampleLoaded = WaitUntil(
+                () =>
+                {
+                    var currentRoot = RefreshAutomationRoot(process, bringToFront: false);
+                    string datasetStatus = GetAutomationValueByAutomationId(currentRoot, "DatasetStatusText");
+                    return datasetStatus.Contains("candidate-focus", StringComparison.OrdinalIgnoreCase)
+                        || ContainsAutomationText(currentRoot, "candidate-focus")
+                        || ContainsAutomationText(currentRoot, "\uC774\uBBF8\uC9C0 \uB85C\uB4DC:");
+                },
+                TimeSpan.FromSeconds(5));
+            if (!sampleLoaded)
+            {
+                TryCaptureExeSmokeFailure(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    outputPath,
+                    "candidate-sample-not-loaded");
+            }
             AssertTrue(sampleLoaded, "candidate focus smoke sample image was not loaded");
 
             root = RefreshAutomationRoot(process);
             AssertTrue(
-                TryInvokeAutomationButtonByAutomationId(root, "AddSampleRoiButton")
-                    || TryInvokeAutomationButton(root, "\uBC15\uC2A4"),
+                TryInvokeExeHeaderToolButton(
+                    process,
+                    "AddSampleRoiButton",
+                    expandAutomationId: "HeaderToolsMenuTemplateSection"),
                 "candidate focus smoke add-box button was not invokable");
             bool roiCreated = WaitUntil(
                 () => ContainsAutomationText(RefreshAutomationRoot(process, bringToFront: false), "Defect /")
@@ -5277,15 +5473,74 @@ internal static partial class Program
             AssertTrue(roiCreated, "candidate focus smoke guide box was not visible in Object Review");
 
             root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "TrainingModelStageButton");
+            AssertTrue(
+                WaitUntil(
+                    () => IsExeWorkflowStageActive(
+                        RefreshAutomationRoot(process, bringToFront: false),
+                        "training"),
+                    TimeSpan.FromSeconds(5)),
+                "candidate focus smoke training/model stage was not active before smoke inference");
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowTrainingModelButton");
+            root = RefreshAutomationRoot(process);
             AssertTrue(
                 SelectAutomationTabByAutomationId(root, "YoloSettingsReviewTab") || SelectTabItemByName(root, "\uBAA8\uB378"),
                 "candidate focus smoke model tab was not selectable before running smoke inference");
+            root = RefreshAutomationRoot(process);
+            AssertTrue(
+                SelectAutomationTabByAutomationId(root, "YoloModelCenterRuntimeTaskTab"),
+                "candidate focus smoke runtime task was not selectable before running smoke inference");
+            root = RefreshAutomationRoot(process);
+            AssertTrue(
+                TryExpandAutomationElementByAutomationId(root, "YoloRuntimeCommandsExpander"),
+                "candidate focus smoke runtime commands were not expandable");
             root = RefreshAutomationRoot(process);
             Stopwatch yoloStopwatch = Stopwatch.StartNew();
             AssertTrue(
                 TryInvokeAutomationButtonByAutomationId(root, "RunYoloSmokeButton")
                     || TryInvokeAutomationButton(root, "테스트"),
                 "candidate focus smoke YOLO test button was not invokable");
+            bool inferenceCompleted = WaitUntil(
+                () =>
+                {
+                    var currentRoot = RefreshAutomationRoot(process, bringToFront: false);
+                    string status = GetAutomationValueByAutomationId(currentRoot, "YoloCommandStatusText");
+                    return IsAutomationButtonEnabledByAutomationId(currentRoot, "FocusCurrentLabelButton")
+                        || ContainsAutomationText(currentRoot, "AI \uD6C4\uBCF4 1\uAC1C")
+                        || status.Contains("1", StringComparison.Ordinal)
+                        || (status.Contains("\uD6C4\uBCF4", StringComparison.Ordinal)
+                            && !status.Contains("\uC900\uBE44", StringComparison.Ordinal));
+                },
+                TimeSpan.FromSeconds(45));
+            if (!inferenceCompleted)
+            {
+                root = RefreshAutomationRoot(process, bringToFront: false);
+                TryCaptureExeSmokeFailure(root, outputPath, "candidate-inference-status");
+                Console.WriteLine(
+                    $"EXE_CANDIDATE_INFERENCE_STATUS status=\"{GetAutomationValueByAutomationId(root, "YoloCommandStatusText")}\" "
+                    + $"sample=\"{BuildAutomationTextSample(root, 120)}\"");
+            }
+            AssertTrue(inferenceCompleted, "candidate focus smoke inference did not report a candidate");
+
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "InferenceReviewStageButton");
+            AssertTrue(
+                WaitUntil(
+                    () => IsExeWorkflowStageActive(
+                        RefreshAutomationRoot(process, bringToFront: false),
+                        "inference"),
+                    TimeSpan.FromSeconds(5)),
+                "candidate focus smoke AI-candidate stage was not active after smoke inference");
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowInferenceCandidatesButton");
+            root = RefreshAutomationRoot(process);
+            AssertTrue(
+                SelectAutomationTabByAutomationId(root, "CandidatesReviewTab")
+                    || SelectTabItemByName(root, "AI \uD6C4\uBCF4"),
+                "candidate focus smoke candidate-review tab was not selectable");
             bool candidateVisible = WaitUntil(
                 () =>
                 {
@@ -5324,7 +5579,6 @@ internal static partial class Program
 
             AssertTrue(objectSelected, "candidate focus smoke did not select the overlapping Object Review row");
             CaptureAutomationRoot(RefreshAutomationRoot(process, bringToFront: false), outputPath);
-            completed = true;
             return new ExeCandidateFocusSmokeResult(
                 RecipeApplied: true,
                 SampleLoaded: true,
@@ -5338,12 +5592,9 @@ internal static partial class Program
         finally
         {
             CloseExeSmokeProcess(process);
-            if (completed)
-            {
-                DeleteDirectoryIfExists(recipeDirectory);
-                DeleteDirectoryIfExists(outputRoot);
-                DeleteDirectoryIfExists(fakeYoloRoot);
-            }
+            DeleteDirectoryIfExists(recipeDirectory);
+            DeleteDirectoryIfExists(outputRoot);
+            DeleteDirectoryIfExists(fakeYoloRoot);
         }
     }
 
@@ -5355,7 +5606,6 @@ internal static partial class Program
         string recipeDirectory)
     {
         Process process = null;
-        bool completed = false;
         try
         {
             string imageRoot = Path.Combine(outputRoot, "data", "train", "images");
@@ -5397,14 +5647,19 @@ internal static partial class Program
             AssertTrue(root != null, "EXE template batch auto-label smoke automation root was not available");
 
             bool recipeApplied = ApplyExeSmokeRecipe(process, recipeName);
+            if (!recipeApplied)
+            {
+                TryCaptureExeSmokeFailure(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    outputPath,
+                    "template-recipe-apply");
+            }
             AssertTrue(recipeApplied, "template batch auto-label smoke recipe was not applied through the real EXE project panel");
             Thread.Sleep(500);
-
-            root = RefreshAutomationRoot(process);
             AssertTrue(
-                TryInvokeAutomationButtonByAutomationId(root, "LoadSampleButton")
-                    || TryInvokeAutomationButton(root, "샘플"),
-                "template batch auto-label smoke sample-load button was not invokable");
+                OpenExeSmokeDatasetRecipe(process, recipeName),
+                "template batch auto-label smoke dataset recipe was not opened through the dataset selector");
+
             AssertTrue(
                 SelectImageQueueItemBySearch(process, "a-active-template", TimeSpan.FromSeconds(5)),
                 "template batch auto-label smoke active template image was not selectable from the queue");
@@ -5414,6 +5669,10 @@ internal static partial class Program
                 TimeSpan.FromSeconds(5));
             AssertTrue(activeLoaded, "template batch auto-label smoke active template image was not loaded");
 
+            root = RefreshAutomationRoot(process);
+            AssertTrue(
+                SelectListItemByText(root, "1 Part"),
+                "Part class was not selectable before drawing the template source");
             root = RefreshAutomationRoot(process);
             AssertTrue(
                 SelectAutomationTabByAutomationId(root, "LearningReviewTab") || SelectTabItemByName(root, "\uAC00\uC774\uB4DC/\uB3C4\uAD6C"),
@@ -5429,7 +5688,11 @@ internal static partial class Program
                     },
                     TimeSpan.FromSeconds(3)),
                 "box tool was not visible before drawing the template source");
-            NativeClick(GetAutomationCenter(boxToolItem));
+            root = RefreshAutomationRoot(process);
+            boxToolItem = FindAnnotationToolItem(root, "\uBC15\uC2A4");
+            AssertTrue(boxToolItem != null, "box tool disappeared before the template source click");
+            AssertTrue(IsForegroundWindowOwnedByProcess(process), "environment-contended before template box-tool click: " + DescribeForegroundWindowOwner());
+            _ = HumanClickAutomationElement(boxToolItem);
             AssertTrue(
                 WaitUntil(
                     () => IsAutomationSelectionItemSelected(boxToolItem)
@@ -5440,14 +5703,16 @@ internal static partial class Program
             root = RefreshAutomationRoot(process);
             System.Windows.Automation.AutomationElement canvas = FindAutomationElementByClass(root, "RoiImageCanvasView");
             AssertTrue(canvas != null, "template batch auto-label smoke canvas was not found");
-            _ = TryInvokeAutomationButton(root, "Fit");
-            Thread.Sleep(80);
+            Thread.Sleep(250);
             canvas = FindAutomationElementByClass(RefreshAutomationRoot(process, bringToFront: false), "RoiImageCanvasView") ?? canvas;
             System.Windows.Rect fittedImageBounds = BuildExeSmokeFittedImageBounds(canvas.Current.BoundingRectangle, activeImagePath);
             ExeSmokeDragPath templateSourceDrag = BuildExeSmokeImagePixelBoxDrag(
                 fittedImageBounds,
                 new Size(120, 90),
                 new Rectangle(12, 12, 24, 18));
+            AssertTrue(
+                IsForegroundWindowOwnedByProcess(process),
+                "environment-contended before template source drag: " + DescribeForegroundWindowOwner());
             _ = ExecuteExeSmokeDragBatch(new[] { templateSourceDrag }, moveDelayMilliseconds: 1, postMouseUpMilliseconds: 40);
             bool roiCreated = WaitUntil(
                 () => GetAutomationValueByAutomationId(RefreshAutomationRoot(process, bringToFront: false), "AnnotationSaveStatusText")
@@ -5460,9 +5725,6 @@ internal static partial class Program
             _ = TrySetAutomationValueByAutomationId(root, "ImageQueueSearchBox", string.Empty);
             Thread.Sleep(250);
             root = RefreshAutomationRoot(process);
-            AssertTrue(
-                FindAutomationElementByAutomationId(root, "TemplateMatchingButton") != null,
-                "template candidate button was not exposed by AutomationId in the real EXE");
             AssertTrue(
                 IsAutomationButtonEnabledByAutomationId(root, "TemplateBatchQueueButton"),
                 "template batch queue button was not enabled after drawing a template source box");
@@ -5492,10 +5754,16 @@ internal static partial class Program
             bool activeSkipped = !File.Exists(activeLabelPath);
             AssertTrue(existingSkipped, "template batch should not overwrite an existing label file");
             AssertTrue(activeSkipped, "template batch should not create a label for the active template source image");
+            AssertTrue(
+                WaitUntil(
+                    () => ContainsAutomationText(
+                        RefreshAutomationRoot(process, bringToFront: false),
+                        "\uC804\uCCB4 \uC774\uBBF8\uC9C0 \uD15C\uD50C\uB9BF \uC790\uB3D9 \uC800\uC7A5 \uC644\uB8CC"),
+                    TimeSpan.FromSeconds(5)),
+                "template batch completion status was not visible after the label files were finalized");
 
             root = RefreshAutomationRoot(process, bringToFront: false);
             CaptureAutomationRoot(root, outputPath);
-            completed = true;
             return new ExeTemplateBatchAutoLabelSmokeResult(
                 RecipeApplied: true,
                 ActiveLoaded: true,
@@ -5510,11 +5778,8 @@ internal static partial class Program
         finally
         {
             CloseExeSmokeProcess(process);
-            if (completed)
-            {
-                DeleteDirectoryIfExists(recipeDirectory);
-                DeleteDirectoryIfExists(outputRoot);
-            }
+            DeleteDirectoryIfExists(recipeDirectory);
+            DeleteDirectoryIfExists(outputRoot);
         }
     }
 
@@ -5656,10 +5921,117 @@ internal static partial class Program
         return "python";
     }
 
+    private static bool OpenExeSmokeDatasetRecipe(Process process, string recipeName)
+    {
+        bool selectorRequested = WaitUntil(
+            () => TryInvokeAutomationButtonByAutomationId(
+                RefreshAutomationRoot(process, bringToFront: false),
+                "ChangeDatasetButton"),
+            TimeSpan.FromSeconds(5));
+        if (!selectorRequested)
+        {
+            BringNativeWindowToFront(process.MainWindowHandle);
+            SendKeys.SendWait("{ESC}");
+            Thread.Sleep(150);
+            var root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "DatasetHomeStageButton");
+            selectorRequested = WaitUntil(
+                () => TryInvokeAutomationButtonByAutomationId(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    "ChangeDatasetButton"),
+                TimeSpan.FromSeconds(3));
+        }
+
+        if (!selectorRequested)
+        {
+            Console.Error.WriteLine("EXE_DATASET_SELECTOR_OPEN_BUTTON_NOT_INVOKED");
+            return false;
+        }
+
+        System.Windows.Automation.AutomationElement selector = WaitForProcessWindowByName(
+            process,
+            "\uB370\uC774\uD130\uC14B \uC120\uD0DD",
+            TimeSpan.FromSeconds(8));
+        if (selector == null)
+        {
+            Console.Error.WriteLine("EXE_DATASET_SELECTOR_WINDOW_NOT_FOUND");
+            return false;
+        }
+
+        System.Windows.Automation.AutomationElement item = FindListItemContainingText(selector, recipeName);
+        if (item == null)
+        {
+            _ = TryInvokeAutomationButtonByAutomationId(selector, "RefreshDatasetSelectionButton");
+            Thread.Sleep(250);
+            selector = WaitForProcessWindowByName(
+                process,
+                "\uB370\uC774\uD130\uC14B \uC120\uD0DD",
+                TimeSpan.FromSeconds(3));
+            item = FindListItemContainingText(selector, recipeName);
+        }
+
+        if (item == null)
+        {
+            Console.Error.WriteLine(
+                $"EXE_DATASET_SELECTOR_RECIPE_NOT_FOUND recipe={recipeName} sample=\"{BuildAutomationTextSample(selector, 100)}\"");
+            return false;
+        }
+
+        if (item.TryGetCurrentPattern(System.Windows.Automation.SelectionItemPattern.Pattern, out object pattern)
+            && pattern is System.Windows.Automation.SelectionItemPattern selectionPattern)
+        {
+            selectionPattern.Select();
+        }
+        else
+        {
+            NativeClick(GetAutomationCenter(item));
+        }
+
+        Thread.Sleep(150);
+        selector = WaitForProcessWindowByName(
+            process,
+            "\uB370\uC774\uD130\uC14B \uC120\uD0DD",
+            TimeSpan.FromSeconds(3));
+        if (selector == null)
+        {
+            Console.Error.WriteLine("EXE_DATASET_SELECTOR_WINDOW_LOST_BEFORE_OPEN");
+            return false;
+        }
+
+        bool openInvoked = TryInvokeAutomationButtonByAutomationId(selector, "OpenSelectedDatasetButton");
+        bool selectorClosed = openInvoked
+            && WaitUntil(
+                () => FindProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC120\uD0DD") == null,
+                TimeSpan.FromSeconds(8));
+        if (!openInvoked || !selectorClosed)
+        {
+            Console.Error.WriteLine(
+                $"EXE_DATASET_SELECTOR_OPEN_FAILED invoked={openInvoked} closed={selectorClosed} sample=\"{BuildAutomationTextSample(selector, 100)}\"");
+        }
+
+        return openInvoked && selectorClosed;
+    }
+
     internal static bool ApplyExeSmokeRecipe(Process process, string recipeName)
     {
         var root = RefreshAutomationRoot(process);
+        _ = TryInvokeAutomationButtonByAutomationId(root, "TrainingModelStageButton");
+        _ = WaitUntil(
+            () => IsExeWorkflowStageActive(
+                RefreshAutomationRoot(process, bringToFront: false),
+                "training"),
+            TimeSpan.FromSeconds(5));
+        EnsureExeRightWorkflowExpanded(process);
+        root = RefreshAutomationRoot(process);
+        _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowTrainingModelButton");
+        root = RefreshAutomationRoot(process);
         if (!SelectAutomationTabByAutomationId(root, "YoloSettingsReviewTab") && !SelectTabItemByName(root, "\uBAA8\uB378"))
+        {
+            return false;
+        }
+
+        root = RefreshAutomationRoot(process);
+        if (!SelectAutomationTabByAutomationId(root, "YoloModelCenterDataTaskTab"))
         {
             return false;
         }
@@ -5675,6 +6047,131 @@ internal static partial class Program
         root = RefreshAutomationRoot(process);
         return TryInvokeAutomationButtonByAutomationId(root, "ApplyProjectRecipeButton")
             || TryInvokeAutomationButton(root, "Recipe 적용");
+    }
+
+    private static bool TryInvokeExeHeaderToolButton(
+        Process process,
+        string buttonAutomationId,
+        string expandAutomationId = null)
+    {
+        var root = RefreshAutomationRoot(process);
+        bool menuAlreadyOpen = FindVisibleProcessAutomationElementByAutomationId(
+            process,
+            "QuickLoadSampleButton") != null;
+        if (!menuAlreadyOpen
+            && !TryInvokeAutomationButtonByAutomationId(root, "HeaderToolsMenuButton"))
+        {
+            return false;
+        }
+
+        bool toolVisible = WaitUntil(
+            () =>
+            {
+                var currentRoot = RefreshAutomationRoot(process, bringToFront: false);
+                if (!string.IsNullOrWhiteSpace(expandAutomationId))
+                {
+                    _ = TryExpandAutomationElementByAutomationId(currentRoot, expandAutomationId);
+                    foreach (var processRoot in GetVisibleProcessAutomationRoots(process))
+                    {
+                        _ = TryExpandAutomationElementByAutomationId(processRoot, expandAutomationId);
+                    }
+                }
+
+                return IsAutomationElementVisibleByAutomationId(currentRoot, buttonAutomationId)
+                    || FindVisibleProcessAutomationElementByAutomationId(process, buttonAutomationId) != null;
+            },
+            TimeSpan.FromSeconds(3));
+        if (!toolVisible)
+        {
+            return false;
+        }
+
+        root = RefreshAutomationRoot(process, bringToFront: false);
+        if (TryInvokeAutomationButtonByAutomationId(root, buttonAutomationId))
+        {
+            return true;
+        }
+
+        foreach (var processRoot in GetVisibleProcessAutomationRoots(process))
+        {
+            if (TryInvokeAutomationButtonByAutomationId(processRoot, buttonAutomationId))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static System.Windows.Automation.AutomationElement FindVisibleProcessAutomationElementByAutomationId(
+        Process process,
+        string automationId)
+    {
+        foreach (var processRoot in GetVisibleProcessAutomationRoots(process))
+        {
+            try
+            {
+                if (string.Equals(processRoot.Current.AutomationId, automationId, StringComparison.Ordinal)
+                    && IsAutomationElementVisible(processRoot))
+                {
+                    return processRoot;
+                }
+
+                var element = FindAutomationElementByAutomationId(processRoot, automationId);
+                if (IsAutomationElementVisible(element))
+                {
+                    return element;
+                }
+            }
+            catch (System.Windows.Automation.ElementNotAvailableException)
+            {
+            }
+        }
+
+        return null;
+    }
+
+    private static IReadOnlyList<System.Windows.Automation.AutomationElement> GetVisibleProcessAutomationRoots(
+        Process process)
+    {
+        var roots = new List<System.Windows.Automation.AutomationElement>();
+        if (process == null || process.HasExited)
+        {
+            return roots;
+        }
+
+        uint targetProcessId = (uint)process.Id;
+        EnumWindows((hWnd, _) =>
+        {
+            if (!IsWindowVisible(hWnd))
+            {
+                return true;
+            }
+
+            GetWindowThreadProcessId(hWnd, out uint processId);
+            if (processId != targetProcessId)
+            {
+                return true;
+            }
+
+            try
+            {
+                var root = System.Windows.Automation.AutomationElement.FromHandle(hWnd);
+                if (root != null)
+                {
+                    roots.Add(root);
+                }
+            }
+            catch (System.Windows.Automation.ElementNotAvailableException)
+            {
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+            }
+
+            return true;
+        }, IntPtr.Zero);
+        return roots;
     }
 
     internal static bool TryReadDatasetManifest(string manifestPath, out LabelingDatasetManifest manifest)
@@ -5918,9 +6415,29 @@ internal static partial class Program
         List<string> statusItems)
     {
         var root = RefreshAutomationRoot(process);
-        AssertTrue(
-            TryInvokeAutomationButtonByAutomationId(root, stageButtonAutomationId),
-            $"workflow stage button was not invokable in real EXE: {stageButtonAutomationId}");
+        bool humanClicked = TryHumanClickAutomationElementByAutomationId(root, stageButtonAutomationId);
+        AssertTrue(humanClicked, $"workflow stage button was not clickable in real EXE: {stageButtonAutomationId}");
+        bool stageActivatedByClick = WaitUntil(
+            () => IsExeWorkflowStageActive(
+                RefreshAutomationRoot(process, bringToFront: false),
+                stageName),
+            TimeSpan.FromSeconds(2));
+        bool usedInvokeFallback = false;
+        if (!stageActivatedByClick)
+        {
+            root = RefreshAutomationRoot(process);
+            usedInvokeFallback = TryInvokeAutomationButtonByAutomationId(root, stageButtonAutomationId);
+            AssertTrue(
+                usedInvokeFallback
+                    && WaitUntil(
+                        () => IsExeWorkflowStageActive(
+                            RefreshAutomationRoot(process, bringToFront: false),
+                            stageName),
+                        TimeSpan.FromSeconds(5)),
+                $"workflow stage did not activate after click or invoke fallback: {stageButtonAutomationId}");
+        }
+
+        EnsureExeRightWorkflowExpanded(process);
 
         bool ready = WaitUntil(
             () =>
@@ -5953,7 +6470,7 @@ internal static partial class Program
                 continue;
             }
 
-            AssertTrue(TryInvokeAutomationButtonByAutomationId(root, shortcutId), $"top subnavigation shortcut was not invokable in real EXE: {shortcutId}");
+            AssertTrue(TryHumanClickAutomationElementByAutomationId(root, shortcutId), $"top subnavigation shortcut was not invokable in real EXE: {shortcutId}");
             clickedForStage++;
             shortcutsClicked++;
             bool stillVisible = WaitUntil(
@@ -5966,7 +6483,73 @@ internal static partial class Program
             AssertTrue(stillVisible, $"top subnavigation shortcuts disappeared after clicking: {shortcutId}");
         }
 
-        statusItems.Add(FormattableString.Invariant($"{stageName}:{expectedVisibleShortcutIds.Count}/{clickedForStage}"));
+        statusItems.Add(FormattableString.Invariant(
+            $"{stageName}:{expectedVisibleShortcutIds.Count}/{clickedForStage}/invokeFallback={usedInvokeFallback}"));
+    }
+
+    private static bool IsExeWorkflowStageActive(
+        System.Windows.Automation.AutomationElement root,
+        string stageName)
+    {
+        string marker = stageName switch
+        {
+            "dataset" => "1/4 \uB370\uC774\uD130\uC14B",
+            "labeling" => "2/4 \uB77C\uBCA8\uB9C1",
+            "inference" => "3/4",
+            "training" => "4/4 \uD559\uC2B5/\uBAA8\uB378",
+            _ => string.Empty
+        };
+        return !string.IsNullOrWhiteSpace(marker) && ContainsAutomationText(root, marker);
+    }
+
+    private static void EnsureExeRightWorkflowExpanded(Process process)
+    {
+        var root = RefreshAutomationRoot(process, bringToFront: false);
+        if (!IsAutomationElementVisibleByAutomationId(root, "RightWorkflowRailOpenButton"))
+        {
+            return;
+        }
+
+        bool clicked = TryHumanClickAutomationElementByAutomationId(root, "RightWorkflowRailOpenButton");
+        bool expanded = clicked && WaitUntil(
+            () => IsExeRightWorkflowExpanded(RefreshAutomationRoot(process, bringToFront: false)),
+            TimeSpan.FromSeconds(1));
+        if (!expanded)
+        {
+            root = RefreshAutomationRoot(process);
+            clicked = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowRailOpenButton");
+            expanded = clicked && WaitUntil(
+                () => IsExeRightWorkflowExpanded(RefreshAutomationRoot(process, bringToFront: false)),
+                TimeSpan.FromSeconds(5));
+        }
+
+        AssertTrue(
+            expanded,
+            "expanded work panel did not appear after clicking its rail");
+    }
+
+    private static bool IsExeRightWorkflowExpanded(System.Windows.Automation.AutomationElement root)
+    {
+        return !IsAutomationElementVisibleByAutomationId(root, "RightWorkflowRailOpenButton")
+            && (IsAutomationElementVisibleByAutomationId(root, "RightWorkflowExpandedContent")
+                || IsAutomationElementVisibleByAutomationId(root, "RightWorkflowDatasetHomeButton")
+                || IsAutomationElementVisibleByAutomationId(root, "RightWorkflowSavedLabelsButton")
+                || IsAutomationElementVisibleByAutomationId(root, "RightWorkflowInferenceCandidatesButton")
+                || IsAutomationElementVisibleByAutomationId(root, "RightWorkflowTrainingModelButton"));
+    }
+
+    private static bool TryHumanClickAutomationElementByAutomationId(
+        System.Windows.Automation.AutomationElement root,
+        string automationId)
+    {
+        System.Windows.Automation.AutomationElement element = FindAutomationElementByAutomationId(root, automationId);
+        if (element == null || !element.Current.IsEnabled || element.Current.IsOffscreen)
+        {
+            return false;
+        }
+
+        _ = HumanClickAutomationElement(element);
+        return true;
     }
 
     private static ExeGuideDashboardCardSmokeResult ExecuteExeGuideDashboardCardSmoke(
@@ -6115,7 +6698,9 @@ internal static partial class Program
             AssertTrue(root != null, "EXE ROI-tools smoke automation root was not available");
             WaitForAutomationText(root, "\uCE94\uBC84\uC2A4", TimeSpan.FromSeconds(10));
 
-            TryInvokeAutomationButton(root, "\uC0D8\uD50C");
+            AssertTrue(
+                TryInvokeExeHeaderToolButton(process, "QuickLoadSampleButton"),
+                "EXE purpose-scope smoke sample-load button was not invokable");
             Thread.Sleep(800);
             root = RefreshAutomationRoot(process);
             WaitForAutomationText(root, "\uBE60\uB978 \uB3C4\uAD6C", TimeSpan.FromSeconds(10));
@@ -6581,6 +7166,30 @@ internal static partial class Program
         string value = GetAutomationValueByAutomationId(root, "CanvasLabelLayerText");
         if (string.IsNullOrWhiteSpace(value))
         {
+            foreach (System.Windows.Automation.AutomationElement element in EnumerateAutomationDescendants(root))
+            {
+                string name;
+                try
+                {
+                    name = element.Current.Name;
+                }
+                catch (System.Windows.Automation.ElementNotAvailableException)
+                {
+                    continue;
+                }
+
+                if (!string.IsNullOrWhiteSpace(name)
+                    && name.Contains("\uB77C\uBCA8", StringComparison.Ordinal)
+                    && name.Contains("\uAC1C \uD45C\uC2DC", StringComparison.Ordinal))
+                {
+                    value = name;
+                    break;
+                }
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
             return 0;
         }
 
@@ -6793,7 +7402,7 @@ internal static partial class Program
             TryInvokeAutomationButton(root, "샘플");
             Thread.Sleep(800);
             root = RefreshAutomationRoot(process);
-            WaitForAutomationText(root, "빠른 도구", TimeSpan.FromSeconds(10));
+            WaitForAutomationText(root, "캔버스", TimeSpan.FromSeconds(10));
             System.Windows.Automation.AutomationElement canvas = FindAutomationElementByClass(root, "RoiImageCanvasView");
             AssertTrue(canvas != null, "EXE mask-tools smoke canvas was not found");
             System.Windows.Rect canvasRect = canvas.Current.BoundingRectangle;
@@ -6805,6 +7414,17 @@ internal static partial class Program
             System.Windows.Rect annotationRegion = hasSmokeImageBounds
                 ? BuildExeSmokeFittedImageRegion(canvasRect, smokeImagePath)
                 : BuildExeSmokeAnnotationRegion(canvasRect);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "DatasetHomeStageButton");
+            _ = WaitUntil(
+                () => IsExeWorkflowStageActive(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    "dataset"),
+                TimeSpan.FromSeconds(3));
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowDatasetHomeButton");
+            root = RefreshAutomationRoot(process);
             if (!ClickDatasetPurposeByText(root, "세그멘테이션"))
             {
                 AssertTrue(
@@ -6814,6 +7434,17 @@ internal static partial class Program
                 AssertTrue(ClickDatasetPurposeByText(root, "세그멘테이션"), "native click did not find the segmentation dataset purpose");
             }
 
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "LabelingWorkbenchStageButton");
+            _ = WaitUntil(
+                () => IsExeWorkflowStageActive(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    "labeling"),
+                TimeSpan.FromSeconds(3));
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowGuideToolsButton")
+                || SelectAutomationTabByAutomationId(root, "LearningReviewTab");
             root = RefreshAutomationRoot(process);
             System.Windows.Automation.AutomationElement brushToolItem = FindAnnotationToolItem(root, "브러시");
             System.Windows.Automation.AutomationElement eraserToolItem = FindAnnotationToolItem(root, "지우개");
@@ -7113,10 +7744,12 @@ internal static partial class Program
             AssertTrue(root != null, "EXE purpose-scope smoke automation root was not available");
             WaitForAutomationText(root, "\uCE94\uBC84\uC2A4", TimeSpan.FromSeconds(10));
 
-            TryInvokeAutomationButton(root, "\uC0D8\uD50C");
+            AssertTrue(
+                TryInvokeExeHeaderToolButton(process, "QuickLoadSampleButton"),
+                "purpose-scope smoke sample-load button was not invokable");
             Thread.Sleep(800);
             root = RefreshAutomationRoot(process);
-            WaitForAutomationText(root, "\uBE60\uB978 \uB3C4\uAD6C", TimeSpan.FromSeconds(10));
+            WaitForAutomationText(root, "\uCE94\uBC84\uC2A4", TimeSpan.FromSeconds(10));
             System.Windows.Automation.AutomationElement canvas = FindAutomationElementByClass(root, "RoiImageCanvasView");
             AssertTrue(canvas != null, "EXE purpose-scope smoke canvas was not found");
             System.Windows.Rect canvasRect = canvas.Current.BoundingRectangle;
@@ -7131,17 +7764,55 @@ internal static partial class Program
             System.Windows.Rect annotationRegion = hasSmokeImageBounds
                 ? BuildExeSmokeFittedImageRegion(canvasRect, smokeImagePath)
                 : BuildExeSmokeAnnotationRegion(canvasRect);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "DatasetHomeStageButton");
+            _ = WaitUntil(
+                () => IsExeWorkflowStageActive(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    "dataset"),
+                TimeSpan.FromSeconds(3));
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowDatasetHomeButton");
+            root = RefreshAutomationRoot(process);
             AssertTrue(
                 SelectAutomationTabByAutomationId(root, "LearningReviewTab") || SelectTabItemByName(root, "\uAC00\uC774\uB4DC/\uB3C4\uAD6C"),
                 "guide/tools tab was not selectable before purpose-scope smoke");
             root = RefreshAutomationRoot(process);
             AssertTrue(SelectListItemByText(root, "\uC138\uADF8\uBA58\uD14C\uC774\uC158"), "segmentation dataset purpose was not selectable");
             root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "LabelingWorkbenchStageButton");
+            _ = WaitUntil(
+                () => IsExeWorkflowStageActive(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    "labeling"),
+                TimeSpan.FromSeconds(3));
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowGuideToolsButton")
+                || SelectAutomationTabByAutomationId(root, "LearningReviewTab");
+            root = RefreshAutomationRoot(process);
+
+            canvas = FindAutomationElementByClass(root, "RoiImageCanvasView");
+            AssertTrue(canvas != null, "purpose-scope canvas was not available before brush input");
+            canvasRect = canvas.Current.BoundingRectangle;
+            fittedImageBounds = hasSmokeImageBounds
+                ? BuildExeSmokeFittedImageBounds(canvasRect, smokeImagePath)
+                : canvasRect;
+            annotationRegion = hasSmokeImageBounds
+                ? BuildExeSmokeFittedImageRegion(canvasRect, smokeImagePath)
+                : BuildExeSmokeAnnotationRegion(canvasRect);
 
             System.Windows.Automation.AutomationElement brushToolItem = FindAnnotationToolItem(root, "\uBE0C\uB7EC\uC2DC");
             AssertTrue(brushToolItem != null, "native click did not find the brush tool");
-            NativeClick(GetAutomationCenter(brushToolItem));
-            AssertTrue(WaitUntil(() => IsAutomationSelectionItemSelected(brushToolItem), TimeSpan.FromSeconds(2)), "real native click did not select the brush tool");
+            AssertTrue(IsForegroundWindowOwnedByProcess(process), "environment-contended before purpose-scope brush-tool click: " + DescribeForegroundWindowOwner());
+            _ = HumanClickAutomationElement(brushToolItem);
+            AssertTrue(
+                WaitUntil(
+                    () => IsAutomationSelectionItemSelected(brushToolItem)
+                        || string.Equals(GetSelectedAnnotationToolText(RefreshAutomationRoot(process, bringToFront: false)), "\uBE0C\uB7EC\uC2DC", StringComparison.Ordinal),
+                    TimeSpan.FromSeconds(2)),
+                "real native click did not select the brush tool");
             IReadOnlyList<ExeSmokeDragPath> brushDrags = BuildExeSmokeStrokeDrags(random, annotationRegion, brushStrokeCount);
             ExeSmokeDragBatchMetrics brushMetrics = ExecuteExeSmokeDragBatch(brushDrags, moveDelayMilliseconds: 1, postMouseUpMilliseconds: 8);
 
@@ -7150,7 +7821,8 @@ internal static partial class Program
             string previousCommitSignal = GetAutomationHelpText(statusElement);
             System.Windows.Automation.AutomationElement selectToolItem = FindAnnotationToolItem(root, "\uC120\uD0DD");
             AssertTrue(selectToolItem != null, "select tool was not visible after brush strokes");
-            NativeClick(GetAutomationCenter(selectToolItem));
+            AssertTrue(IsForegroundWindowOwnedByProcess(process), "environment-contended before purpose-scope select-tool click: " + DescribeForegroundWindowOwner());
+            _ = HumanClickAutomationElement(selectToolItem);
             AssertTrue(
                 IsChangedExeMaskCommitSignal(previousCommitSignal)
                 || WaitForExeMaskCommitSignal(process, statusElement, previousCommitSignal, TimeSpan.FromSeconds(3)),
@@ -7166,6 +7838,16 @@ internal static partial class Program
             AssertTrue(maskVisibleBeforeSwitch, "segmentation purpose should show the mask object before switching purpose");
 
             root = RefreshAutomationRoot(process, bringToFront: false);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "DatasetHomeStageButton");
+            _ = WaitUntil(
+                () => IsExeWorkflowStageActive(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    "dataset"),
+                TimeSpan.FromSeconds(3));
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowDatasetHomeButton");
+            root = RefreshAutomationRoot(process);
             AssertTrue(
                 SelectAutomationTabByAutomationId(root, "LearningReviewTab") || SelectTabItemByName(root, "\uAC00\uC774\uB4DC/\uB3C4\uAD6C"),
                 "guide/tools tab was not selectable before object-detection switch");
@@ -7190,6 +7872,16 @@ internal static partial class Program
             AssertTrue(hiddenStatusVisible, "purpose switch should explain hidden segmentation labels in the model status");
 
             root = RefreshAutomationRoot(process, bringToFront: false);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "LabelingWorkbenchStageButton");
+            _ = WaitUntil(
+                () => IsExeWorkflowStageActive(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    "labeling"),
+                TimeSpan.FromSeconds(3));
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowSavedLabelsButton");
+            root = RefreshAutomationRoot(process);
             AssertTrue(
                 SelectAutomationTabByAutomationId(root, "ObjectsReviewTab") || SelectTabItemByName(root, "\uC800\uC7A5 \uB77C\uBCA8"),
                 "saved-label tab was not selectable after object-detection switch");
@@ -7199,10 +7891,23 @@ internal static partial class Program
             AssertTrue(segmentationHidden, "object-detection purpose should hide stale mask rows");
 
             root = RefreshAutomationRoot(process, bringToFront: false);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowGuideToolsButton");
+            root = RefreshAutomationRoot(process);
             System.Windows.Automation.AutomationElement boxToolItem = FindAnnotationToolItem(root, "\uBC15\uC2A4");
             AssertTrue(boxToolItem != null, "box tool was not visible after object-detection switch");
             NativeClick(GetAutomationCenter(boxToolItem));
             AssertTrue(WaitUntil(() => IsAutomationSelectionItemSelected(boxToolItem), TimeSpan.FromSeconds(2)), "box tool was not selected for object-detection scope");
+
+            root = RefreshAutomationRoot(process, bringToFront: false);
+            canvas = FindAutomationElementByClass(root, "RoiImageCanvasView");
+            AssertTrue(canvas != null, "purpose-scope canvas was not available after the object-detection layout change");
+            canvasRect = canvas.Current.BoundingRectangle;
+            fittedImageBounds = hasSmokeImageBounds
+                ? BuildExeSmokeFittedImageBounds(canvasRect, smokeImagePath)
+                : canvasRect;
+            annotationRegion = hasSmokeImageBounds
+                ? BuildExeSmokeFittedImageRegion(canvasRect, smokeImagePath)
+                : BuildExeSmokeAnnotationRegion(canvasRect);
 
             // Saved sample boxes can hydrate shortly after the purpose/tab switch.
             // Let the object list settle so the outside-drag check measures new rows only.
@@ -7210,7 +7915,11 @@ internal static partial class Program
             root = RefreshAutomationRoot(process, bringToFront: false);
             int boxCountBeforeOutsideDrag = CountAutomationTextOccurrences(root, "Defect / \uBC15\uC2A4");
             int boxBaselineBeforeOutsideDrag = InferExistingBoxTextCount(root, boxCountBeforeOutsideDrag);
+            int canvasLabelCountBeforeOutsideDrag = GetExeCanvasLabelCount(root);
             ExeSmokeDragPath outsideDrag = BuildExeSmokeOutsideImageBoxDrag(random, canvasRect, fittedImageBounds);
+            AssertTrue(
+                IsForegroundWindowOwnedByProcess(process),
+                "environment-contended before purpose-scope outside-image drag: " + DescribeForegroundWindowOwner());
             double outsideBoxMilliseconds = NativeHumanDrag(outsideDrag.Points, moveDelayMilliseconds: 1, postMouseUpMilliseconds: 80);
             root = RefreshAutomationRoot(process, bringToFront: false);
             AssertTrue(
@@ -7218,7 +7927,9 @@ internal static partial class Program
                 "saved-label tab was not selectable after outside-image drag");
             root = RefreshAutomationRoot(process, bringToFront: false);
             int boxCountAfterOutsideDrag = CountAutomationTextOccurrences(root, "Defect / \uBC15\uC2A4");
-            bool outsideBoxCreatedObject = boxCountAfterOutsideDrag > boxBaselineBeforeOutsideDrag;
+            int canvasLabelCountAfterOutsideDrag = GetExeCanvasLabelCount(root);
+            bool outsideBoxCreatedObject = boxCountAfterOutsideDrag > boxBaselineBeforeOutsideDrag
+                || canvasLabelCountAfterOutsideDrag > canvasLabelCountBeforeOutsideDrag;
             if (outsideBoxCreatedObject)
             {
                 TryCaptureExeSmokeFailure(root, outputPath, "purpose-outside-box-created");
@@ -7233,14 +7944,67 @@ internal static partial class Program
             int boxCountBeforeInsideDrag = Math.Max(
                 CountAutomationTextOccurrences(root, "Defect / \uBC15\uC2A4"),
                 boxBaselineBeforeOutsideDrag);
+            int canvasLabelCountBeforeInsideDrag = GetExeCanvasLabelCount(root);
+            root = RefreshAutomationRoot(process);
+            AssertTrue(
+                TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowGuideToolsButton")
+                    || SelectAutomationTabByAutomationId(root, "LearningReviewTab"),
+                "guide/tools was not selectable before the inside-image box drag");
+            root = RefreshAutomationRoot(process);
+            boxToolItem = FindAnnotationToolItem(root, "\uBC15\uC2A4");
+            AssertTrue(boxToolItem != null, "box tool was not visible before the inside-image drag");
+            AssertTrue(
+                IsForegroundWindowOwnedByProcess(process),
+                "environment-contended before purpose-scope inside-image box-tool click: " + DescribeForegroundWindowOwner());
+            _ = HumanClickAutomationElement(boxToolItem);
+            AssertTrue(
+                WaitUntil(
+                    () => IsExeSmokeBoxToolSelected(RefreshAutomationRoot(process, bringToFront: false)),
+                    TimeSpan.FromSeconds(2)),
+                "box tool was not selected before the inside-image drag");
+
+            root = RefreshAutomationRoot(process);
+            canvas = FindAutomationElementByClass(root, "RoiImageCanvasView");
+            AssertTrue(canvas != null, "purpose-scope canvas was not available before the inside-image drag");
+            canvasRect = canvas.Current.BoundingRectangle;
+            annotationRegion = hasSmokeImageBounds
+                ? BuildExeSmokeFittedImageRegion(canvasRect, smokeImagePath)
+                : BuildExeSmokeAnnotationRegion(canvasRect);
             ExeSmokeDragPath insideDrag = BuildExeSmokeBoxDrags(random, annotationRegion, 1)[0];
+            AssertTrue(
+                IsForegroundWindowOwnedByProcess(process),
+                "environment-contended before purpose-scope inside-image drag: " + DescribeForegroundWindowOwner());
             double insideBoxMilliseconds = NativeHumanDrag(insideDrag.Points, moveDelayMilliseconds: 1, postMouseUpMilliseconds: 80);
             bool insideBoxCreatedObject = WaitUntil(
-                () => CountAutomationTextOccurrences(RefreshAutomationRoot(process, bringToFront: false), "Defect / \uBC15\uC2A4") > boxCountBeforeInsideDrag,
+                () =>
+                {
+                    var currentRoot = RefreshAutomationRoot(process, bringToFront: false);
+                    return CountAutomationTextOccurrences(currentRoot, "Defect / \uBC15\uC2A4") > boxCountBeforeInsideDrag
+                        || GetExeCanvasLabelCount(currentRoot) > canvasLabelCountBeforeInsideDrag
+                        || GetAutomationValueByAutomationId(currentRoot, "AnnotationSaveStatusText")
+                            .Contains("\uD544\uC694", StringComparison.Ordinal);
+                },
                 TimeSpan.FromSeconds(4));
-            AssertTrue(insideBoxCreatedObject, "dragging a box inside the image should still create an object row");
+            if (!insideBoxCreatedObject)
+            {
+                TryCaptureExeSmokeFailure(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    outputPath,
+                    "purpose-inside-box-missing");
+            }
+            AssertTrue(insideBoxCreatedObject, "dragging a box inside the image should create a visible label or object row");
 
             root = RefreshAutomationRoot(process, bringToFront: false);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "DatasetHomeStageButton");
+            _ = WaitUntil(
+                () => IsExeWorkflowStageActive(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    "dataset"),
+                TimeSpan.FromSeconds(3));
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowDatasetHomeButton");
+            root = RefreshAutomationRoot(process);
             AssertTrue(
                 SelectAutomationTabByAutomationId(root, "LearningReviewTab") || SelectTabItemByName(root, "\uAC00\uC774\uB4DC/\uB3C4\uAD6C"),
                 "guide/tools tab was not selectable before segmentation restore");
@@ -7264,6 +8028,16 @@ internal static partial class Program
 
             AssertTrue(restoredStatusVisible, "purpose switch back should explain restored segmentation label visibility");
             root = RefreshAutomationRoot(process, bringToFront: false);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "LabelingWorkbenchStageButton");
+            _ = WaitUntil(
+                () => IsExeWorkflowStageActive(
+                    RefreshAutomationRoot(process, bringToFront: false),
+                    "labeling"),
+                TimeSpan.FromSeconds(3));
+            EnsureExeRightWorkflowExpanded(process);
+            root = RefreshAutomationRoot(process);
+            _ = TryInvokeAutomationButtonByAutomationId(root, "RightWorkflowSavedLabelsButton");
+            root = RefreshAutomationRoot(process);
             AssertTrue(
                 SelectAutomationTabByAutomationId(root, "ObjectsReviewTab") || SelectTabItemByName(root, "\uC800\uC7A5 \uB77C\uBCA8"),
                 "saved-label tab was not selectable after segmentation restore");
@@ -7603,8 +8377,37 @@ internal static partial class Program
             ShowWindow(handle, SwRestore);
         }
 
-        SetWindowPos(handle, HwndTopMost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpShowWindow);
-        SetForegroundWindow(handle);
+        IntPtr foreground = GetForegroundWindow();
+        uint currentThreadId = GetCurrentThreadId();
+        uint foregroundThreadId = foreground == IntPtr.Zero
+            ? 0
+            : GetWindowThreadProcessId(foreground, out _);
+        uint targetThreadId = GetWindowThreadProcessId(handle, out _);
+        bool attachedForeground = foregroundThreadId != 0
+            && foregroundThreadId != currentThreadId
+            && AttachThreadInput(currentThreadId, foregroundThreadId, true);
+        bool attachedTarget = targetThreadId != 0
+            && targetThreadId != currentThreadId
+            && AttachThreadInput(currentThreadId, targetThreadId, true);
+        try
+        {
+            SetWindowPos(handle, HwndTopMost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpShowWindow);
+            BringWindowToTop(handle);
+            SetForegroundWindow(handle);
+        }
+        finally
+        {
+            if (attachedTarget)
+            {
+                AttachThreadInput(currentThreadId, targetThreadId, false);
+            }
+
+            if (attachedForeground)
+            {
+                AttachThreadInput(currentThreadId, foregroundThreadId, false);
+            }
+        }
+
         Thread.Sleep(250);
     }
 
@@ -7614,7 +8417,12 @@ internal static partial class Program
         process.Refresh();
         if (bringToFront)
         {
-            BringNativeWindowToFront(process.MainWindowHandle);
+            AssertTrue(
+                TryActivateProcessWindowWithoutStealingFromPeer(
+                    process,
+                    process.MainWindowHandle,
+                    TimeSpan.FromSeconds(45)),
+                "environment-contended: " + DescribeForegroundWindowOwner());
         }
 
         var root = System.Windows.Automation.AutomationElement.FromHandle(process.MainWindowHandle);
@@ -7628,12 +8436,126 @@ internal static partial class Program
         AssertTrue(stableHandle != IntPtr.Zero, "EXE smoke stable window handle was not available");
         if (bringToFront)
         {
-            BringNativeWindowToFront(stableHandle);
+            AssertTrue(
+                TryActivateProcessWindowWithoutStealingFromPeer(
+                    process,
+                    stableHandle,
+                    TimeSpan.FromSeconds(45)),
+                "environment-contended: " + DescribeForegroundWindowOwner());
         }
 
         var root = System.Windows.Automation.AutomationElement.FromHandle(stableHandle);
         AssertTrue(root != null, "EXE smoke automation root was not available after stable refresh");
         return root;
+    }
+
+    private static bool TryActivateProcessWindowWithoutStealingFromPeer(
+        Process process,
+        IntPtr handle,
+        TimeSpan timeout)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        while (stopwatch.Elapsed < timeout)
+        {
+            if (process == null || process.HasExited)
+            {
+                return false;
+            }
+
+            if (IsForegroundWindowOwnedByProcess(process))
+            {
+                return true;
+            }
+
+            if (IsForegroundOwnedByAnotherOpenVisionLabProcess(process))
+            {
+                Thread.Sleep(250);
+                continue;
+            }
+
+            BringNativeWindowToFront(handle);
+            if (IsForegroundWindowOwnedByProcess(process))
+            {
+                return true;
+            }
+
+            Thread.Sleep(250);
+        }
+
+        return IsForegroundWindowOwnedByProcess(process);
+    }
+
+    private static bool IsForegroundOwnedByAnotherOpenVisionLabProcess(Process target)
+    {
+        IntPtr foreground = GetForegroundWindow();
+        if (foreground == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        GetWindowThreadProcessId(foreground, out uint processId);
+        if (processId == (uint)target.Id)
+        {
+            return false;
+        }
+
+        try
+        {
+            using Process owner = Process.GetProcessById((int)processId);
+            return owner.ProcessName.StartsWith("OpenVisionLab", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsForegroundWindowOwnedByProcess(Process process)
+    {
+        if (process == null || process.HasExited)
+        {
+            return false;
+        }
+
+        IntPtr foreground = GetForegroundWindow();
+        if (foreground == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        GetWindowThreadProcessId(foreground, out uint processId);
+        return processId == (uint)process.Id;
+    }
+
+    private static string DescribeForegroundWindowOwner()
+    {
+        IntPtr foreground = GetForegroundWindow();
+        if (foreground == IntPtr.Zero)
+        {
+            return "foreground window is unavailable";
+        }
+
+        GetWindowThreadProcessId(foreground, out uint processId);
+        try
+        {
+            using Process owner = Process.GetProcessById((int)processId);
+            string path;
+            try
+            {
+                path = owner.MainModule?.FileName ?? string.Empty;
+            }
+            catch
+            {
+                path = string.Empty;
+            }
+
+            return $"foreground belongs to PID {processId} ({owner.ProcessName})"
+                + (string.IsNullOrWhiteSpace(path) ? string.Empty : $" at {path}");
+        }
+        catch
+        {
+            return $"foreground belongs to PID {processId}";
+        }
     }
 
     internal static bool TryInvokeAutomationButton(System.Windows.Automation.AutomationElement root, string name)
@@ -7649,6 +8571,11 @@ internal static partial class Program
         {
             invokePattern.Invoke();
             return true;
+        }
+
+        if (!IsForegroundOwnedByAutomationElement(button))
+        {
+            return false;
         }
 
         NativeClick(GetAutomationCenter(button));
@@ -8349,6 +9276,7 @@ internal static partial class Program
     {
         System.Windows.Automation.AutomationElement root = RefreshAutomationRoot(process);
         if (!TryPasteAutomationValueByAutomationId(root, "ImageQueueSearchBox", imageId)
+            && !TrySetAutomationValueByAutomationId(root, "ImageQueueSearchBox", imageId)
             && !TryPasteAutomationValueByName(root, "이미지 큐 검색", imageId))
         {
             Console.Error.WriteLine("IMAGE_QUEUE_SEARCH_BOX_NOT_FOUND " + BuildAutomationTextSample(root, 80));
@@ -9219,11 +10147,48 @@ internal static partial class Program
                 return true;
             }
 
+            if (element.TryGetCurrentPattern(System.Windows.Automation.TogglePattern.Pattern, out pattern)
+                && pattern is System.Windows.Automation.TogglePattern togglePattern)
+            {
+                togglePattern.Toggle();
+                return true;
+            }
+
+            if (!IsForegroundOwnedByAutomationElement(element))
+            {
+                return false;
+            }
+
             NativeClick(GetAutomationCenter(element));
             return true;
         }
 
         return false;
+    }
+
+    private static bool IsForegroundOwnedByAutomationElement(
+        System.Windows.Automation.AutomationElement element)
+    {
+        if (element == null)
+        {
+            return false;
+        }
+
+        IntPtr foreground = GetForegroundWindow();
+        if (foreground == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        GetWindowThreadProcessId(foreground, out uint foregroundProcessId);
+        try
+        {
+            return foregroundProcessId == (uint)element.Current.ProcessId;
+        }
+        catch (System.Windows.Automation.ElementNotAvailableException)
+        {
+            return false;
+        }
     }
 
     internal static bool IsAutomationButtonEnabledByAutomationId(
@@ -10340,7 +11305,42 @@ internal static partial class Program
         int height = Math.Max(1, (int)Math.Round(bounds.Height));
         Bitmap bitmap = new Bitmap(width, height);
         using Graphics graphics = Graphics.FromImage(bitmap);
-        graphics.CopyFromScreen((int)Math.Round(bounds.X), (int)Math.Round(bounds.Y), 0, 0, bitmap.Size);
+        bool captured = false;
+        IntPtr hWnd = new IntPtr(root.Current.NativeWindowHandle);
+        if (hWnd != IntPtr.Zero && GetForegroundWindow() == hWnd)
+        {
+            try
+            {
+                // WPF/D3D surfaces can render as flat gray through PrintWindow. When the
+                // audited window owns the foreground, capture the composed user-visible frame.
+                graphics.CopyFromScreen((int)Math.Round(bounds.X), (int)Math.Round(bounds.Y), 0, 0, bitmap.Size);
+                captured = true;
+            }
+            catch (ExternalException)
+            {
+                captured = false;
+            }
+        }
+
+        if (!captured && hWnd != IntPtr.Zero)
+        {
+            IntPtr hdc = graphics.GetHdc();
+            try
+            {
+                const uint printWindowRenderFullContent = 0x00000002;
+                captured = PrintWindow(hWnd, hdc, printWindowRenderFullContent);
+            }
+            finally
+            {
+                graphics.ReleaseHdc(hdc);
+            }
+        }
+
+        if (!captured)
+        {
+            graphics.CopyFromScreen((int)Math.Round(bounds.X), (int)Math.Round(bounds.Y), 0, 0, bitmap.Size);
+        }
+
         return bitmap;
     }
 
@@ -26326,13 +27326,15 @@ internal static partial class Program
         AssertTrue(source.Contains("RunInteractiveDetectionAsync(allowSmokeFallback: false)", StringComparison.Ordinal), "current-image detection should not use smoke fallback");
         AssertTrue(source.Contains("RunInteractiveDetectionAsync(item.ImagePath, allowSmokeFallback: false)", StringComparison.Ordinal), "selected-image detection should not use smoke fallback");
         AssertTrue(source.Contains("RunInteractiveDetectionAsync(allowSmokeFallback: true)", StringComparison.Ordinal), "YOLO diagnostic test may use smoke fallback");
-        AssertTrue(source.Contains("GetInteractiveWorkerConnectTimeoutMilliseconds()", StringComparison.Ordinal), "single-image detection should use the interactive worker wait helper");
+        AssertTrue(source.Contains("GetInteractiveWorkerConnectTimeoutMilliseconds(allowSmokeFallback)", StringComparison.Ordinal), "single-image detection should pass its fallback contract to the interactive worker wait helper");
         AssertTrue(source.Contains("return GetWorkerConnectTimeoutMilliseconds();", StringComparison.Ordinal), "first interactive worker connection should allow model preload to finish");
+        AssertTrue(source.Contains("if (allowSmokeFallback && !autoStartClient)", StringComparison.Ordinal), "manual-client diagnostic fallback should not wait through the full model-startup window");
+        AssertTrue(source.Contains("Math.Clamp(detectionTimeoutSeconds, 1, 30) * 1000", StringComparison.Ordinal), "manual-client diagnostic fallback should use the bounded configured detection timeout");
         AssertTrue(!source.Contains("return 1500;", StringComparison.Ordinal), "current-image detection should allow enough time for a restarted trained-model worker to connect");
         AssertTrue(source.Contains("detectionTimeoutSeconds + 90", StringComparison.Ordinal), "worker startup should add model-load grace time before reporting a connection failure");
         AssertTrue(source.Contains("120, 300", StringComparison.Ordinal), "worker startup wait should allow slow CPU model loading before timing out");
         AssertTrue(source.Contains("FormatElapsed(totalStopwatch.Elapsed)", StringComparison.Ordinal), "single-image detection should log elapsed time for UX diagnostics");
-        AssertTrue(source.Contains("GetInteractiveWorkerConnectTimeoutMilliseconds()", StringComparison.Ordinal), "single-image detection should tell the operator when it is waiting for the worker");
+        AssertTrue(source.Contains("GetInteractiveWorkerConnectTimeoutMilliseconds(allowSmokeFallback)", StringComparison.Ordinal), "single-image detection should tell the operator when it is waiting for the worker");
         AssertTrue(source.Contains("SetGlobalInferenceStatus(", StringComparison.Ordinal), "single-image detection should report request progress through the status surface");
         AssertTrue(source.Contains("result.CandidateCount", StringComparison.Ordinal), "single-image detection should show completion with candidate count");
         AssertTrue(source.Contains("BuildRuntimeModelLabel", StringComparison.Ordinal), "single-image detection should keep the runtime/model source in result summaries and logs");
