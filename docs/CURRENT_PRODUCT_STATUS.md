@@ -187,6 +187,14 @@ Prerequisite: an approved clean Windows environment and any required signing
 credential. Do not spend implementation tokens on this gate until those are
 available.
 
+The approved first environment is Windows Sandbox on the current Windows 10
+Pro host. `docs/P0C_WINDOWS_SANDBOX_SETUP_20260730.md` and
+`scripts/New-P0CWindowsSandboxConfig.ps1` define a read-only release mapping,
+an isolated writable evidence mapping, disabled networking/redirections, and
+explicit application launch. This preparation does not complete P0-C:
+interactive portable evidence, installer lifecycle decisions, and the later
+signing gate remain.
+
 ### P1-A. Portable Project Archive
 
 Status: `Complete`.

@@ -97,6 +97,7 @@ namespace OpenVisionLab.Logging
 					rollingFileAppender.MaxSizeRollBackups = maxBackupFileCount;
 					rollingFileAppender.MaximumFileSize = $"{maximumFileSizeInMB}MB";
 					rollingFileAppender.Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
+					rollingFileAppender.LockingModel = new FileAppender.MinimalLock();
 					rollingFileAppender.ActivateOptions();
 				}
 			}

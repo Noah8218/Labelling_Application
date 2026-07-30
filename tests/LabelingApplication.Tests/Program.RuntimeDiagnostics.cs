@@ -1,5 +1,6 @@
 using MvcVisionSystem;
 using MvcVisionSystem.Yolo;
+using OpenVisionLab.Logging;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -56,6 +57,11 @@ internal static class RuntimeDiagnosticsContractTests
                 password: raw-password-value
                 """,
                 Encoding.UTF8);
+            OVLog.ApplyFilePolicy(
+                paths.LogDirectory,
+                maxBackupFileCount: 10,
+                maximumFileSizeInMB: 20);
+            OVLog.Write("support-bundle-live-log token=live-log-secret");
 
             File.WriteAllBytes(Path.Combine(applicationDataRoot, "source-image.jpg"), new byte[] { 1, 2, 3 });
             File.WriteAllText(Path.Combine(applicationDataRoot, "labels.txt"), "0 0.5 0.5 0.2 0.2", Encoding.UTF8);
@@ -99,6 +105,12 @@ internal static class RuntimeDiagnosticsContractTests
             WpfSupportBundleResult result = service.CreateSupportBundle();
             AssertTrue(File.Exists(result.ArchivePath), "explicit support bundle export should create an archive");
             AssertTrue(
+                result.IncludedEntries.Any(entry => entry.StartsWith("logs/", StringComparison.Ordinal)),
+                "support bundle should include a sanitized log while the logging appenders are active");
+            AssertTrue(
+                result.SkippedLogs.All(entry => !entry.Contains("IOException", StringComparison.Ordinal)),
+                "support bundle should not lose active logs to exclusive file locking");
+            AssertTrue(
                 Directory.EnumerateFiles(paths.DiagnosticsDirectory, "*.json").Count()
                     <= WpfRuntimeDiagnosticsService.MaximumDiagnosticFiles,
                 "diagnostic retention should keep a bounded file count");
@@ -137,6 +149,7 @@ internal static class RuntimeDiagnosticsContractTests
                 "raw-password-value",
                 "raw-config-secret",
                 "startup-secret",
+                "live-log-secret",
                 @"C:\private\dataset"
             })
             {
