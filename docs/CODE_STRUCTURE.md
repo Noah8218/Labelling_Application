@@ -153,7 +153,7 @@ ViewModel은 가능하면 이름에 `ViewModel`을 명시합니다. UserControl�
 
 | 경로 | 대표 파일 | 역할 |
 | --- | --- | --- |
-| `ViewModels/Shell` | `WpfLabelingShellViewModel`, `WpfLearningWorkflowPanelViewModel`, `WpfLearningWorkflowItems` | shell composition, workflow navigation, 공통 status/log 상태와 workflow 표시 item. |
+| `ViewModels/Shell` | `WpfLabelingShellViewModel`, `WpfLearningWorkflowPanelViewModel`, `WpfLearningWorkflowItems`, `WpfRuntimeDiagnosticsViewModel` | shell composition, workflow navigation, 공통 status/log 상태, workflow 표시 item, 명시적 환경 점검/support export 상태. |
 | `ViewModels/Labeling` | `WpfCanvasPanelViewModel`, `WpfImageQueuePanelViewModel`, review ViewModel | 라벨 편집, 이미지 큐, 후보/객체 검토 상태. |
 | `ViewModels/Dataset` | `WpfDatasetSetupWizardViewModel`, `WpfProjectConfigPanelViewModel` | 데이터셋 선택·건강 상태와 Recipe/config 상태. |
 | `ViewModels/Model` | `WpfTrainingSettingsPanelViewModel`, `WpfYoloModelSettingsPanelViewModel`, `WpfModelBenchmarkViewModel`, `WpfModelBenchmarkItems` | 학습, 실행기 설정, 모델 비교 상태와 benchmark row/item 표시 모델. |
@@ -178,7 +178,7 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | `Services/ObjectReview` | `WpfObjectReview*` | object row text, class/delete plan, selection policy. |
 | `Services/Project` | `WpfProjectRecipe*` | recipe path와 session 상태. |
 | `Services/Training` | `WpfTraining*`, `WpfWorkflow*` | training readiness/progress와 workflow command state. |
-| `Services/Runtime` | `WpfYolo*` | YOLO runtime/settings 상태와 command 표시. |
+| `Services/Runtime` | `WpfYolo*`, `WpfRuntimeDiagnosticsService` | YOLO runtime/settings 상태, current-user 진단 경로, 시작 기록, 보존, 환경 점검, allow-list support export. |
 | `Services/Infrastructure` | `WpfFileDialogService`, `WpfWorkspaceLayoutSettingsService`, `WpfApplicationClosePolicyService` | WPF 공통 dialog, workspace layout 설정, 안전 종료 상태/결정 정책. |
 
 새 UI 요구사항이 생기면 먼저 Presenter/Selection/State service로 분리할 수 있는지 봅니다. Shell partial에는 “어느 service를 언제 호출할지” 정도만 남기는 것이 목표입니다.
@@ -850,6 +850,32 @@ and routes persistence through the existing explicit label-save operation.
 Do not extend this owner to session-only hide/full-lock/movement-pin, geometry
 merge/shared movement, training weighting, external interchange, team review,
 or automatic save.
+
+## Portable Project Archive Ownership
+
+`Services/Project/WpfPortableProjectArchiveService.cs` owns the saved Recipe
+plus complete dataset archive manifest, per-file SHA-256 validation, safe ZIP
+paths, staging, dataset-owned path rebasing, non-overwrite promotion, and
+rollback. `WpfLabelingShellWindow.ProjectArchiveCommands.cs` is only the WPF
+dialog/status adapter. `WpfProjectConfigPanelViewModel` owns the two visible
+commands and their workflow enablement.
+
+This boundary must not save labels or Recipe settings, confirm AI candidates,
+apply an imported Recipe, or start model work implicitly.
+
+## Crash Recovery Ownership
+
+`Services/Annotation/WpfCrashRecoveryJournalService.cs` owns the one-image
+recovery envelope, atomic promotion, SHA-256, revision ordering, retention and
+payload bounds, Recipe/dataset/image validation, discard, and quarantine.
+`WpfLabelingShellWindow.CrashRecovery.cs` is the WPF startup-dialog and
+current-image capture/restore adapter.
+
+Existing `AnnotationPersistence` remains the only label-file writer. Candidate
+Review and Smart Mask remain the owners of pending-candidate and prompt-session
+state. Recovery restores only ordinary annotation geometry and persistent
+Object Review metadata as dirty in-memory state; it must not call save,
+candidate confirmation, Recipe Apply, training, or inference.
 
 ## 완료 보고 전 확인
 

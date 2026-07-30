@@ -108,11 +108,45 @@ Do not claim complete if the required verification did not run or did not pass.
 
 ## Current Project Priorities
 
-- The combined current worktree passed 19/19 focused integration switches and
-  the default internal suite at 258/258 in
-  `docs/CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md`. Preserve the
-  loaded-window safe-close boundary, never-loaded cleanup behavior, and
-  non-segmentation object-row aggregate-scan optimization.
+- Read `docs/CURRENT_PRODUCT_STATUS.md` before choosing work. It is the single
+  current source of truth for product identity, maturity, the active priority,
+  and external prerequisites. Dated records remain evidence, not competing
+  current-priority documents.
+- The current protected regression baseline is 264/264 after the P1-B
+  bounded crash-recovery completion. Preserve the loaded-window
+  safe-close boundary, never-loaded cleanup behavior, non-segmentation
+  object-row aggregate-scan optimization, and all completed behavior named in
+  `docs/STABLE_VERIFIED_AREAS.md`.
+- The current-source Commercial Release Baseline audit is Complete in
+  `docs/COMMERCIAL_READINESS_AUDIT_20260730.md`. It verified a solo 260/260
+  default suite, both Release publish modes, published WPF launch, and the
+  configured local YOLO smoke without changing production code.
+- `P0-B1 Versioned Deterministic Self-Contained Release Bundle Contract` is
+  Complete in `docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md`. Preserve SDK
+  `8.0.421`, product `0.1.0`, deterministic output, the versioned
+  self-contained folder, full payload SHA-256 verification, required notices,
+  and the CI artifact gate.
+- `P0-B2 Packaged Runtime Diagnostics And Support Bundle` is Complete in
+  `docs/PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md`. Preserve current-user
+  startup/log/config routing, delayed logging initialization, bounded
+  retention, explicit environment self-test, allow-list/redacted support
+  export, and package-folder immutability.
+- `P1-A Portable Project Archive` is Complete in
+  `docs/PORTABLE_PROJECT_ARCHIVE_P1A_20260730.md`. Preserve saved-state
+  preflight, complete Recipe/dataset inclusion, per-file SHA-256 validation,
+  staged path rebasing, non-overwrite import, and explicit Recipe Apply.
+- `P1-B Bounded Crash Recovery Journal` is Complete in
+  `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`. Preserve one-current-image
+  scope, atomic/checksummed bounded retention, Recipe/dataset/image identity,
+  explicit restore/discard, dirty in-memory restore, pending-candidate
+  exclusion, and explicit label save.
+- Next prioritize clean-machine evidence and
+  independent production-data validation. Do not absorb
+  installer, signing, telemetry/cloud support, automatic inference/training,
+  autosave, multi-image recovery, or field-quality claims into the completed
+  P0-B2/P1-A/P1-B contracts. P0-C
+  is blocked until an approved clean Windows environment and release lifecycle
+  decisions are available.
 - Follow
   `docs/LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md`.
   Main-window safe close is Complete in

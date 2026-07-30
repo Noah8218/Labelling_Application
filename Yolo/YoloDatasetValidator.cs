@@ -201,8 +201,14 @@ namespace MvcVisionSystem.Yolo
 
             try
             {
-                Directory.CreateDirectory(data.OutputRootPath);
-                string probePath = Path.Combine(data.OutputRootPath, $".write-test-{Guid.NewGuid():N}.tmp");
+                string writableProbeDirectory = FindNearestExistingDirectory(data.OutputRootPath);
+                if (string.IsNullOrWhiteSpace(writableProbeDirectory))
+                {
+                    errors.Add("YOLO output root path has no existing writable parent.");
+                    return;
+                }
+
+                string probePath = Path.Combine(writableProbeDirectory, $".write-test-{Guid.NewGuid():N}.tmp");
                 File.WriteAllText(probePath, "");
                 File.Delete(probePath);
             }
@@ -210,6 +216,22 @@ namespace MvcVisionSystem.Yolo
             {
                 errors.Add($"YOLO output root path is not writable: {ex.Message}");
             }
+        }
+
+        private static string FindNearestExistingDirectory(string path)
+        {
+            string current = Path.GetFullPath(path);
+            while (!string.IsNullOrWhiteSpace(current))
+            {
+                if (Directory.Exists(current))
+                {
+                    return current;
+                }
+
+                current = Directory.GetParent(current)?.FullName;
+            }
+
+            return string.Empty;
         }
 
         private static void ValidateClasses(CData data, List<string> errors)

@@ -88,6 +88,8 @@ namespace MvcVisionSystem
                 ExecuteRefreshProjectRecipeListCommand,
                 ExecuteSaveProjectConfigCommand,
                 ExecuteOpenProjectConfigFolderCommand,
+                ExecuteExportProjectArchiveCommand,
+                ExecuteImportProjectArchiveCommand,
                 selected => ProjectRecipeListBox_SelectionChanged(ProjectRecipeListBox, selected));
             RefreshAttachedCommandBindings(ProjectRecipeListBox, InputCommandBehaviors.SelectedItemChangedCommandProperty);
         }

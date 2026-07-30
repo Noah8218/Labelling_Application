@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Xml;
 
 namespace OpenVisionLab.Logging
 {
@@ -41,17 +42,12 @@ namespace OpenVisionLab.Logging
 		private static readonly ILog warningLog = LogManager.GetLogger("OpenVisionLab.Warning");
 		private static readonly ILog errorLog = LogManager.GetLogger("OpenVisionLab.Error");
 		private static readonly ILog debugLog = LogManager.GetLogger("OpenVisionLab.Debug");
+		private static readonly object configurationSync = new object();
 		private static LogRetentionService logRetention;
+		private static bool isConfigured;
 
 		static OVLog()
 		{
-			string assemblyDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-			string configPath = Path.Combine(assemblyDirectory ?? AppDomain.CurrentDomain.BaseDirectory, "log4net.config");
-			if (File.Exists(configPath))
-			{
-				log4net.Config.XmlConfigurator.ConfigureAndWatch(new FileInfo(configPath));
-			}
-
 			log4net.Util.LogLog.InternalDebugging = false;
 		}
 
@@ -67,6 +63,7 @@ namespace OpenVisionLab.Logging
 
 		public static string GetLogDirectory()
 		{
+			EnsureConfigured();
 			Hierarchy hierarchy = (Hierarchy)LogManager.GetRepository();
 			RollingFileAppender appender = hierarchy.GetAppenders().FirstOrDefault(a => a.Name == "AllFile") as RollingFileAppender;
 			return appender == null ? null : Path.GetDirectoryName(appender.File);
@@ -90,6 +87,7 @@ namespace OpenVisionLab.Logging
 				return;
 			}
 
+			EnsureConfigured(logDirectory);
 			ILoggerRepository repository = LogManager.GetRepository();
 			foreach (IAppender appender in repository.GetAppenders())
 			{
@@ -151,6 +149,7 @@ namespace OpenVisionLab.Logging
 
 		public static void Write(LogCategory category, LogLevel level, params object[] values)
 		{
+			EnsureConfigured();
 			string message = BuildMessage(category, level, values);
 			WriteToLogger(allLog, level, message);
 
@@ -215,6 +214,57 @@ namespace OpenVisionLab.Logging
 				default:
 					logger.Info(message);
 					break;
+			}
+		}
+
+		private static void EnsureConfigured(string initialLogDirectory = null)
+		{
+			if (isConfigured)
+			{
+				return;
+			}
+
+			lock (configurationSync)
+			{
+				if (isConfigured)
+				{
+					return;
+				}
+
+				string assemblyDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+				string configPath = Path.Combine(assemblyDirectory ?? AppDomain.CurrentDomain.BaseDirectory, "log4net.config");
+				if (File.Exists(configPath))
+				{
+					var document = new XmlDocument();
+					document.Load(configPath);
+					XmlElement log4netElement =
+						document.SelectSingleNode("/configuration/log4net") as XmlElement
+						?? document.DocumentElement;
+					if (!string.IsNullOrWhiteSpace(initialLogDirectory))
+					{
+						string logRoot = initialLogDirectory.EndsWith("\\")
+							? initialLogDirectory
+							: initialLogDirectory + "\\";
+						XmlNodeList fileNodes = log4netElement?.SelectNodes("appender/file");
+						if (fileNodes != null)
+						{
+							foreach (XmlNode fileNode in fileNodes)
+							{
+								XmlAttribute valueAttribute = fileNode.Attributes?["value"];
+								if (valueAttribute != null)
+								{
+									valueAttribute.Value = logRoot;
+								}
+							}
+						}
+					}
+
+					log4net.Config.XmlConfigurator.Configure(
+						LogManager.GetRepository(),
+						log4netElement);
+				}
+
+				isConfigured = true;
 			}
 		}
 	}

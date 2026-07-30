@@ -12,6 +12,7 @@ namespace MvcVisionSystem
         [STAThread]
         static void Main(string[] args)
         {
+            WpfRuntimeDiagnosticsService.ConfigureApplicationStartup();
             using (Mutex mutex = new Mutex(true, "MvcVisionSystem", out bool bNew))
             {
                 if (!bNew)

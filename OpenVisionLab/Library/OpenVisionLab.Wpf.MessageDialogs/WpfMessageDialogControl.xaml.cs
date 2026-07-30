@@ -28,7 +28,7 @@ namespace OpenVisionLab.Wpf.MessageDialogs
             DetailsTextBox.Text = options.Details ?? string.Empty;
             DetailsContainer.Visibility = string.IsNullOrWhiteSpace(options.Details) ? Visibility.Collapsed : Visibility.Visible;
             DetailsTextBox.Visibility = Visibility.Collapsed;
-            DetailsToggleButton.Content = "Details";
+            DetailsToggleButton.Content = "상세 정보";
             detailsVisible = false;
 
             ApplyKind(options.Kind);
@@ -163,7 +163,7 @@ namespace OpenVisionLab.Wpf.MessageDialogs
         {
             detailsVisible = !detailsVisible;
             DetailsTextBox.Visibility = detailsVisible ? Visibility.Visible : Visibility.Collapsed;
-            DetailsToggleButton.Content = detailsVisible ? "Hide details" : "Details";
+            DetailsToggleButton.Content = detailsVisible ? "상세 정보 닫기" : "상세 정보";
         }
     }
 }

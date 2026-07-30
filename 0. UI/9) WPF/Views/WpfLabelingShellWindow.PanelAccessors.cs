@@ -43,6 +43,8 @@ namespace MvcVisionSystem
 
         public WpfShellLogPanelViewModel ShellLogViewModel => viewModels.ShellLogViewModel;
 
+        public WpfRuntimeDiagnosticsViewModel RuntimeDiagnosticsViewModel => viewModels.RuntimeDiagnosticsViewModel;
+
         public RoiImageCanvasViewModel MainCanvasViewModel => viewModels.MainCanvasViewModel;
 
         private ListBox DatasetPurposeListBox => LearningWorkflowPanelControl?.DatasetPurposeList;

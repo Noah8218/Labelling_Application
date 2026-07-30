@@ -135,8 +135,17 @@ dotnet build .\OpenVisionLab.LabelingStudio.sln -c Debug -p:Platform=x64
 Release publish 실행:
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Configuration Release
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release
 .\scripts\start-labeling-workbench.ps1 -AppMode Publish
+```
+
+기본 릴리스는 `artifacts\publish\Release\win-x64\0.1.0`에 생성되는
+self-contained Windows x64 번들입니다. `release-manifest.json`과
+`publish-manifest.txt`에는 소스 커밋, 빌드 식별 정보, 전체 payload의
+SHA-256이 기록됩니다. 기존 패키지는 다음 명령으로 변경 없이 다시 검증할 수 있습니다.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release -ReleaseVersion 0.1.0 -VerifyOnly
 ```
 
 ## 샘플 데이터
@@ -185,12 +194,17 @@ GitHub Actions의 `.github/workflows/ci.yml`은 다음을 확인합니다.
 - README 필수 섹션
 - .NET 테스트 프로젝트 빌드
 - `--priority-workflow-docs` smoke
+- versioned self-contained `win-x64` publish와 `--release-package-contract`
+- `openvisionlab-labeling-studio-0.1.0-win-x64` artifact 업로드
 - `git diff --check`
 
 ## 문서
 
 | 문서 | 내용 |
 | --- | --- |
+| [현재 제품 상태와 개발 우선순위](docs/CURRENT_PRODUCT_STATUS.md) | 제품 정체성, 검증된 완성 범위, 상용화 전환 순서, 외부 선행조건의 단일 기준 |
+| [상용 릴리스 기준 감사](docs/COMMERCIAL_READINESS_AUDIT_20260730.md) | 현재 빌드·전체 회귀·게시·첫 실행 결과와 릴리스 누락 항목 |
+| [다음 개발 결정](docs/NEXT_DEVELOPMENT_DECISION_20260730.md) | 버전이 지정된 결정적 self-contained 릴리스 번들의 단일 구현 계약 |
 | [단계별 사용 가이드](docs/tutorial/README.md) | 객체탐지·세그멘테이션·이상탐지 라벨링과 학습 절차 |
 | [화면 캡처 튜토리얼](docs/tutorial/labeling-workbench-tutorial.html) | 번호가 표시된 전체 화면 안내 |
 | [YOLOv5 학습 결과 판단 기준](docs/YOLOV5_TRAINING_RESULT_WORKFLOW.md) | 학습 완료 후 후보를 채택하기 전 확인할 기준 |
@@ -201,18 +215,31 @@ GitHub Actions의 `.github/workflows/ci.yml`은 다음을 확인합니다.
 | [MobileSAM 스마트 마스크](docs/MOBILE_SAM_SMART_MASK.md) | 결함 박스에서 검토 가능한 세그멘테이션 후보를 만드는 방법 |
 | [MobileSAM 박스 오차 검증](docs/MOBILE_SAM_BOX_JITTER_MATRIX_20260722.md) | 작은 박스 확대·축소·이동 96회 평가와 검증 경계 |
 
+P0-B1 릴리스 패키지 계약의 구현·검증 결과는
+[릴리스 패키지 완료 기록](docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md)에
+정리되어 있습니다. P0-B2의 사용자 경로 시작 진단, 제한된 보존, 명시적 환경
+점검, 개인정보 안전 support bundle 결과는
+[패키지 진단 완료 기록](docs/PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md)에
+정리되어 있습니다.
+
 ## Release Notes
 
-사용자에게 영향을 주는 변경은 [RELEASE_NOTES.md](RELEASE_NOTES.md)에 기록합니다. 상세 개발 검증 이력은 `docs/WORK_TRACKING.md`에서 관리합니다.
+사용자에게 영향을 주는 변경은 [RELEASE_NOTES.md](RELEASE_NOTES.md)에 기록합니다. 현재 제품 상태와 다음 개발 우선순위는 [CURRENT_PRODUCT_STATUS.md](docs/CURRENT_PRODUCT_STATUS.md), 상세 개발 검증 이력은 `docs/WORK_TRACKING.md`에서 관리합니다.
 
 ## Roadmap
 
-1. MobileSAM 스마트 마스크는 Recipe별 자동 윤곽, 포함/제외점 보정, 이전/현재 후보 복원, 명시적 확정·스킵까지 지원합니다. 8개 합성 결함 클래스의 정확한 박스 24회와 작은 확대·축소·이동 96회 평가도 완료했습니다. 텍스트·음성 프롬프트는 현재 범위가 아닙니다.
-2. 합성 데이터는 고정 split·SHA-256·런타임 provenance·공통 평가 기준을 충족할 때 기능 완료 근거로 사용합니다.
-3. 현장 데이터가 제공되면 별도 선택적 검증으로 일반화 성능과 운영 임계값을 평가합니다.
+1. 현재 소스의 빌드·260개 전체 회귀·framework-dependent/self-contained Release 게시·첫 실행 감사가 완료됐습니다. 로컬 게시 가능성은 확인됐지만 상용 릴리스 준비 완료를 의미하지 않습니다.
+2. SDK `8.0.421`, 제품 `0.1.0`, 결정적 self-contained 패키지, 전체 payload SHA-256, LICENSE·NOTICE·제3자 고지를 포함한 P0-B1은 완료됐습니다.
+3. P0-B2의 명시적 환경 self-test, 구조화된 시작 진단, 제한된 로그 보존, 개인정보 안전 support bundle export는 완료됐습니다.
+4. 이식 가능한 프로젝트 아카이브와 한 이미지 제한형 비정상 종료 복구 저널은 구현 완료됐습니다. 승인된 깨끗한 Windows 환경과 설치/서명 결정이 제공되면 설치·업그레이드·제거를 검증합니다.
+5. 승인된 생산 데이터와 목표 하드웨어가 제공되면 정확도·장기 안정성·takt time을 별도 현장 채택 기준으로 검증합니다.
 
 ## Known Limitations
 
+- 현재 설치 프로그램, 코드 서명, 업그레이드·제거 검증, 깨끗한 PC 설치 근거는 없습니다. 로컬 게시 감사는 완료됐지만 설치 생명주기 검증과는 별개입니다.
+- P0-B2 진단은 로컬 사용자 경로와 명시적 support export까지 검증됐지만 텔레메트리·클라우드 지원·자동 업로드를 제공하지 않습니다.
+- `설정/도구 -> 프로젝트 이동`에서 마지막으로 저장된 Recipe와 전체 데이터셋을 SHA-256 프로젝트 아카이브로 내보내고 새 위치로 가져올 수 있습니다. 미저장 라벨·미확정 후보·진행 중 작업은 차단하며, 기존 Recipe/데이터셋을 덮어쓰거나 자동 적용하지 않습니다.
+- 비정상 종료 시 한 이미지의 미저장 박스·세그멘테이션·검수 메타데이터를 명시적으로 복구하거나 폐기할 수 있습니다. 복구는 AI 후보를 승인하거나 라벨을 자동 저장하지 않으며, 7일이 지난 초안과 Recipe·데이터셋·이미지가 달라진 초안은 사용하지 않습니다. 상세 계약은 [P1-B 복구 완료 기록](docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md)을 참고하세요.
 - 현재 이상탐지는 OK/NG 2클래스 분류이며 one-class novelty detection이나 위치 heatmap 학습이 아닙니다.
 - 합성 데이터는 기능·어댑터·재현성 완료 근거로 사용할 수 있지만 생산 정확도 보장은 아닙니다. 현장 데이터가 없으면 `현장 검증 미평가`로 분리합니다.
 - MobileSAM은 현재 객체 하나당 단일 시작 박스와 여러 포함/제외점을 지원합니다. 고정 평가에서는 정확한 메타데이터 박스와 20% 확대, 10% 축소, 10% 대각선 이동까지 검증했지만 더 큰 오차, 임의 형상, 자동 다중 객체 분리와 현장 정확도는 보장하지 않습니다. 자동 확정·저장, 텍스트·음성 프롬프트와 텍스트 기반 자동 라벨링은 지원하지 않습니다.

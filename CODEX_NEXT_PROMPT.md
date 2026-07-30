@@ -12,11 +12,12 @@ Read and follow both instruction files first:
 Required start order:
 1. Run git status --short first.
 2. Read the global and repository AGENTS.md files listed above.
-3. Read docs/NEXT_THREAD_HANDOFF.md. It is the current project handoff and source-of-truth summary.
-4. Read docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md for current product scope, maturity, and commercial comparison.
-5. Read this CODEX_NEXT_PROMPT.md, docs/WORK_TRACKING.md, and docs/STABLE_VERIFIED_AREAS.md for the bounded next action and durable evidence.
-6. Inspect the live branch, status, and diff before selecting work. Git state is authoritative over documentation.
-7. Before editing or running follow-up commands, state:
+3. Read docs/CURRENT_PRODUCT_STATUS.md. It is the single current source of truth for product identity, maturity, active priority, and prerequisites.
+4. Read docs/NEXT_THREAD_HANDOFF.md as navigation and historical context.
+5. Read docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md for the detailed historical product scope and commercial comparison.
+6. Read this CODEX_NEXT_PROMPT.md, docs/WORK_TRACKING.md, and docs/STABLE_VERIFIED_AREAS.md for durable evidence.
+7. Inspect the live branch, status, and diff before selecting work. Git state is authoritative over documentation.
+8. Before editing or running follow-up commands, state:
    - immediate priority;
    - remaining product priority;
    - product identity;
@@ -26,9 +27,9 @@ Required start order:
 
 Current checkpoint:
 - Workspace: C:\Git\Labelling_Application
-- Branch: main. Live HEAD at the latest handoff is
-  `e1465d6 feat: streamline smart mask labeling workflow`; `main` and
-  `origin/main` are `0/0` at that commit. The
+- Branch: main. Baseline HEAD at the 2026-07-30 product-direction review is
+  `4c6718a fix: contextualize object group controls`. Verify the live branch,
+  worktree, and remote state before work. The
   labeling-editor structure workflow through P1-C
   merge/join and axis-aligned split/slice is committed and pushed as
   `9b2160a feat: advance labeling editor structure workflows`. Enclosed hole
@@ -83,6 +84,32 @@ Product direction:
 - The supplied circular-disk 500 OK / 500 NG package is complete synthetic workflow evidence: exact metadata-backed 5-class detection data, YOLOv5/YOLOv8 one-epoch connectivity, a controlled 20-epoch 150-image test benchmark, and a new 20-epoch anomaly candidate. The anomaly candidate remains `hold`; the detection benchmark favors YOLOv8n (`mAP50/mAP50-95 0.955/0.678`, 27.575ms) over YOLOv5s (`0.900/0.567`, 52.45ms) but is explicitly `engine-benchmark`, not adoption. The fixed comparison cleanup preserves the exact source-tree SHA-256. The package is derived from one earlier OK source image; do not present it as independent camera evidence. Read `docs/CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
 
 Current immediate priority:
+- The Commercial Release Baseline audit is Complete in
+  `docs/COMMERCIAL_READINESS_AUDIT_20260730.md`.
+- `P0-B1 Versioned Deterministic Self-Contained Release Bundle Contract` is
+  Complete in `docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md`.
+- `P0-B2 Packaged Runtime Diagnostics And Support Bundle` is Complete in
+  `docs/PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md`.
+- `P1-A Portable Project Archive` is Complete in
+  `docs/PORTABLE_PROJECT_ARCHIVE_P1A_20260730.md`.
+- `P1-B Bounded Crash Recovery Journal` is Complete in
+  `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`.
+- Preserve explicit saved-state preflight, complete Recipe/dataset coverage,
+  per-file SHA-256, path rebasing, non-overwrite import, and explicit Apply.
+- Preserve current-user startup/log/config paths, delayed logging
+  initialization, bounded retention, explicit environment self-test,
+  allow-list/redacted support export, and package-folder immutability.
+- P0-C clean-machine evidence is blocked until an approved Windows
+  environment and installer/signing decisions are supplied. Do not spend
+  implementation tokens on that blocked gate.
+- Preserve one-current-image recovery, atomic/checksummed bounded retention,
+  Recipe/dataset/image identity, explicit restore/discard, dirty in-memory
+  restore, pending-candidate exclusion, and explicit label save.
+- Independent production validation is blocked until approved data,
+  thresholds, runtime/weights, and target hardware are supplied. Do not invent
+  local field evidence or expand P1-B into autosave/multi-image recovery.
+
+Historical completed context:
 - The combined current worktree integration verification is Complete.
   Isolated/current Debug builds have zero warnings/errors, 19/19 focused
   switches pass, and the default internal suite passes 258/258 with empty

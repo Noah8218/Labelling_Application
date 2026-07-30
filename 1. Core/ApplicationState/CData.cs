@@ -41,7 +41,11 @@ namespace MvcVisionSystem
 
         [XmlIgnore] public string TestImagesPath => Path.Combine(OutputRootPath, "data", "test", "images");
 
-        public CData() { CUtil.InitDirectory("DATA"); }
+        public CData()
+        {
+            // Dataset folders are created by the selected setup/save workflow.
+            // Construction must remain side-effect free for packaged startup.
+        }
         public CData LoadConfig(string RecipeName)
         {
             string strPath = GetRecipeConfigPath(RecipeName);

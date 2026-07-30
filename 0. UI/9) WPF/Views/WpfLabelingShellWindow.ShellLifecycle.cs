@@ -15,7 +15,10 @@ namespace MvcVisionSystem
             {
                 RefreshYoloStatus();
                 _ = RefreshYoloSettingsPanelAsync();
-                TryLoadStartupSampleImage();
+                if (!TryHandleCrashRecoveryOnStartup())
+                {
+                    TryLoadStartupSampleImage();
+                }
                 SetPythonStatus("\uCD94\uB860: \uC2E4\uD589 \uB300\uAE30");
                 AppendLog("시작 완료. 추론은 사용자가 명시적으로 실행할 때만 시작합니다.");
             }), DispatcherPriority.ApplicationIdle);
@@ -198,6 +201,7 @@ namespace MvcVisionSystem
 
         private void ExecuteClosedCommand()
         {
+            DiscardCrashRecoveryJournal();
             SaveWorkspaceLayoutSettings();
             CloseModelBenchmarkWindow();
             CloseDatasetHealthWindow();

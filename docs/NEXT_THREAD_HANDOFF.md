@@ -1,13 +1,15 @@
 # Next Thread Handoff
 
-Last updated: 2026-07-29 KST
+Last updated: 2026-07-30 KST
 
 This is the current operational handoff for C:\Git\Labelling_Application. It is intentionally shorter than the historical journal. Use it to choose the next task; use the linked records only for the detailed evidence behind a claim.
 
-## 0. 2026-07-29 Current Source-of-Truth Capsule
+## 0. 2026-07-30 Current Source-of-Truth Capsule
 
-This section supersedes older priority wording later in this file when the two
-conflict.
+Read `docs/CURRENT_PRODUCT_STATUS.md` first. It supersedes older product,
+maturity, and priority wording later in this file when they conflict. This
+handoff remains a navigation surface and historical context, not a second
+current-priority authority.
 
 Current product:
 
@@ -19,25 +21,45 @@ Current product:
 
 Current Git/worktree:
 
-- live HEAD at this handoff:
-  `e1465d6 feat: streamline smart mask labeling workflow`;
-- `main` and `origin/main` are `0/0` at that commit;
-- Smart Mask contextual correction, real correction-effectiveness evidence,
-  candidate compare/restore, Recipe-scoped automatic contour, canvas layout
-  auto-fit, and the earlier source-of-truth synchronization are committed;
-- safe close, canonical class-index presentation, current Smart Mask
-  operator-documentation truth, and Dataset Health existing-data split
-  filtering are Complete in the current uncommitted worktree and have their
-  own verification records;
-- the current combined worktree passed zero-warning/error isolated and Debug
-  app builds, 19/19 focused integration switches, and the default internal
-  suite at 258/258. Integration verification also corrected never-loaded
-  test-window close cleanup and unnecessary 100,000-row manual-ROI
-  segmentation aggregate scans. Read
-  `docs/CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md`;
+- baseline HEAD at this documentation review:
+  `4c6718a fix: contextualize object group controls`;
+- all safe-close, canonical class-index, Smart Mask, Dataset Health,
+  four-point box, Object Review metadata/group, and contextual group-control
+  slices are committed and pushed through that baseline;
+- the latest clean solo default internal regression evidence is 264/264 with
+  no failures. Read `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`;
 - `.proofline/STATE.md` and `.proofline/dashboard/` are local/user-owned and
   must remain untouched;
 - no product change or push is authorized by this handoff.
+
+Current immediate priority:
+
+- the Commercial Release Baseline audit is Complete in
+  `docs/COMMERCIAL_READINESS_AUDIT_20260730.md`;
+- `P0-B1 Versioned Deterministic Self-Contained Release Bundle Contract` is
+  Complete in `docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md`;
+- `P0-B2 Packaged Runtime Diagnostics And Support Bundle` is Complete in
+  `docs/PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md`;
+- `P1-A Portable Project Archive` is Complete in
+  `docs/PORTABLE_PROJECT_ARCHIVE_P1A_20260730.md`;
+- `P1-B Bounded Crash Recovery Journal` is Complete in
+  `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`;
+- preserve dirty/pending/active preflight blocking, complete saved
+  Recipe/dataset inclusion, per-file SHA-256, staging/path rebasing,
+  non-overwrite import, and explicit Recipe Apply;
+- preserve current-user diagnostics/log/config routing, delayed log
+  initialization, bounded retention, explicit self-test/export, support ZIP
+  allow-list/redaction, and package-folder immutability;
+- preserve one-current-image recovery, atomic/checksummed bounded retention,
+  Recipe/dataset/image identity, explicit restore/discard, dirty in-memory
+  restore, pending-candidate exclusion, and explicit label save;
+- P0-C clean-machine installation evidence is blocked until an approved clean
+  Windows environment and installer/signing decisions are available;
+- independent production validation is blocked until approved data,
+  thresholds, runtime/weights, and target hardware are available;
+- do not turn P0-B2/P1-A/P1-B into telemetry/cloud support, automatic
+  inference/training, label autosave, multi-image recovery, external runtime
+  redistribution, or a production-accuracy claim.
 
 Latest completed Smart Mask slices:
 

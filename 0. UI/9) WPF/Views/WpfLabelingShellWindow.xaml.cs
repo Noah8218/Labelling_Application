@@ -172,6 +172,7 @@ namespace MvcVisionSystem
         private readonly WpfAnomalyClassificationEvaluationRunService anomalyClassificationEvaluationRunService = new WpfAnomalyClassificationEvaluationRunService();
         private readonly WpfWorkspaceLayoutSettingsService workspaceLayoutSettingsService = new WpfWorkspaceLayoutSettingsService();
         private readonly WpfApplicationClosePolicyService applicationClosePolicyService = new WpfApplicationClosePolicyService();
+        private readonly WpfCrashRecoveryJournalService crashRecoveryJournalService = new WpfCrashRecoveryJournalService();
         private readonly WpfTrainingGuideHistoryService trainingGuideHistoryService = new WpfTrainingGuideHistoryService();
         private readonly WpfMaskEditStateService maskEditStateService = new WpfMaskEditStateService();
         private readonly WpfMaskStrokeHistoryDraftService maskStrokeHistoryDraftService = new WpfMaskStrokeHistoryDraftService();
@@ -233,6 +234,10 @@ namespace MvcVisionSystem
         private bool activeSegmentDragChanged;
         private bool suppressAnnotationHistory;
         private string annotationDirtyReason = string.Empty;
+        private long crashRecoveryJournalRevision;
+        private int crashRecoveryCaptureVersion;
+        private bool suppressCrashRecoveryJournal;
+        private System.Threading.Tasks.Task crashRecoveryWriteTask = System.Threading.Tasks.Task.CompletedTask;
         private bool isApplicationCloseApproved;
         private bool isApplicationClosePromptOpen;
         private string activeRoiEditHistoryOverlayId = string.Empty;

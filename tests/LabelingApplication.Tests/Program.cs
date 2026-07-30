@@ -290,6 +290,24 @@ internal static partial class Program
             });
         }
 
+        if (args.Any(arg => string.Equals(arg, "--project-archive", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke("Portable project archive round-trips saved Recipe and dataset state", () =>
+            {
+                ProjectArchiveTests.TestPortableProjectArchiveRoundTrip();
+                ProjectArchiveTests.TestProjectArchiveExplicitBoundaryAndUiContract();
+            });
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--crash-recovery", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke("Bounded crash recovery restores only explicit dirty annotation drafts", () =>
+            {
+                CrashRecoveryTests.TestCrashRecoveryJournalRoundTripAndSafety();
+                CrashRecoveryTests.TestCrashRecoveryShellPreservesExplicitSaveAndCandidateBoundaries();
+            });
+        }
+
         if (args.Any(arg => string.Equals(arg, "--wpf-dataset-version-visual", StringComparison.OrdinalIgnoreCase)))
         {
             return RecipeDatasetVersionTests.RunWpfDatasetVersionVisual(args);
@@ -701,7 +719,19 @@ internal static partial class Program
 
         if (args.Any(arg => string.Equals(arg, "--priority-workflow-docs", StringComparison.OrdinalIgnoreCase)))
         {
-            return RunSingleSmoke("Priority workflow docs preserve completed areas and current model-quality priorities", TestPriorityWorkflowDocuments);
+            return RunSingleSmoke("Priority workflow docs preserve completed areas and current productization priorities", TestPriorityWorkflowDocuments);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--release-package-contract", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke("Versioned self-contained release package verifies identity, hashes, and notices", ReleasePackageContractTests.TestReleasePackageContract);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--runtime-diagnostics-contract", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Runtime diagnostics uses per-user paths and exports an allow-list support bundle",
+                RuntimeDiagnosticsContractTests.TestRuntimeDiagnosticsAndSupportBundleContract);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-image-queue-status", StringComparison.OrdinalIgnoreCase)))
@@ -1583,6 +1613,10 @@ internal static partial class Program
             ("WPF project config panel declares recipe controls", TestWpfProjectConfigPanelDeclaresRecipeControls),
             ("WPF project recipe session service isolates Core transitions", TestWpfProjectRecipeSessionService),
             ("WPF project recipe service remembers last opened dataset", TestWpfProjectRecipeServiceRemembersLastOpenedDataset),
+            ("Portable project archive round-trips saved Recipe and dataset state", ProjectArchiveTests.TestPortableProjectArchiveRoundTrip),
+            ("Project archive preserves explicit save, confirmation, and apply boundaries", ProjectArchiveTests.TestProjectArchiveExplicitBoundaryAndUiContract),
+            ("Crash recovery journal round-trips one bounded current-image draft", CrashRecoveryTests.TestCrashRecoveryJournalRoundTripAndSafety),
+            ("Crash recovery preserves explicit label-save and AI-candidate boundaries", CrashRecoveryTests.TestCrashRecoveryShellPreservesExplicitSaveAndCandidateBoundaries),
             ("WPF YOLO model settings panel declares path editors", TestWpfYoloModelSettingsPanelDeclaresPathEditors),
             ("WPF training settings panel declares controls", TestWpfTrainingSettingsPanelDeclaresControls),
             ("WPF settings view models round-trip editor values", WpfSettingsViewModelTests.TestWpfSettingsViewModelsRoundTrip),
@@ -1934,6 +1968,8 @@ internal static partial class Program
         bool showObjectGroup = HasArgument(args, "--show-object-group");
         bool openHeaderToolsMenu = HasArgument(args, "--open-header-tools-menu");
         bool showWorkspaceLayoutControls = HasArgument(args, "--show-workspace-layout-controls");
+        bool runRuntimeSelfTest = HasArgument(args, "--run-runtime-self-test");
+        bool createSupportBundle = HasArgument(args, "--create-support-bundle");
         bool showTrainingRecoveryStatus = HasArgument(args, "--show-training-recovery-status");
         bool showCandidateDisclosure = HasArgument(args, "--show-candidate-disclosure");
         bool expandModelRuntimeDetails = HasArgument(args, "--expand-model-runtime-details");
@@ -1980,6 +2016,7 @@ internal static partial class Program
         bool displayEqualize = HasArgument(args, "--display-equalize");
         bool screenCapture = HasArgument(args, "--screen-capture");
         bool showApplicationCloseDialog = HasArgument(args, "--show-application-close-dialog");
+        bool showCrashRecoveryDialog = HasArgument(args, "--show-crash-recovery-dialog");
         bool labelsOnly = HasArgument(args, "--labels-only");
         bool segmentationCandidates = HasArgument(args, "--segmentation-candidates");
         bool smartMaskCandidate = HasArgument(args, "--smart-mask-candidate");
@@ -2489,6 +2526,18 @@ internal static partial class Program
                         PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
                     }
 
+                    if (runRuntimeSelfTest)
+                    {
+                        window.RuntimeDiagnosticsViewModel.RunSelfTestCommand.Execute(null);
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(150));
+                    }
+
+                    if (createSupportBundle)
+                    {
+                        window.RuntimeDiagnosticsViewModel.CreateSupportBundleCommand.Execute(null);
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
+                    }
+
                     if (showCandidateDisclosure)
                     {
                         ApplyVisualSmokeCandidateDisclosure(window);
@@ -2909,6 +2958,35 @@ internal static partial class Program
                         ?? (System.Windows.Window)datasetHealthWindow
                         ?? (System.Windows.Window)modelBenchmarkWindow
                         ?? window;
+                    if (showCrashRecoveryDialog)
+                    {
+                        bool dialogCaptured = false;
+                        WpfCrashRecoveryDraft visualDraft = CrashRecoveryTests.CreateVisualDraft(
+                            imagePath,
+                            CGlobal.Inst.Data.OutputRootPath);
+                        window.Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            WpfMessageDialogWindow recoveryDialog = System.Windows.Application.Current.Windows
+                                .OfType<WpfMessageDialogWindow>()
+                                .FirstOrDefault(candidate => ReferenceEquals(candidate.Owner, window));
+                            AssertTrue(recoveryDialog != null, "crash-recovery dialog was not visible for capture");
+                            recoveryDialog.UpdateLayout();
+                            recoveryDialog.Activate();
+                            PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
+                            CaptureWindowFromScreen(window, outputPath);
+                            dialogCaptured = true;
+                            recoveryDialog.Close();
+                        }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
+                        InvokePrivateResult<WpfMessageDialogResult>(
+                            window,
+                            "ShowCrashRecoveryPrompt",
+                            visualDraft);
+                        AssertTrue(dialogCaptured, "crash-recovery dialog capture did not complete");
+                        Console.WriteLine($"WPF crash-recovery visual smoke captured: {outputPath}");
+                        return 0;
+                    }
+
                     if (showApplicationCloseDialog)
                     {
                         bool dialogCaptured = false;
@@ -24730,6 +24808,16 @@ internal static partial class Program
         string fourPointExtremeBoxImplementationPath = Path.Combine(root, "docs", "FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md");
         string datasetHealthClassFilterPath = Path.Combine(root, "docs", "DATASET_HEALTH_CLASS_FILTER_20260729.md");
         string currentWorktreeIntegrationPath = Path.Combine(root, "docs", "CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md");
+        string currentProductStatusPath = Path.Combine(root, "docs", "CURRENT_PRODUCT_STATUS.md");
+        string commercialReadinessAuditPath = Path.Combine(root, "docs", "COMMERCIAL_READINESS_AUDIT_20260730.md");
+        string nextDevelopmentDecisionPath = Path.Combine(root, "docs", "NEXT_DEVELOPMENT_DECISION_20260730.md");
+        string releasePackageCompletionPath = Path.Combine(root, "docs", "RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md");
+        string runtimeDiagnosticsCompletionPath = Path.Combine(root, "docs", "PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md");
+        string crashRecoveryCompletionPath = Path.Combine(root, "docs", "BOUNDED_CRASH_RECOVERY_P1B_20260730.md");
+        string repositoryInstructionsPath = Path.Combine(root, "AGENTS.md");
+        string handoffPath = Path.Combine(root, "docs", "NEXT_THREAD_HANDOFF.md");
+        string nextPromptPath = Path.Combine(root, "CODEX_NEXT_PROMPT.md");
+        string userCenteredDirectionPath = Path.Combine(root, "docs", "LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md");
         string releaseNotesPath = Path.Combine(root, "RELEASE_NOTES.md");
         string ciWorkflowPath = Path.Combine(root, ".github", "workflows", "ci.yml");
         string tutorialReadmePath = Path.Combine(root, "docs", "tutorial", "README.md");
@@ -24749,6 +24837,12 @@ internal static partial class Program
         AssertTrue(File.Exists(fourPointExtremeBoxImplementationPath), "four-point extreme-box implementation record should exist");
         AssertTrue(File.Exists(datasetHealthClassFilterPath), "Dataset Health class-filter completion record should exist");
         AssertTrue(File.Exists(currentWorktreeIntegrationPath), "current-worktree integration completion record should exist");
+        AssertTrue(File.Exists(currentProductStatusPath), "single current product-status authority should exist");
+        AssertTrue(File.Exists(commercialReadinessAuditPath), "commercial readiness audit should exist");
+        AssertTrue(File.Exists(nextDevelopmentDecisionPath), "next development decision should exist");
+        AssertTrue(File.Exists(releasePackageCompletionPath), "P0-B1 release package completion record should exist");
+        AssertTrue(File.Exists(runtimeDiagnosticsCompletionPath), "P0-B2 runtime diagnostics completion record should exist");
+        AssertTrue(File.Exists(crashRecoveryCompletionPath), "P1-B crash recovery completion record should exist");
         AssertTrue(File.Exists(releaseNotesPath), "release notes document should exist");
         AssertTrue(File.Exists(ciWorkflowPath), "CI workflow should exist");
         AssertTrue(File.Exists(tutorialReadmePath), "tutorial README should exist");
@@ -24773,6 +24867,16 @@ internal static partial class Program
         string fourPointExtremeBoxImplementation = File.ReadAllText(fourPointExtremeBoxImplementationPath, Encoding.UTF8);
         string datasetHealthClassFilter = File.ReadAllText(datasetHealthClassFilterPath, Encoding.UTF8);
         string currentWorktreeIntegration = File.ReadAllText(currentWorktreeIntegrationPath, Encoding.UTF8);
+        string currentProductStatus = File.ReadAllText(currentProductStatusPath, Encoding.UTF8);
+        string commercialReadinessAudit = File.ReadAllText(commercialReadinessAuditPath, Encoding.UTF8);
+        string nextDevelopmentDecision = File.ReadAllText(nextDevelopmentDecisionPath, Encoding.UTF8);
+        string releasePackageCompletion = File.ReadAllText(releasePackageCompletionPath, Encoding.UTF8);
+        string runtimeDiagnosticsCompletion = File.ReadAllText(runtimeDiagnosticsCompletionPath, Encoding.UTF8);
+        string crashRecoveryCompletion = File.ReadAllText(crashRecoveryCompletionPath, Encoding.UTF8);
+        string repositoryInstructions = File.ReadAllText(repositoryInstructionsPath, Encoding.UTF8);
+        string handoff = File.ReadAllText(handoffPath, Encoding.UTF8);
+        string nextPrompt = File.ReadAllText(nextPromptPath, Encoding.UTF8);
+        string userCenteredDirection = File.ReadAllText(userCenteredDirectionPath, Encoding.UTF8);
         string releaseNotes = File.ReadAllText(releaseNotesPath, Encoding.UTF8);
         string ciWorkflow = File.ReadAllText(ciWorkflowPath, Encoding.UTF8);
         string tutorialReadme = File.ReadAllText(tutorialReadmePath, Encoding.UTF8);
@@ -24793,10 +24897,78 @@ internal static partial class Program
         AssertTrue(readme.Contains("## Release Notes", StringComparison.Ordinal), "README should link release notes");
         AssertTrue(readme.Contains("## Roadmap", StringComparison.Ordinal), "README should include a roadmap");
         AssertTrue(readme.Contains("## Known Limitations", StringComparison.Ordinal), "README should include known limitations");
+        AssertTrue(readme.Contains("docs/CURRENT_PRODUCT_STATUS.md", StringComparison.Ordinal), "README should link the current product-status authority");
+        AssertTrue(readme.Contains("docs/COMMERCIAL_READINESS_AUDIT_20260730.md", StringComparison.Ordinal), "README should link the commercial readiness audit");
+        AssertTrue(readme.Contains("docs/NEXT_DEVELOPMENT_DECISION_20260730.md", StringComparison.Ordinal), "README should link the next development decision");
+        AssertTrue(
+            currentProductStatus.Contains("single current source of truth", StringComparison.Ordinal)
+                && currentProductStatus.Contains("P0-A. Current-Source Commercial Release Audit And Contract", StringComparison.Ordinal)
+                && currentProductStatus.Contains("No production code was changed during the audit", StringComparison.Ordinal)
+                && currentProductStatus.Contains("P0-B1. Versioned Deterministic Self-Contained Release Bundle", StringComparison.Ordinal)
+                && currentProductStatus.Contains("P0-B2. Packaged Runtime Diagnostics And Support Bundle", StringComparison.Ordinal)
+                && currentProductStatus.Contains("Status: `Complete`", StringComparison.Ordinal)
+                && currentProductStatus.Contains("P0-C. Clean-Machine Installation Evidence", StringComparison.Ordinal)
+                && currentProductStatus.Contains("approved clean Windows environment", StringComparison.Ordinal)
+                && currentProductStatus.Contains("260/260", StringComparison.Ordinal),
+            "current product status should preserve completed P0-A/B1/B2 work and the blocked P0-C prerequisite");
+        AssertTrue(
+            commercialReadinessAudit.Contains("Status: Complete", StringComparison.Ordinal)
+                && commercialReadinessAudit.Contains("260/260", StringComparison.Ordinal)
+                && commercialReadinessAudit.Contains("263,463,549", StringComparison.Ordinal)
+                && commercialReadinessAudit.Contains("Local publish baseline verified", StringComparison.Ordinal)
+                && commercialReadinessAudit.Contains("contract missing", StringComparison.OrdinalIgnoreCase),
+            "commercial readiness audit should preserve commands, package measurements, and the no-overclaim boundary");
+        AssertTrue(
+            nextDevelopmentDecision.Contains("P0-B1 Versioned Deterministic Self-Contained Release Bundle Contract", StringComparison.Ordinal)
+                && nextDevelopmentDecision.Contains("Included Scope", StringComparison.Ordinal)
+                && nextDevelopmentDecision.Contains("Excluded Scope", StringComparison.Ordinal)
+                && nextDevelopmentDecision.Contains("Status: Complete", StringComparison.Ordinal),
+            "next development decision should select exactly one bounded package implementation slice");
+        AssertTrue(
+            releasePackageCompletion.Contains("Status: Complete", StringComparison.Ordinal)
+                && releasePackageCompletion.Contains("503", StringComparison.Ordinal)
+                && releasePackageCompletion.Contains("8.0.421", StringComparison.Ordinal)
+                && releasePackageCompletion.Contains("0.1.0", StringComparison.Ordinal)
+                && releasePackageCompletion.Contains("F9C589EA1AF73101170AB0AE5736B0353E9DC91098401D85AB9AD35B1A419A23", StringComparison.Ordinal)
+                && releasePackageCompletion.Contains("P0-B2 Packaged Runtime Diagnostics And Support Bundle", StringComparison.Ordinal),
+            "P0-B1 completion record should preserve exact release evidence and the next dependency");
+        AssertTrue(
+            runtimeDiagnosticsCompletion.Contains("Status: Complete", StringComparison.Ordinal)
+                && runtimeDiagnosticsCompletion.Contains("allow-list", StringComparison.Ordinal)
+                && runtimeDiagnosticsCompletion.Contains("B8EEE699F190406DC7FC65A0095EF1C59CD9E1BDC7B0744D206BC67FD1AE5C2B", StringComparison.Ordinal)
+                && runtimeDiagnosticsCompletion.Contains("no `Log`, `CONFIG`, `DATA`", StringComparison.Ordinal)
+                && runtimeDiagnosticsCompletion.Contains("approved clean Windows environment", StringComparison.Ordinal),
+            "P0-B2 completion record should preserve privacy, packaged-EXE, manifest, and next-prerequisite evidence");
+        AssertTrue(
+            crashRecoveryCompletion.Contains("Status: Complete", StringComparison.Ordinal)
+                && crashRecoveryCompletion.Contains("264/264", StringComparison.Ordinal)
+                && crashRecoveryCompletion.Contains("편집 복구", StringComparison.Ordinal)
+                && crashRecoveryCompletion.Contains("초안 폐기", StringComparison.Ordinal)
+                && crashRecoveryCompletion.Contains("never writes the label file", StringComparison.Ordinal),
+            "P1-B completion record should preserve bounded restore/discard and explicit-save evidence");
+        AssertTrue(
+            repositoryInstructions.Contains("docs/CURRENT_PRODUCT_STATUS.md", StringComparison.Ordinal)
+                && handoff.Contains("docs/CURRENT_PRODUCT_STATUS.md", StringComparison.Ordinal)
+                && nextPrompt.Contains("docs/CURRENT_PRODUCT_STATUS.md", StringComparison.Ordinal)
+                && userCenteredDirection.Contains("docs/CURRENT_PRODUCT_STATUS.md", StringComparison.Ordinal),
+            "all operator and handoff navigation surfaces should route current priority ownership to the status document");
+        AssertTrue(
+            handoff.Contains("4c6718a fix: contextualize object group controls", StringComparison.Ordinal)
+                && handoff.Contains("264/264", StringComparison.Ordinal)
+                && handoff.Contains("P0-B2 Packaged Runtime Diagnostics And Support Bundle", StringComparison.Ordinal)
+                && handoff.Contains("P1-A Portable Project Archive", StringComparison.Ordinal)
+                && handoff.Contains("P1-B Bounded Crash Recovery Journal", StringComparison.Ordinal)
+                && handoff.Contains("is Complete", StringComparison.Ordinal)
+                && nextPrompt.Contains("P0-B2 Packaged Runtime Diagnostics And Support Bundle", StringComparison.Ordinal)
+                && nextPrompt.Contains("P1-A Portable Project Archive", StringComparison.Ordinal)
+                && nextPrompt.Contains("P1-B Bounded Crash Recovery Journal", StringComparison.Ordinal),
+            "handoff and next prompt should preserve the reviewed baseline, diagnostics, archive, and recovery contracts");
         AssertTrue(releaseNotes.Contains("## Unreleased", StringComparison.Ordinal), "release notes should keep an Unreleased section");
         AssertTrue(ciWorkflow.Contains("Check required README sections", StringComparison.Ordinal), "CI workflow should check the README contract");
         AssertTrue(ciWorkflow.Contains("dotnet build .\\tests\\LabelingApplication.Tests\\LabelingApplication.Tests.csproj", StringComparison.Ordinal), "CI workflow should run the test-project build");
         AssertTrue(ciWorkflow.Contains("--priority-workflow-docs", StringComparison.Ordinal), "CI workflow should run the docs smoke");
+        AssertTrue(ciWorkflow.Contains("--release-package-contract", StringComparison.Ordinal), "CI workflow should run the release package contract");
+        AssertTrue(ciWorkflow.Contains("actions/upload-artifact@v4", StringComparison.Ordinal), "CI workflow should upload the verified release package");
         AssertTrue(appProject.Contains("dll\\Lib.Common.dll", StringComparison.Ordinal), "app project should reference Lib.Common by checked-in DLL");
         AssertTrue(appProject.Contains("dll\\Lib.OpenCV.dll", StringComparison.Ordinal), "app project should reference Lib.OpenCV by checked-in DLL");
         AssertTrue(appProject.Contains("CopyCheckedInNoahLibrariesToOutput", StringComparison.Ordinal), "app project should force checked-in Noah DLLs into the EXE output");

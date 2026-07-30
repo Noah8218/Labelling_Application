@@ -354,3 +354,56 @@ Verification: Live source at e1465d6, current project documents, ten full commer
 Evidence: This document plus NEXT_THREAD_HANDOFF.md, LABELING_STUDIO_COMPLETENESS_AUDIT.md, LABELING_PROGRAM_DIRECTION.md, WORK_TRACKING.md, and STABLE_VERIFIED_AREAS.md.
 Boundary / next dependency: This record does not implement the listed product changes or prove production model accuracy. Product completion must be recorded separately after its required focused and actual-EXE gates pass.
 ```
+
+## 8. 2026-07-30 Commercial Productization Transition
+
+The editor and focused workstation workflow now have enough verified breadth
+that additional general annotation features are no longer the default next
+step. The current direction is to make the completed workflow installable,
+diagnosable, recoverable, and reproducible.
+
+The authoritative current plan is `docs/CURRENT_PRODUCT_STATUS.md`. This dated
+document remains the rationale and earlier product-analysis record.
+
+Ordered direction:
+
+1. Audit current-source build, regression, Release publish, first run,
+   dependencies, versioning, diagnostics, license/SBOM, installer/signing,
+   recovery/archive, CLI, and CI without changing production code.
+   `Complete`: read `docs/COMMERCIAL_READINESS_AUDIT_20260730.md`.
+2. `Complete`: implement the selected `P0-B1 Versioned Deterministic
+   Self-Contained Release Bundle Contract`. Read
+   `docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md`.
+3. `Complete`: implement `P0-B2 Packaged Runtime Diagnostics And Support
+   Bundle`: explicit self-test, structured startup diagnostics, bounded
+   retention, and privacy-safe explicit export without implicit
+   training/inference. Read
+   `docs/PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md`.
+4. Verify install, launch, upgrade, and uninstall on an approved clean Windows
+   environment.
+5. `Complete`: add the P1-A portable project archive with complete saved
+   Recipe/dataset coverage, per-file SHA-256, path rebasing, non-overwrite
+   import, and explicit Apply. Read
+   `docs/PORTABLE_PROJECT_ARCHIVE_P1A_20260730.md`.
+6. `Complete`: add a bounded P1-B one-current-image crash-recovery journal
+   with explicit restore/discard, dirty in-memory restore, context/integrity
+   validation, and no implicit save/confirm. Read
+   `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`.
+7. Validate accuracy, long-run stability, and takt time only with approved
+   independent field data and intended hardware/runtime.
+8. Add data-centric QA or active-learning efficiency only when measured
+   operator evidence establishes the need.
+
+Commercial products teach this project to optimize the complete operator
+outcome: install, diagnose, recover, reproduce, and only then scale review
+efficiency. They do not require this product to copy cloud collaboration,
+accounts, video tracking, deployment orchestration, or enterprise governance.
+
+```text
+Status: Complete
+Scope: Persisted the commercial-productization transition and routed current priority ownership to docs/CURRENT_PRODUCT_STATUS.md.
+Acceptance criteria: Productization order is explicit; editor feature expansion is no longer the default; local work and external prerequisites are separated; commercial platform breadth remains out of scope.
+Verification: --priority-workflow-docs and git diff --check.
+Evidence: docs/CURRENT_PRODUCT_STATUS.md and this section.
+Boundary / next dependency: The audit, P0-B1 release package, P0-B2 packaged diagnostics, P1-A portable project archive, and P1-B bounded crash recovery are complete. P0-C requires a clean Windows environment and release lifecycle decisions; signing and production validation remain separate.
+```

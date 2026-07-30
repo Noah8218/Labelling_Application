@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 8.0.421
 
       - name: Check required README sections
         shell: pwsh
@@ -53,6 +53,21 @@ jobs:
       - name: Smoke docs
         shell: pwsh
         run: dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
+
+      - name: Publish versioned self-contained release
+        shell: pwsh
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release
+
+      - name: Verify release package contract
+        shell: pwsh
+        run: dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --release-package-contract
+
+      - name: Upload versioned win-x64 release
+        uses: actions/upload-artifact@v4
+        with:
+          name: openvisionlab-labeling-studio-0.1.0-win-x64
+          path: artifacts/publish/Release/win-x64/0.1.0
+          if-no-files-found: error
 
       - name: Whitespace check
         shell: pwsh

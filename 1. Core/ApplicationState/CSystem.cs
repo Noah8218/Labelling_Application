@@ -150,11 +150,8 @@ namespace MvcVisionSystem
 
         public CSystem()
         {
-            CUtil.InitDirectory("IMAGE");
-            CUtil.InitDirectory("SAVE_IMAGE");
-            CUtil.InitDirectory("RECIPE");            
-            CUtil.InitDirectory("CAPTURE");
-            CUtil.InitDirectory("CONFIG");
+            // Runtime folders are created by the owning save/capture workflow.
+            // Construction must not mutate a packaged application directory.
         }
 
         public void Close() { }        

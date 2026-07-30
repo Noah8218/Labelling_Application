@@ -3464,3 +3464,154 @@ Status: Complete
 Boundary: do not reopen this presentation slice without a changed requirement
 or a focused regression. This does not authorize automatic grouping/save,
 shared geometry movement, cross-image/video tracking, or cloud collaboration.
+
+## Current status authority and productization direction (2026-07-30)
+
+Status: Complete
+
+- `docs/CURRENT_PRODUCT_STATUS.md` owns current product identity, maturity,
+  active priority, and prerequisites.
+- `docs/STABLE_VERIFIED_AREAS.md` protects completed behavior;
+  `docs/WORK_TRACKING.md` preserves chronological evidence; dated records
+  remain detailed evidence rather than competing current-priority sources.
+- The immediate next task is a no-production-code Commercial Release Baseline
+  audit of current build/test/publish/first-run evidence and productization
+  gaps.
+- General editor feature expansion is not the default next step.
+- Packaging/diagnostics, clean-machine verification, recovery/archive, and
+  independent field validation remain distinct phases with explicit gates.
+
+Boundary: this verified documentation contract does not prove commercial
+release readiness. Reopen the direction only when evidence, requirements, or
+prerequisites change.
+
+## Commercial release baseline audit (2026-07-30)
+
+Status: Complete
+
+- A solo current-source default regression passed `260/260`.
+- Framework-dependent and self-contained `win-x64` Release folders published
+  and opened locally.
+- The configured local YOLO smoke passed but depends on external
+  development-machine Python, source, weights, and sample data.
+- The current package is unsigned, time-versioned from `1.0.*`,
+  nondeterministic, and has no payload hashes or bundled
+  LICENSE/NOTICE/third-party notices.
+- Installer, upgrade/uninstall, clean-machine, recovery/archive, product CLI,
+  and production-adoption evidence remain incomplete or externally blocked.
+- Evidence:
+  `docs/COMMERCIAL_READINESS_AUDIT_20260730.md`.
+
+Boundary: preserve these findings until source or evidence changes. Do not
+convert local publish/WPF/YOLO smoke into a commercial-readiness claim.
+
+## P0-B1 versioned deterministic release package (2026-07-30)
+
+Status: Complete
+
+- SDK `8.0.421`, product `0.1.0`, assembly/file `0.1.0.0`, deterministic
+  compilation, and explicit informational identity are repository-owned.
+- The default release is a versioned self-contained `win-x64` package with
+  complete payload path/length/SHA-256 provenance.
+- LICENSE, NOTICE, exact engineering third-party inventory, required-file
+  checks, and private development-path rejection are mandatory.
+- Missing/unlisted/changed payload fails verification; the focused test proves
+  tamper rejection and exact restoration.
+- CI is configured to publish, verify, and upload the versioned release
+  folder. The source contract passed locally; a hosted Actions run was not
+  executed in this uncommitted/unpushed worktree.
+- Two unchanged-source publishes produced the same manifest SHA-256:
+  `F9C589EA1AF73101170AB0AE5736B0353E9DC91098401D85AB9AD35B1A419A23`.
+- The current package opened in the WPF smoke and the solo default regression
+  passed `260/260`.
+- Evidence: `docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md`.
+
+Boundary: this is an engineering package, not installer/signing,
+clean-machine, formal legal approval, external-runtime redistribution,
+recovery, or production-quality evidence. P0-B2 packaged diagnostics is next.
+
+## P0-B2 packaged runtime diagnostics and support export (2026-07-30)
+
+Status: Complete
+
+- Startup logs, localization state, structured diagnostics, and explicit
+  support bundles use a predictable current-user writable root.
+- Logging appender creation is delayed until that root is known; packaged
+  first launch does not create writable folders in the application directory.
+- `환경 점검` reports product/package/file/path/runtime health without running
+  training or inference.
+- `지원 자료 만들기` writes one bounded allow-list ZIP with a manifest,
+  self-test, non-secret policy summary, optional release manifest, and
+  redacted recent diagnostics/logs.
+- Images, labels/annotations, weights, projects/recipes, raw runtime
+  configuration, credentials, and dumps are excluded by default.
+- Diagnostics and bundles have age/count/byte retention limits.
+- Focused export/reopen/privacy tests, current-source visual smoke, current
+  packaged-EXE launch, package-folder immutability, and post-launch manifest
+  verification passed.
+- Evidence: `docs/PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md` and
+  `artifacts/p0b2-runtime-diagnostics-20260730`.
+
+Boundary: preserve explicit collection, allow-list/redaction, no implicit
+model work, and package-folder immutability. This does not prove telemetry,
+cloud support, installer/signing, clean-machine lifecycle, recovery/archive,
+runtime redistribution, or production quality.
+
+## P1-A portable project archive (2026-07-30)
+
+Status: Complete
+
+- Export contains the complete last-saved Recipe directory and dataset root,
+  including canonical class order, train/valid/test artifacts, labels,
+  segments, masks, object-metadata sidecars, review state, reports, and
+  Recipe-owned dataset-version evidence.
+- `archive-manifest.json` owns schema/application compatibility, file kind and
+  split, byte length, SHA-256, and disclosed external references.
+- Dirty annotations, pending mask work, unconfirmed candidates, and named
+  active work block archive commands. Export never invokes label/config save
+  or candidate confirmation.
+- Import validates before extraction, stages content, rebases dataset-owned
+  paths, validates Recipe class order/output root, refuses existing targets,
+  and leaves Recipe Apply explicit.
+- Checksum changes fail closed and failed import does not leave promoted
+  targets.
+- Focused round-trip/tamper/boundary tests and current-source 1920x1080
+  before/after UI evidence passed. The final clean solo default regression
+  passed `262/262`.
+- Evidence: `docs/PORTABLE_PROJECT_ARCHIVE_P1A_20260730.md` and
+  `artifacts/p1a-portable-project-archive-20260730`.
+
+Boundary: preserve explicit save/Confirm/Apply, non-overwrite promotion, and
+external-reference disclosure. This is not autosave, crash recovery, cloud
+transfer, installer/signing, runtime redistribution, or production-quality
+evidence. P1-B crash recovery remains separate.
+
+## P1-B bounded crash recovery journal (2026-07-30)
+
+Status: Complete
+
+- One current-image dirty draft records Recipe/dataset/image identity, source
+  image size/time/dimensions, ordinary box/ellipse and confirmed annotation
+  geometry, polygon/cutout/raster-mask state, and persistent Object Review
+  metadata.
+- Pending AI candidates, unconfirmed Smart Mask candidates/prompts, history,
+  active work, and unsaved Recipe settings are excluded.
+- Startup offers explicit `편집 복구` or `초안 폐기`. Restore returns dirty
+  in-memory annotation state and never calls label save or candidate
+  confirmation.
+- Atomic temp promotion, SHA-256, revision ordering, one-image/size/count
+  bounds, seven-day retention, and Recipe/dataset/image validation fail
+  closed. Invalid drafts are quarantined when possible.
+- Explicit label save, explicit discard, and approved normal close remove the
+  active journal. Older queued writes cannot recreate it afterward.
+- Zero-warning/error isolated build, `--crash-recovery`,
+  `--application-close`, `--wpf-labeling-shell`, 1920x1080 current-source
+  before/after visual smoke, docs gate, `git diff --check`, and the clean solo
+  default regression `264/264` passed.
+- Evidence: `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md` and
+  `artifacts/p1b-crash-recovery-20260730`.
+
+Boundary: preserve explicit label save and candidate confirmation. Do not
+expand this contract into background autosave, pending-candidate recovery,
+multi-image history, Recipe autosave, cloud sync, installer/signing, or field
+quality evidence.

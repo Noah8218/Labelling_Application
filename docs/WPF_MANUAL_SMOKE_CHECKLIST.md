@@ -2,6 +2,35 @@
 
 Current image queue rule: one click on a row must open that image in the Main canvas, the selected row must be clearly highlighted, and the old top preview block should not be visible.
 
+Portable project archive check:
+
+1. With a dirty current image, `설정/도구 -> 프로젝트 이동 -> 프로젝트
+   아카이브 내보내기` must stop and direct the operator to `라벨 저장`.
+2. With an unconfirmed AI candidate, export/import must stop without confirming
+   or saving the candidate.
+3. After explicit label and Recipe saves, export a ZIP outside the Recipe and
+   dataset folders and reopen it with the import action.
+4. Select a new dataset parent. Import must create a new Recipe and dataset,
+   preserve classes/splits/labels/object metadata, and leave `적용` explicit.
+5. Repeating the same import must fail without overwriting either target.
+6. External Python/model/weight references listed after import must be
+   rechecked on the receiving machine.
+
+Crash recovery check:
+
+1. Edit one current image and confirm `라벨 저장 필요`.
+2. End the process abnormally without using the application close dialog.
+3. Restart with the same Recipe and dataset. The recovery dialog must name the
+   Recipe, image, draft time/reason, and object counts.
+4. Press `편집 복구`. Geometry and persistent Object Review metadata must
+   return, pending AI/Smart Mask candidates must not return, and the state must
+   remain unsaved.
+5. Press `라벨 저장`, restart normally, and confirm that the recovery dialog
+   no longer appears.
+6. Repeat with `초안 폐기`; the draft must not appear on the next launch.
+7. A changed/missing source image, wrong Recipe/dataset, corrupt checksum, or
+   draft older than seven days must fail closed without changing label files.
+
 WPF 화면을 직접 띄워 보는 날에는 아래 순서만 확인합니다.
 
 ## 실행
@@ -13,9 +42,13 @@ WPF 화면을 직접 띄워 보는 날에는 아래 순서만 확인합니다.
 Release publish 산출물을 볼 때는 먼저 publish 후 실행합니다.
 
 ```powershell
-.\scripts\publish-win-x64.ps1 -Configuration Release
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release
 .\scripts\start-labeling-workbench.ps1 -AppMode Publish
 ```
+
+Publish 실행 파일은
+`artifacts\publish\Release\win-x64\0.1.0\OpenVisionLab.LabelingStudio.exe`이며,
+같은 폴더의 `release-manifest.json` 검증을 통과한 산출물만 smoke 대상으로 사용합니다.
 
 ## 화면 확인
 

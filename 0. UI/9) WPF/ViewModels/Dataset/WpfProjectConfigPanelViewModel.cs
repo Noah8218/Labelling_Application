@@ -20,10 +20,13 @@ namespace MvcVisionSystem
         private bool isRefreshRecipeListEnabled = true;
         private bool isSaveProjectConfigEnabled;
         private bool isOpenProjectConfigFolderEnabled = true;
+        private bool isProjectArchiveCommandEnabled = true;
         private ICommand applyRecipeCommand = new RelayCommand(NoOpCommand);
         private ICommand refreshRecipeListCommand = new RelayCommand(NoOpCommand);
         private ICommand saveProjectConfigCommand = new RelayCommand(NoOpCommand);
         private ICommand openProjectConfigFolderCommand = new RelayCommand(NoOpCommand);
+        private ICommand exportProjectArchiveCommand = new RelayCommand(NoOpCommand);
+        private ICommand importProjectArchiveCommand = new RelayCommand(NoOpCommand);
         private ICommand recipeSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
 
         public string ViewName => nameof(WpfProjectConfigPanel);
@@ -52,6 +55,18 @@ namespace MvcVisionSystem
         {
             get => openProjectConfigFolderCommand;
             private set => SetProperty(ref openProjectConfigFolderCommand, value);
+        }
+
+        public ICommand ExportProjectArchiveCommand
+        {
+            get => exportProjectArchiveCommand;
+            private set => SetProperty(ref exportProjectArchiveCommand, value);
+        }
+
+        public ICommand ImportProjectArchiveCommand
+        {
+            get => importProjectArchiveCommand;
+            private set => SetProperty(ref importProjectArchiveCommand, value);
         }
 
         public ICommand RecipeSelectionChangedCommand
@@ -131,11 +146,19 @@ namespace MvcVisionSystem
             private set => SetProperty(ref isOpenProjectConfigFolderEnabled, value);
         }
 
+        public bool IsProjectArchiveCommandEnabled
+        {
+            get => isProjectArchiveCommandEnabled;
+            private set => SetProperty(ref isProjectArchiveCommandEnabled, value);
+        }
+
         public void ConfigureCommands(
             Action applyRecipe,
             Action refreshRecipeList,
             Action saveProjectConfig,
             Action openProjectConfigFolder,
+            Action exportProjectArchive,
+            Action importProjectArchive,
             Action<object> recipeSelectionChanged)
         {
             // Recipe selection passes the selected value instead of WPF EventArgs so the ViewModel remains reusable.
@@ -143,6 +166,8 @@ namespace MvcVisionSystem
             RefreshRecipeListCommand = new RelayCommand(refreshRecipeList ?? NoOpCommand);
             SaveProjectConfigCommand = new RelayCommand(saveProjectConfig ?? NoOpCommand);
             OpenProjectConfigFolderCommand = new RelayCommand(openProjectConfigFolder ?? NoOpCommand);
+            ExportProjectArchiveCommand = new RelayCommand(exportProjectArchive ?? NoOpCommand);
+            ImportProjectArchiveCommand = new RelayCommand(importProjectArchive ?? NoOpCommand);
             RecipeSelectionChangedCommand = new RelayCommand<object>(recipeSelectionChanged ?? NoOpSelectionCommand);
         }
         public void LoadFrom(string currentRecipeName, string rootPath)
@@ -199,6 +224,7 @@ namespace MvcVisionSystem
             IsRefreshRecipeListEnabled = canRunGeneralCommands;
             IsSaveProjectConfigEnabled = state?.CanSaveProjectConfig == true;
             IsOpenProjectConfigFolderEnabled = canRunGeneralCommands;
+            IsProjectArchiveCommandEnabled = canRunGeneralCommands;
         }
 
         private static void NoOpCommand()

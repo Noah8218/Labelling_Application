@@ -32,6 +32,8 @@ namespace MvcVisionSystem
 
         public WpfShellLogPanelViewModel ShellLogViewModel { get; } = new WpfShellLogPanelViewModel();
 
+        public WpfRuntimeDiagnosticsViewModel RuntimeDiagnosticsViewModel { get; } = new WpfRuntimeDiagnosticsViewModel();
+
         public RoiImageCanvasViewModel MainCanvasViewModel { get; } = new RoiImageCanvasViewModel("Main");
     }
 }

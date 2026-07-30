@@ -299,6 +299,11 @@ namespace MvcVisionSystem
             {
                 pendingMaskStrokeCommitCount = Math.Max(0, pendingMaskStrokeCommitCount - 1);
                 RefreshAnnotationHistoryToolState();
+                if (!HasPendingMaskStrokeCommitWork()
+                    && !string.IsNullOrWhiteSpace(annotationDirtyReason))
+                {
+                    ScheduleCrashRecoveryJournalWrite();
+                }
             }
         }
 

@@ -15,9 +15,7 @@
     <OpenVisionLabSourceRoot Condition="'$(OpenVisionLabSourceRoot)' == ''">$(MSBuildProjectDirectory)\OpenVisionLab</OpenVisionLabSourceRoot>
     <PlatformTarget>x64</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
-    <Deterministic>false</Deterministic>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <ArtifactsRoot>$(MSBuildProjectDirectory)\artifacts</ArtifactsRoot>
     <OutputPath>$(ArtifactsRoot)\run\$(Configuration)\</OutputPath>
@@ -161,6 +159,15 @@
   <ItemGroup>
     <None Update="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="LICENSE">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="NOTICE">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="THIRD-PARTY-NOTICES.txt">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
     <None Update="Runtime\Python\openvisionlab_ultralytics_worker.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

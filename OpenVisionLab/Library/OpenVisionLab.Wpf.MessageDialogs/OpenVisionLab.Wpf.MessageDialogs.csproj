@@ -6,6 +6,5 @@
     <AssemblyName>OpenVisionLab.Wpf.MessageDialogs</AssemblyName>
     <RootNamespace>OpenVisionLab.Wpf.MessageDialogs</RootNamespace>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <Deterministic>false</Deterministic>
   </PropertyGroup>
 </Project>

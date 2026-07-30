@@ -484,6 +484,12 @@ namespace OpenVisionLab
 
         private static string GetConfigDirectory()
         {
+            string configuredDirectory = Environment.GetEnvironmentVariable("OPENVISIONLAB_CONFIG_ROOT");
+            if (!string.IsNullOrWhiteSpace(configuredDirectory))
+            {
+                return Path.GetFullPath(configuredDirectory);
+            }
+
             return Path.Combine(Application.StartupPath, ConfigDirectoryName);
         }
 

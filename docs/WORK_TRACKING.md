@@ -19358,3 +19358,297 @@ Boundary / next dependency:
 - production evaluation remains blocked until operator-approved,
   provenance-confirmed, content-separated field data and the intended
   runtime/weights/hardware are available.
+
+## 2026-07-30 Current product status and commercial-productization direction
+
+Status: Complete
+
+Scope:
+
+- established `docs/CURRENT_PRODUCT_STATUS.md` as the single current authority
+  for product identity, maturity, active priority, and prerequisites;
+- aligned README, repository instructions, handoff, next-session prompt, and
+  the user-centered direction record;
+- changed the default next step from editor feature expansion to a
+  current-source Commercial Release Baseline audit;
+- separated local package/recovery implementation from clean-machine,
+  signing, runtime-redistribution, and production-data prerequisites.
+
+Acceptance criteria:
+
+- one current authority and one immediate next task -> pass;
+- protected completed editor areas remain closed -> pass;
+- productization phases and external gates are explicit -> pass;
+- no production code changed -> pass.
+
+Verification:
+
+- isolated test-project build;
+- `--priority-workflow-docs`;
+- `git diff --check`.
+
+Evidence:
+
+- `docs/CURRENT_PRODUCT_STATUS.md`;
+- aligned `README.md`, `AGENTS.md`, `docs/NEXT_THREAD_HANDOFF.md`,
+  `CODEX_NEXT_PROMPT.md`, and
+  `docs/LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md`.
+
+Boundary / next dependency:
+
+- this record does not execute the audit or prove installability, recovery, or
+  production readiness;
+- next execute the bounded audit and create its audit and decision records.
+
+## 2026-07-30 Commercial release baseline audit and next decision
+
+Status: Complete
+
+Scope:
+
+- inspected current SDK/version/publish/CI/log/runtime/recovery/CLI/legal
+  contracts without changing production code;
+- ran the isolated build and complete default regression in a solo process;
+- published and launched both framework-dependent and self-contained Release
+  folders;
+- ran the configured local YOLO smoke;
+- inventoried exact NuGet licenses and checked-in/native payload identities;
+- selected one next implementation slice.
+
+Acceptance criteria:
+
+- current build and solo default regression -> pass, 0 warnings/errors and
+  `260/260`;
+- default and self-contained Release publish -> pass after recording execution
+  policy and stale audit-owned MSBuild-node friction;
+- published WPF and configured local YOLO smoke -> pass;
+- all release/runtime/recovery/CLI/CI/legal areas classified -> pass;
+- exactly one next local implementation slice -> pass;
+- no production code changed -> pass.
+
+Verification:
+
+- commands and logs in
+  `artifacts/commercial-release-audit-20260730`;
+- `docs/COMMERCIAL_READINESS_AUDIT_20260730.md`;
+- `docs/NEXT_DEVELOPMENT_DECISION_20260730.md`.
+
+Evidence:
+
+- framework-dependent: 47 files, 99,062,270 bytes;
+- self-contained: 501 files, 263,463,549 bytes;
+- version `1.0.9707.30353`, unsigned, no bundled LICENSE/NOTICE/third-party
+  notice, and no manifest SHA-256;
+- local YOLO smoke passed with external development-machine runtime and
+  weights.
+
+Boundary / next dependency:
+
+- local publishability is verified, not commercial or clean-machine readiness;
+- next implement only `P0-B1 Versioned Deterministic Self-Contained Release
+  Bundle Contract`.
+
+## 2026-07-30 P0-B1 versioned deterministic self-contained release package
+
+Status: Complete
+
+Scope:
+
+- pinned SDK `8.0.421`, product `0.1.0`, assembly/file `0.1.0.0`, and
+  deterministic compilation;
+- produced `artifacts/publish/Release/win-x64/0.1.0` as the default
+  self-contained package;
+- added full payload path/length/SHA-256 provenance, project/third-party
+  notices, fail-closed verification, a focused tamper test, and CI artifact
+  upload;
+- preserved the existing private development-path and required-file guards.
+
+Acceptance criteria:
+
+- version/SDK/deterministic source policy -> pass;
+- `503` hashed payload files and required two manifests -> pass;
+- manifest identity and every SHA-256 -> pass;
+- notice coverage against the resolved NuGet graph -> pass;
+- tampered NOTICE rejected and exact restore accepted -> pass;
+- two unchanged-source manifests byte-identical -> pass;
+- current published WPF shell opened -> pass;
+- default regression -> `260/260` pass.
+
+Verification:
+
+- zero-warning/error isolated test-project build;
+- `--release-package-contract`;
+- two executions of `scripts/publish-win-x64.ps1`;
+- `verify-first-run.ps1 ... -RunPublishWpfSmoke`;
+- `--priority-workflow-docs`;
+- solo default suite;
+- `git diff --check`.
+- CI workflow source contract was validated locally; no hosted Actions run
+  occurred because no commit or push was requested.
+
+Evidence:
+
+- `docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md`;
+- `artifacts/publish/Release/win-x64/0.1.0`;
+- `artifacts/release-package-contract-20260730`.
+
+Boundary / next dependency:
+
+- P0-B2 packaged runtime diagnostics/support export is next;
+- installer, signing, clean-machine lifecycle, recovery/archive, Python/CUDA
+  redistribution, hosted CI evidence, and production validation remain
+  separate.
+
+## 2026-07-30 P0-B2 packaged runtime diagnostics and support bundle
+
+Status: Complete
+
+Scope:
+
+- routed startup logging, localization state, structured diagnostics, and
+  explicit support ZIP files to a predictable current-user root;
+- added bounded retention and package/environment self-test without model
+  execution;
+- added a visible one-action allow-list support export with path/credential
+  redaction and default image/label/weight/config exclusion;
+- removed packaged-startup directory side effects and made read-only dataset
+  readiness validation non-creating;
+- republished and relaunched the current `0.1.0` self-contained package.
+
+Acceptance criteria:
+
+- explicit structured package/path self-test without training/inference ->
+  pass;
+- structured startup diagnostics outside package -> pass;
+- age/count/byte retention -> pass;
+- allow-list support ZIP save/export/reopen -> pass;
+- images, labels, weights, raw configuration, credentials, and dataset paths
+  absent -> pass;
+- current UI status before/after explicit export -> pass;
+- packaged EXE launch with no package writable folders -> pass;
+- post-launch release manifest verification -> pass.
+
+Verification:
+
+- zero-warning isolated test build;
+- `--runtime-diagnostics-contract`;
+- current-source WPF visual smoke and explicit export capture;
+- `scripts/publish-win-x64.ps1`;
+- current packaged-EXE launch with isolated application-data root;
+- post-launch `-VerifyOnly`;
+- release-package, priority-document, default-suite, and diff gates recorded
+  in the completion document.
+
+Evidence:
+
+- `docs/PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md`;
+- `artifacts/p0b2-runtime-diagnostics-20260730`;
+- `artifacts/publish/Release/win-x64/0.1.0`;
+- release manifest SHA-256
+  `B8EEE699F190406DC7FC65A0095EF1C59CD9E1BDC7B0744D206BC67FD1AE5C2B`.
+
+Boundary / next dependency:
+
+- P0-C clean-machine lifecycle evidence requires an approved Windows
+  environment and installer/signing decisions;
+- telemetry/cloud, automatic model work, recovery/archive, external runtime
+  redistribution, and production-quality claims remain outside P0-B2.
+
+## 2026-07-30 P1-A portable project archive
+
+Status: Complete
+
+Scope:
+
+- added an explicit saved-Recipe plus complete-dataset ZIP export/import;
+- added schema/application compatibility, complete entry list, lengths,
+  per-file SHA-256, split/kind identity, and external-reference disclosure;
+- added staged import, dataset-owned path rebasing, class/output-root
+  validation, non-overwrite promotion, and rollback;
+- added `설정/도구 -> 프로젝트 이동` actions and explicit saved-state,
+  non-overwrite, and Apply wording.
+
+Acceptance criteria:
+
+- Recipe, class order, annotations, segments, masks, metadata sidecars,
+  train/valid/test, review/evidence files round trip -> pass;
+- dirty labels, pending candidates, and active work block -> pass;
+- no implicit label/config save, candidate Confirm, or Recipe Apply -> pass;
+- exact-entry/length/SHA-256/path/schema validation -> pass;
+- tamper and collision fail closed -> pass;
+- failed import leaves no promoted targets -> pass;
+- current-source before/after UI disclosure -> pass.
+
+Verification:
+
+- zero-warning/error focused test build;
+- `--project-archive`;
+- 1920x1080 current-source header-tools before/after visual smoke;
+- priority documentation gate;
+- clean solo default regression `262/262`;
+- `git diff --check`.
+
+Evidence:
+
+- `docs/PORTABLE_PROJECT_ARCHIVE_P1A_20260730.md`;
+- `artifacts/p1a-portable-project-archive-20260730`.
+
+Boundary / next dependency:
+
+- P1-B bounded crash recovery is the next local implementable priority;
+- P0-C still requires a clean Windows environment and installer/signing
+  decisions;
+- autosave, cloud transfer, external runtime/weight redistribution, and
+  production-quality claims remain separate.
+
+## 2026-07-30 P1-B bounded crash recovery journal
+
+Status: Complete
+
+Scope:
+
+- added one current-image dirty annotation journal under the bounded
+  current-user application-data root;
+- captured box/ellipse, confirmed annotation geometry, polygon/cutout/raster
+  mask, and persistent `occluded`/tag/group metadata;
+- added explicit startup `편집 복구` / `초안 폐기`;
+- restored only dirty in-memory annotation state and kept `라벨 저장`
+  explicit;
+- added atomic write, payload SHA-256, revision ordering, seven-day retention,
+  object/point/file bounds, context validation, and invalid-journal quarantine.
+
+Acceptance criteria:
+
+- current-image geometry and persistent metadata round trip -> pass;
+- restored state remains dirty -> pass;
+- pending AI/Smart Mask candidate state excluded -> pass;
+- no implicit label save or candidate confirmation -> pass;
+- explicit save/discard and normal-close cleanup -> pass;
+- older queued write cannot recreate a discarded journal -> pass;
+- corruption, age, Recipe, dataset, and image validation fail closed -> pass;
+- current-source recovery dialog visual evidence -> pass.
+
+Verification:
+
+- zero-warning/error isolated build;
+- `--crash-recovery`;
+- `--application-close`;
+- `--wpf-labeling-shell`;
+- 1920x1080 current-source before/after visual smoke;
+- `--priority-workflow-docs`;
+- clean solo default regression `264/264`;
+- `git diff --check`.
+
+Evidence:
+
+- `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`;
+- `artifacts/p1b-crash-recovery-20260730`.
+
+Boundary / next dependency:
+
+- P0-C clean-machine lifecycle evidence still requires an approved Windows
+  environment and installer/signing decisions;
+- independent production validation still requires approved field data,
+  thresholds, runtime/weights, and target hardware;
+- label autosave, pending-candidate recovery, multi-image history, Recipe
+  autosave, cloud sync, and production-quality claims remain separate.

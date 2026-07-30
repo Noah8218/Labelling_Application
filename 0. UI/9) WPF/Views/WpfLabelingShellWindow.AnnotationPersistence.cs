@@ -41,6 +41,7 @@ namespace MvcVisionSystem
             if (saved)
             {
                 MarkAnnotationsSaved($"라벨 저장 완료: 객체 {savedCount}개");
+                DiscardCrashRecoveryJournal();
                 global.System?.UpdateData();
             }
 
@@ -71,6 +72,7 @@ namespace MvcVisionSystem
             if (saved)
             {
                 MarkAnnotationsSaved("\uBE48 \uB77C\uBCA8 \uD30C\uC77C \uC800\uC7A5 \uC644\uB8CC");
+                DiscardCrashRecoveryJournal();
                 global.System?.UpdateData();
             }
 
@@ -219,6 +221,7 @@ namespace MvcVisionSystem
         {
             annotationDirtyReason = string.IsNullOrWhiteSpace(reason) ? "Edit" : reason;
             ApplyAnnotationDirtyPresentation();
+            ScheduleCrashRecoveryJournalWrite();
         }
 
         private void MarkMaskStrokeAnnotationsDirty(string reason)
@@ -230,12 +233,14 @@ namespace MvcVisionSystem
                 toolTip: $"\uC544\uC9C1 \uD30C\uC77C\uC5D0 \uC800\uC7A5\uB418\uC9C0 \uC54A\uC740 \uD3B8\uC9D1: {annotationDirtyReason}");
             if (!string.Equals(annotationDirtyReason, "\0", StringComparison.Ordinal))
             {
+                ScheduleCrashRecoveryJournalWrite();
                 return;
             }
             StatusBarViewModel?.SetAnnotationSaveStatus(
                 isDirty: true,
                 text: "?쇰꺼 ????꾩슂",
                 toolTip: $"?꾩쭅 ?뚯씪????λ릺吏 ?딆? ?몄쭛: {annotationDirtyReason}");
+            ScheduleCrashRecoveryJournalWrite();
         }
 
         private void RefreshDeferredMaskStrokeDirtyPresentation()

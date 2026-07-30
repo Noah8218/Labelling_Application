@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+- Saved Recipe and dataset state can now be exported as one validated portable
+  project archive and imported into new, non-overwriting targets. Export is
+  blocked while annotations, mask commits, AI candidates, or named work remain
+  pending; import verifies the manifest, entry set, sizes, and SHA-256 hashes,
+  rebases dataset-owned paths, and leaves Recipe activation as an explicit
+  operator action. External model/runtime references are disclosed but are not
+  embedded in the archive.
+- A bounded current-image crash-recovery journal now offers explicit
+  `편집 복구` or `초안 폐기` on the next launch. Restore returns box,
+  segmentation, and persistent Object Review metadata as dirty in-memory state;
+  it never confirms pending AI/Smart Mask candidates or saves label files.
+  Journals are atomic, checksum-verified, context-validated, limited to seven
+  days, and removed after explicit label save, discard, or normal close.
+- Packaged startup now keeps logs, localization state, structured diagnostics,
+  and explicit support ZIP files under a bounded current-user writable root.
+  `설정/도구 -> 진단/지원` provides a model-free environment self-test and a
+  one-action allow-list support export that excludes images, labels, weights,
+  raw configuration, and credentials by default.
+- Release engineering now pins .NET SDK `8.0.421` and product version `0.1.0`,
+  emits a deterministic versioned self-contained `win-x64` folder, ships
+  project and third-party notices, verifies every payload SHA-256
+  fail-closed, and publishes the verified folder as a CI artifact.
+
 - Object Review now supports persistent per-object `가림` and Recipe-defined
   tags for saved manual boxes and segmentation objects, with row badges,
   combined review filters, explicit reset paths, and a separate per-image

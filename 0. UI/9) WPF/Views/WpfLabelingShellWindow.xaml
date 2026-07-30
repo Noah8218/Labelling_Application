@@ -822,7 +822,7 @@
                            StaysOpen="False"
                            IsOpen="{Binding IsChecked, ElementName=HeaderToolsMenuButton}"
                            DataContext="{Binding DataContext, ElementName=ShellWindow}">
-                        <Border Width="242"
+                        <Border Width="282"
                                 Margin="0,4,0,0"
                                 Padding="8"
                                 Background="{DynamicResource PanelBrush}"
@@ -993,7 +993,7 @@
                                           FontWeight="SemiBold"
                                           Foreground="{DynamicResource SecondaryTextBrush}"
                                           IsExpanded="False"
-                                          Margin="0,0,0,0">
+                                          Margin="0,0,0,6">
                                     <StackPanel>
                                         <TextBlock x:Name="HeaderToolsMenuWorkflowSectionText"
                                                    Text="작업 전환/환경"
@@ -1049,6 +1049,116 @@
                                                 <TextBlock Text="모델 점검" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </ui:Button>
+                                    </StackPanel>
+                                </Expander>
+                                <Expander x:Name="HeaderToolsMenuProjectArchiveSection"
+                                          Header="프로젝트 이동"
+                                          FontFamily="Segoe UI"
+                                          FontSize="10"
+                                          FontWeight="SemiBold"
+                                          Foreground="{DynamicResource SecondaryTextBrush}"
+                                          IsExpanded="True"
+                                          Margin="0">
+                                    <StackPanel>
+                                        <ui:Button x:Name="ExportProjectArchiveButton"
+                                                   Style="{StaticResource WpfUiToolbarButtonStyle}"
+                                                   HorizontalAlignment="Stretch"
+                                                   MinWidth="258"
+                                                   Margin="0,0,0,4"
+                                                   IsEnabled="{Binding ProjectConfigViewModel.IsProjectArchiveCommandEnabled}"
+                                                   AutomationProperties.AutomationId="ExportProjectArchiveButton"
+                                                   AutomationProperties.Name="프로젝트 아카이브 내보내기"
+                                                   ToolTip="마지막으로 저장된 Recipe, 클래스, 이미지, 라벨, 분할, 객체 메타데이터와 근거 파일을 체크섬이 있는 ZIP으로 내보냅니다. 미저장 라벨과 미확정 후보가 있으면 실행하지 않습니다."
+                                                   Command="{Binding ProjectConfigViewModel.ExportProjectArchiveCommand}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="FolderZipOutline" />
+                                                <TextBlock Text="프로젝트 아카이브 내보내기" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </ui:Button>
+                                        <ui:Button x:Name="ImportProjectArchiveButton"
+                                                   Style="{StaticResource WpfUiToolbarButtonStyle}"
+                                                   HorizontalAlignment="Stretch"
+                                                   MinWidth="258"
+                                                   Margin="0,0,0,4"
+                                                   IsEnabled="{Binding ProjectConfigViewModel.IsProjectArchiveCommandEnabled}"
+                                                   AutomationProperties.AutomationId="ImportProjectArchiveButton"
+                                                   AutomationProperties.Name="프로젝트 아카이브 가져오기"
+                                                   ToolTip="체크섬과 호환성을 검증한 뒤 새 Recipe와 새 데이터셋 폴더로 복원합니다. 기존 항목을 덮어쓰거나 자동 적용하지 않습니다."
+                                                   Command="{Binding ProjectConfigViewModel.ImportProjectArchiveCommand}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ArchiveArrowUpOutline" />
+                                                <TextBlock Text="프로젝트 아카이브 가져오기" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </ui:Button>
+                                        <TextBlock Text="저장된 상태만 포함 · 기존 프로젝트 덮어쓰기 없음 · 가져온 뒤 명시적 적용"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   FontFamily="Segoe UI"
+                                                   FontSize="9"
+                                                   Margin="8,0,4,6"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Expander>
+                                <Expander x:Name="HeaderToolsMenuSupportSection"
+                                          Header="진단/지원"
+                                          FontFamily="Segoe UI"
+                                          FontSize="10"
+                                          FontWeight="SemiBold"
+                                          Foreground="{DynamicResource SecondaryTextBrush}"
+                                          IsExpanded="True"
+                                          Margin="0">
+                                    <StackPanel>
+                                        <ui:Button x:Name="RuntimeSelfTestButton"
+                                                   Style="{StaticResource WpfUiToolbarButtonStyle}"
+                                                   HorizontalAlignment="Stretch"
+                                                   MinWidth="258"
+                                                   Margin="0,0,0,4"
+                                                   AutomationProperties.AutomationId="RuntimeSelfTestButton"
+                                                   AutomationProperties.Name="환경 점검"
+                                                   ToolTip="제품 버전, 필수 파일, 사용자 쓰기 경로를 점검합니다. 학습이나 추론은 실행하지 않습니다."
+                                                   Command="{Binding RuntimeDiagnosticsViewModel.RunSelfTestCommand}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ShieldCheckOutline" />
+                                                <TextBlock Text="환경 점검" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </ui:Button>
+                                        <ui:Button x:Name="CreateSupportBundleButton"
+                                                   Style="{StaticResource WpfUiToolbarButtonStyle}"
+                                                   HorizontalAlignment="Stretch"
+                                                   MinWidth="258"
+                                                   Margin="0,0,0,6"
+                                                   AutomationProperties.AutomationId="CreateSupportBundleButton"
+                                                   AutomationProperties.Name="지원 자료 만들기"
+                                                   ToolTip="점검 결과와 정제된 로그를 압축합니다. 이미지, 라벨, 모델 가중치, 자격 증명은 포함하지 않습니다."
+                                                   Command="{Binding RuntimeDiagnosticsViewModel.CreateSupportBundleCommand}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ArchiveArrowDownOutline" />
+                                                <TextBlock Text="지원 자료 만들기" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </ui:Button>
+                                        <Border x:Name="RuntimeDiagnosticsStatusCard"
+                                                AutomationProperties.AutomationId="RuntimeDiagnosticsStatusCard"
+                                                Background="{DynamicResource CanvasBrush}"
+                                                BorderBrush="{DynamicResource BorderBrushDark}"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="8,6">
+                                            <StackPanel>
+                                                <TextBlock x:Name="RuntimeDiagnosticsStatusTitleText"
+                                                           Text="{Binding RuntimeDiagnosticsViewModel.StatusTitleText}"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                                           FontFamily="Segoe UI"
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold"
+                                                           TextWrapping="Wrap" />
+                                                <TextBlock x:Name="RuntimeDiagnosticsStatusDetailText"
+                                                           Text="{Binding RuntimeDiagnosticsViewModel.StatusDetailText}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           FontFamily="Segoe UI"
+                                                           FontSize="9"
+                                                           Margin="0,2,0,0"
+                                                           TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
                                 </Expander>
                             </StackPanel>
