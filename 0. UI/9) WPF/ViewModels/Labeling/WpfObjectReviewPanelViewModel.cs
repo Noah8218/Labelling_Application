@@ -689,7 +689,13 @@ namespace MvcVisionSystem
         public bool IsPersistentMetadataEnabled
         {
             get => isPersistentMetadataEnabled;
-            private set => SetProperty(ref isPersistentMetadataEnabled, value);
+            private set
+            {
+                if (SetProperty(ref isPersistentMetadataEnabled, value))
+                {
+                    OnPropertyChanged(nameof(IsGroupStartVisible));
+                }
+            }
         }
 
         public bool IsSelectedObjectOccluded
@@ -779,7 +785,15 @@ namespace MvcVisionSystem
         public bool IsGroupSelectionMode
         {
             get => isGroupSelectionMode;
-            private set => SetProperty(ref isGroupSelectionMode, value);
+            private set
+            {
+                if (SetProperty(ref isGroupSelectionMode, value))
+                {
+                    OnPropertyChanged(nameof(IsGroupStartVisible));
+                    OnPropertyChanged(nameof(IsGroupSelectionActionsVisible));
+                    OnPropertyChanged(nameof(IsSelectedGroupActionsVisible));
+                }
+            }
         }
 
         public int GroupSelectionCount
@@ -803,8 +817,25 @@ namespace MvcVisionSystem
         public bool IsSelectedObjectGrouped
         {
             get => isSelectedObjectGrouped;
-            private set => SetProperty(ref isSelectedObjectGrouped, value);
+            private set
+            {
+                if (SetProperty(ref isSelectedObjectGrouped, value))
+                {
+                    OnPropertyChanged(nameof(IsGroupStartVisible));
+                    OnPropertyChanged(nameof(IsSelectedGroupActionsVisible));
+                }
+            }
         }
+
+        public bool IsGroupStartVisible
+            => IsPersistentMetadataEnabled
+                && !IsGroupSelectionMode
+                && !IsSelectedObjectGrouped;
+
+        public bool IsGroupSelectionActionsVisible => IsGroupSelectionMode;
+
+        public bool IsSelectedGroupActionsVisible
+            => !IsGroupSelectionMode && IsSelectedObjectGrouped;
 
         public bool IsSegmentContextVisible
         {

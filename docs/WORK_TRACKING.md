@@ -19314,3 +19314,47 @@ Boundary / next dependency:
   ownership is ambiguous;
 - real field model quality still requires operator-selected train/valid/test
   data, runtime/weights, and GPU.
+
+## 2026-07-30 Object Review contextual group controls
+
+Status: Complete
+
+Scope:
+
+- show only `그룹 구성` for a selected ungrouped saved object;
+- show only the selection preview, explicit create action, and cancel action
+  while choosing group members;
+- show only the current-group mutation and metadata actions for a selected
+  grouped object;
+- preserve the completed group sidecar, explicit label-save, navigation, and
+  reopen contracts.
+
+Acceptance criteria:
+
+- ordinary, selection, and grouped presentation states -> pass;
+- at least two objects still required for creation -> pass;
+- actual current Debug EXE group create/save/navigate/reopen -> pass;
+- fresh before/after screenshots and full-duration videos -> pass.
+
+Verification:
+
+- isolated test build and current application build: 0 warnings, 0 errors;
+- `--object-group-review`, `--object-metadata-review`,
+  `--wpf-object-review-panel`, and `--wpf-labeling-shell`: pass;
+- `--exe-dataset-wizard-smoke --verify-object-group`: pass;
+- default internal regression suite: 260/260 pass, 0 failures, empty stderr;
+- before video 72.8 seconds; after video 66.53 seconds.
+
+Evidence:
+
+- `docs/OBJECT_GROUP_CONTEXTUAL_CONTROLS_20260730.md`;
+- `artifacts/ui/object-group-contextual-20260730`.
+
+Boundary / next dependency:
+
+- this is a contextual presentation correction, not a new group data contract;
+- cross-image/video tracking, shared movement, automatic save, collaboration,
+  and cloud review remain out of scope;
+- production evaluation remains blocked until operator-approved,
+  provenance-confirmed, content-separated field data and the intended
+  runtime/weights/hardware are available.

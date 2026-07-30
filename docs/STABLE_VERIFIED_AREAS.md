@@ -3443,3 +3443,24 @@ Status: Complete
 Boundary: these deterministic local flows prove workflow, state, and persistence
 safety. They do not prove field-model accuracy, GPU throughput, or production
 deployment readiness.
+
+## Object Review contextual group controls (2026-07-30)
+
+Status: Complete
+
+- An ungrouped saved object exposes only `그룹 구성`.
+- Group-selection mode exposes only the selection preview, explicit create,
+  and cancel actions.
+- A grouped object exposes only its current-group actions.
+- Group membership, sidecar persistence, explicit label save, navigation, and
+  reopen behavior remain unchanged.
+- Current Debug EXE create/save/navigate/reopen evidence passed with fresh
+  before/after screenshots and full-duration videos.
+- Default internal regression suite passed 260/260 with no failures and empty
+  stderr.
+- Evidence: `docs/OBJECT_GROUP_CONTEXTUAL_CONTROLS_20260730.md` and
+  `artifacts/ui/object-group-contextual-20260730`.
+
+Boundary: do not reopen this presentation slice without a changed requirement
+or a focused regression. This does not authorize automatic grouping/save,
+shared geometry movement, cross-image/video tracking, or cloud collaboration.

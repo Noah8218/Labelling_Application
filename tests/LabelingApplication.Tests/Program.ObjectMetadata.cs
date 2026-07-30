@@ -247,13 +247,30 @@ internal static partial class Program
         AssertTrue(ungrouped.IsMetadataFilterMatch, "ungrouped filter should keep only ungrouped rows");
         viewModel.SelectedGroupFilter = WpfObjectReviewPanelViewModel.AllGroupsFilter;
         AssertEqual(3, viewModel.Objects.Count(item => item.IsMetadataFilterMatch));
+        viewModel.SelectedObject = ungrouped;
+        AssertTrue(viewModel.IsGroupStartVisible, "an ungrouped saved object should show only the group-start action");
+        AssertTrue(
+            !viewModel.IsGroupSelectionActionsVisible && !viewModel.IsSelectedGroupActionsVisible,
+            "an ungrouped saved object should hide selection-mode and existing-group actions");
         viewModel.SetGroupSelectionMode(true);
+        AssertTrue(
+            !viewModel.IsGroupStartVisible
+            && viewModel.IsGroupSelectionActionsVisible
+            && !viewModel.IsSelectedGroupActionsVisible,
+            "group selection mode should show only selection status and create/cancel actions");
         ungrouped.IsGroupSelected = true;
         viewModel.RefreshGroupSelectionPresentation();
         AssertTrue(
             viewModel.GroupSelectionStatusText.Contains("\uBC15\uC2A4 1\uAC1C", StringComparison.Ordinal)
             && viewModel.GroupSelectionStatusText.Contains("\uD074\uB798\uC2A4 Defect", StringComparison.Ordinal),
             "pending group preview should identify selected object types and classes");
+        viewModel.SetGroupSelectionMode(false);
+        viewModel.SelectedObject = first;
+        AssertTrue(
+            !viewModel.IsGroupStartVisible
+            && !viewModel.IsGroupSelectionActionsVisible
+            && viewModel.IsSelectedGroupActionsVisible,
+            "a grouped saved object should show only its current-group actions");
 
         state.SetManualRoiGroupId(0, string.Empty);
         AssertEqual(1, state.DissolveInvalidGroups(2, new[] { segment }));

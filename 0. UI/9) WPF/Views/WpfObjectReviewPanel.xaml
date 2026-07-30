@@ -676,11 +676,9 @@
                                 BorderThickness="1"
                                 CornerRadius="2">
                             <StackPanel>
-                                <Grid>
+                                <Grid Visibility="{Binding IsGroupStartVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <ui:Button x:Name="BeginObjectGroupSelectionButton"
                                                AutomationProperties.AutomationId="BeginObjectGroupSelectionButton"
@@ -690,18 +688,22 @@
                                                Content="&#xADF8;&#xB8F9; &#xAD6C;&#xC131;"
                                                ToolTip="&#xAC19;&#xC740; &#xC774;&#xBBF8;&#xC9C0;&#xC758; &#xC800;&#xC7A5; &#xAC1D;&#xCCB4; 2&#xAC1C; &#xC774;&#xC0C1;&#xC744; &#xAC80;&#xC218; &#xB2E8;&#xC704;&#xB85C; &#xC120;&#xD0DD;"
                                                Command="{Binding BeginGroupSelectionCommand}" />
+                                </Grid>
+                                <Grid Visibility="{Binding IsGroupSelectionActionsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
                                     <ui:Button x:Name="CreateObjectGroupButton"
-                                               Grid.Column="1"
                                                AutomationProperties.AutomationId="CreateObjectGroupButton"
                                                Style="{StaticResource ObjectReviewButtonStyle}"
                                                Height="23"
-                                               Margin="5,0,0,0"
                                                Padding="6,0"
-                                               Content="&#xB9CC;&#xB4E4;&#xAE30;"
+                                               Content="&#xC120;&#xD0DD;&#xD55C; &#xAC1D;&#xCCB4;&#xB85C; &#xADF8;&#xB8F9; &#xB9CC;&#xB4E4;&#xAE30;"
                                                IsEnabled="{Binding IsCreateGroupEnabled}"
                                                Command="{Binding CreateGroupCommand}" />
                                     <ui:Button x:Name="CancelObjectGroupSelectionButton"
-                                               Grid.Column="2"
+                                               Grid.Column="1"
                                                AutomationProperties.AutomationId="CancelObjectGroupSelectionButton"
                                                Style="{StaticResource ObjectReviewButtonStyle}"
                                                Height="23"
@@ -714,11 +716,13 @@
                                 <TextBlock x:Name="ObjectGroupSelectionStatusText"
                                            AutomationProperties.AutomationId="ObjectGroupSelectionStatusText"
                                            Text="{Binding GroupSelectionStatusText}"
+                                           Visibility="{Binding IsGroupSelectionActionsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            FontSize="9.5"
                                            Margin="0,3,0,0"
                                            TextWrapping="Wrap" />
-                                <Grid Margin="0,4,0,0">
+                                <Grid Margin="0,0,0,0"
+                                      Visibility="{Binding IsSelectedGroupActionsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -754,7 +758,8 @@
                                                ToolTip="&#xC120;&#xD0DD; &#xAC1D;&#xCCB4;&#xC758; &#xADF8;&#xB8F9; &#xAD00;&#xACC4; &#xC804;&#xCCB4; &#xD574;&#xC81C;"
                                                Command="{Binding DissolveSelectedGroupCommand}" />
                                 </Grid>
-                                <Grid Margin="0,4,0,0">
+                                <Grid Margin="0,4,0,0"
+                                      Visibility="{Binding IsSelectedGroupActionsVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
