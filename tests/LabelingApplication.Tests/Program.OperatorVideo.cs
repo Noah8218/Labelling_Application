@@ -177,14 +177,7 @@ internal static partial class Program
 
             IntPtr handle = WaitForMainWindowHandle(appProcess, TimeSpan.FromSeconds(25));
             AssertTrue(handle != IntPtr.Zero, "operator video EXE window did not appear");
-            SetWindowPos(
-                handle,
-                HwndTopMost,
-                0,
-                0,
-                VisualSmokeDefaultWindowWidth,
-                VisualSmokeDefaultWindowHeight,
-                SwpShowWindow);
+            PlaceExeSmokeWindowOnLeftmostMonitor(handle);
             BringNativeWindowToFront(handle);
             Thread.Sleep(500);
 

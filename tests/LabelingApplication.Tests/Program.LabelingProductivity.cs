@@ -282,14 +282,7 @@ internal static partial class Program
 
             IntPtr handle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(25));
             AssertTrue(handle != IntPtr.Zero, "labeling productivity smoke window did not appear");
-            SetWindowPos(
-                handle,
-                HwndTopMost,
-                0,
-                0,
-                VisualSmokeDefaultWindowWidth,
-                VisualSmokeDefaultWindowHeight,
-                SwpShowWindow);
+            PlaceExeSmokeWindowOnLeftmostMonitor(handle);
             BringNativeWindowToFront(handle);
             var automationRoot = RefreshAutomationRoot(process, handle);
             WaitForAutomationText(automationRoot, "캔버스", TimeSpan.FromSeconds(10));

@@ -245,14 +245,7 @@ internal static class RecipeDatasetVersionTests
             AssertTrue(process != null, "Dataset Version EXE smoke process did not start");
             IntPtr handle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(25));
             AssertTrue(handle != IntPtr.Zero, "Dataset Version EXE smoke window did not appear");
-            SetWindowPos(
-                handle,
-                HwndTopMost,
-                0,
-                0,
-                VisualSmokeDefaultWindowWidth,
-                VisualSmokeDefaultWindowHeight,
-                SwpShowWindow);
+            PlaceExeSmokeWindowOnLeftmostMonitor(handle);
             BringNativeWindowToFront(handle);
             AssertTrue(
                 OpenYoloModelCenterThroughExe(process, handle),

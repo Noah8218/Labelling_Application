@@ -11,6 +11,10 @@ This file defines how Codex should work in this repository.
 - Keep MVVM boundaries: View code-behind may act as a UI adapter, but command/state/workflow/presentation logic should live in ViewModel or Service classes where feasible.
 - Avoid Viewer/OpenGL/ROI/brush/eraser performance paths unless the task explicitly requires them.
 - Public README/tutorial docs must not include local private paths, conversation notes, portfolio-only wording, or machine-specific details.
+- Store local test data and generated test/smoke/validation artifacts physically under `D:\OpenVisionLab-TestData\Labelling_Application`. Preserve repository-relative paths with verified directory junctions where needed; tracked source fixtures and documentation remain in the repository.
+- Use `scripts\Move-LabelingTestStorageToDDrive.ps1 -Apply` for the bounded local migration. Do not remove the C source directory until the script's file-length and SHA-256 verification passes. CI or a machine without `D:` may use its isolated available storage and must report the fallback.
+- Local test processes must route `TEMP` and `TMP` to `D:\OpenVisionLab-TestData\Labelling_Application\temp`. Do not move user datasets or `.proofline` state as test data.
+- Every actual EXE smoke, UI automation, operator-video, and EXE screenshot run must use `PlaceExeSmokeWindowOnLeftmostMonitor`, which dynamically selects the active monitor with the smallest bounds `Left` coordinate and verifies the actual window placement. Do not hard-code `DISPLAY2`; on the current topology it resolves to `\\.\DISPLAY2` at `Left=-1920`.
 
 ## Think Before Coding
 
@@ -86,7 +90,8 @@ Proceed only when all answers are clear:
 Completion must be proven by commands, not by wording alone.
 
 - C# / WPF default:
-  - `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\`
+  - `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Build-LabelingApplicationTests.ps1 -OutputName isolated-out`
+  - Run focused tests from `.\artifacts\tests\isolated-out\LabelingApplication.Tests.dll`.
   - Run the focused `LabelingApplication.Tests.dll` switches for the changed area.
   - `git diff --check`
 - WPF UI visual changes:

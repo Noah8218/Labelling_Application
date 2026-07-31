@@ -20031,3 +20031,47 @@ Boundary / next dependency:
   Windows PC/VM;
 - do not use unsupported GPU-P/DDA scripts or modify the host boot chain
   without a separate explicit decision and restart approval.
+
+## 2026-07-31 Local D-drive test storage and leftmost-monitor EXE smoke
+
+Status: Complete
+
+Scope:
+
+- migrated generated repository/test artifacts and test-project build caches
+  to `D:\OpenVisionLab-TestData\Labelling_Application` with verified junction
+  compatibility;
+- routed local test-process `TEMP`/`TMP` to D;
+- centralized dynamic leftmost-monitor placement and native-coordinate
+  verification for all actual desktop EXE smoke entry points;
+- recorded the same rules in the global and repository AGENT files.
+
+Acceptance criteria:
+
+- five physical D targets and five verified C junctions -> pass;
+- copy length and SHA-256 verification before C source removal -> pass;
+- D-backed focused test build and identical logical/physical DLL hash -> pass;
+- actual EXE leftmost-monitor evidence -> pass, `\\.\DISPLAY2`,
+  `-1920,360,1920,1080`;
+- clean default regression -> pass, `264/264`.
+
+Verification:
+
+- `Move-LabelingTestStorageToDDrive.ps1 -Apply` and idempotent dry run;
+- `Build-LabelingApplicationTests.ps1 -OutputName storage-monitor-20260731`;
+- `--exe-canonical-class-index-visual` with monitor JSON and desktop capture;
+- `--priority-workflow-docs`;
+- default test DLL, exit code `0`, `272.4` seconds;
+- `git diff --check`.
+
+Evidence:
+
+- `docs/LOCAL_TEST_STORAGE_AND_LEFT_MONITOR_CONTRACT_20260731.md`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\migration-evidence\test-storage-migration.json`;
+- `artifacts/repository-structure-monitor-20260731`.
+
+Boundary / next dependency:
+
+- source, tracked fixtures, user datasets, and `.proofline` remain outside the
+  migration scope;
+- the external GPU-capable clean-target P0-C labeling gate remains separate.

@@ -149,7 +149,7 @@ internal static class ExeCircularSegmentationWorkflowTests
 
             handle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(25));
             AssertTrue(handle != IntPtr.Zero, "EXE circular segmentation workflow window did not appear");
-            SetWindowPos(handle, HwndTopMost, 0, 0, VisualSmokeDefaultWindowWidth, VisualSmokeDefaultWindowHeight, SwpShowWindow);
+            PlaceExeSmokeWindowOnLeftmostMonitor(handle);
             BringNativeWindowToFront(handle);
             var root = RefreshAutomationRoot(process);
             CaptureWorkflowStep(root, screenshotDirectory, "01_startup");
@@ -1310,7 +1310,7 @@ internal static class ExeCircularSegmentationWorkflowTests
         {
             if (stableHandle != IntPtr.Zero)
             {
-                SetWindowPos(stableHandle, HwndTopMost, 0, 0, VisualSmokeDefaultWindowWidth, VisualSmokeDefaultWindowHeight, SwpShowWindow);
+                PlaceExeSmokeWindowOnLeftmostMonitor(stableHandle);
                 BringNativeWindowToFront(stableHandle);
             }
 

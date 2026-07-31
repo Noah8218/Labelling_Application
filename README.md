@@ -169,8 +169,14 @@ dotnet build .\OpenVisionLab.LabelingStudio.sln -c Debug -p:Platform=x64
 격리 테스트 빌드:
 
 ```powershell
-dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File .\scripts\Build-LabelingApplicationTests.ps1 `
+  -OutputName isolated-out
 ```
+
+테스트 빌드 결과는 저장소 루트의
+`artifacts/tests/isolated-out`에 생성됩니다. 목적별 출력은 `-OutputName`으로
+분리하고 테스트 프로젝트 내부에는 새 최종 빌드 출력 폴더를 만들지 않습니다.
 
 ## Smoke Command
 
@@ -184,7 +190,7 @@ dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj 
 공개 문서와 주요 워크플로 계약:
 
 ```powershell
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
 ```
 
 ## CI

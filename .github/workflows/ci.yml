@@ -48,11 +48,11 @@ jobs:
 
       - name: Build tests
         shell: pwsh
-        run: dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Build-LabelingApplicationTests.ps1 -OutputName isolated-out
 
       - name: Smoke docs
         shell: pwsh
-        run: dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
+        run: dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
 
       - name: Publish versioned self-contained release
         shell: pwsh
@@ -60,7 +60,7 @@ jobs:
 
       - name: Verify release package contract
         shell: pwsh
-        run: dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --release-package-contract
+        run: dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --release-package-contract
 
       - name: Upload versioned win-x64 release
         uses: actions/upload-artifact@v4

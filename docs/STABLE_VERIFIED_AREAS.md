@@ -3732,3 +3732,25 @@ The standard Hyper-V synthetic display reproduced
 installer lifecycle, signing, and production readiness remain incomplete. Do
 not repeat this viewer path unless display capability or viewer implementation
 changes.
+
+## Local D-drive test storage and leftmost-monitor EXE smoke (2026-07-31)
+
+Status: Complete
+
+- Five test-output/build-cache paths were moved under
+  `D:\OpenVisionLab-TestData\Labelling_Application` after file-length and
+  SHA-256 verification; their existing C paths are directory junctions.
+- Local test `TEMP` and `TMP` use the D test root. The central build helper
+  fails closed when a local D-equipped workstation has the wrong artifact
+  junction, while CI and D-less targets retain an explicit fallback.
+- Every actual desktop EXE smoke dynamically selects the screen with the
+  smallest bounds `Left`, places the window there, and verifies the native
+  window rectangle. Current evidence resolved to `\\.\DISPLAY2` at
+  `-1920,360,1920,1080`.
+- Zero-warning/error focused build, real current-EXE canonical class-index
+  smoke, docs gate, and clean default `264/264` regression passed.
+- Evidence: `docs/LOCAL_TEST_STORAGE_AND_LEFT_MONITOR_CONTRACT_20260731.md`.
+
+Boundary: do not move tracked fixtures, source, user datasets, or `.proofline`.
+Do not hard-code the current display name; topology determines the leftmost
+monitor. This does not complete the external GPU-capable P0-C gate.

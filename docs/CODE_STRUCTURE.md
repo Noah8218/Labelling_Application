@@ -87,6 +87,14 @@ navigation source로 사용합니다.
 | `docs` | 개발 방향, WPF 전환, 검증 체크리스트, 아키텍처 문서. |
 | `scripts` | 빌드/게시/첫 실행/YOLO smoke 자동화 스크립트. |
 | `config` | runtime path 예제 설정. 개인 설정은 local json으로 분리합니다. |
+| `artifacts` | Git에서 제외되는 빌드·테스트·UI·릴리스·검증 산출물. 삭제 전에 `REPOSITORY_ARTIFACT_INVENTORY_AND_RETENTION_POLICY_20260731.md`의 보존 분류와 승인 gate를 따릅니다. |
+
+생성물 구조를 검토할 때는
+`scripts/Get-RepositoryArtifactInventory.ps1`을 사용합니다. 이 스크립트는
+인벤토리와 보존 검토 분류만 만들며 파일을 삭제하거나 이동하지 않습니다.
+테스트 최종 빌드 출력은
+`scripts/Build-LabelingApplicationTests.ps1`을 통해
+`artifacts/tests/<목적>` 아래에 생성합니다.
 
 ## 의존 방향
 
@@ -876,6 +884,20 @@ Review and Smart Mask remain the owners of pending-candidate and prompt-session
 state. Recovery restores only ordinary annotation geometry and persistent
 Object Review metadata as dirty in-memory state; it must not call save,
 candidate confirmation, Recipe Apply, training, or inference.
+
+## Local Test Infrastructure Ownership
+
+`scripts/Move-LabelingTestStorageToDDrive.ps1` owns the bounded local
+test-output migration, extended-length path handling, copy verification, and
+junction creation for the canonical D-drive root. It does not move source,
+tracked fixtures, user datasets, or `.proofline` state.
+
+`scripts/Build-LabelingApplicationTests.ps1` owns the central test output path
+and the local D-drive junction preflight. `Program.ConfigureTestStorageEnvironment`
+owns test-process `TEMP`/`TMP` routing. `PlaceExeSmokeWindowOnLeftmostMonitor`
+owns dynamic leftmost-monitor selection, native window placement verification,
+and optional monitor evidence for every actual desktop EXE smoke entry point.
+These helpers do not change production window placement or product UI logic.
 
 ## 완료 보고 전 확인
 

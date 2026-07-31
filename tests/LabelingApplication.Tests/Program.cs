@@ -49,6 +49,10 @@ internal static partial class Program
     internal const int VisualSmokeDefaultWindowHeight = 1080;
     internal const int VisualSmokeMinimumWindowWidth = 1100;
     internal const int VisualSmokeMinimumWindowHeight = 720;
+    internal const string ExeSmokeMonitorEvidenceEnvironmentVariable = "OPENVISIONLAB_EXE_SMOKE_MONITOR_EVIDENCE";
+    internal const string ExeSmokeDesktopScreenshotEnvironmentVariable = "OPENVISIONLAB_EXE_SMOKE_DESKTOP_SCREENSHOT";
+    internal const string TestStorageRootEnvironmentVariable = "OPENVISIONLAB_TEST_STORAGE_ROOT";
+    internal const string DefaultLocalTestStorageRoot = @"D:\OpenVisionLab-TestData\Labelling_Application";
     internal static readonly IntPtr HwndTopMost = new IntPtr(-1);
     internal static readonly string[] ExeSmokeImageArtifactExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
@@ -94,6 +98,9 @@ internal static partial class Program
     internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
 
     [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(IntPtr hWnd, out NativeRect rect);
+
+    [DllImport("user32.dll")]
     private static extern bool SetCursorPos(int x, int y);
 
     [DllImport("user32.dll")]
@@ -108,6 +115,15 @@ internal static partial class Program
         uint flags,
         uint timeout,
         out UIntPtr result);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        internal int Left;
+        internal int Top;
+        internal int Right;
+        internal int Bottom;
+    }
 
     private static void ConfigureIsolatedWorkspaceLayoutSettingsPath()
     {
@@ -129,6 +145,34 @@ internal static partial class Program
         Environment.SetEnvironmentVariable(
             WpfWorkspaceLayoutSettingsService.SettingsPathEnvironmentVariable,
             path);
+    }
+
+    private static void ConfigureTestStorageEnvironment()
+    {
+        if (string.Equals(Environment.GetEnvironmentVariable("CI"), "true", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(Environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        string configuredRoot = Environment.GetEnvironmentVariable(TestStorageRootEnvironmentVariable);
+        string storageRoot = string.IsNullOrWhiteSpace(configuredRoot)
+            ? DefaultLocalTestStorageRoot
+            : Path.GetFullPath(configuredRoot);
+        string storageDriveRoot = Path.GetPathRoot(storageRoot);
+        if (string.IsNullOrWhiteSpace(storageDriveRoot) || !Directory.Exists(storageDriveRoot))
+        {
+            Console.WriteLine($"TEST_STORAGE_FALLBACK={Path.GetTempPath()}");
+            return;
+        }
+
+        string tempRoot = Path.Combine(storageRoot, "temp");
+        Directory.CreateDirectory(tempRoot);
+        Environment.SetEnvironmentVariable(TestStorageRootEnvironmentVariable, storageRoot);
+        Environment.SetEnvironmentVariable("TEMP", tempRoot);
+        Environment.SetEnvironmentVariable("TMP", tempRoot);
+        Console.WriteLine($"TEST_STORAGE_ROOT={storageRoot}");
+        Console.WriteLine($"TEST_TEMP_ROOT={tempRoot}");
     }
 
     internal static System.Windows.Automation.AutomationElement OpenDatasetSetupWizardThroughExe(
@@ -243,6 +287,7 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        ConfigureTestStorageEnvironment();
         ConfigureIsolatedWorkspaceLayoutSettingsPath();
 
         if (args.Any(arg => string.Equals(arg, "--wpf-visual-smoke", StringComparison.OrdinalIgnoreCase)))
@@ -4792,7 +4837,7 @@ internal static partial class Program
 
             IntPtr handle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(25));
             AssertTrue(handle != IntPtr.Zero, "canonical class-index EXE window did not appear");
-            SetWindowPos(handle, HwndTopMost, 0, 0, VisualSmokeDefaultWindowWidth, VisualSmokeDefaultWindowHeight, SwpShowWindow);
+            PlaceExeSmokeWindowOnLeftmostMonitor(handle);
             BringNativeWindowToFront(handle);
 
             System.Windows.Automation.AutomationElement automationRoot = RefreshAutomationRoot(process, handle);
@@ -8650,6 +8695,103 @@ internal static partial class Program
         }
     }
 
+    internal static Screen PlaceExeSmokeWindowOnLeftmostMonitor(
+        IntPtr handle,
+        int requestedWidth = VisualSmokeDefaultWindowWidth,
+        int requestedHeight = VisualSmokeDefaultWindowHeight)
+    {
+        AssertTrue(handle != IntPtr.Zero, "EXE smoke window handle was not available for monitor placement");
+        Screen expectedScreen = Screen.AllScreens
+            .OrderBy(screen => screen.Bounds.Left)
+            .ThenBy(screen => screen.Bounds.Top)
+            .First();
+        Rectangle monitorBounds = expectedScreen.Bounds;
+        int width = Math.Min(Math.Max(1, requestedWidth), monitorBounds.Width);
+        int height = Math.Min(Math.Max(1, requestedHeight), monitorBounds.Height);
+        int left = monitorBounds.Left + ((monitorBounds.Width - width) / 2);
+        int top = monitorBounds.Top + ((monitorBounds.Height - height) / 2);
+
+        AssertTrue(
+            SetWindowPos(handle, HwndTopMost, left, top, width, height, SwpShowWindow),
+            $"failed to place EXE smoke window on leftmost monitor {expectedScreen.DeviceName}");
+        Thread.Sleep(100);
+
+        Screen actualScreen = Screen.FromHandle(handle);
+        AssertEqual(expectedScreen.DeviceName, actualScreen.DeviceName);
+        AssertTrue(GetWindowRect(handle, out NativeRect windowRect), "failed to read EXE smoke window bounds after placement");
+        var actualBounds = new Rectangle(
+            windowRect.Left,
+            windowRect.Top,
+            windowRect.Right - windowRect.Left,
+            windowRect.Bottom - windowRect.Top);
+        AssertTrue(
+            monitorBounds.IntersectsWith(actualBounds),
+            $"EXE smoke window does not intersect leftmost monitor {expectedScreen.DeviceName}: {actualBounds}");
+
+        string evidencePath = Environment.GetEnvironmentVariable(ExeSmokeMonitorEvidenceEnvironmentVariable);
+        if (!string.IsNullOrWhiteSpace(evidencePath))
+        {
+            string fullEvidencePath = Path.GetFullPath(evidencePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullEvidencePath)!);
+            File.WriteAllText(
+                fullEvidencePath,
+                System.Text.Json.JsonSerializer.Serialize(
+                    new
+                    {
+                        schemaVersion = 1,
+                        capturedAt = DateTimeOffset.Now,
+                        expectedScreen = new
+                        {
+                            expectedScreen.DeviceName,
+                            expectedScreen.Primary,
+                            left = monitorBounds.Left,
+                            top = monitorBounds.Top,
+                            width = monitorBounds.Width,
+                            height = monitorBounds.Height,
+                        },
+                        actualScreen = new
+                        {
+                            actualScreen.DeviceName,
+                            actualScreen.Primary,
+                        },
+                        window = new
+                        {
+                            left = actualBounds.Left,
+                            top = actualBounds.Top,
+                            width = actualBounds.Width,
+                            height = actualBounds.Height,
+                        },
+                    },
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        }
+
+        string screenshotPath = Environment.GetEnvironmentVariable(ExeSmokeDesktopScreenshotEnvironmentVariable);
+        if (!string.IsNullOrWhiteSpace(screenshotPath))
+        {
+            string fullScreenshotPath = Path.GetFullPath(screenshotPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullScreenshotPath)!);
+            Rectangle virtualBounds = SystemInformation.VirtualScreen;
+            using var bitmap = new Bitmap(virtualBounds.Width, virtualBounds.Height);
+            using (Graphics graphics = Graphics.FromImage(bitmap))
+            {
+                graphics.CopyFromScreen(
+                    virtualBounds.Left,
+                    virtualBounds.Top,
+                    0,
+                    0,
+                    bitmap.Size);
+            }
+
+            bitmap.Save(fullScreenshotPath, System.Drawing.Imaging.ImageFormat.Png);
+        }
+
+        Console.WriteLine(
+            $"EXE_SMOKE_MONITOR={expectedScreen.DeviceName} " +
+            $"LEFT={monitorBounds.Left} TOP={monitorBounds.Top} " +
+            $"WINDOW={actualBounds.Left},{actualBounds.Top},{actualBounds.Width},{actualBounds.Height}");
+        return expectedScreen;
+    }
+
     internal static IntPtr WaitForMainWindowHandle(Process process, TimeSpan timeout)
     {
         Stopwatch stopwatch = Stopwatch.StartNew();
@@ -8663,7 +8805,9 @@ internal static partial class Program
             process.Refresh();
             if (process.MainWindowHandle != IntPtr.Zero)
             {
-                return process.MainWindowHandle;
+                IntPtr handle = process.MainWindowHandle;
+                PlaceExeSmokeWindowOnLeftmostMonitor(handle);
+                return handle;
             }
 
             Thread.Sleep(100);
@@ -8722,6 +8866,7 @@ internal static partial class Program
     {
         AssertTrue(process != null && !process.HasExited, "EXE smoke process exited unexpectedly");
         process.Refresh();
+        PlaceExeSmokeWindowOnLeftmostMonitor(process.MainWindowHandle);
         if (bringToFront)
         {
             AssertTrue(
@@ -8741,6 +8886,7 @@ internal static partial class Program
     {
         AssertTrue(process != null && !process.HasExited, "EXE smoke process exited unexpectedly");
         AssertTrue(stableHandle != IntPtr.Zero, "EXE smoke stable window handle was not available");
+        PlaceExeSmokeWindowOnLeftmostMonitor(stableHandle);
         if (bringToFront)
         {
             AssertTrue(
@@ -11720,7 +11866,7 @@ internal static partial class Program
         AssertTrue(process != null, "failed to start YOLOv8 runtime restart smoke EXE");
         handle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(25));
         AssertTrue(handle != IntPtr.Zero, "YOLOv8 runtime restart smoke window did not appear");
-        SetWindowPos(handle, HwndTopMost, 0, 0, VisualSmokeDefaultWindowWidth, VisualSmokeDefaultWindowHeight, SwpShowWindow);
+        PlaceExeSmokeWindowOnLeftmostMonitor(handle);
         BringNativeWindowToFront(handle);
         return process;
     }
@@ -25050,6 +25196,10 @@ internal static partial class Program
         string userCenteredDirectionPath = Path.Combine(root, "docs", "LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md");
         string releaseNotesPath = Path.Combine(root, "RELEASE_NOTES.md");
         string ciWorkflowPath = Path.Combine(root, ".github", "workflows", "ci.yml");
+        string agentPath = Path.Combine(root, "AGENTS.md");
+        string testBuildScriptPath = Path.Combine(root, "scripts", "Build-LabelingApplicationTests.ps1");
+        string testStorageMigrationScriptPath = Path.Combine(root, "scripts", "Move-LabelingTestStorageToDDrive.ps1");
+        string localTestStorageContractPath = Path.Combine(root, "docs", "LOCAL_TEST_STORAGE_AND_LEFT_MONITOR_CONTRACT_20260731.md");
         string tutorialReadmePath = Path.Combine(root, "docs", "tutorial", "README.md");
         string mobileSamGuidePath = Path.Combine(root, "docs", "MOBILE_SAM_SMART_MASK.md");
         string tutorialHtmlPath = Path.Combine(root, "docs", "tutorial", "labeling-workbench-tutorial.html");
@@ -25076,6 +25226,10 @@ internal static partial class Program
         AssertTrue(File.Exists(crashRecoveryCompletionPath), "P1-B crash recovery completion record should exist");
         AssertTrue(File.Exists(releaseNotesPath), "release notes document should exist");
         AssertTrue(File.Exists(ciWorkflowPath), "CI workflow should exist");
+        AssertTrue(File.Exists(agentPath), "repository AGENT instructions should exist");
+        AssertTrue(File.Exists(testBuildScriptPath), "central test-output build script should exist");
+        AssertTrue(File.Exists(testStorageMigrationScriptPath), "local test-storage migration script should exist");
+        AssertTrue(File.Exists(localTestStorageContractPath), "local test-storage and EXE-monitor completion record should exist");
         AssertTrue(File.Exists(tutorialReadmePath), "tutorial README should exist");
         AssertTrue(File.Exists(mobileSamGuidePath), "MobileSAM operator guide should exist");
         AssertTrue(File.Exists(tutorialHtmlPath), "tutorial HTML guide should exist");
@@ -25111,6 +25265,10 @@ internal static partial class Program
         string userCenteredDirection = File.ReadAllText(userCenteredDirectionPath, Encoding.UTF8);
         string releaseNotes = File.ReadAllText(releaseNotesPath, Encoding.UTF8);
         string ciWorkflow = File.ReadAllText(ciWorkflowPath, Encoding.UTF8);
+        string agent = File.ReadAllText(agentPath, Encoding.UTF8);
+        string testBuildScript = File.ReadAllText(testBuildScriptPath, Encoding.UTF8);
+        string testStorageMigrationScript = File.ReadAllText(testStorageMigrationScriptPath, Encoding.UTF8);
+        string localTestStorageContract = File.ReadAllText(localTestStorageContractPath, Encoding.UTF8);
         string tutorialReadme = File.ReadAllText(tutorialReadmePath, Encoding.UTF8);
         string mobileSamGuide = File.ReadAllText(mobileSamGuidePath, Encoding.UTF8);
         string tutorialHtml = File.ReadAllText(tutorialHtmlPath, Encoding.UTF8);
@@ -25208,7 +25366,18 @@ internal static partial class Program
             "handoff and next prompt should preserve the reviewed baseline, diagnostics, archive, and recovery contracts");
         AssertTrue(releaseNotes.Contains("## Unreleased", StringComparison.Ordinal), "release notes should keep an Unreleased section");
         AssertTrue(ciWorkflow.Contains("Check required README sections", StringComparison.Ordinal), "CI workflow should check the README contract");
-        AssertTrue(ciWorkflow.Contains("dotnet build .\\tests\\LabelingApplication.Tests\\LabelingApplication.Tests.csproj", StringComparison.Ordinal), "CI workflow should run the test-project build");
+        AssertTrue(ciWorkflow.Contains("Build-LabelingApplicationTests.ps1 -OutputName isolated-out", StringComparison.Ordinal), "CI workflow should use the central test-output build script");
+        AssertTrue(ciWorkflow.Contains(".\\artifacts\\tests\\isolated-out\\LabelingApplication.Tests.dll", StringComparison.Ordinal), "CI workflow should run tests from the repository artifact root");
+        AssertTrue(testBuildScript.Contains("artifacts\\tests", StringComparison.Ordinal), "test build script should own the repository test artifact root");
+        AssertTrue(testBuildScript.Contains("ValidatePattern", StringComparison.Ordinal), "test build script should reject unsafe output names");
+        AssertTrue(!testBuildScript.Contains("Remove-Item", StringComparison.Ordinal), "test build script should not delete existing outputs");
+        AssertTrue(testBuildScript.Contains(@"D:\OpenVisionLab-TestData\Labelling_Application\artifacts", StringComparison.Ordinal), "local test builds should verify the canonical D-drive artifact target");
+        AssertTrue(testStorageMigrationScript.Contains("Get-FileSha256", StringComparison.Ordinal), "test-storage migration should verify copied file hashes");
+        AssertTrue(testStorageMigrationScript.Contains("ItemType Junction", StringComparison.Ordinal), "test-storage migration should preserve logical paths with junctions");
+        AssertTrue(agent.Contains(@"D:\OpenVisionLab-TestData\Labelling_Application", StringComparison.Ordinal), "repository instructions should preserve D-drive local test storage");
+        AssertTrue(agent.Contains("PlaceExeSmokeWindowOnLeftmostMonitor", StringComparison.Ordinal), "repository instructions should preserve dynamic leftmost-monitor EXE placement");
+        AssertTrue(localTestStorageContract.Contains("Status: Complete", StringComparison.Ordinal), "local test-storage contract should use the durable completion state");
+        AssertTrue(localTestStorageContract.Contains("264/264", StringComparison.Ordinal), "local test-storage contract should preserve final regression evidence");
         AssertTrue(ciWorkflow.Contains("--priority-workflow-docs", StringComparison.Ordinal), "CI workflow should run the docs smoke");
         AssertTrue(ciWorkflow.Contains("--release-package-contract", StringComparison.Ordinal), "CI workflow should run the release package contract");
         AssertTrue(ciWorkflow.Contains("actions/upload-artifact@v4", StringComparison.Ordinal), "CI workflow should upload the verified release package");

@@ -30,6 +30,11 @@ Current Git/worktree:
   no failures. Read `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`;
 - `.proofline/STATE.md` and `.proofline/dashboard/` are local/user-owned and
   must remain untouched;
+- local test, smoke, screenshot, validation, and test-temporary data now
+  physically use `D:\OpenVisionLab-TestData\Labelling_Application`; the
+  established C paths are junction-backed. Every actual desktop EXE smoke
+  dynamically selects and verifies the leftmost monitor. Preserve
+  `docs/LOCAL_TEST_STORAGE_AND_LEFT_MONITOR_CONTRACT_20260731.md`;
 - the current worktree adds the runtime graphics-preflight slice described in
   `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`;
 - a deliberately versioned dirty-source `0.1.1` engineering package now proves
@@ -1200,32 +1205,32 @@ automatic candidate save remain out of scope.
 Use only the relevant commands for the slice being changed.
 
 ~~~powershell
-dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Build-LabelingApplicationTests.ps1 -OutputName isolated-out
 
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
 
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-10k-responsive
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-10k-detail-responsive
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-status
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-root-switch
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-queue-click-perf --count 125 --measure-detail-refresh --settle-ms 60
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-10k-responsive
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-10k-detail-responsive
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-status
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --wpf-image-queue-root-switch
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --wpf-queue-click-perf --count 125 --measure-detail-refresh --settle-ms 60
 
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --dataset-health
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-dataset-health-window
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --external-yolo-dataset-intake
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --dataset-readiness-purpose
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --dataset-quality-audit
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --recipe-dataset-version-v2
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-labeling-shell
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --model-adapter-catalog
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --mobile-sam-box-prompt
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --real-mobile-sam-point-correction
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --exe-smart-mask-point-smoke --exe .\artifacts\run\Debug\OpenVisionLab.LabelingStudio.exe
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-yolo-model-settings-panel
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --dataset-health
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --wpf-dataset-health-window
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --external-yolo-dataset-intake
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --dataset-readiness-purpose
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --dataset-quality-audit
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --recipe-dataset-version-v2
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --wpf-labeling-shell
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --model-adapter-catalog
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --mobile-sam-box-prompt
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --real-mobile-sam-point-correction
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --exe-smart-mask-point-smoke --exe .\artifacts\run\Debug\OpenVisionLab.LabelingStudio.exe
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --wpf-yolo-model-settings-panel
 
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --anomaly-classification-training-workflow
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --anomaly-classification-evaluation
-dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --wpf-yolov8-anomaly-classification-runtime-smoke
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --anomaly-classification-training-workflow
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --anomaly-classification-evaluation
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --wpf-yolov8-anomaly-classification-runtime-smoke
 
 C:\Git\yolov8\.venv\Scripts\python.exe -m py_compile C:\Git\yolov8\labeling_tcp_client.py Runtime\Python\openvisionlab_ultralytics_worker.py
 C:\Git\yolov8\.venv\Scripts\python.exe -m py_compile Runtime\Python\openvisionlab_yolo_classification_batch.py
