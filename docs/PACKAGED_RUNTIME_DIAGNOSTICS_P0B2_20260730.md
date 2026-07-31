@@ -194,3 +194,15 @@ Verification: Zero-warning isolated build; --runtime-diagnostics-contract; curre
 Evidence: docs/PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md; artifacts/p0b2-runtime-diagnostics-20260730; artifacts/publish/Release/win-x64/0.1.0.
 Boundary / next dependency: No telemetry, cloud, implicit model execution, installer/signing, clean-machine, recovery/archive, runtime redistribution, or production-quality claim. P0-C requires an approved clean Windows environment and release lifecycle decisions.
 ```
+
+## 9. 2026-07-31 Current-Source P0-C Extension
+
+The original `0.1.0` P0-B2 result above remains an immutable historical
+package record. A later current-source P0-C slice extends the same explicit
+self-test and support-bundle surfaces with an actual Main Viewer
+`viewerGraphics` check and fail-closed image-load guidance.
+
+Read `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md` for the new
+contract and evidence. Do not attribute that extension to the existing
+`0.1.0` package; a packaged proof requires a deliberately versioned fresh
+bundle.

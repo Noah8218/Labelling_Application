@@ -153,6 +153,14 @@ namespace MvcVisionSystem.Yolo
                     .ToList();
             }
 
+            // An untouched startup queue contains only default Unreviewed rows. Do not create an
+            // empty cache beside a packaged executable, while still allowing an existing cache to
+            // be cleared after the operator resets every persisted review state.
+            if (persistedItems.Count == 0 && !File.Exists(filePath))
+            {
+                return;
+            }
+
             try
             {
                 string directory = Path.GetDirectoryName(filePath);

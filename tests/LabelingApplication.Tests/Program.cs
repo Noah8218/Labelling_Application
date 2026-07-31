@@ -21,6 +21,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -732,6 +733,11 @@ internal static partial class Program
             return RunSingleSmoke(
                 "Runtime diagnostics uses per-user paths and exports an allow-list support bundle",
                 RuntimeDiagnosticsContractTests.TestRuntimeDiagnosticsAndSupportBundleContract);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--exe-runtime-graphics-smoke", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunExeRuntimeGraphicsSmoke(args);
         }
 
         if (args.Any(arg => string.Equals(arg, "--wpf-image-queue-status", StringComparison.OrdinalIgnoreCase)))
@@ -1969,6 +1975,7 @@ internal static partial class Program
         bool openHeaderToolsMenu = HasArgument(args, "--open-header-tools-menu");
         bool showWorkspaceLayoutControls = HasArgument(args, "--show-workspace-layout-controls");
         bool runRuntimeSelfTest = HasArgument(args, "--run-runtime-self-test");
+        bool showFailedGraphicsCapability = HasArgument(args, "--show-failed-graphics-capability");
         bool createSupportBundle = HasArgument(args, "--create-support-bundle");
         bool showTrainingRecoveryStatus = HasArgument(args, "--show-training-recovery-status");
         bool showCandidateDisclosure = HasArgument(args, "--show-candidate-disclosure");
@@ -2017,6 +2024,7 @@ internal static partial class Program
         bool screenCapture = HasArgument(args, "--screen-capture");
         bool showApplicationCloseDialog = HasArgument(args, "--show-application-close-dialog");
         bool showCrashRecoveryDialog = HasArgument(args, "--show-crash-recovery-dialog");
+        bool showGraphicsCapabilityDialog = HasArgument(args, "--show-graphics-capability-dialog");
         bool labelsOnly = HasArgument(args, "--labels-only");
         bool segmentationCandidates = HasArgument(args, "--segmentation-candidates");
         bool smartMaskCandidate = HasArgument(args, "--smart-mask-candidate");
@@ -2528,6 +2536,12 @@ internal static partial class Program
 
                     if (runRuntimeSelfTest)
                     {
+                        if (showFailedGraphicsCapability)
+                        {
+                            window.RuntimeDiagnosticsViewModel.AttachGraphicsCapabilityProvider(
+                                CreateVisualSmokeFailedGraphicsCapabilityCheck);
+                        }
+
                         window.RuntimeDiagnosticsViewModel.RunSelfTestCommand.Execute(null);
                         PumpWpfDispatcher(TimeSpan.FromMilliseconds(150));
                     }
@@ -3011,6 +3025,37 @@ internal static partial class Program
                         return 0;
                     }
 
+                    if (showGraphicsCapabilityDialog)
+                    {
+                        window.RuntimeDiagnosticsViewModel.AttachGraphicsCapabilityProvider(
+                            CreateVisualSmokeFailedGraphicsCapabilityCheck);
+                        bool dialogCaptured = false;
+                        window.Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            WpfMessageDialogWindow graphicsDialog = System.Windows.Application.Current.Windows
+                                .OfType<WpfMessageDialogWindow>()
+                                .FirstOrDefault(candidate => ReferenceEquals(candidate.Owner, window));
+                            AssertTrue(graphicsDialog != null, "graphics-capability dialog was not visible for capture");
+                            graphicsDialog.UpdateLayout();
+                            graphicsDialog.Activate();
+                            PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
+                            CaptureWindowFromScreen(window, outputPath);
+                            dialogCaptured = true;
+                            graphicsDialog.Close();
+                        }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
+                        bool reloaded = window.TryLoadImage(
+                            imagePath,
+                            populateQueue: false,
+                            refreshQueueDetails: false,
+                            refreshActiveStatus: false,
+                            appendLoadLog: false);
+                        AssertTrue(!reloaded, "failed graphics capability should block the central image-load path");
+                        AssertTrue(dialogCaptured, "graphics-capability dialog capture did not complete");
+                        Console.WriteLine($"WPF graphics-capability dialog captured: {outputPath}");
+                        return 0;
+                    }
+
                     if (screenCapture)
                     {
                         CaptureWindowFromScreen(captureTarget, outputPath);
@@ -3049,6 +3094,16 @@ internal static partial class Program
             Console.Error.WriteLine(ex.ToString());
             return 1;
         }
+    }
+
+    private static WpfRuntimeSelfTestCheck CreateVisualSmokeFailedGraphicsCapabilityCheck()
+    {
+        return new WpfRuntimeSelfTestCheck(
+            WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName,
+            "fail",
+            "이미지 뷰어 사용 불가 · Microsoft Hyper-V Video / OpenGL 1.1 · "
+            + "지원되지 않는 필수 기능: glGenFramebuffersEXT · "
+            + "지원되는 GPU 드라이버가 설치된 로컬 PC/VM 콘솔에서 다시 실행하세요.");
     }
 
     private static int RunWpfStartupOnboardingVisualSmoke(string[] args)
@@ -4143,6 +4198,180 @@ internal static partial class Program
             Console.Error.WriteLine(ex.ToString());
             return 1;
         }
+    }
+
+    private static int RunExeRuntimeGraphicsSmoke(string[] args)
+    {
+        Process process = null;
+        try
+        {
+            string root = FindRepositoryRoot();
+            string exePath = Path.GetFullPath(GetArgumentValue(
+                args,
+                "--exe",
+                Path.Combine(
+                    root,
+                    "artifacts",
+                    "publish",
+                    "Release",
+                    "win-x64",
+                    "0.1.1",
+                    "OpenVisionLab.LabelingStudio.exe")));
+            string outputPath = Path.GetFullPath(GetArgumentValue(
+                args,
+                "--output",
+                Path.Combine(
+                    root,
+                    "artifacts",
+                    "ui",
+                    "packaged-runtime-graphics-0.1.1-20260731.png")));
+            string appDataRoot = Path.GetFullPath(GetArgumentValue(
+                args,
+                "--app-data-root",
+                Path.Combine(
+                    root,
+                    "artifacts",
+                    "release-package-0.1.1-20260731",
+                    "packaged-app-data")));
+            string expectedVersion = GetArgumentValue(args, "--expected-version", "0.1.1");
+
+            AssertTrue(File.Exists(exePath), "packaged runtime-graphics EXE target was not found");
+            AssertTrue(
+                !Directory.Exists(appDataRoot),
+                "packaged runtime-graphics app-data root must be a new empty path");
+            Directory.CreateDirectory(appDataRoot);
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = exePath,
+                WorkingDirectory = Path.GetDirectoryName(exePath)!,
+                UseShellExecute = false
+            };
+            startInfo.Environment["OPENVISIONLAB_LABELING_APP_DATA_ROOT"] = appDataRoot;
+            process = Process.Start(startInfo);
+            AssertTrue(process != null, "packaged runtime-graphics EXE did not start");
+
+            IntPtr handle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(45));
+            var automationRoot = RefreshAutomationRoot(process, handle);
+            AssertTrue(
+                TryInvokeAutomationButtonByAutomationId(automationRoot, "HeaderToolsMenuButton"),
+                "packaged runtime-graphics smoke could not open Settings/Tools");
+
+            System.Windows.Automation.AutomationElement selfTestButton = null;
+            AssertTrue(
+                WaitUntil(
+                    () =>
+                    {
+                        selfTestButton = FindProcessAutomationElementById(
+                            process.Id,
+                            "RuntimeSelfTestButton");
+                        return selfTestButton != null && selfTestButton.Current.IsEnabled;
+                    },
+                    TimeSpan.FromSeconds(10)),
+                "packaged runtime-graphics smoke could not find the environment-check action");
+            AssertTrue(
+                TryInvokeAutomationElement(selfTestButton),
+                "packaged runtime-graphics smoke could not invoke the environment check");
+
+            string selfTestPath = Path.Combine(
+                appDataRoot,
+                "Diagnostics",
+                "self-test-latest.json");
+            AssertTrue(
+                WaitUntil(
+                    () => File.Exists(selfTestPath) && new FileInfo(selfTestPath).Length > 0,
+                    TimeSpan.FromSeconds(15)),
+                "packaged runtime-graphics self-test JSON was not persisted");
+
+            using JsonDocument selfTest = JsonDocument.Parse(
+                File.ReadAllText(selfTestPath, Encoding.UTF8));
+            JsonElement rootElement = selfTest.RootElement;
+            AssertEqual(
+                expectedVersion,
+                rootElement.GetProperty("productVersion").GetString());
+            JsonElement graphicsCheck = rootElement
+                .GetProperty("checks")
+                .EnumerateArray()
+                .FirstOrDefault(check =>
+                    string.Equals(
+                        check.GetProperty("name").GetString(),
+                        WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName,
+                        StringComparison.Ordinal));
+            AssertTrue(
+                graphicsCheck.ValueKind == JsonValueKind.Object,
+                "packaged self-test should include viewerGraphics");
+            AssertEqual("pass", graphicsCheck.GetProperty("status").GetString());
+            AssertTrue(
+                graphicsCheck.GetProperty("detail").GetString()?.Contains(
+                    "필수 framebuffer 함수 11개 확인",
+                    StringComparison.Ordinal) == true,
+                "packaged viewerGraphics should prove all 11 required functions");
+            AssertEqual(0, rootElement.GetProperty("failedCount").GetInt32());
+
+            automationRoot = RefreshAutomationRoot(process, handle, bringToFront: false);
+            CaptureAutomationRoot(automationRoot, outputPath);
+            Console.WriteLine(
+                $"PACKAGED_RUNTIME_GRAPHICS_VERSION={expectedVersion} "
+                + $"STATUS={graphicsCheck.GetProperty("status").GetString()} "
+                + $"DETAIL={graphicsCheck.GetProperty("detail").GetString()} "
+                + $"SCREENSHOT={outputPath}");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"FAIL packaged runtime graphics smoke: {ex.Message}");
+            Console.Error.WriteLine(ex.ToString());
+            return 1;
+        }
+        finally
+        {
+            if (process != null && !process.HasExited)
+            {
+                process.CloseMainWindow();
+                if (!process.WaitForExit(10000))
+                {
+                    process.Kill(entireProcessTree: true);
+                    process.WaitForExit(5000);
+                }
+            }
+        }
+    }
+
+    private static System.Windows.Automation.AutomationElement FindProcessAutomationElementById(
+        int processId,
+        string automationId)
+    {
+        var condition = new System.Windows.Automation.AndCondition(
+            new System.Windows.Automation.PropertyCondition(
+                System.Windows.Automation.AutomationElement.ProcessIdProperty,
+                processId),
+            new System.Windows.Automation.PropertyCondition(
+                System.Windows.Automation.AutomationElement.AutomationIdProperty,
+                automationId));
+        return System.Windows.Automation.AutomationElement.RootElement.FindFirst(
+            System.Windows.Automation.TreeScope.Descendants,
+            condition);
+    }
+
+    private static bool TryInvokeAutomationElement(
+        System.Windows.Automation.AutomationElement element)
+    {
+        if (element == null || !element.Current.IsEnabled)
+        {
+            return false;
+        }
+
+        if (element.TryGetCurrentPattern(
+                System.Windows.Automation.InvokePattern.Pattern,
+                out object pattern)
+            && pattern is System.Windows.Automation.InvokePattern invokePattern)
+        {
+            invokePattern.Invoke();
+            return true;
+        }
+
+        return false;
     }
 
     private static int RunExeRoiToolsSmoke(string[] args)
@@ -24813,6 +25042,7 @@ internal static partial class Program
         string nextDevelopmentDecisionPath = Path.Combine(root, "docs", "NEXT_DEVELOPMENT_DECISION_20260730.md");
         string releasePackageCompletionPath = Path.Combine(root, "docs", "RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md");
         string runtimeDiagnosticsCompletionPath = Path.Combine(root, "docs", "PACKAGED_RUNTIME_DIAGNOSTICS_P0B2_20260730.md");
+        string runtimeGraphicsPreflightPath = Path.Combine(root, "docs", "RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md");
         string crashRecoveryCompletionPath = Path.Combine(root, "docs", "BOUNDED_CRASH_RECOVERY_P1B_20260730.md");
         string repositoryInstructionsPath = Path.Combine(root, "AGENTS.md");
         string handoffPath = Path.Combine(root, "docs", "NEXT_THREAD_HANDOFF.md");
@@ -24842,6 +25072,7 @@ internal static partial class Program
         AssertTrue(File.Exists(nextDevelopmentDecisionPath), "next development decision should exist");
         AssertTrue(File.Exists(releasePackageCompletionPath), "P0-B1 release package completion record should exist");
         AssertTrue(File.Exists(runtimeDiagnosticsCompletionPath), "P0-B2 runtime diagnostics completion record should exist");
+        AssertTrue(File.Exists(runtimeGraphicsPreflightPath), "P0-C runtime graphics preflight completion record should exist");
         AssertTrue(File.Exists(crashRecoveryCompletionPath), "P1-B crash recovery completion record should exist");
         AssertTrue(File.Exists(releaseNotesPath), "release notes document should exist");
         AssertTrue(File.Exists(ciWorkflowPath), "CI workflow should exist");
@@ -24872,6 +25103,7 @@ internal static partial class Program
         string nextDevelopmentDecision = File.ReadAllText(nextDevelopmentDecisionPath, Encoding.UTF8);
         string releasePackageCompletion = File.ReadAllText(releasePackageCompletionPath, Encoding.UTF8);
         string runtimeDiagnosticsCompletion = File.ReadAllText(runtimeDiagnosticsCompletionPath, Encoding.UTF8);
+        string runtimeGraphicsPreflight = File.ReadAllText(runtimeGraphicsPreflightPath, Encoding.UTF8);
         string crashRecoveryCompletion = File.ReadAllText(crashRecoveryCompletionPath, Encoding.UTF8);
         string repositoryInstructions = File.ReadAllText(repositoryInstructionsPath, Encoding.UTF8);
         string handoff = File.ReadAllText(handoffPath, Encoding.UTF8);
@@ -24908,9 +25140,11 @@ internal static partial class Program
                 && currentProductStatus.Contains("P0-B2. Packaged Runtime Diagnostics And Support Bundle", StringComparison.Ordinal)
                 && currentProductStatus.Contains("Status: `Complete`", StringComparison.Ordinal)
                 && currentProductStatus.Contains("P0-C. Clean-Machine Installation Evidence", StringComparison.Ordinal)
-                && currentProductStatus.Contains("approved clean Windows environment", StringComparison.Ordinal)
+                && currentProductStatus.Contains("P0C_HYPERV_LABELING_EVIDENCE_20260731.md", StringComparison.Ordinal)
+                && currentProductStatus.Contains("RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md", StringComparison.Ordinal)
+                && currentProductStatus.Contains("glGenFramebuffersEXT not supported", StringComparison.Ordinal)
                 && currentProductStatus.Contains("260/260", StringComparison.Ordinal),
-            "current product status should preserve completed P0-A/B1/B2 work and the blocked P0-C prerequisite");
+            "current product status should preserve completed P0-A/B1/B2 work and the current P0-C Hyper-V evidence boundary");
         AssertTrue(
             commercialReadinessAudit.Contains("Status: Complete", StringComparison.Ordinal)
                 && commercialReadinessAudit.Contains("260/260", StringComparison.Ordinal)
@@ -24940,6 +25174,14 @@ internal static partial class Program
                 && runtimeDiagnosticsCompletion.Contains("approved clean Windows environment", StringComparison.Ordinal),
             "P0-B2 completion record should preserve privacy, packaged-EXE, manifest, and next-prerequisite evidence");
         AssertTrue(
+            runtimeGraphicsPreflight.Contains("Status: Complete", StringComparison.Ordinal)
+                && runtimeGraphicsPreflight.Contains("actual Main Viewer", StringComparison.OrdinalIgnoreCase)
+                && runtimeGraphicsPreflight.Contains("11 framebuffer functions", StringComparison.Ordinal)
+                && runtimeGraphicsPreflight.Contains("glGenFramebuffersEXT", StringComparison.Ordinal)
+                && runtimeGraphicsPreflight.Contains("complete the broader P0-C clean-machine labeling gate", StringComparison.Ordinal)
+                && runtimeGraphicsPreflight.Contains("immutable `0.1.0` package", StringComparison.Ordinal),
+            "P0-C runtime graphics preflight should preserve the actual-viewer, fail-closed, and package-version boundary");
+        AssertTrue(
             crashRecoveryCompletion.Contains("Status: Complete", StringComparison.Ordinal)
                 && crashRecoveryCompletion.Contains("264/264", StringComparison.Ordinal)
                 && crashRecoveryCompletion.Contains("편집 복구", StringComparison.Ordinal)
@@ -24953,11 +25195,12 @@ internal static partial class Program
                 && userCenteredDirection.Contains("docs/CURRENT_PRODUCT_STATUS.md", StringComparison.Ordinal),
             "all operator and handoff navigation surfaces should route current priority ownership to the status document");
         AssertTrue(
-            handoff.Contains("4c6718a fix: contextualize object group controls", StringComparison.Ordinal)
+            handoff.Contains("ed682b2 fix: verify clean-machine support bundles", StringComparison.Ordinal)
                 && handoff.Contains("264/264", StringComparison.Ordinal)
                 && handoff.Contains("P0-B2 Packaged Runtime Diagnostics And Support Bundle", StringComparison.Ordinal)
                 && handoff.Contains("P1-A Portable Project Archive", StringComparison.Ordinal)
                 && handoff.Contains("P1-B Bounded Crash Recovery Journal", StringComparison.Ordinal)
+                && handoff.Contains("RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md", StringComparison.Ordinal)
                 && handoff.Contains("is Complete", StringComparison.Ordinal)
                 && nextPrompt.Contains("P0-B2 Packaged Runtime Diagnostics And Support Bundle", StringComparison.Ordinal)
                 && nextPrompt.Contains("P1-A Portable Project Archive", StringComparison.Ordinal)

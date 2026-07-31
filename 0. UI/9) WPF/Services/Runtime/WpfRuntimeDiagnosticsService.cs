@@ -22,6 +22,7 @@ namespace MvcVisionSystem
         public const int MaximumSupportBundleFiles = 20;
         public const long MaximumSupportBundleBytes = 250L * 1024L * 1024L;
         public const long MaximumIncludedLogBytes = 5L * 1024L * 1024L;
+        public const string ViewerGraphicsCheckName = "viewerGraphics";
 
         private const int MaximumIncludedLogFiles = 20;
         private const int MaximumLogCharactersPerFile = 500000;
@@ -38,6 +39,7 @@ namespace MvcVisionSystem
             RegexOptions.Compiled);
 
         private readonly WpfRuntimeDiagnosticsPaths paths;
+        private Func<WpfRuntimeSelfTestCheck> graphicsCapabilityProvider;
 
         public WpfRuntimeDiagnosticsService()
             : this(WpfRuntimeDiagnosticsPaths.Resolve())
@@ -54,7 +56,47 @@ namespace MvcVisionSystem
             this.paths = paths ?? throw new ArgumentNullException(nameof(paths));
         }
 
+        internal WpfRuntimeDiagnosticsService(
+            WpfRuntimeDiagnosticsPaths paths,
+            Func<WpfRuntimeSelfTestCheck> graphicsCapabilityProvider)
+            : this(paths)
+        {
+            SetGraphicsCapabilityProvider(graphicsCapabilityProvider);
+        }
+
         public WpfRuntimeDiagnosticsPaths Paths => paths;
+
+        public void SetGraphicsCapabilityProvider(Func<WpfRuntimeSelfTestCheck> provider)
+        {
+            graphicsCapabilityProvider = provider;
+        }
+
+        internal WpfRuntimeSelfTestCheck RunGraphicsCapabilityCheck()
+        {
+            if (graphicsCapabilityProvider == null)
+            {
+                return new WpfRuntimeSelfTestCheck(
+                    ViewerGraphicsCheckName,
+                    "warning",
+                    "이미지 뷰어 그래픽 점검이 현재 실행 표면에 연결되지 않았습니다.");
+            }
+
+            try
+            {
+                WpfRuntimeSelfTestCheck check = graphicsCapabilityProvider();
+                return check ?? new WpfRuntimeSelfTestCheck(
+                    ViewerGraphicsCheckName,
+                    "fail",
+                    "이미지 뷰어 그래픽 점검 결과가 없습니다.");
+            }
+            catch (Exception ex)
+            {
+                return new WpfRuntimeSelfTestCheck(
+                    ViewerGraphicsCheckName,
+                    "fail",
+                    "이미지 뷰어 그래픽 점검 실패 · " + ex.GetType().Name);
+            }
+        }
 
         public static WpfRuntimeStartupResult ConfigureApplicationStartup()
         {
@@ -133,6 +175,7 @@ namespace MvcVisionSystem
                 logOutsideApplication
                     ? "로그가 사용자 쓰기 경로에 분리됨"
                     : "로그 경로가 설치/실행 폴더 내부임"));
+            checks.Add(RunGraphicsCapabilityCheck());
 
             var result = new WpfRuntimeSelfTestResult(
                 DateTimeOffset.Now,

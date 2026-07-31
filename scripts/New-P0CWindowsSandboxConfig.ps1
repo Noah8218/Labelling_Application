@@ -9,6 +9,12 @@ param(
 
     [switch]$EnableNetworking,
 
+    [switch]$EnableVGpu,
+
+    [switch]$UseStandardClient,
+
+    [string]$LogonCommand = "explorer.exe C:\P0C\Release",
+
     [switch]$Launch
 )
 
@@ -93,17 +99,20 @@ $releaseXmlPath = ConvertTo-XmlText $resolvedReleaseDirectory
 $evidenceXmlPath = ConvertTo-XmlText $sandboxEvidenceDirectory
 $harnessXmlPath = ConvertTo-XmlText $resolvedHarnessDirectory
 $networkingValue = if ($EnableNetworking.IsPresent) { "Enable" } else { "Disable" }
+$vGpuValue = if ($EnableVGpu.IsPresent) { "Enable" } else { "Disable" }
+$protectedClientValue = if ($UseStandardClient.IsPresent) { "Disable" } else { "Enable" }
+$logonCommandXml = ConvertTo-XmlText $LogonCommand
 $configurationPath = Join-Path $resolvedEvidenceRoot "OpenVisionLab-P0C.wsb"
 
 $configuration = @"
 <Configuration>
-  <VGpu>Disable</VGpu>
+  <VGpu>$vGpuValue</VGpu>
   <Networking>$networkingValue</Networking>
   <AudioInput>Disable</AudioInput>
   <VideoInput>Disable</VideoInput>
   <PrinterRedirection>Disable</PrinterRedirection>
   <ClipboardRedirection>Disable</ClipboardRedirection>
-  <ProtectedClient>Enable</ProtectedClient>
+  <ProtectedClient>$protectedClientValue</ProtectedClient>
   <MemoryInMB>$MemoryInMB</MemoryInMB>
   <MappedFolders>
     <MappedFolder>
@@ -123,7 +132,7 @@ $configuration = @"
     </MappedFolder>
   </MappedFolders>
   <LogonCommand>
-    <Command>explorer.exe C:\P0C\Release</Command>
+    <Command>$logonCommandXml</Command>
   </LogonCommand>
 </Configuration>
 "@
@@ -161,10 +170,12 @@ $hostContext = [ordered]@{
     sandbox = [ordered]@{
         memoryInMB = $MemoryInMB
         networking = $networkingValue
-        vGpu = "Disable"
+        vGpu = $vGpuValue
+        protectedClient = $protectedClientValue
         releaseMapping = "read-only"
         evidenceMapping = "read-write"
         harnessMapping = "read-only"
+        logonCommand = $LogonCommand
     }
 }
 
@@ -178,6 +189,8 @@ Write-Output "Configuration: $configurationPath"
 Write-Output "Evidence folder: $sandboxEvidenceDirectory"
 Write-Output "Release bundle: $resolvedReleaseDirectory"
 Write-Output "Networking: $networkingValue"
+Write-Output "vGPU: $vGpuValue"
+Write-Output "Protected client: $protectedClientValue"
 Write-Output ""
 Write-Output "Double-click the .wsb file, or rerun this command with -Launch."
 Write-Output "Closing Windows Sandbox permanently discards everything except files copied to C:\P0C\Evidence."

@@ -31,6 +31,10 @@ internal static class RuntimeDiagnosticsContractTests
                 Encoding.UTF8);
 
             var service = new WpfRuntimeDiagnosticsService(applicationRoot, applicationDataRoot);
+            service.SetGraphicsCapabilityProvider(() => new WpfRuntimeSelfTestCheck(
+                WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName,
+                "pass",
+                "이미지 뷰어 사용 가능 · test renderer"));
             WpfRuntimeDiagnosticsPaths paths = service.Paths;
             paths.EnsureDirectories();
 
@@ -91,6 +95,11 @@ internal static class RuntimeDiagnosticsContractTests
                 selfTest.Checks.Any(check => string.Equals(check.Name, "logIsolation", StringComparison.Ordinal)
                     && string.Equals(check.Status, "pass", StringComparison.Ordinal)),
                 "self-test should prove that logs are outside the application folder");
+            AssertTrue(
+                selfTest.Checks.Any(check =>
+                    string.Equals(check.Name, WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName, StringComparison.Ordinal)
+                    && string.Equals(check.Status, "pass", StringComparison.Ordinal)),
+                "self-test should include the connected image-viewer graphics capability");
             AssertTrue(File.Exists(paths.LatestSelfTestPath), "explicit self-test should persist its structured result");
 
             string missingDatasetRoot = Path.Combine(root, "not-created-by-readiness", "dataset");
@@ -171,6 +180,7 @@ internal static class RuntimeDiagnosticsContractTests
                 selfTestDocument.RootElement.GetProperty("checks").GetArrayLength() >= 6,
                 "reopened self-test should retain the environment checks");
 
+            VerifyGraphicsCapabilityFailurePresentation(applicationRoot, root);
             VerifyShellSurface();
         }
         finally
@@ -180,6 +190,66 @@ internal static class RuntimeDiagnosticsContractTests
                 Directory.Delete(root, recursive: true);
             }
         }
+    }
+
+    private static void VerifyGraphicsCapabilityFailurePresentation(string applicationRoot, string root)
+    {
+        string failedApplicationDataRoot = Path.Combine(root, "failed-graphics-app-data");
+        var service = new WpfRuntimeDiagnosticsService(applicationRoot, failedApplicationDataRoot);
+        service.SetGraphicsCapabilityProvider(() => new WpfRuntimeSelfTestCheck(
+            WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName,
+            "fail",
+            "이미지 뷰어 사용 불가 · glGenFramebuffersEXT"));
+        var viewModel = new WpfRuntimeDiagnosticsViewModel(service);
+
+        viewModel.RunSelfTestCommand.Execute(null);
+
+        AssertTrue(
+            viewModel.StatusTitleText.Contains("실패 1", StringComparison.Ordinal),
+            "failed graphics capability should be visible in the environment-check title");
+        AssertTrue(
+            viewModel.StatusDetailText.Contains("glGenFramebuffersEXT", StringComparison.Ordinal),
+            "failed graphics capability should retain the actionable missing-function detail");
+        AssertTrue(
+            !viewModel.EnsureViewerReadyForImageLoad(out string detail)
+            && detail.Contains("glGenFramebuffersEXT", StringComparison.Ordinal),
+            "failed graphics capability should block image loading before viewer execution");
+
+        var warningService = new WpfRuntimeDiagnosticsService(
+            applicationRoot,
+            Path.Combine(root, "pending-graphics-app-data"));
+        warningService.SetGraphicsCapabilityProvider(() => new WpfRuntimeSelfTestCheck(
+            WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName,
+            "warning",
+            "이미지 뷰어 그래픽 컨텍스트가 아직 준비되지 않았습니다."));
+        var warningViewModel = new WpfRuntimeDiagnosticsViewModel(warningService);
+        AssertTrue(
+            warningViewModel.EnsureViewerReadyForImageLoad(out _),
+            "a not-yet-created viewer context should not block headless construction or startup restore");
+
+        int retriableProbeCount = 0;
+        var retriableService = new WpfRuntimeDiagnosticsService(
+            applicationRoot,
+            Path.Combine(root, "retriable-graphics-app-data"));
+        retriableService.SetGraphicsCapabilityProvider(() =>
+        {
+            retriableProbeCount++;
+            return retriableProbeCount == 1
+                ? new WpfRuntimeSelfTestCheck(
+                    WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName,
+                    "warning",
+                    "이미지 뷰어 그래픽 컨텍스트가 아직 준비되지 않았습니다.")
+                : new WpfRuntimeSelfTestCheck(
+                    WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName,
+                    "fail",
+                    "이미지 뷰어 사용 불가 · glGenFramebuffersEXT");
+        });
+        var retriableViewModel = new WpfRuntimeDiagnosticsViewModel(retriableService);
+        retriableViewModel.RunSelfTestCommand.Execute(null);
+        AssertTrue(
+            !retriableViewModel.EnsureViewerReadyForImageLoad(out _)
+            && retriableProbeCount == 2,
+            "a warning captured before the viewer is ready should be re-probed before image loading");
     }
 
     private static void VerifyShellSurface()
@@ -194,11 +264,53 @@ internal static class RuntimeDiagnosticsContractTests
             "CreateSupportBundleButton",
             "RuntimeDiagnosticsStatusCard",
             "RuntimeDiagnosticsViewModel.RunSelfTestCommand",
-            "RuntimeDiagnosticsViewModel.CreateSupportBundleCommand"
+            "RuntimeDiagnosticsViewModel.CreateSupportBundleCommand",
+            "이미지 뷰어 그래픽"
         })
         {
             AssertTrue(xaml.Contains(requiredToken, StringComparison.Ordinal), $"diagnostics UI token missing: {requiredToken}");
         }
+
+        string graphicsProbeSource = File.ReadAllText(
+            Path.Combine(
+                repoRoot,
+                "0. UI",
+                "9) WPF",
+                "Services",
+                "Runtime",
+                "WpfOpenGlRuntimeCapabilityProbe.cs"));
+        foreach (string requiredFunction in new[]
+        {
+            "glGenFramebuffersEXT",
+            "glBindFramebufferEXT",
+            "glFramebufferTexture2DEXT",
+            "glCheckFramebufferStatusEXT",
+            "glDeleteFramebuffersEXT",
+            "glGenRenderbuffersEXT",
+            "glBindRenderbufferEXT",
+            "glRenderbufferStorageEXT",
+            "glFramebufferRenderbufferEXT",
+            "glDeleteRenderbuffersEXT",
+            "glGenerateMipmapEXT"
+        })
+        {
+            AssertTrue(
+                graphicsProbeSource.Contains(requiredFunction, StringComparison.Ordinal),
+                $"graphics capability probe should require {requiredFunction}");
+        }
+
+        string imageLoadingSource = File.ReadAllText(
+            Path.Combine(
+                repoRoot,
+                "0. UI",
+                "9) WPF",
+                "Views",
+                "WpfLabelingShellWindow.ImageLoading.cs"));
+        AssertTrue(
+            imageLoadingSource.Contains("EnsureViewerReadyForImageLoad", StringComparison.Ordinal)
+            && imageLoadingSource.Contains("이미지 열기 차단", StringComparison.Ordinal)
+            && imageLoadingSource.Contains("지원 자료", StringComparison.Ordinal),
+            "the central image-loading path should fail closed with actionable graphics guidance");
 
         string systemSource = File.ReadAllText(
             Path.Combine(repoRoot, "1. Core", "ApplicationState", "CSystem.cs"));

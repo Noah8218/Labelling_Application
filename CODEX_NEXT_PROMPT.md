@@ -27,8 +27,8 @@ Required start order:
 
 Current checkpoint:
 - Workspace: C:\Git\Labelling_Application
-- Branch: main. Baseline HEAD at the 2026-07-30 product-direction review is
-  `4c6718a fix: contextualize object group controls`. Verify the live branch,
+- Branch: main. Baseline HEAD for the current operational worktree is
+  `ed682b2 fix: verify clean-machine support bundles`. Verify the live branch,
   worktree, and remote state before work. The
   labeling-editor structure workflow through P1-C
   merge/join and axis-aligned split/slice is committed and pushed as
@@ -94,14 +94,27 @@ Current immediate priority:
   `docs/PORTABLE_PROJECT_ARCHIVE_P1A_20260730.md`.
 - `P1-B Bounded Crash Recovery Journal` is Complete in
   `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`.
+- The current-source actual Main Viewer graphics capability preflight is
+  Complete in
+  `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`. Preserve the
+  exact 11-function probe, retriable early-context warning, structured
+  diagnostics/support evidence, and fail-closed central image-load guidance.
+  It does not replace SharpGL or complete clean-machine labeling.
 - Preserve explicit saved-state preflight, complete Recipe/dataset coverage,
   per-file SHA-256, path rebasing, non-overwrite import, and explicit Apply.
 - Preserve current-user startup/log/config paths, delayed logging
   initialization, bounded retention, explicit environment self-test,
   allow-list/redacted support export, and package-folder immutability.
-- P0-C clean-machine evidence is blocked until an approved Windows
-  environment and installer/signing decisions are supplied. Do not spend
-  implementation tokens on that blocked gate.
+- P0-C GPU-capable clean-machine labeling remains blocked until the selected
+  supported target is directly accessible. The immutable `0.1.0` evidence
+  package predates the new preflight. Local packaged behavior and post-launch
+  immutability are Complete for the deterministic dirty-source `0.1.1`
+  engineering package in
+  `docs/ENGINEERING_RELEASE_0_1_1_GRAPHICS_PREFLIGHT_EVIDENCE_20260731.md`.
+  Do not use it as clean-source target evidence; publish a clean-source
+  versioned bundle when the supported target is accessible. Installer/signing
+  decisions remain separate prerequisites. Do not repeat Sandbox or standard
+  Hyper-V synthetic-display viewer testing without a capability change.
 - Preserve one-current-image recovery, atomic/checksummed bounded retention,
   Recipe/dataset/image identity, explicit restore/discard, dirty in-memory
   restore, pending-candidate exclusion, and explicit label save.

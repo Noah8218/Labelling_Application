@@ -1,6 +1,141 @@
 # Work Tracking
 
-Last updated: 2026-07-29
+Last updated: 2026-07-31
+
+## 2026-07-31 Engineering Release 0.1.1 Graphics Preflight
+
+Status: Complete
+
+Scope:
+
+- publish a deliberately versioned self-contained `0.1.1` engineering package
+  containing the completed Main Viewer graphics preflight;
+- prove two consecutive publishes are byte-identical;
+- run the environment self-test through the real published WPF EXE;
+- verify package contents and SHA-256 hashes remain valid after EXE close;
+- correct the reproduced empty `DATA/review-status.json` startup write without
+  changing active-dataset review-state persistence.
+
+Acceptance criteria:
+
+- isolated Debug build -> pass, 0 warnings and 0 errors;
+- untouched review state creates no new cache -> pass;
+- existing review cache remains clearable to `[]` -> pass;
+- two `release-manifest.json` hashes match -> pass;
+- two `publish-manifest.txt` hashes match -> pass;
+- packaged product version `0.1.1` -> pass;
+- packaged environment self-test -> `8` pass, `0` warning, `0` failed;
+- actual packaged viewer -> GTX 1060, OpenGL 4.6, all 11 functions pass;
+- package-local `DATA/review-status.json` after launch -> absent;
+- post-launch full manifest verification -> pass.
+
+Verification:
+
+- isolated Debug build;
+- `--yolo-image-review-status`;
+- two `publish-win-x64.ps1 -ReleaseVersion 0.1.1 -SelfContained` runs;
+- first/second SHA-256 comparison;
+- `--exe-runtime-graphics-smoke`;
+- `publish-win-x64.ps1 ... -VerifyOnly`;
+- final default suite: `264/264` pass, 0 failures and empty stderr;
+- `--priority-workflow-docs`;
+- `git diff --check`.
+
+The first full-suite attempt hit the existing 500,000-ROI mouse-event
+performance threshold during a transient `2442 ms` run; the unchanged focused
+gate passed three times at `20.167`, `20.443`, and `20.365 ms`. A second run
+passed that gate at `57.388 ms` but hit a temporary fake-YOLO cleanup file
+lock; that unchanged focused test also passed three consecutive retries. The
+final solo run passed all `264/264`. Its stdout/stderr logs are
+`artifacts/full-suite-0.1.1-final-retry.*.log`.
+
+Evidence:
+
+- `docs/ENGINEERING_RELEASE_0_1_1_GRAPHICS_PREFLIGHT_EVIDENCE_20260731.md`;
+- `artifacts/release-package-0.1.1-20260731-final`;
+- `artifacts/publish/Release/win-x64/0.1.1`.
+
+Boundary / next dependency:
+
+- manifest `source.dirty=true`, so this is not clean-source P0-C release
+  evidence;
+- no commit, push, target transfer ZIP, installer, signing, or external
+  clean-machine label/save/reopen claim is included;
+- direct access to the selected supported GPU-capable clean Windows target and
+  a clean-source versioned package are required next.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
+
+## 2026-07-31 Runtime Graphics Capability Preflight
+
+Status: Complete
+
+Scope:
+
+- probe the actual Main Viewer SharpGL context for the 11 framebuffer
+  functions used by the current viewer;
+- add structured `viewerGraphics` environment diagnostics and explicit support
+  evidence;
+- block the central image-load path before annotation state changes when the
+  graphics result is definitely unsupported;
+- keep early/headless context warnings retriable and non-blocking;
+- provide actionable status, log, tooltip, and modal guidance;
+- preserve the SharpGL viewer and all image/annotation/model explicit-action
+  contracts.
+
+Acceptance criteria:
+
+- actual current-host viewer reports NVIDIA GeForce GTX 1060, OpenGL 4.6.0,
+  and all 11 required functions: pass;
+- deterministic missing `glGenFramebuffersEXT` reports one failed diagnostics
+  check and blocks central image loading: pass;
+- a warning obtained before the context is ready is re-probed before image
+  loading: pass;
+- current-source supported, failed-diagnostics, and blocked-image dialog
+  captures: pass;
+- isolated build: warning 0, error 0;
+- focused runtime diagnostics and priority-document contracts: pass;
+- final default internal regression suite: `264/264` pass;
+- `git diff --check`: pass.
+
+Verification:
+
+- `dotnet build .\tests\LabelingApplication.Tests\LabelingApplication.Tests.csproj -c Debug /nr:false -m:1 /p:UseSharedCompilation=false /p:OutDir=artifacts\isolated-out\`;
+- `--runtime-diagnostics-contract`;
+- `--priority-workflow-docs`;
+- `--wpf-visual-smoke` supported, deterministic failed diagnostics, and
+  deterministic blocked-dialog modes;
+- default `LabelingApplication.Tests.dll`;
+- `git diff --check`.
+
+The first default-suite attempt encountered the existing 500,000-object hover
+performance threshold during a transient slow run (`1589 ms`, limit `150 ms`).
+The unchanged focused gate then passed three consecutive times (`77 ms`,
+`30 ms`, `28 ms`), and the clean full-suite rerun passed with `47 ms` at the
+same gate and no failures.
+
+Evidence:
+
+- `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`;
+- `artifacts/ui/runtime-graphics-preflight-20260731/before.png`;
+- `artifacts/ui/runtime-graphics-preflight-20260731/after-supported.png`;
+- `artifacts/ui/runtime-graphics-preflight-20260731/after-blocked.png`;
+- `artifacts/ui/runtime-graphics-preflight-20260731/after-image-load-blocked-dialog.png`.
+
+Boundary / next dependency:
+
+- no SharpGL replacement, software fallback, driver installation, installer,
+  signing, package republish, or production-quality claim is included;
+- the immutable `0.1.0` clean-machine evidence package predates this feature;
+- the broader P0-C labeling gate still requires a deliberately versioned fresh
+  package and direct access to the selected GPU-capable clean Windows target;
+- no commit or push is included.
+
+Recommended model: `gpt-5.6-terra`
+
+Reasoning effort: `medium`
 
 ## 2026-07-29 Current Worktree Integration Verification
 
@@ -19652,3 +19787,247 @@ Boundary / next dependency:
   thresholds, runtime/weights, and target hardware;
 - label autosave, pending-candidate recovery, multi-image history, Recipe
   autosave, cloud sync, and production-quality claims remain separate.
+
+## 2026-07-30 P0-C Windows Sandbox portable evidence
+
+Status: Incomplete
+
+Scope:
+
+- generated hardened and graphics-probe Windows Sandbox configurations from
+  the clean-source `0.1.0` self-contained release;
+- ran packaged first launch, environment self-test, support export, live-log
+  collection, package-integrity comparison, and normal close;
+- staged a writable guest-local copy, verified all manifest payload hashes,
+  and exercised the real packaged dataset wizard and image-queue path;
+- preserved every harness and graphics-capability failure instead of
+  reclassifying it as a product pass.
+
+Acceptance criteria:
+
+- packaged first launch -> pass;
+- environment self-test -> pass, `7/7`;
+- support ZIP with active logs and no skipped `IOException` -> pass;
+- source package unchanged -> pass, `505/505`;
+- writable extraction payload verification -> pass, `503/503`;
+- real dataset creation -> pass;
+- image display, ordinary box, explicit label save, and reopen -> fail because
+  the Windows Sandbox guest does not expose `glGenFramebuffersEXT`;
+- installer install/upgrade/uninstall and signing -> not started.
+
+Verification:
+
+- PowerShell 5.1 parser and ASCII checks for both Sandbox harnesses;
+- packaged UI Automation replay;
+- source/staged release SHA-256 comparisons;
+- three graphics/client combinations;
+- guest-side failure captures;
+- COCO128 fixture source/copy SHA-256 equality.
+
+Evidence:
+
+- `docs/P0C_PORTABLE_SANDBOX_EVIDENCE_20260730.md`;
+- `docs/P0C_WINDOWS_SANDBOX_SETUP_20260730.md`;
+- `artifacts/p0c-clean-machine/20260730-live-log-fix-after`.
+
+Boundary / next dependency:
+
+- do not repeat the Windows Sandbox viewer loop unless its OpenGL capability
+  changes;
+- approve administrator Hyper-V enablement and reboot, official Windows ISO
+  download, and a `60-80 GB` Generation 2 VM allocation;
+- keep installer lifecycle, code signing, field data, and target-hardware
+  validation separate.
+
+## 2026-07-30 P0-C Hyper-V pre-restart preparation
+
+Status: Complete
+
+Scope:
+
+- recorded the current Windows, hardware, disk, graphics, optional-feature,
+  and Hyper-V management state;
+- enabled full Hyper-V from an administrator process using `-All -NoRestart`;
+- added a fail-closed post-restart Generation 2 VM creation script;
+- preserved the user's explicit restart approval boundary.
+
+Acceptance criteria:
+
+- host report produced -> pass;
+- Hyper-V optional feature after state -> `Enabled`;
+- Windows restart response -> `RestartNeeded: true`;
+- restart/shutdown command executed -> no;
+- existing VM or VM directory overwrite -> prohibited by script;
+- automatic VM start -> disabled by default;
+- post-restart VM and SharpGL labeling -> pending outside this bounded scope.
+
+Verification:
+
+- PowerShell 5.1 parser and ASCII checks;
+- read-only host report run;
+- administrator `Prepare-P0CHyperVHost.ps1 -EnableHyperV` run;
+- independent `Win32_OptionalFeature` after-state read;
+- restart/shutdown command search;
+- `--priority-workflow-docs`;
+- `git diff --check`.
+
+Evidence:
+
+- `scripts/Prepare-P0CHyperVHost.ps1`;
+- `scripts/New-P0CHyperVVm.ps1`;
+- `artifacts/p0c-clean-machine/hyperv-host-preparation/hyperv-host-preparation.json`.
+
+Boundary / next dependency:
+
+- wait for explicit user approval before restarting Windows;
+- after restart, verify `Get-VM` and `vmms`, then obtain an official x64
+  Windows ISO and create the VM without automatic start;
+- the standard Hyper-V display must pass the SharpGL framebuffer preflight
+  before project data is copied.
+
+## 2026-07-31 P0-C Hyper-V clean-Windows labeling preflight
+
+Status: Incomplete
+
+Scope:
+
+- verified the official Windows 11 25H2 Korean x64 ISO SHA-256;
+- created and installed the fail-closed Generation 2 VM;
+- detached the installation ISO, confirmed VHD-first boot, and preserved a
+  clean installed-Windows checkpoint;
+- transferred the clean-source `0.1.0` portable release, UI Automation
+  harness, and public COCO128 fixture through Hyper-V Guest Service;
+- ran the real packaged dataset/image-queue/labeling workflow in the guest;
+- recovered guest evidence through a read-only mount of the current VHDX.
+
+Acceptance criteria:
+
+- Hyper-V management and VM definition -> pass;
+- official ISO SHA-256 -> pass;
+- clean installed-Windows checkpoint -> pass;
+- release transfer and all `503` manifest payload hashes -> pass;
+- packaged first launch and real dataset creation -> pass;
+- fixture copy and image-open request -> pass;
+- image display -> fail with
+  `Extension function glGenFramebuffersEXT not supported`;
+- ordinary box, explicit label save, and saved-image reopen -> not reached;
+- clean checkpoint preserved and VM restarted after evidence recovery -> pass.
+
+Verification:
+
+- fresh elevated Hyper-V VM, DVD, firmware, checkpoint, and integration-service
+  queries;
+- host transfer ZIP and launcher SHA-256 records;
+- guest UI Automation progress/result JSON;
+- guest-side and VMConnect failure captures;
+- graceful VM shutdown plus read-only current-VHD evidence recovery;
+- recovered-file SHA-256 inventory;
+- final VM state `Running` with heartbeat `OkApplicationsUnknown`;
+- documentation workflow test and `git diff --check`.
+
+Evidence:
+
+- `docs/P0C_HYPERV_LABELING_EVIDENCE_20260731.md`;
+- `artifacts/p0c-clean-machine/hyperv-post-restart`;
+- `artifacts/p0c-clean-machine/hyperv-guest-transfer`;
+- `artifacts/p0c-clean-machine/hyperv-guest-evidence-20260731`.
+
+Boundary / next dependency:
+
+- do not repeat Windows Sandbox or standard Hyper-V synthetic-display viewer
+  testing unless the display capability or viewer implementation changes;
+- before another viewer attempt, obtain the user's explicit choice between a
+  supported GPU-capable clean Windows target and a separately scoped viewer
+  compatibility fallback with measurable performance criteria;
+- installer lifecycle, code signing, independent production data, target
+  hardware/runtime, and field-quality claims remain separate.
+
+## 2026-07-31 P0-C GPU-capable clean-target direction decision
+
+Status: Complete
+
+Scope:
+
+- recorded the operator's choice to use a separate GPU-capable clean Windows
+  PC or explicitly GPU-capable VM for the next labeling validation;
+- defined the exact target, console/session, graphics-driver, workflow, reopen,
+  and evidence-return criteria;
+- kept the viewer compatibility/fallback project inactive;
+- preserved the ban on repeating Sandbox/standard Hyper-V synthetic-display
+  testing without a capability change.
+
+Acceptance criteria:
+
+- one viewer direction selected -> pass, GPU-capable clean target;
+- target requirements and evidence checklist -> pass;
+- image/box/save/close/relaunch/reopen gates explicit -> pass;
+- workaround/viewer implementation change authorized -> no;
+- actual GPU-target execution evidence -> blocked by target access.
+
+Verification:
+
+- current status, project instructions, handoff, Hyper-V evidence, and the new
+  validation plan agree on the selected direction;
+- `--priority-workflow-docs`;
+- `git diff --check`.
+
+Evidence:
+
+- `docs/P0C_GPU_CAPABLE_CLEAN_TARGET_VALIDATION_PLAN_20260731.md`;
+- `docs/P0C_HYPERV_LABELING_EVIDENCE_20260731.md`;
+- `docs/CURRENT_PRODUCT_STATUS.md`.
+
+Boundary / next dependency:
+
+- provide access to the supported GPU-capable clean Windows PC/VM or return
+  the complete bounded evidence folder after executing the checklist;
+- no model recommendation or further viewer execution is appropriate until
+  that external prerequisite is available.
+
+## 2026-07-31 P0-C local GPU-target feasibility check
+
+Status: Blocked
+
+Scope:
+
+- inventoried the host GPU, OS, Hyper-V GPU command availability, accessible
+  VM list, and VM GPU adapter state;
+- checked Microsoft-supported DDA/GPU-P boundaries;
+- assessed same-PC native-boot prerequisites without creating a VHDX or
+  changing BCD;
+- confirmed that Codex, not the operator, owns the prepared target-side
+  command execution.
+
+Acceptance criteria:
+
+- directly accessible supported GPU-capable clean target -> fail, none exists;
+- current VM GPU adapter -> fail, none attached;
+- official client Windows/GTX 1060 Hyper-V GPU path -> unsupported;
+- native-boot preflight without mutation -> pass;
+- BitLocker host-volume protection -> off;
+- current system disk/boot mode -> MBR/legacy, unsuitable for an automatic
+  Windows 11 native-boot continuation;
+- VHDX creation, BCD modification, restart -> not performed.
+
+Verification:
+
+- `Win32_VideoController`;
+- elevated `Get-VM` and `Get-VMGpuPartitionAdapter`;
+- Microsoft official Hyper-V GPU support documentation;
+- elevated disk, BitLocker, Secure Boot, and BCD read-only queries;
+- the timed-out ISO inspection process was identified by exact command line,
+  terminated, and the ISO was confirmed detached.
+
+Evidence:
+
+- `artifacts/p0c-clean-machine/gpu-target-local-inventory.json`;
+- `artifacts/p0c-clean-machine/native-boot-host-prerequisites.json`;
+- `artifacts/p0c-clean-machine/native-boot-feasibility-cleanup.json`;
+- `docs/P0C_GPU_CAPABLE_CLEAN_TARGET_VALIDATION_PLAN_20260731.md`.
+
+Boundary / next dependency:
+
+- provide direct access from this workspace to a supported GPU-capable clean
+  Windows PC/VM;
+- do not use unsupported GPU-P/DDA scripts or modify the host boot chain
+  without a separate explicit decision and restart approval.

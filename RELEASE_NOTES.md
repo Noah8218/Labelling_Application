@@ -20,6 +20,17 @@
   `설정/도구 -> 진단/지원` provides a model-free environment self-test and a
   one-action allow-list support export that excludes images, labels, weights,
   raw configuration, and credentials by default.
+- Current-source environment diagnostics now probe the actual Main Viewer
+  OpenGL context, report its renderer/version and required framebuffer
+  functions, and include the result in explicit support evidence. A definite
+  unsupported result blocks image opening before annotation-state changes and
+  directs the operator to a local GPU/OpenGL-capable Windows session.
+- A versioned `0.1.1` self-contained engineering package now carries the
+  graphics preflight. Its real packaged EXE passed all eight environment
+  checks on the current GTX 1060 host, and post-launch manifest verification
+  remains clean. Untouched startup queues no longer create an empty
+  `DATA/review-status.json` beside the executable; existing dataset review
+  caches remain explicitly clearable.
 - Release engineering now pins .NET SDK `8.0.421` and product version `0.1.0`,
   emits a deterministic versioned self-contained `win-x64` folder, ships
   project and third-party notices, verifies every payload SHA-256

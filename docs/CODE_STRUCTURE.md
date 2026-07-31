@@ -178,7 +178,7 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | `Services/ObjectReview` | `WpfObjectReview*` | object row text, class/delete plan, selection policy. |
 | `Services/Project` | `WpfProjectRecipe*` | recipe path와 session 상태. |
 | `Services/Training` | `WpfTraining*`, `WpfWorkflow*` | training readiness/progress와 workflow command state. |
-| `Services/Runtime` | `WpfYolo*`, `WpfRuntimeDiagnosticsService` | YOLO runtime/settings 상태, current-user 진단 경로, 시작 기록, 보존, 환경 점검, allow-list support export. |
+| `Services/Runtime` | `WpfYolo*`, `WpfRuntimeDiagnosticsService`, `WpfOpenGlRuntimeCapabilityProbe` | YOLO runtime/settings 상태, current-user 진단 경로, 시작 기록, 보존, 실제 Main Viewer 그래픽 환경 점검, allow-list support export. |
 | `Services/Infrastructure` | `WpfFileDialogService`, `WpfWorkspaceLayoutSettingsService`, `WpfApplicationClosePolicyService` | WPF 공통 dialog, workspace layout 설정, 안전 종료 상태/결정 정책. |
 
 새 UI 요구사항이 생기면 먼저 Presenter/Selection/State service로 분리할 수 있는지 봅니다. Shell partial에는 “어느 service를 언제 호출할지” 정도만 남기는 것이 목표입니다.

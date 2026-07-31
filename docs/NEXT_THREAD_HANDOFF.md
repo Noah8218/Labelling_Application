@@ -1,10 +1,10 @@
 # Next Thread Handoff
 
-Last updated: 2026-07-30 KST
+Last updated: 2026-07-31 KST
 
 This is the current operational handoff for C:\Git\Labelling_Application. It is intentionally shorter than the historical journal. Use it to choose the next task; use the linked records only for the detailed evidence behind a claim.
 
-## 0. 2026-07-30 Current Source-of-Truth Capsule
+## 0. 2026-07-31 Current Source-of-Truth Capsule
 
 Read `docs/CURRENT_PRODUCT_STATUS.md` first. It supersedes older product,
 maturity, and priority wording later in this file when they conflict. This
@@ -21,8 +21,8 @@ Current product:
 
 Current Git/worktree:
 
-- baseline HEAD at this documentation review:
-  `4c6718a fix: contextualize object group controls`;
+- baseline HEAD for the current operational worktree:
+  `ed682b2 fix: verify clean-machine support bundles`;
 - all safe-close, canonical class-index, Smart Mask, Dataset Health,
   four-point box, Object Review metadata/group, and contextual group-control
   slices are committed and pushed through that baseline;
@@ -30,7 +30,13 @@ Current Git/worktree:
   no failures. Read `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`;
 - `.proofline/STATE.md` and `.proofline/dashboard/` are local/user-owned and
   must remain untouched;
-- no product change or push is authorized by this handoff.
+- the current worktree adds the runtime graphics-preflight slice described in
+  `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`;
+- a deliberately versioned dirty-source `0.1.1` engineering package now proves
+  deterministic publish, real packaged-EXE `8/8` graphics diagnostics, and
+  post-launch package immutability. Read
+  `docs/ENGINEERING_RELEASE_0_1_1_GRAPHICS_PREFLIGHT_EVIDENCE_20260731.md`;
+- no commit or push is authorized by this handoff.
 
 Current immediate priority:
 
@@ -53,8 +59,38 @@ Current immediate priority:
 - preserve one-current-image recovery, atomic/checksummed bounded retention,
   Recipe/dataset/image identity, explicit restore/discard, dirty in-memory
   restore, pending-candidate exclusion, and explicit label save;
-- P0-C clean-machine installation evidence is blocked until an approved clean
-  Windows environment and installer/signing decisions are available;
+- the P0-C Windows Sandbox packaged startup/diagnostics/support/package
+  integrity slice passed;
+- the full Hyper-V follow-up is `Incomplete`: a clean Windows 11 Generation 2
+  guest verified all `503` payload hashes, launched the package, and created a
+  real dataset, but its standard synthetic display reproduced
+  `glGenFramebuffersEXT not supported`;
+- the current-source actual-viewer graphics preflight is Complete: environment
+  diagnostics and explicit support export report the renderer/version and 11
+  required framebuffer functions, while a definite failure blocks the central
+  image-load path with actionable guidance;
+- preserve the warning-not-blocked early-startup behavior, fail-closed definite
+  failure, and no implicit image/model/save action defined in
+  `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`;
+- the immutable `0.1.0` package used by the existing VM evidence predates the
+  preflight and must remain unchanged;
+- the new `0.1.1` package records `source.dirty=true`; do not use it as
+  clean-source P0-C target evidence. Republish a clean-source version only
+  after the source is deliberately committed and the GPU-capable target is
+  accessible;
+- preserve checkpoint `P0C-Clean-Windows-Installed-20260731` and the evidence
+  in `docs/P0C_HYPERV_LABELING_EVIDENCE_20260731.md`;
+- do not repeat the Sandbox or standard Hyper-V viewer loop unless the
+  display capability or viewer implementation changes;
+- the user selected the separate GPU-capable clean Windows PC/VM path in
+  `docs/P0C_GPU_CAPABLE_CLEAN_TARGET_VALIDATION_PLAN_20260731.md`; the viewer
+  fallback project is not active; the current Windows 10 Pro/GTX 1060 host is
+  not an officially supported Hyper-V DDA/GPU-P target, so execution is
+  blocked until a supported GPU-capable clean target is directly accessible;
+  Codex, not the operator, owns target-side command execution and evidence
+  recovery;
+- installer lifecycle and signing decisions remain separate P0-C
+  prerequisites;
 - independent production validation is blocked until approved data,
   thresholds, runtime/weights, and target hardware are available;
 - do not turn P0-B2/P1-A/P1-B into telemetry/cloud support, automatic

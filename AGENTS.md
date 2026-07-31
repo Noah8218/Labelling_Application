@@ -140,13 +140,41 @@ Do not claim complete if the required verification did not run or did not pass.
   scope, atomic/checksummed bounded retention, Recipe/dataset/image identity,
   explicit restore/discard, dirty in-memory restore, pending-candidate
   exclusion, and explicit label save.
-- Next prioritize clean-machine evidence and
-  independent production-data validation. Do not absorb
-  installer, signing, telemetry/cloud support, automatic inference/training,
-  autosave, multi-image recovery, or field-quality claims into the completed
-  P0-B2/P1-A/P1-B contracts. P0-C
-  is blocked until an approved clean Windows environment and release lifecycle
-  decisions are available.
+- The P0-C full-VM SharpGL labeling preflight is `Incomplete` in
+  `docs/P0C_HYPERV_LABELING_EVIDENCE_20260731.md`. The clean Windows 11
+  Generation 2 guest verified all `503` release-manifest payload files,
+  launched the package, and created a real dataset, but the standard Hyper-V
+  synthetic display reproduced `glGenFramebuffersEXT not supported`. Do not
+  repeat the Windows Sandbox or standard Hyper-V viewer loop unless the
+  display capability or viewer implementation changes. On 2026-07-31, the
+  user selected the separate GPU-capable clean Windows PC/VM path defined in
+  `docs/P0C_GPU_CAPABLE_CLEAN_TARGET_VALIDATION_PLAN_20260731.md`; the viewer
+  compatibility/fallback project is not active. Do not spend implementation
+  tokens repeating the viewer test until that target is accessible and its
+  bounded evidence can be returned. The current Windows 10 Pro/GTX 1060 host
+  is not an officially supported Hyper-V DDA/GPU-P target. Codex owns
+  target-side command execution; do not ask the operator to type the prepared
+  PowerShell command. Continue independent production-data
+  validation only when approved field data, thresholds, runtime/weights, and
+  target hardware are available. Do not absorb installer, signing,
+  telemetry/cloud support, automatic inference/training, autosave, multi-image
+  recovery, or field-quality claims into the completed P0-B2/P1-A/P1-B contracts.
+  Installer lifecycle and signing decisions remain separate P0-C
+  prerequisites.
+- The current-source actual-viewer graphics capability preflight is Complete
+  in `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`. Preserve the
+  actual Main Viewer context probe, the exact 11 required framebuffer-function
+  checks, retriable non-blocking early-context warning, structured
+  `viewerGraphics` diagnostics/support evidence, and fail-closed central
+  image-load guidance before annotation-state mutation. This is not a SharpGL
+  fallback and does not complete the external GPU-target labeling gate. The
+  immutable `0.1.0` Sandbox/Hyper-V package predates this implementation.
+  Local packaged behavior is Complete for the deterministic dirty-source
+  `0.1.1` engineering package in
+  `docs/ENGINEERING_RELEASE_0_1_1_GRAPHICS_PREFLIGHT_EVIDENCE_20260731.md`;
+  preserve its post-launch package immutability and empty-review-cache no-write
+  contract. It is not clean-source GPU-target evidence. A target run requires
+  a clean-source versioned bundle.
 - Follow
   `docs/LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md`.
   Main-window safe close is Complete in

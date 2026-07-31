@@ -1,6 +1,7 @@
 using MvcVisionSystem._1._Core;
 using MvcVisionSystem.Yolo;
 using OpenVisionLab.ImageCanvas.ViewModels;
+using OpenVisionLab.Wpf.MessageDialogs;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -39,6 +40,29 @@ namespace MvcVisionSystem
             if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
             {
                 AppendLog(imageLoadPresentationService.BuildMissingImageLog(imagePath));
+                return false;
+            }
+
+            if (!RuntimeDiagnosticsViewModel.EnsureViewerReadyForImageLoad(out string graphicsDetail))
+            {
+                SetDatasetStatus("이미지 뷰어 환경 확인 필요");
+                AppendLog("이미지 열기 차단: " + graphicsDetail);
+                if (IsLoaded && IsVisible)
+                {
+                    WpfMessageDialog.Show(this, new WpfMessageDialogOptions
+                    {
+                        Title = "이미지 뷰어를 시작할 수 없습니다",
+                        Message = "현재 그래픽 환경이 라벨링 뷰어의 필수 기능을 지원하지 않습니다.",
+                        Details =
+                            graphicsDetail
+                            + "\n\n설정/도구 > 진단/지원에서 환경 점검을 실행하거나 지원 자료를 만들어 확인하세요.",
+                        Kind = WpfMessageDialogKind.Warning,
+                        Buttons = WpfMessageDialogButtons.OK,
+                        PrimaryButtonText = "확인",
+                        MaxWidth = 680D
+                    });
+                }
+
                 return false;
             }
 

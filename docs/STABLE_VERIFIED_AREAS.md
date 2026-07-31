@@ -2,6 +2,72 @@
 
 This document records code paths that have already been performance- or UX-verified and should not be casually refactored. Treat these areas as protected product behavior: change them only when the user reports a new issue in that exact path, or when a focused verification gate proves the change is necessary.
 
+## 2026-07-31 Packaged Graphics Preflight And Empty-Cache Immutability
+
+Status: stable and Complete for the local `0.1.1` dirty-source engineering
+package. External clean-machine labeling remains Incomplete.
+
+Protected behavior:
+
+- an untouched YOLO review queue with no existing review cache does not create
+  `review-status.json` or its parent directory;
+- an existing review cache can still be cleared to `[]`;
+- non-empty review state remains dataset-owned and persists under the active
+  dataset root;
+- packaged diagnostics/log/config state remains below the current-user
+  writable root, not beside the EXE;
+- the published graphics check reports product version, renderer, OpenGL
+  version, and the exact 11 required functions without starting unrelated
+  actions;
+- a package that gains an unlisted file after launch must fail the existing
+  manifest verification.
+
+Protected gates: `--yolo-image-review-status`,
+`--exe-runtime-graphics-smoke`, two-publish manifest equality, and post-launch
+`publish-win-x64.ps1 -VerifyOnly`.
+
+Evidence:
+`docs/ENGINEERING_RELEASE_0_1_1_GRAPHICS_PREFLIGHT_EVIDENCE_20260731.md` and
+`artifacts/release-package-0.1.1-20260731-final`.
+
+Boundary: the manifest records `source.dirty=true`. Do not represent this
+engineering candidate as clean-source GPU-target evidence.
+
+## 2026-07-31 Runtime Graphics Capability Preflight Contract
+
+Status: stable and Complete for the current-source preflight slice. The broader
+P0-C clean-machine labeling gate remains Incomplete.
+
+Protected behavior:
+
+- the capability probe uses the actual Main Viewer's attached SharpGL context;
+- `viewerGraphics` reports vendor, renderer, version, and all 11 framebuffer
+  functions used by the current viewer;
+- a context that is not ready during early startup or headless construction is
+  a retriable warning and does not block startup restore;
+- a definite missing-function or probe failure is retained in diagnostics and
+  explicit support-bundle evidence;
+- the central image-load path blocks a definite unsupported result before
+  annotation state mutation, shows `이미지 뷰어 환경 확인 필요`, and provides
+  actionable local-PC/GPU-capable-VM guidance;
+- probing or restoring the result never starts a model, training, inference,
+  label save, layer change, or image-open action;
+- the existing viewer implementation, zoom/pan/drag, ROI, brush/eraser, and
+  explicit save contracts remain unchanged.
+
+Protected gates: zero-warning/error isolated build,
+`--runtime-diagnostics-contract`, current-source supported and deterministic
+unsupported 1920x1080 visual smoke, default internal suite,
+`--priority-workflow-docs`, and `git diff --check`.
+
+Evidence:
+`docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md` and
+`artifacts/ui/runtime-graphics-preflight-20260731`.
+
+Boundary: this does not add a viewer fallback or prove packaged clean-machine
+label save/reopen. The existing immutable `0.1.0` evidence package predates the
+preflight.
+
 ## 2026-07-29 Current Worktree Integration Contract
 
 Status: stable and Complete.
@@ -3615,3 +3681,54 @@ Boundary: preserve explicit label save and candidate confirmation. Do not
 expand this contract into background autosave, pending-candidate recovery,
 multi-image history, Recipe autosave, cloud sync, installer/signing, or field
 quality evidence.
+
+## P0-C Windows Sandbox package-safe slice (2026-07-30)
+
+Status: Complete for the bounded package-safe slice; P0-C overall is
+Incomplete.
+
+- Clean-source self-contained `0.1.0` first launch passed in a new Windows
+  Sandbox guest without a guest SDK or Visual Studio dependency.
+- Explicit environment self-test passed `7/7`; explicit support export
+  included the active process logs without skipped `IOException` entries.
+- All `505` mapped release files remained unchanged before/after launch,
+  diagnostics, support export, and normal close.
+- A writable guest-local extraction verified all `503` manifest payload
+  hashes and created a real detection dataset through the packaged wizard.
+- The COCO128 fixture copy preserved its `56,556` byte length and SHA-256.
+- Evidence: `docs/P0C_PORTABLE_SANDBOX_EVIDENCE_20260730.md` and
+  `artifacts/p0c-clean-machine/20260730-live-log-fix-after`.
+
+Boundary: Windows Sandbox did not expose `glGenFramebuffersEXT` under any of
+the three tested vGPU/Protected Client combinations. Image display, box/save/
+reopen, project-archive UI replay, crash-recovery UI replay, installer
+lifecycle, signing, and production validation are not included in this
+completed sub-slice. Do not repeat the Sandbox viewer loop unless its graphics
+capability changes; use an approved full Windows VM next.
+
+## P0-C Hyper-V host and clean-guest preparation (2026-07-30 to 2026-07-31)
+
+Status: Complete for the bounded host/guest preparation; P0-C overall is
+Incomplete.
+
+- `scripts/Prepare-P0CHyperVHost.ps1` recorded the host/feature state and
+  enabled `Microsoft-Hyper-V-All` with `-All -NoRestart`.
+- After the user-approved restart, Hyper-V management and `vmms` were
+  available.
+- The official Windows 11 25H2 Korean x64 ISO matched SHA-256
+  `9F39A222AD4A96BD5BBB18AFE7B5EED583DD18622B225DBAB478C363C4019642`.
+- `scripts/New-P0CHyperVVm.ps1` created the non-overwriting Generation 2 VM
+  with fixed `8 GB` RAM, 4 processors, dynamic `80 GB` VHDX, Secure Boot,
+  virtual TPM, Default Switch, and automatic checkpoints disabled.
+- Windows was installed, the ISO was detached, VHD boot was confirmed, and
+  clean checkpoint `P0C-Clean-Windows-Installed-20260731` was preserved.
+- Guest file transfer, graceful shutdown, read-only current-VHD evidence
+  recovery, detach, restart, and heartbeat verification passed.
+- Evidence: `docs/P0C_HYPERV_LABELING_EVIDENCE_20260731.md`.
+
+Boundary: this completed preparation does not prove viewer compatibility.
+The standard Hyper-V synthetic display reproduced
+`glGenFramebuffersEXT not supported`; image display, box/save/reopen,
+installer lifecycle, signing, and production readiness remain incomplete. Do
+not repeat this viewer path unless display capability or viewer implementation
+changes.

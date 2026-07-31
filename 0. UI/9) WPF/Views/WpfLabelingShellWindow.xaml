@@ -1114,7 +1114,7 @@
                                                    Margin="0,0,0,4"
                                                    AutomationProperties.AutomationId="RuntimeSelfTestButton"
                                                    AutomationProperties.Name="환경 점검"
-                                                   ToolTip="제품 버전, 필수 파일, 사용자 쓰기 경로를 점검합니다. 학습이나 추론은 실행하지 않습니다."
+                                                   ToolTip="제품 버전, 필수 파일, 사용자 쓰기 경로와 이미지 뷰어 그래픽을 점검합니다. 학습이나 추론은 실행하지 않습니다."
                                                    Command="{Binding RuntimeDiagnosticsViewModel.RunSelfTestCommand}">
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ShieldCheckOutline" />

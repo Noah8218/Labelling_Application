@@ -282,6 +282,8 @@ namespace MvcVisionSystem
             };
             displayAdjustmentRefreshTimer.Tick += DisplayAdjustmentRefreshTimer_Tick;
             DataContext = viewModels;
+            RuntimeDiagnosticsViewModel.AttachGraphicsCapabilityProvider(
+                () => WpfOpenGlRuntimeCapabilityProbe.Probe(MainCanvasViewModel.ImageViewer));
             RestoreWorkspaceLayoutSettings();
             TemplateMatchingAutoLabelViewModel.ConfigureHost(this);
             ComposePanelViewModels();

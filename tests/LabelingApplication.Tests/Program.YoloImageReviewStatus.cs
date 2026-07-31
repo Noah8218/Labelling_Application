@@ -117,6 +117,12 @@ internal static class YoloImageReviewStatusTests
             data.ClassNamedList.Add(new CClassItem { Text = "Part", DrawColor = Color.Blue });
             data.EnsureYoloOutputDirectories();
 
+            string reviewStatusPath = YoloImageReviewStatusService.ResolveReviewStatusFilePath(data);
+            var untouched = new YoloImageReviewStatusService();
+            untouched.SetImages(new[] { Path.Combine(root, "source", "untouched.png") });
+            untouched.SaveReviewStatus(data);
+            AssertTrue(!File.Exists(reviewStatusPath), "untouched review state should not create an empty cache");
+
             string sourceDirectory = Path.Combine(root, "source");
             Directory.CreateDirectory(sourceDirectory);
 
@@ -221,7 +227,6 @@ internal static class YoloImageReviewStatusTests
             service.SetDetectionCandidates(candidateImagePath, "candidate", 2);
             service.SaveReviewStatus(data);
 
-            string reviewStatusPath = YoloImageReviewStatusService.ResolveReviewStatusFilePath(data);
             AssertTrue(File.Exists(reviewStatusPath), "review status file was not saved");
             string reviewStatusJson = File.ReadAllText(reviewStatusPath);
             AssertTrue(reviewStatusJson.Contains("\"ReviewStateName\": \"Confirmed\""), "review status file did not include a readable confirmed state name");
@@ -246,6 +251,13 @@ internal static class YoloImageReviewStatusTests
             var restoredFromName = new YoloImageReviewStatusService();
             restoredFromName.LoadReviewStatus(data, imagePaths);
             AssertEqual("Confirmed", restoredFromName.GetOrCreate(labeledImagePath).DetectionText);
+
+            var clearedCache = new YoloImageReviewStatusService();
+            clearedCache.SetImages(imagePaths);
+            clearedCache.SaveReviewStatus(data);
+            AssertTrue(
+                string.Equals("[]", File.ReadAllText(reviewStatusPath), StringComparison.Ordinal),
+                "existing review cache should remain clearable");
         }
         finally
         {
