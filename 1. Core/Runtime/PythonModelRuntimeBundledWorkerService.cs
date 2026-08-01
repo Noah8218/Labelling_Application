@@ -9,6 +9,7 @@ namespace MvcVisionSystem._1._Core
     {
         public const string UltralyticsWorkerRelativePath = @"Runtime\Python\openvisionlab_ultralytics_worker.py";
         public const string UnetWorkerRelativePath = @"Runtime\Python\openvisionlab_unet_worker.py";
+        public const string PatchCoreWorkerRelativePath = @"Runtime\Python\openvisionlab_patchcore_worker.py";
         public const string SegmentationPredictionExporterRelativePath = @"Runtime\Python\openvisionlab_segmentation_prediction_export.py";
         public const string MobileSamBoxPromptWorkerRelativePath = @"Runtime\Python\openvisionlab_mobile_sam_box_prompt.py";
 
@@ -20,6 +21,11 @@ namespace MvcVisionSystem._1._Core
         public static string ResolveUnetWorkerScriptPath()
         {
             return ResolveWorkerScriptPath(UnetWorkerRelativePath);
+        }
+
+        public static string ResolvePatchCoreWorkerScriptPath()
+        {
+            return ResolveWorkerScriptPath(PatchCoreWorkerRelativePath);
         }
 
         public static string ResolveSegmentationPredictionExporterScriptPath()
@@ -42,6 +48,11 @@ namespace MvcVisionSystem._1._Core
         public static bool IsUnetWorkerScriptPath(string scriptPath)
         {
             return IsWorkerScriptPath(scriptPath, UnetWorkerRelativePath);
+        }
+
+        public static bool IsPatchCoreWorkerScriptPath(string scriptPath)
+        {
+            return IsWorkerScriptPath(scriptPath, PatchCoreWorkerRelativePath);
         }
 
         private static string ResolveWorkerScriptPath(string relativePath)

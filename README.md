@@ -63,7 +63,7 @@ MobileSAM 후보가 바로 생성됩니다. 후보가 부족하면 `보정 옵�
 
 ![이상탐지 OK/NG 판정](docs/tutorial/images/workflows-20260722/anomaly-ok-ng-review-1920x1080.png)
 
-현재 이상탐지 학습 경로는 OK와 NG 예시를 모두 사용하는 2클래스 지도학습 분류입니다. 정상 이미지만 학습하는 PatchCore 계열 one-class 방식이나 이상 위치 heatmap과는 다릅니다.
+이상탐지는 두 모델 계약을 제공합니다. YOLOv8/YOLO11 분류는 OK와 NG 예시를 모두 사용하는 2클래스 지도학습이며 이미지 전체 판정을 반환합니다. PatchCore bounded pilot은 검토 완료 정상 이미지만 학습하고 이미지 판정, 이상 점수/임계값, 미확정 위치 후보와 heatmap을 반환합니다. 후보 검토의 `히트맵 보기`는 명시적으로 눌렀을 때만 읽기 전용 검토 창을 열며 라벨·후보·모델을 자동 변경하지 않습니다. 위치 후보는 자동 저장되지 않으며 생산 품질은 별도 held-out 검증이 필요합니다. 자세한 흐름은 [이상탐지 가이드](docs/ANOMALY_DETECTION_FLOW.md), [PatchCore pilot 완료 기록](docs/PATCHCORE_ANOMALY_PILOT_20260731.md), [히트맵 검토 완료 기록](docs/PATCHCORE_HEATMAP_REVIEW_VIEW_20260801.md)을 참고하세요.
 
 ## 하나의 레시피로 여러 모델 사용하기
 
@@ -193,7 +193,28 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
 ```
 
+## Headless Environment Self-Test
+
+Automation can run the read-only environment check without opening WPF:
+
+```text
+OpenVisionLab.LabelingStudio.exe --environment-self-test --json
+```
+
+The command emits one JSON document and never saves labels, Recipes, models,
+or a support bundle. Because the product is a Windows GUI executable,
+PowerShell automation should use `Start-Process -Wait` with redirected standard
+output. See
+[the headless CLI contract](docs/HEADLESS_ENVIRONMENT_CHECK_CLI_20260801.md)
+for the reliable example and exit codes.
+
 ## CI
+
+The Windows CI workflow builds the isolated test assembly, validates the
+documentation contract, runs the complete default regression suite exactly
+once with a bounded timeout, publishes and verifies the versioned release
+package, and uploads the verified artifact. Hosted-run success is claimed only
+after the corresponding GitHub Actions run is inspected.
 
 GitHub Actions의 `.github/workflows/ci.yml`은 다음을 확인합니다.
 
@@ -208,6 +229,7 @@ GitHub Actions의 `.github/workflows/ci.yml`은 다음을 확인합니다.
 
 | 문서 | 내용 |
 | --- | --- |
+| [전체 문서 탐색과 분류](docs/README.md) | 현재 권위·운영 가이드·기능 계약·검증 증거·역사 기록을 찾는 단일 문서 허브 |
 | [현재 제품 상태와 개발 우선순위](docs/CURRENT_PRODUCT_STATUS.md) | 제품 정체성, 검증된 완성 범위, 상용화 전환 순서, 외부 선행조건의 단일 기준 |
 | [상용 릴리스 기준 감사](docs/COMMERCIAL_READINESS_AUDIT_20260730.md) | 현재 빌드·전체 회귀·게시·첫 실행 결과와 릴리스 누락 항목 |
 | [다음 개발 결정](docs/NEXT_DEVELOPMENT_DECISION_20260730.md) | 버전이 지정된 결정적 self-contained 릴리스 번들의 단일 구현 계약 |

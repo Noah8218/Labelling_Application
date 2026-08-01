@@ -192,6 +192,14 @@ namespace MvcVisionSystem
         {
             if (CandidateReviewViewModel != null)
             {
+                bool preserveOpenEvidence = patchCoreHeatmapWindow != null
+                    && ReferenceEquals(candidate, patchCoreHeatmapWindowCandidate);
+                if (!preserveOpenEvidence)
+                {
+                    ClosePatchCoreHeatmapWindow();
+                    CandidateReviewViewModel.SetPatchCoreHeatmapAvailability(
+                        patchCoreHeatmapReviewService.Inspect(candidate));
+                }
                 if (candidate == null)
                 {
                     CandidateReviewViewModel.ApplySelectionReview("선택된 AI 후보가 없습니다.", default, showComparison: false);
@@ -208,6 +216,67 @@ namespace MvcVisionSystem
                     comparison,
                     showComparison: true);
             }
+        }
+
+        private void ExecuteTogglePatchCoreHeatmapCommand()
+        {
+            if (CandidateReviewViewModel == null)
+            {
+                return;
+            }
+
+            if (patchCoreHeatmapWindow != null || CandidateReviewViewModel.IsPatchCoreHeatmapOpen)
+            {
+                ClosePatchCoreHeatmapWindow();
+                return;
+            }
+
+            WpfPatchCoreHeatmapLoadResult result = patchCoreHeatmapReviewService.Load(GetSelectedCandidate());
+            CandidateReviewViewModel.ShowPatchCoreHeatmap(result);
+            if (!CandidateReviewViewModel.IsPatchCoreHeatmapOpen)
+            {
+                return;
+            }
+
+            patchCoreHeatmapWindow = new WpfPatchCoreHeatmapWindow(CandidateReviewViewModel)
+            {
+                Owner = this,
+                Topmost = Topmost
+            };
+            patchCoreHeatmapWindowCandidate = GetSelectedCandidate();
+            patchCoreHeatmapWindow.ApplyThemeFrom(this);
+            patchCoreHeatmapWindow.Closed += PatchCoreHeatmapWindow_Closed;
+            patchCoreHeatmapWindow.Show();
+            patchCoreHeatmapWindow.Activate();
+        }
+
+        private void ClosePatchCoreHeatmapWindow()
+        {
+            if (patchCoreHeatmapWindow == null)
+            {
+                patchCoreHeatmapWindowCandidate = null;
+                CandidateReviewViewModel?.ClosePatchCoreHeatmap();
+                return;
+            }
+
+            WpfPatchCoreHeatmapWindow window = patchCoreHeatmapWindow;
+            patchCoreHeatmapWindow = null;
+            patchCoreHeatmapWindowCandidate = null;
+            window.Closed -= PatchCoreHeatmapWindow_Closed;
+            window.Close();
+            CandidateReviewViewModel?.ClosePatchCoreHeatmap();
+        }
+
+        private void PatchCoreHeatmapWindow_Closed(object sender, System.EventArgs e)
+        {
+            if (ReferenceEquals(sender, patchCoreHeatmapWindow))
+            {
+                patchCoreHeatmapWindow.Closed -= PatchCoreHeatmapWindow_Closed;
+                patchCoreHeatmapWindow = null;
+                patchCoreHeatmapWindowCandidate = null;
+            }
+
+            CandidateReviewViewModel?.ClosePatchCoreHeatmap();
         }
     }
 }

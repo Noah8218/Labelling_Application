@@ -10,6 +10,7 @@ namespace MvcVisionSystem
         public const string EngineYoloV8 = "YOLOv8";
         public const string EngineYolo11 = "YOLO11";
         public const string EngineUnet = "U-Net";
+        public const string EnginePatchCore = "PatchCore";
         public const string EngineOnnx = "ONNX";
 
         private const string ProjectRootPathDefault = @"C:\Git\yolov5";
@@ -45,18 +46,25 @@ namespace MvcVisionSystem
         public void EnsureDefaults()
         {
             MigrateRetiredDefaults();
-            RepairPortableYoloPaths();
             ModelEngine = NormalizeModelEngine(ModelEngine);
+            if (ModelEngine != EnginePatchCore)
+            {
+                RepairPortableYoloPaths();
+            }
 
             if (string.IsNullOrWhiteSpace(ProjectRootPath))
             {
-                ProjectRootPath = GetDefaultProjectRootPath();
+                ProjectRootPath = ModelEngine == EnginePatchCore
+                    ? GetDefaultPatchCoreProjectRootPath()
+                    : GetDefaultProjectRootPath();
             }
 
             if (string.IsNullOrWhiteSpace(ClientScriptPath))
             {
                 ClientScriptPath = ModelEngine == EngineUnet
                     ? _1._Core.PythonModelRuntimeBundledWorkerService.ResolveUnetWorkerScriptPath()
+                    : ModelEngine == EnginePatchCore
+                    ? _1._Core.PythonModelRuntimeBundledWorkerService.ResolvePatchCoreWorkerScriptPath()
                     : Path.Combine(ProjectRootPath, "labelling_tcp_client.py");
             }
 
@@ -64,6 +72,8 @@ namespace MvcVisionSystem
             {
                 WeightsPath = ModelEngine == EngineUnet
                     ? GetDefaultUnetWeightsPath(ProjectRootPath)
+                    : ModelEngine == EnginePatchCore
+                    ? GetDefaultPatchCoreWeightsPath(ProjectRootPath)
                     : Path.Combine(ProjectRootPath, "best.pt");
             }
 
@@ -79,7 +89,7 @@ namespace MvcVisionSystem
         }
 
         public static IReadOnlyList<string> GetSupportedModelEngines()
-            => new[] { EngineYoloV5, EngineYoloV8, EngineYolo11, EngineUnet, EngineOnnx };
+            => new[] { EngineYoloV5, EngineYoloV8, EngineYolo11, EngineUnet, EnginePatchCore, EngineOnnx };
 
         public static string NormalizeModelEngine(string value)
         {
@@ -103,6 +113,12 @@ namespace MvcVisionSystem
                 return EngineUnet;
             }
 
+            if (string.Equals(normalized, "patchcore", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(normalized, "patch-core", StringComparison.OrdinalIgnoreCase))
+            {
+                return EnginePatchCore;
+            }
+
             if (string.Equals(normalized, "onnx", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(normalized, "onnxruntime", StringComparison.OrdinalIgnoreCase))
             {
@@ -119,6 +135,7 @@ namespace MvcVisionSystem
                 EngineYoloV8 => "yolov8",
                 EngineYolo11 => "yolo11",
                 EngineUnet => "unet",
+                EnginePatchCore => "patchcore",
                 EngineOnnx => "onnx",
                 _ => "yolov5"
             };
@@ -162,6 +179,20 @@ namespace MvcVisionSystem
                 ? GetDefaultUnetProjectRootPath()
                 : projectRootPath.Trim();
             return Path.Combine(root, "runs", "segment", "openvisionlab-unet-segmentation", "weights", "best.pt");
+        }
+
+        public static string GetDefaultPatchCoreProjectRootPath()
+        {
+            string dataDriveRoot = @"D:\OpenVisionLab_Runtime\PatchCore";
+            return Directory.Exists(@"D:\") ? dataDriveRoot : Path.Combine(AppContext.BaseDirectory, "PatchCoreRuntime");
+        }
+
+        public static string GetDefaultPatchCoreWeightsPath(string projectRootPath = "")
+        {
+            string root = string.IsNullOrWhiteSpace(projectRootPath)
+                ? GetDefaultPatchCoreProjectRootPath()
+                : projectRootPath.Trim();
+            return Path.Combine(root, "runs", "anomaly", "openvisionlab-patchcore", "weights", "best.pt");
         }
 
         public static string GetDefaultImageRootPath()

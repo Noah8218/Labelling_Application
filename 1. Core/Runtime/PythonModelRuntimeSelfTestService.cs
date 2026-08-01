@@ -37,6 +37,11 @@ namespace MvcVisionSystem._1._Core
                 int pythonIndex = items.FindIndex(item => string.Equals(item.LabelText, "Python", StringComparison.Ordinal));
                 items.Insert(Math.Max(0, pythonIndex + 1), BuildUnetPackageItem(settings));
             }
+            else if (UsesPatchCore(settings.ModelEngine))
+            {
+                int pythonIndex = items.FindIndex(item => string.Equals(item.LabelText, "Python", StringComparison.Ordinal));
+                items.Insert(Math.Max(0, pythonIndex + 1), BuildPatchCorePackageItem(settings));
+            }
 
             items.Add(BuildExecutionSupportItem(settings));
 
@@ -159,6 +164,31 @@ namespace MvcVisionSystem._1._Core
                 isWarning: false);
         }
 
+        private static PythonModelRuntimeSelfTestItem BuildPatchCorePackageItem(PythonModelSettings settings)
+        {
+            string pythonExecutable = PythonModelSettingsValidator.ResolvePythonExecutable(settings);
+            if (!TryResolveSitePackagesPath(pythonExecutable, out string sitePackagesPath))
+            {
+                return new PythonModelRuntimeSelfTestItem(
+                    "PyTorch PatchCore",
+                    "확인 필요",
+                    "PatchCore는 torch, torchvision, numpy, Pillow가 설치된 Python이 필요합니다.",
+                    isPassed: false,
+                    isWarning: true);
+            }
+
+            bool installed = Directory.Exists(Path.Combine(sitePackagesPath, "torch"))
+                && Directory.Exists(Path.Combine(sitePackagesPath, "torchvision"))
+                && Directory.Exists(Path.Combine(sitePackagesPath, "numpy"))
+                && Directory.Exists(Path.Combine(sitePackagesPath, "PIL"));
+            return new PythonModelRuntimeSelfTestItem(
+                "PyTorch PatchCore",
+                installed ? "확인" : "설치 필요",
+                installed ? sitePackagesPath : $"torch, torchvision, numpy 또는 Pillow가 없습니다: {sitePackagesPath}",
+                installed,
+                isWarning: false);
+        }
+
         private static string FormatMissingDirectoryDetail(string labelText, string path)
         {
             string prefix = string.IsNullOrWhiteSpace(path)
@@ -205,7 +235,18 @@ namespace MvcVisionSystem._1._Core
             string scriptsPath = string.Empty;
             if (File.Exists(trimmed))
             {
-                scriptsPath = Path.GetDirectoryName(trimmed) ?? string.Empty;
+                string pythonDirectory = Path.GetDirectoryName(trimmed) ?? string.Empty;
+                if (!string.Equals(Path.GetFileName(pythonDirectory), "Scripts", StringComparison.OrdinalIgnoreCase))
+                {
+                    string systemSitePackages = Path.Combine(pythonDirectory, "Lib", "site-packages");
+                    if (Directory.Exists(systemSitePackages))
+                    {
+                        sitePackagesPath = systemSitePackages;
+                        return true;
+                    }
+                }
+
+                scriptsPath = pythonDirectory;
             }
             else if (Directory.Exists(trimmed))
             {
@@ -260,6 +301,12 @@ namespace MvcVisionSystem._1._Core
             => string.Equals(
                 PythonModelSettings.NormalizeModelEngine(engine),
                 PythonModelSettings.EngineUnet,
+                StringComparison.Ordinal);
+
+        private static bool UsesPatchCore(string engine)
+            => string.Equals(
+                PythonModelSettings.NormalizeModelEngine(engine),
+                PythonModelSettings.EnginePatchCore,
                 StringComparison.Ordinal);
 
         private static string FormatDetail(PythonModelRuntimeState runtimeState)

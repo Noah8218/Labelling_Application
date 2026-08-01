@@ -1023,7 +1023,8 @@
                                                    AutomationProperties.AutomationId="ThemeToggleButton"
                                                    AutomationProperties.Name="Theme"
                                                    ToolTip="&#xB2E4;&#xD06C;/&#xB77C;&#xC774;&#xD2B8; &#xD14C;&#xB9C8; &#xC804;&#xD658;"
-                                                   Command="{Binding ShellViewModel.ToggleThemeCommand}">
+                                                   Command="{Binding ShellViewModel.ToggleThemeCommand}"
+                                                   Visibility="Collapsed">
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ThemeLightDark" />
                                                 <TextBlock x:Name="ThemeToggleText" Text="&#xD14C;&#xB9C8;: &#xB2E4;&#xD06C;" VerticalAlignment="Center" />

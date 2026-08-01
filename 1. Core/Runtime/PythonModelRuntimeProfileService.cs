@@ -27,6 +27,7 @@ namespace MvcVisionSystem._1._Core
                 BuildProfile(PythonModelSettings.EngineYoloV8, selectedEngine, selectedState),
                 BuildProfile(PythonModelSettings.EngineYolo11, selectedEngine, selectedState),
                 BuildProfile(PythonModelSettings.EngineUnet, selectedEngine, selectedState),
+                BuildProfile(PythonModelSettings.EnginePatchCore, selectedEngine, selectedState),
                 BuildProfile(PythonModelSettings.EngineOnnx, selectedEngine, selectedState)
             };
         }
@@ -74,6 +75,12 @@ namespace MvcVisionSystem._1._Core
                     "\uC571\uC774 \uB0B4\uBCB4\ub0B4\ub294 segmentation mask export\ub97c \uc0ac\uc6a9\ud558\ub294 PyTorch U-Net \uc2e4\ud589 \ud504\ub85c\ud544\uc785\ub2c8\ub2e4.",
                     "C:\\Git\\unet \uc2e4\ud589\uae30 \uc5f0\uacb0",
                     "\uC5F0\uACB0"),
+                PythonModelSettings.EnginePatchCore => BuildDisconnectedProfile(
+                    engine,
+                    "PatchCore 실행기 연결 대기",
+                    "정상 이미지만 학습하는 one-class 이상탐지 프로필입니다. 이미지 판정과 검토용 위치 후보를 함께 반환합니다.",
+                    "PyTorch 실행기와 bundled PatchCore worker 연결",
+                    "연결"),
                 PythonModelSettings.EngineOnnx => BuildDisconnectedProfile(
                     engine,
                     "\uCD94\uB860 \uC5F0\uACB0 \uB300\uAE30",
@@ -171,6 +178,7 @@ namespace MvcVisionSystem._1._Core
                 PythonModelSettings.EngineYoloV8 => "\uC9C0\uC6D0 \uBC94\uC704: local worker \uD604\uC7AC \uAC80\uC0AC / \uD559\uC2B5\uC740 TrainYolo \uC9C0\uC6D0 \uD544\uC694",
                 PythonModelSettings.EngineYolo11 => "\uC9C0\uC6D0 \uBC94\uC704: \uD604\uC7AC \uAC80\uC0AC \uC6B0\uC120 / \uD559\uC2B5\uC740 worker \uC5F0\uACB0 \uD544\uC694",
                 PythonModelSettings.EngineUnet => "\uC9C0\uC6D0 \uBC94\uC704: segmentation \uD559\uC2B5 + \uD604\uC7AC \uAC80\uC0AC",
+                PythonModelSettings.EnginePatchCore => "지원 범위: 정상-only 학습 + 이미지 판정 + 위치 후보",
                 PythonModelSettings.EngineOnnx => "\uC9C0\uC6D0 \uBC94\uC704: \uCD94\uB860 \uC804\uC6A9",
                 _ => "\uC9C0\uC6D0 \uBC94\uC704: \uD559\uC2B5 + \uD604\uC7AC \uAC80\uC0AC"
             };
@@ -181,6 +189,7 @@ namespace MvcVisionSystem._1._Core
                 PythonModelSettings.EngineYoloV8 => "YOLOv8",
                 PythonModelSettings.EngineYolo11 => "YOLO11",
                 PythonModelSettings.EngineUnet => "U-Net",
+                PythonModelSettings.EnginePatchCore => "PatchCore",
                 PythonModelSettings.EngineOnnx => "ONNX",
                 _ => "YOLOv5"
             };
@@ -191,6 +200,7 @@ namespace MvcVisionSystem._1._Core
                 PythonModelSettings.EngineYoloV8 => "Ultralytics",
                 PythonModelSettings.EngineYolo11 => "Ultralytics",
                 PythonModelSettings.EngineUnet => "PyTorch U-Net",
+                PythonModelSettings.EnginePatchCore => "PyTorch PatchCore",
                 PythonModelSettings.EngineOnnx => "ONNX Runtime",
                 _ => "YOLOv5 repo"
             };

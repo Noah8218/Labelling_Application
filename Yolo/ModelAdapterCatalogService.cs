@@ -64,6 +64,17 @@ namespace MvcVisionSystem.Yolo
                 },
                 new ModelAdapterCatalogItem
                 {
+                    AdapterKey = "patchcore-anomaly",
+                    DisplayName = "PatchCore one-class 이상탐지",
+                    AvailabilityText = "로컬 PyTorch 정상-only 학습·추론 후보",
+                    TaskContractText = "이상탐지 Recipe에서 정상 이미지만 학습하고, 이미지 OK/NG 판정과 결함 위치 후보를 함께 반환합니다.",
+                    DataContractText = "검토 완료 normal train 이미지만 메모리 뱅크에 사용합니다. normal val은 임계값 보정에 사용하며, NG 이미지는 학습 특징에 포함하지 않습니다.",
+                    RuntimeContractText = "bundled openvisionlab_patchcore_worker.py와 torch·torchvision·numpy·Pillow를 사용합니다. 학습 결과 best.pt에는 특징 추출기와 메모리 뱅크를 포함합니다.",
+                    EvidenceContractText = "히트맵과 위치 후보는 검토 보조이며 자동 라벨 저장이나 현장 결함 검출 성능을 보장하지 않습니다. 동일 held-out 데이터에서 YOLO 분류와 별도 비교해야 합니다.",
+                    NextActionText = "정상 train 2장 이상과 가능하면 독립 normal val을 준비한 뒤 학습하고, 미확정 위치 후보와 heatmap을 검토하세요."
+                },
+                new ModelAdapterCatalogItem
+                {
                     AdapterKey = "onnx-inference",
                     DisplayName = "ONNX 추론",
                     AvailabilityText = "추론 전용(Inference-only) 어댑터",

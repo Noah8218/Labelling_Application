@@ -152,6 +152,9 @@ namespace MvcVisionSystem
         private readonly WpfCandidateReviewStateService candidateReviewState = new WpfCandidateReviewStateService();
         private readonly WpfCandidateReviewPresentationService candidateReviewPresentationService = new WpfCandidateReviewPresentationService();
         private readonly WpfCandidateConfirmationService candidateConfirmationService = new WpfCandidateConfirmationService();
+        private readonly WpfPatchCoreHeatmapReviewService patchCoreHeatmapReviewService = new WpfPatchCoreHeatmapReviewService();
+        private WpfPatchCoreHeatmapWindow patchCoreHeatmapWindow;
+        private YoloWorkerSmokeCandidate patchCoreHeatmapWindowCandidate;
         private readonly WpfCandidateReviewCompletionPresentationService candidateReviewCompletionPresentationService = new WpfCandidateReviewCompletionPresentationService();
         private readonly WpfDetectionResultPresentationService detectionResultPresentationService = new WpfDetectionResultPresentationService();
         private readonly WpfDetectionTargetService detectionTargetService = new WpfDetectionTargetService();

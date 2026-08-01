@@ -17,6 +17,9 @@ namespace MvcVisionSystem._1._Core
         public string CandidateType { get; set; } = string.Empty;
         public string PredictionType { get; set; } = string.Empty;
         public bool ImageLevel { get; set; }
+        public double? AnomalyScore { get; set; }
+        public double? AnomalyThreshold { get; set; }
+        public string HeatmapPath { get; set; } = string.Empty;
         public string SegmentationType { get; set; } = string.Empty;
         public IReadOnlyList<DetectionPolygonPoint> PolygonPoints { get; set; } = Array.Empty<DetectionPolygonPoint>();
         public IReadOnlyList<DetectionPolygonPoint> NormalizedPolygonPoints { get; set; } = Array.Empty<DetectionPolygonPoint>();

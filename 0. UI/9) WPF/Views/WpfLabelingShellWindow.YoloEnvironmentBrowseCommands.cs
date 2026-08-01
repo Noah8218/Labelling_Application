@@ -114,6 +114,9 @@ namespace MvcVisionSystem
                 case PythonModelSettings.EngineUnet:
                     ExecuteConnectUnetRuntime();
                     break;
+                case PythonModelSettings.EnginePatchCore:
+                    ExecuteConnectPatchCoreRuntime();
+                    break;
                 case PythonModelSettings.EngineOnnx:
                     YoloWeightsPathBox?.Focus();
                     SetYoloCommandStatus("ONNX \uC120\uD0DD: \uAC80\uC0AC\uC5D0 \uC4F8 .onnx \uBAA8\uB378 \uD30C\uC77C\uC744 \uC120\uD0DD\uD558\uACE0 \uC800\uC7A5\uD558\uC138\uC694.", isBusy: false);
@@ -235,6 +238,20 @@ namespace MvcVisionSystem
             YoloProjectRootBox?.Focus();
             SetYoloCommandStatus($"{result.SummaryText}: {result.DetailText}", isBusy: false);
             AppendLog($"U-Net runtime profile applied: {projectRootPath} / {result.SummaryText}");
+        }
+
+        private void ExecuteConnectPatchCoreRuntime()
+        {
+            string projectRootPath = PythonModelSettings.GetDefaultPatchCoreProjectRootPath();
+            Directory.CreateDirectory(projectRootPath);
+            PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildPatchCoreConnection(
+                CreateYoloModelSettingsSnapshot(),
+                YoloModelSettingsViewModel?.PythonExecutablePath ?? string.Empty);
+            YoloModelSettingsViewModel?.ApplyRuntimeConnectionResult(result);
+            TrainingSettingsViewModel?.ApplyModelEngineSelection(result.Settings.ModelEngine);
+            YoloProjectRootBox?.Focus();
+            SetYoloCommandStatus($"{result.SummaryText}: {result.DetailText}", isBusy: false);
+            AppendLog($"PatchCore runtime profile applied: {result.Settings.ProjectRootPath} / {result.SummaryText}");
         }
 
         private PythonModelSettings CreateYoloModelSettingsSnapshot()

@@ -27,6 +27,9 @@ namespace MvcVisionSystem
                 CandidateType = defect?.CandidateType ?? string.Empty,
                 PredictionType = defect?.PredictionType ?? string.Empty,
                 ImageLevel = defect?.ImageLevel == true,
+                AnomalyScore = defect?.AnomalyScore,
+                AnomalyThreshold = defect?.AnomalyThreshold,
+                HeatmapPath = defect?.HeatmapPath ?? string.Empty,
                 SegmentationType = defect?.SegmentationType ?? string.Empty,
                 PolygonPoints = defect?.PolygonPoints?.ToArray() ?? Array.Empty<DetectionPolygonPoint>(),
                 NormalizedPolygonPoints = defect?.NormalizedPolygonPoints?.ToArray() ?? Array.Empty<DetectionPolygonPoint>()

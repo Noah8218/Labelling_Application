@@ -15,6 +15,11 @@ namespace MvcVisionSystem._1._Core
                 return BuildUnetPlan(settings, engine);
             }
 
+            if (string.Equals(engine, PythonModelSettings.EnginePatchCore, StringComparison.Ordinal))
+            {
+                return BuildPatchCorePlan(settings, engine);
+            }
+
             if (!UsesUltralytics(engine))
             {
                 return new PythonModelRuntimeInstallPlan(
@@ -149,6 +154,53 @@ namespace MvcVisionSystem._1._Core
                 canPreviewCommand: true,
                 canRunInstall: true,
                 canRunUninstall: true,
+                requiresInstallation: !installed,
+                isAlreadyInstalled: installed);
+        }
+
+        private static PythonModelRuntimeInstallPlan BuildPatchCorePlan(PythonModelSettings settings, string engine)
+        {
+            const string title = "PatchCore PyTorch installation check";
+            string pythonExecutable = PythonModelSettingsValidator.ResolvePythonExecutable(settings);
+            if (!PythonModelSettingsValidator.LooksLikePath(pythonExecutable) || !File.Exists(pythonExecutable))
+            {
+                return new PythonModelRuntimeInstallPlan(
+                    engine, title, "Python connection required",
+                    "Connect a Python executable before checking the PatchCore runtime.",
+                    string.IsNullOrWhiteSpace(pythonExecutable) ? "Not configured" : pythonExecutable,
+                    string.Empty, string.Empty, string.Empty,
+                    isVisible: true, canPreviewCommand: false, canRunInstall: false, canRunUninstall: false,
+                    requiresInstallation: false, isAlreadyInstalled: false);
+            }
+
+            string pythonDirectory = Path.GetDirectoryName(pythonExecutable) ?? string.Empty;
+            string environmentRoot = string.Equals(Path.GetFileName(pythonDirectory), "Scripts", StringComparison.OrdinalIgnoreCase)
+                ? Directory.GetParent(pythonDirectory)?.FullName ?? string.Empty
+                : pythonDirectory;
+            string sitePackagesPath = Path.Combine(environmentRoot, "Lib", "site-packages");
+            bool installed = Directory.Exists(Path.Combine(sitePackagesPath, "torch"))
+                && Directory.Exists(Path.Combine(sitePackagesPath, "torchvision"))
+                && Directory.Exists(Path.Combine(sitePackagesPath, "numpy"))
+                && Directory.Exists(Path.Combine(sitePackagesPath, "PIL"));
+            string installCommand = $"{Quote(pythonExecutable)} -m pip install --upgrade torch torchvision pillow numpy";
+            bool isVenv = string.Equals(Path.GetFileName(pythonDirectory), "Scripts", StringComparison.OrdinalIgnoreCase);
+            return new PythonModelRuntimeInstallPlan(
+                engine,
+                title,
+                installed ? "PatchCore PyTorch runtime verified" : "PatchCore PyTorch runtime required",
+                installed
+                    ? "torch, torchvision, numpy, and Pillow are visible to the selected Python."
+                    : isVenv
+                        ? "Install the PatchCore prerequisites in this selected venv."
+                        : "Use a dedicated venv for in-app package installation, or install the required packages outside the app.",
+                environmentRoot,
+                installed ? $"{Quote(pythonExecutable)} -c \"import torch, torchvision, numpy, PIL; print(torch.__version__)\"" : installCommand,
+                installCommand,
+                isVenv ? $"{Quote(pythonExecutable)} -m pip uninstall -y torch torchvision pillow numpy" : string.Empty,
+                isVisible: true,
+                canPreviewCommand: true,
+                canRunInstall: isVenv,
+                canRunUninstall: isVenv && installed,
                 requiresInstallation: !installed,
                 isAlreadyInstalled: installed);
         }

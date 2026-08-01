@@ -3754,3 +3754,102 @@ Status: Complete
 Boundary: do not move tracked fixtures, source, user datasets, or `.proofline`.
 Do not hard-code the current display name; topology determines the leftmost
 monitor. This does not complete the external GPU-capable P0-C gate.
+
+## PatchCore normal-only anomaly pilot (2026-07-31)
+
+Status: Complete for the bounded local pilot.
+
+Preserve the separate `PatchCore` model profile, bundled worker, reviewed
+normal-only memory-bank input, minimum two normal train images, independent
+normal-val threshold calibration when available, explicit train-normal
+fallback warning, self-contained `openvisionlab-patchcore-v1` checkpoint,
+full-frame resize without center-crop edge loss, image-level normal/abnormal
+result, raw score/threshold, review-only location
+candidate, and heatmap path. NG review evidence may be exported for comparison
+but must not enter the PatchCore memory bank. Do not auto-save a label, auto-
+confirm a location, or auto-adopt PatchCore over the YOLO classifiers.
+
+Covered by the isolated zero-warning/error build, focused
+`--patchcore-anomaly-pilot`, `--model-adapter-catalog`, and
+`--wpf-yolo-model-settings-panel` tests, plus the real CUDA synthetic
+train/normal/defect smoke and the real C# app smoke-service adapter run recorded in
+`docs/PATCHCORE_ANOMALY_PILOT_20260731.md`. The post-pilot solo default suite
+passed `265/265`; the current-source PatchCore settings capture was produced
+at 1920x1080 on the dynamically selected leftmost monitor.
+
+Boundary: this does not prove production defect accuracy, long-run stability,
+takt time, same-split superiority over YOLO, or clean GPU package readiness.
+
+## PatchCore explicit heatmap review (2026-08-01)
+
+Status: Complete.
+
+Preserve the PatchCore-only `히트맵 보기` action, metadata-only selection
+inspection, explicit no-lock image load, owned themed review window,
+missing/moved/unsupported/corrupt fail-closed guidance, and close/candidate-
+change release. Do not auto-open the evidence or turn it into label save,
+candidate confirmation/hide, active-layer/viewer mutation, or model adoption.
+
+Covered by the zero-warning/error isolated build, focused
+`--patchcore-heatmap-review`, `--wpf-candidate-review-panel`, and
+`--patchcore-anomaly-pilot` tests, Dark/Wide and Light/Compact current-source
+visual evidence on the dynamically selected leftmost monitor, and the clean
+default `266/266` regression recorded in
+`docs/PATCHCORE_HEATMAP_REVIEW_VIEW_20260801.md`.
+
+Boundary: this is a read-only owned window, not a Main Viewer layer and not
+field-quality or YOLO-comparison evidence.
+
+## Dark-only workstation theme (2026-08-01)
+
+Status: Complete.
+
+Preserve the hidden theme-selection controls and the dark-only shell policy.
+Startup, the dormant toggle command, and legacy/internal `Light` requests must
+all resolve to the supported dark palette. Do not resume light-theme styling
+or expose a theme selector without an explicit product-direction change.
+
+Covered by the zero-warning/error isolated build, focused
+`--wpf-labeling-shell` contract test, and a current-source 1366x768 visual
+smoke that deliberately requested `--theme light` but rendered the dark shell
+with no theme entry in the open settings/tools menu. The window was placed on
+the dynamically selected leftmost monitor.
+
+Boundary: existing semantic brush resources remain reusable by owned windows;
+this contract hides and locks product theme selection rather than redesigning
+the visual system.
+
+## CI complete regression gate (2026-08-01)
+
+Status: Complete for the repository workflow contract.
+
+Preserve exactly one no-argument invocation of the complete default test suite
+in one Windows CI process, bounded by `timeout-minutes: 15`, after the isolated
+build/documentation checks and before release publishing. Do not replace it
+with focused tests alone or run concurrent copies against shared state.
+
+Covered by the zero-warning/error isolated build, the
+`--priority-workflow-docs` source contract, and the local equivalent solo run:
+`266/266`, zero failures, exit code 0, and empty stderr. Exact evidence is in
+`docs/CI_COMPLETE_REGRESSION_GATE_20260801.md`.
+
+Boundary: this does not prove a hosted GitHub Actions run before commit/push,
+and the internal test runner is not a headless product CLI.
+
+## Headless environment self-test CLI (2026-08-01)
+
+Status: Complete for the current-source command.
+
+Preserve `--environment-self-test --json` dispatch before startup diagnostics,
+single-instance mutex acquisition, and WPF construction. Preserve JSON-only
+stdout, exit codes 0/2/64/70, no durable writes, no support-bundle creation,
+and the warning that Main Viewer graphics cannot be checked without its UI
+OpenGL context.
+
+Covered by the zero-warning/error isolated build, focused actual-product-EXE
+test, existing runtime-diagnostics/support-bundle regression, direct EXE JSON
+evidence, invalid-argument evidence, and solo default `267/267` regression in
+`docs/HEADLESS_ENVIRONMENT_CHECK_CLI_20260801.md`.
+
+Boundary: this is not a batch inference, training, archive, labeling, or model-
+adoption CLI and is not yet clean-source packaged-target evidence.

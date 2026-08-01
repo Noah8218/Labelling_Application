@@ -1,6 +1,6 @@
 # Next Thread Handoff
 
-Last updated: 2026-07-31 KST
+Last updated: 2026-08-01 KST
 
 This is the current operational handoff for C:\Git\Labelling_Application. It is intentionally shorter than the historical journal. Use it to choose the next task; use the linked records only for the detailed evidence behind a claim.
 
@@ -21,22 +21,57 @@ Current product:
 
 Current Git/worktree:
 
-- baseline HEAD for the current operational worktree:
+- reviewed clean-machine baseline preserved by the workflow contract:
   `ed682b2 fix: verify clean-machine support bundles`;
+- current operational HEAD before the uncommitted documentation/cleanup work:
+  `56f256a chore: centralize test artifacts and smoke runs`;
 - all safe-close, canonical class-index, Smart Mask, Dataset Health,
   four-point box, Object Review metadata/group, and contextual group-control
   slices are committed and pushed through that baseline;
-- the latest clean solo default internal regression evidence is 264/264 with
-  no failures. Read `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`;
+- the latest solo default internal regression evidence is 267/267 with no
+  failures after the read-only headless environment self-test CLI. The actual
+  current-source product EXE returns structured JSON without startup logging,
+  mutex acquisition, WPF, or durable writes; Main Viewer graphics remains an
+  explicit warning because no UI/OpenGL context exists. Read
+  `docs/HEADLESS_ENVIRONMENT_CHECK_CLI_20260801.md`. CI now
+  invokes the same no-argument suite exactly once with a 15-minute timeout
+  before release publishing. This is a locally verified workflow contract,
+  not hosted GitHub Actions success before push. Read
+  `docs/CI_COMPLETE_REGRESSION_GATE_20260801.md`; the prior 265/265 pilot and
+  264/264 P1-B results remain historical baselines;
 - `.proofline/STATE.md` and `.proofline/dashboard/` are local/user-owned and
   must remain untouched;
 - local test, smoke, screenshot, validation, and test-temporary data now
   physically use `D:\OpenVisionLab-TestData\Labelling_Application`; the
-  established C paths are junction-backed. Every actual desktop EXE smoke
-  dynamically selects and verifies the leftmost monitor. Preserve
+  established C paths are junction-backed. The expanded contract also covers
+  root/component `bin`/`obj`/`artifacts`, `packages`, `.vs`, and the 516-file
+  repository test-fixture `datasets` path. All 52 mappings verify, the dataset
+  remains Git-identical, and the post-expansion build/default `264/264` suite
+  passed. Every actual desktop EXE smoke dynamically selects and verifies the
+  leftmost monitor. Preserve
   `docs/LOCAL_TEST_STORAGE_AND_LEFT_MONITOR_CONTRACT_20260731.md`;
+- `docs/README.md` is the complete non-authoritative documentation navigation
+  hub. It classifies all documents exactly once without moving historical
+  records; preserve the CI-backed
+  `scripts/Test-DocumentationInformationArchitecture.ps1` gate;
+- the operator-approved 32-entry C-drive rebuildable-candidate cleanup is
+  Complete. It removed 958,721,091 bytes of approved output, preserved all 13
+  D candidates, and passed a zero-warning/error current-source rebuild plus
+  the focused workflow-doc test. Read
+  `docs/REPOSITORY_C_CANDIDATE_CLEANUP_EXECUTION_20260731.md`. D candidates
+  remain unapproved and require a fresh preview before any separate decision;
 - the current worktree adds the runtime graphics-preflight slice described in
   `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`;
+- the current worktree also contains the completed bounded PatchCore normal-
+  only anomaly pilot in `docs/PATCHCORE_ANOMALY_PILOT_20260731.md`: preserve
+  normal-only memory-bank input, score/threshold visibility, review-only
+  localization and heatmap file/path, and no automatic YOLO replacement or
+  field claim;
+- the explicit PatchCore heatmap review view is Complete: `히트맵 보기` loads
+  only after the action, uses an owned themed window, fails closed for missing
+  or corrupt files, releases on close/candidate change, and never saves,
+  confirms, hides, changes a layer, or adopts a model. It is not a Main Viewer
+  layer. Read `docs/PATCHCORE_HEATMAP_REVIEW_VIEW_20260801.md`;
 - a deliberately versioned dirty-source `0.1.1` engineering package now proves
   deterministic publish, real packaged-EXE `8/8` graphics diagnostics, and
   post-launch package immutability. Read
@@ -55,6 +90,9 @@ Current immediate priority:
   `docs/PORTABLE_PROJECT_ARCHIVE_P1A_20260730.md`;
 - `P1-B Bounded Crash Recovery Journal` is Complete in
   `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`;
+- the bounded PatchCore anomaly implementation is Complete; its next model
+  gate is blocked on approved same-split field images, acceptance thresholds,
+  and target hardware for YOLO-versus-PatchCore comparison;
 - preserve dirty/pending/active preflight blocking, complete saved
   Recipe/dataset inclusion, per-file SHA-256, staging/path rebasing,
   non-overwrite import, and explicit Recipe Apply;

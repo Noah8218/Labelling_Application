@@ -780,6 +780,13 @@ internal static partial class Program
                 RuntimeDiagnosticsContractTests.TestRuntimeDiagnosticsAndSupportBundleContract);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--headless-environment-self-test", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke(
+                "Headless environment self-test returns read-only JSON without opening WPF",
+                RuntimeDiagnosticsContractTests.TestHeadlessEnvironmentSelfTestCli);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--exe-runtime-graphics-smoke", StringComparison.OrdinalIgnoreCase)))
         {
             return RunExeRuntimeGraphicsSmoke(args);
@@ -1042,6 +1049,21 @@ internal static partial class Program
         if (args.Any(arg => string.Equals(arg, "--anomaly-classification-training-workflow", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("Anomaly classification training workflow sends classify dataset", AnomalyClassificationTests.TestAnomalyClassificationTrainingWorkflow);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--patchcore-anomaly-pilot", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke("PatchCore anomaly pilot preserves normal-only learning and review-only localization", AnomalyClassificationTests.TestPatchCoreAnomalyPilotContract);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--patchcore-heatmap-review", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke("WPF PatchCore heatmap review opens explicit read-only evidence", ReviewServicesTests.TestWpfPatchCoreHeatmapReviewService);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--real-patchcore-smoke", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke("Real PatchCore app smoke preserves score, threshold, heatmap, and location", AnomalyClassificationTests.TestRealPatchCoreAppSmoke);
         }
 
         if (args.Any(arg => string.Equals(arg, "--external-yolo-dataset-intake", StringComparison.OrdinalIgnoreCase)))
@@ -1551,6 +1573,8 @@ internal static partial class Program
             ("WPF anomaly purpose flow persists image-level review state", AnomalyClassificationTests.TestWpfAnomalyPurposeFlow),
             ("WPF anomaly decisions keep queue focus on the active image", AnomalyQueueFocusSmokeTests.TestWpfAnomalyQueueFocusFollowsActiveImage),
             ("Anomaly classification decision maps configured image-level classes", AnomalyClassificationTests.TestAnomalyClassificationDecisionService),
+            ("PatchCore anomaly pilot preserves normal-only learning and review-only localization", AnomalyClassificationTests.TestPatchCoreAnomalyPilotContract),
+            ("WPF PatchCore heatmap review opens explicit read-only evidence", ReviewServicesTests.TestWpfPatchCoreHeatmapReviewService),
             ("YOLO annotation service writes image and label files", TestYoloAnnotationFileWrite),
             ("YOLO annotation save preserves source image extension and split ownership", TestYoloAnnotationPreservesSourceImageExtensionAndSplitOwnership),
             ("Template batch auto label saves unlabeled images and skips existing labels", TemplateAutoLabelTests.TestTemplateMatchingBatchAutoLabelSaveAndSkip),
@@ -1585,6 +1609,7 @@ internal static partial class Program
             ("Python model settings validator reports missing weights", TestPythonModelSettingsValidator),
             ("Python model runtime profiles describe selectable engines", TestPythonModelRuntimeProfiles),
             ("Python model runtime self-test reports actionable checks", TestPythonModelRuntimeSelfTest),
+            ("Headless environment self-test returns read-only JSON without opening WPF", RuntimeDiagnosticsContractTests.TestHeadlessEnvironmentSelfTestCli),
             ("Python model runtime connection switches worker paths without replacing data or inspection model", TestPythonModelRuntimeConnection),
             ("Bundled Ultralytics worker exposes the runtime contract", TestPythonUltralyticsBundledWorker),
             ("Python environment result summaries stay operator-readable", TestPythonEnvironmentResultSummaries),
@@ -1993,6 +2018,10 @@ internal static partial class Program
         string datasetPurpose = GetArgumentValue(args, "--dataset-purpose", string.Empty);
         string datasetOutputRoot = GetArgumentValue(args, "--dataset-output-root", string.Empty);
         string datasetClasses = GetArgumentValue(args, "--dataset-classes", string.Empty);
+        string modelEngine = GetArgumentValue(args, "--model-engine", string.Empty);
+        string patchCoreHeatmapPath = GetArgumentValue(args, "--patchcore-heatmap", string.Empty);
+        bool openPatchCoreHeatmap = HasArgument(args, "--open-patchcore-heatmap");
+        bool patchCoreHeatmapCaptured = false;
         bool roiOnly = HasArgument(args, "--roi-only");
         bool savedAnnotationsOnly = HasArgument(args, "--saved-annotations-only");
         bool seedDuplicate = HasArgument(args, "--seed-duplicate");
@@ -2232,6 +2261,13 @@ internal static partial class Program
                 try
                 {
                     window.Show();
+                    if (screenCapture)
+                    {
+                        PlaceExeSmokeWindowOnLeftmostMonitor(
+                            new System.Windows.Interop.WindowInteropHelper(window).Handle,
+                            windowWidth,
+                            windowHeight);
+                    }
                     ApplyVisualSmokeTheme(window, theme);
                     PumpWpfDispatcher(TimeSpan.FromMilliseconds(500));
                     AssertTrue(
@@ -2292,9 +2328,20 @@ internal static partial class Program
                         ApplyVisualSmokeUnetRuntimeReady(window, imagePath);
                     }
 
+                    if (!string.IsNullOrWhiteSpace(modelEngine)
+                        && window.YoloModelSettingsViewModel != null)
+                    {
+                        window.YoloModelSettingsViewModel.SelectedModelEngine =
+                            PythonModelSettings.NormalizeModelEngine(modelEngine);
+                        InvokePrivateResult<object>(window, "RefreshYoloStatus");
+                        InvokePrivateResult<object>(window, "UpdateYoloCommandButtons");
+                    }
+
                     var candidates = roiOnly || savedAnnotationsOnly
                         ? new List<YoloWorkerSmokeCandidate>()
-                        : CreateVisualSmokeCandidates(imageSize, segmentationCandidates);
+                        : string.IsNullOrWhiteSpace(patchCoreHeatmapPath)
+                            ? CreateVisualSmokeCandidates(imageSize, segmentationCandidates)
+                            : CreateVisualSmokePatchCoreCandidate(imageSize, patchCoreHeatmapPath);
                     if (!roiOnly && seedDuplicate)
                     {
                         SeedVisualSmokeDuplicateLabel(window, candidates);
@@ -2311,6 +2358,28 @@ internal static partial class Program
                     if (!roiOnly && !savedAnnotationsOnly && !anomalyReviewOnly)
                     {
                         InvokePrivateResult<object>(window, "ApplyDetectionCandidates", candidates, true);
+                        if (openPatchCoreHeatmap)
+                        {
+                            window.CandidateReviewViewModel.TogglePatchCoreHeatmapCommand.Execute(null);
+                            AssertTrue(
+                                window.CandidateReviewViewModel.IsPatchCoreHeatmapOpen,
+                                "PatchCore heatmap visual fixture did not open the explicit preview");
+                            PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
+                            WpfPatchCoreHeatmapWindow heatmapWindow = System.Windows.Application.Current.Windows
+                                .OfType<WpfPatchCoreHeatmapWindow>()
+                                .FirstOrDefault(candidate => ReferenceEquals(candidate.Owner, window));
+                            AssertTrue(heatmapWindow != null, "PatchCore heatmap visual fixture did not create the owned evidence window");
+                            IntPtr heatmapHandle = new System.Windows.Interop.WindowInteropHelper(heatmapWindow).Handle;
+                            AssertTrue(GetWindowRect(heatmapHandle, out NativeRect heatmapRect), "PatchCore heatmap evidence window bounds were unavailable");
+                            Screen leftmostScreen = Screen.AllScreens.OrderBy(screen => screen.Bounds.Left).First();
+                            var heatmapBounds = Rectangle.FromLTRB(heatmapRect.Left, heatmapRect.Top, heatmapRect.Right, heatmapRect.Bottom);
+                            AssertTrue(leftmostScreen.Bounds.IntersectsWith(heatmapBounds), "PatchCore heatmap evidence window should inherit the leftmost owner monitor");
+                            Console.WriteLine($"EXE_SMOKE_CHILD_WINDOW=PatchCoreHeatmap MONITOR={leftmostScreen.DeviceName} BOUNDS={heatmapBounds.Left},{heatmapBounds.Top},{heatmapBounds.Width},{heatmapBounds.Height}");
+                            heatmapWindow.Activate();
+                            heatmapWindow.UpdateLayout();
+                            CaptureWindow(heatmapWindow, outputPath);
+                            patchCoreHeatmapCaptured = true;
+                        }
                         if (confirmAllCandidates)
                         {
                             InvokePrivate(window, "ExecuteConfirmAllCandidatesCommand");
@@ -3101,7 +3170,11 @@ internal static partial class Program
                         return 0;
                     }
 
-                    if (screenCapture)
+                    if (openPatchCoreHeatmap)
+                    {
+                        AssertTrue(patchCoreHeatmapCaptured, "PatchCore heatmap evidence window was not captured after opening");
+                    }
+                    else if (screenCapture)
                     {
                         CaptureWindowFromScreen(captureTarget, outputPath);
                     }
@@ -14258,6 +14331,33 @@ internal static partial class Program
         };
     }
 
+    private static List<YoloWorkerSmokeCandidate> CreateVisualSmokePatchCoreCandidate(Size imageSize, string heatmapPath)
+    {
+        int width = Math.Max(80, imageSize.Width);
+        int height = Math.Max(80, imageSize.Height);
+        double candidateWidth = Math.Max(28, width * 0.28);
+        double candidateHeight = Math.Max(28, height * 0.24);
+        return new List<YoloWorkerSmokeCandidate>
+        {
+            new YoloWorkerSmokeCandidate
+            {
+                Index = 1,
+                ClassName = "Defect",
+                Confidence = 0.584,
+                X = Math.Max(0, width * 0.50 - candidateWidth / 2),
+                Y = Math.Max(0, height * 0.46 - candidateHeight / 2),
+                Width = candidateWidth,
+                Height = candidateHeight,
+                CandidateType = "anomaly",
+                PredictionType = "patchcore",
+                ImageLevel = true,
+                AnomalyScore = 0.5839282274,
+                AnomalyThreshold = 0.4214764774,
+                HeatmapPath = Path.GetFullPath(heatmapPath)
+            }
+        };
+    }
+
     private static void CloseAuxiliaryVisualSmokeWindows(System.Windows.Window mainWindow)
     {
         IntPtr mainHandle = new System.Windows.Interop.WindowInteropHelper(mainWindow).Handle;
@@ -25374,11 +25474,25 @@ internal static partial class Program
         AssertTrue(testBuildScript.Contains(@"D:\OpenVisionLab-TestData\Labelling_Application\artifacts", StringComparison.Ordinal), "local test builds should verify the canonical D-drive artifact target");
         AssertTrue(testStorageMigrationScript.Contains("Get-FileSha256", StringComparison.Ordinal), "test-storage migration should verify copied file hashes");
         AssertTrue(testStorageMigrationScript.Contains("ItemType Junction", StringComparison.Ordinal), "test-storage migration should preserve logical paths with junctions");
+        AssertTrue(testStorageMigrationScript.Contains("repository-datasets", StringComparison.Ordinal), "test-storage migration should keep the approved repository fixture dataset D-backed");
+        AssertTrue(testStorageMigrationScript.Contains("component-artifacts", StringComparison.Ordinal), "test-storage migration should keep component artifacts D-backed");
+        AssertTrue(testStorageMigrationScript.Contains("foreach ($outputName in @(\"bin\", \"obj\", \"artifacts\"))", StringComparison.Ordinal), "test-storage migration should own every component build-output family");
         AssertTrue(agent.Contains(@"D:\OpenVisionLab-TestData\Labelling_Application", StringComparison.Ordinal), "repository instructions should preserve D-drive local test storage");
         AssertTrue(agent.Contains("PlaceExeSmokeWindowOnLeftmostMonitor", StringComparison.Ordinal), "repository instructions should preserve dynamic leftmost-monitor EXE placement");
         AssertTrue(localTestStorageContract.Contains("Status: Complete", StringComparison.Ordinal), "local test-storage contract should use the durable completion state");
         AssertTrue(localTestStorageContract.Contains("264/264", StringComparison.Ordinal), "local test-storage contract should preserve final regression evidence");
         AssertTrue(ciWorkflow.Contains("--priority-workflow-docs", StringComparison.Ordinal), "CI workflow should run the docs smoke");
+        int completeRegressionStepCount = ciWorkflow
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Split('\n')
+            .Count(line => string.Equals(
+                line.Trim(),
+                "run: dotnet .\\artifacts\\tests\\isolated-out\\LabelingApplication.Tests.dll",
+                StringComparison.Ordinal));
+        AssertTrue(
+            completeRegressionStepCount == 1,
+            "CI workflow should run the complete regression exactly once in one process");
+        AssertTrue(ciWorkflow.Contains("timeout-minutes: 15", StringComparison.Ordinal), "CI complete regression should have a bounded timeout");
         AssertTrue(ciWorkflow.Contains("--release-package-contract", StringComparison.Ordinal), "CI workflow should run the release package contract");
         AssertTrue(ciWorkflow.Contains("actions/upload-artifact@v4", StringComparison.Ordinal), "CI workflow should upload the verified release package");
         AssertTrue(appProject.Contains("dll\\Lib.Common.dll", StringComparison.Ordinal), "app project should reference Lib.Common by checked-in DLL");
@@ -26242,10 +26356,11 @@ internal static partial class Program
         AssertTrue(yoloSettingsViewModel.SettingsSummaryPathText.Contains("Images", StringComparison.Ordinal), "YOLO model settings summary should show the image folder leaf instead of only hidden full paths");
         AssertTrue(yoloSettingsViewModel.SettingsSummaryActionText.Contains("\uBAA8\uB378 \uD504\uB85C\uD544", StringComparison.Ordinal), "model settings action text should explain that the profile and model file are saved together");
         AssertTrue(yoloSettingsViewModel.AdvancedSettingsHeaderText.Contains("\uBAA8\uB378 \uC2E4\uD589 \uD658\uACBD", StringComparison.Ordinal), "advanced model settings header should identify runtime environment details");
-        AssertEqual(5, yoloSettingsViewModel.RuntimeProfileItems.Count);
+        AssertEqual(6, yoloSettingsViewModel.RuntimeProfileItems.Count);
         AssertTrue(yoloSettingsViewModel.RuntimeProfileItems.Any(item => item.Engine == PythonModelSettings.EngineYolo11 && item.RuntimeFamilyText.Contains("Ultralytics", StringComparison.Ordinal)), "YOLO model settings should show YOLO11 as an Ultralytics runtime profile");
         AssertTrue(yoloSettingsViewModel.RuntimeProfileItems.Any(item => item.Engine == PythonModelSettings.EngineYolo11 && item.CapabilityText.Contains("worker", StringComparison.Ordinal)), "YOLO model settings should show runtime profile support scope in the profile list");
         AssertTrue(yoloSettingsViewModel.RuntimeProfileItems.Any(item => item.Engine == PythonModelSettings.EngineUnet && item.RuntimeFamilyText.Contains("U-Net", StringComparison.Ordinal)), "YOLO model settings should show the dedicated U-Net runtime profile");
+        AssertTrue(yoloSettingsViewModel.RuntimeProfileItems.Any(item => item.Engine == PythonModelSettings.EnginePatchCore && item.RuntimeFamilyText.Contains("PatchCore", StringComparison.Ordinal)), "model settings should show the dedicated PatchCore anomaly runtime profile");
         AssertTrue(yoloSettingsViewModel.RuntimeSelfTestTitleText.Contains("\uC810\uAC80", StringComparison.Ordinal), "YOLO model settings should expose a selected-runtime self-test title");
         AssertTrue(yoloSettingsViewModel.RuntimeSelfTestItems.Count >= 5, "YOLO model settings should expose actionable runtime self-test rows");
         AssertTrue(yoloSettingsViewModel.RuntimeExecutionTitleText.Contains("\uC2E4\uD589 \uACBD\uB85C", StringComparison.Ordinal), "YOLO model settings should expose an actual execution route title");

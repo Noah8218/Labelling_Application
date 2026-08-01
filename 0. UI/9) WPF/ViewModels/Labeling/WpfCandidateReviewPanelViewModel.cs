@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using MediaBrush = System.Windows.Media.Brush;
 using MediaBrushes = System.Windows.Media.Brushes;
 
@@ -95,6 +96,16 @@ namespace MvcVisionSystem
         private ICommand rejectModelCandidateCommand = new RelayCommand(NoOpCommand);
         private ICommand candidateSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
         private ICommand candidatePreviewKeyDownCommand = new RelayCommand<KeyInputCommandArgs>(NoOpKeyCommand);
+        private ICommand togglePatchCoreHeatmapCommand = new RelayCommand(NoOpCommand);
+        private Visibility patchCoreHeatmapVisibility = Visibility.Collapsed;
+        private Visibility patchCoreHeatmapPreviewVisibility = Visibility.Collapsed;
+        private ImageSource patchCoreHeatmapSource;
+        private string patchCoreHeatmapStatusText = string.Empty;
+        private string patchCoreHeatmapFileName = string.Empty;
+        private string patchCoreHeatmapToolTip = string.Empty;
+        private string patchCoreHeatmapActionText = "히트맵 보기";
+        private bool isPatchCoreHeatmapActionEnabled;
+        private bool isPatchCoreHeatmapOpen;
 
         public string ViewName => nameof(WpfCandidateReviewPanel);
 
@@ -237,6 +248,66 @@ namespace MvcVisionSystem
         {
             get => candidatePreviewKeyDownCommand;
             private set => SetProperty(ref candidatePreviewKeyDownCommand, value);
+        }
+
+        public ICommand TogglePatchCoreHeatmapCommand
+        {
+            get => togglePatchCoreHeatmapCommand;
+            private set => SetProperty(ref togglePatchCoreHeatmapCommand, value);
+        }
+
+        public Visibility PatchCoreHeatmapVisibility
+        {
+            get => patchCoreHeatmapVisibility;
+            private set => SetProperty(ref patchCoreHeatmapVisibility, value);
+        }
+
+        public Visibility PatchCoreHeatmapPreviewVisibility
+        {
+            get => patchCoreHeatmapPreviewVisibility;
+            private set => SetProperty(ref patchCoreHeatmapPreviewVisibility, value);
+        }
+
+        public ImageSource PatchCoreHeatmapSource
+        {
+            get => patchCoreHeatmapSource;
+            private set => SetProperty(ref patchCoreHeatmapSource, value);
+        }
+
+        public string PatchCoreHeatmapStatusText
+        {
+            get => patchCoreHeatmapStatusText;
+            private set => SetProperty(ref patchCoreHeatmapStatusText, value ?? string.Empty);
+        }
+
+        public string PatchCoreHeatmapFileName
+        {
+            get => patchCoreHeatmapFileName;
+            private set => SetProperty(ref patchCoreHeatmapFileName, value ?? string.Empty);
+        }
+
+        public string PatchCoreHeatmapToolTip
+        {
+            get => patchCoreHeatmapToolTip;
+            private set => SetProperty(ref patchCoreHeatmapToolTip, value ?? string.Empty);
+        }
+
+        public string PatchCoreHeatmapActionText
+        {
+            get => patchCoreHeatmapActionText;
+            private set => SetProperty(ref patchCoreHeatmapActionText, value ?? string.Empty);
+        }
+
+        public bool IsPatchCoreHeatmapActionEnabled
+        {
+            get => isPatchCoreHeatmapActionEnabled;
+            private set => SetProperty(ref isPatchCoreHeatmapActionEnabled, value);
+        }
+
+        public bool IsPatchCoreHeatmapOpen
+        {
+            get => isPatchCoreHeatmapOpen;
+            private set => SetProperty(ref isPatchCoreHeatmapOpen, value);
         }
 
         public string ConfidenceText
@@ -619,7 +690,8 @@ namespace MvcVisionSystem
             Action<WpfModelComparisonReviewExample> openModelComparisonExample = null,
             Action saveModelCandidate = null,
             Action rejectModelCandidate = null,
-            Action<object> modelComparisonHistorySelectionChanged = null)
+            Action<object> modelComparisonHistorySelectionChanged = null,
+            Action togglePatchCoreHeatmap = null)
         {
             // Candidate review stays virtualized; commands keep the view declarative while shell owns workflow state.
             ConfidenceChangedCommand = new RelayCommand<double>(confidenceChanged ?? NoOpValueCommand);
@@ -637,6 +709,7 @@ namespace MvcVisionSystem
             ModelComparisonHistorySelectionChangedCommand = new RelayCommand<object>(modelComparisonHistorySelectionChanged ?? NoOpSelectionCommand);
             SaveModelCandidateCommand = new RelayCommand(saveModelCandidate ?? NoOpCommand);
             RejectModelCandidateCommand = new RelayCommand(rejectModelCandidate ?? NoOpCommand);
+            TogglePatchCoreHeatmapCommand = new RelayCommand(togglePatchCoreHeatmap ?? NoOpCommand);
         }
 
         public void SetCandidates(
@@ -646,6 +719,7 @@ namespace MvcVisionSystem
             int totalCandidateCount = -1)
         {
             SelectedCandidate = null;
+            ClearPatchCoreHeatmapReview();
             List<WpfCandidateReviewListItem> rows = (candidates ?? Array.Empty<WpfCandidateReviewListItem>()).ToList();
             Candidates.ReplaceAll(rows);
 
@@ -754,6 +828,60 @@ namespace MvcVisionSystem
             {
                 ClearComparison();
             }
+        }
+
+        public void SetPatchCoreHeatmapAvailability(WpfPatchCoreHeatmapAvailability availability)
+        {
+            ClosePatchCoreHeatmap();
+            if (availability?.IsPatchCoreCandidate != true)
+            {
+                PatchCoreHeatmapVisibility = Visibility.Collapsed;
+                PatchCoreHeatmapStatusText = string.Empty;
+                PatchCoreHeatmapFileName = string.Empty;
+                PatchCoreHeatmapToolTip = string.Empty;
+                IsPatchCoreHeatmapActionEnabled = false;
+                return;
+            }
+
+            PatchCoreHeatmapVisibility = Visibility.Visible;
+            PatchCoreHeatmapStatusText = availability.StatusText;
+            PatchCoreHeatmapFileName = availability.FileName;
+            PatchCoreHeatmapToolTip = availability.ToolTip;
+            IsPatchCoreHeatmapActionEnabled = availability.CanOpen;
+        }
+
+        public void ShowPatchCoreHeatmap(WpfPatchCoreHeatmapLoadResult result)
+        {
+            if (result?.Succeeded != true || result.ImageSource == null)
+            {
+                ClosePatchCoreHeatmap();
+                PatchCoreHeatmapStatusText = result?.StatusText ?? "히트맵 이미지를 열 수 없습니다.";
+                return;
+            }
+
+            PatchCoreHeatmapSource = result.ImageSource;
+            PatchCoreHeatmapPreviewVisibility = Visibility.Visible;
+            PatchCoreHeatmapStatusText = result.StatusText;
+            PatchCoreHeatmapActionText = "히트맵 닫기";
+            IsPatchCoreHeatmapOpen = true;
+        }
+
+        public void ClosePatchCoreHeatmap()
+        {
+            PatchCoreHeatmapSource = null;
+            PatchCoreHeatmapPreviewVisibility = Visibility.Collapsed;
+            PatchCoreHeatmapActionText = "히트맵 보기";
+            IsPatchCoreHeatmapOpen = false;
+        }
+
+        public void ClearPatchCoreHeatmapReview()
+        {
+            ClosePatchCoreHeatmap();
+            PatchCoreHeatmapVisibility = Visibility.Collapsed;
+            PatchCoreHeatmapStatusText = string.Empty;
+            PatchCoreHeatmapFileName = string.Empty;
+            PatchCoreHeatmapToolTip = string.Empty;
+            IsPatchCoreHeatmapActionEnabled = false;
         }
 
         public void ClearReviewHistory()

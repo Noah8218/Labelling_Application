@@ -12,6 +12,109 @@ namespace LabelingApplication.Tests;
 
 internal static class RuntimeDiagnosticsContractTests
 {
+    internal static void TestHeadlessEnvironmentSelfTestCli()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "OpenVisionLab.LabelingStudio.Tests",
+            "headless-environment-self-test-" + Guid.NewGuid().ToString("N"));
+        string applicationDataRoot = Path.Combine(root, "app-data");
+
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(applicationDataRoot, "Diagnostics"));
+            Directory.CreateDirectory(Path.Combine(applicationDataRoot, "SupportBundles"));
+            string executablePath = Path.Combine(AppContext.BaseDirectory, "OpenVisionLab.LabelingStudio.exe");
+            AssertTrue(File.Exists(executablePath), "headless CLI test requires the built product executable");
+
+            string[] filesBefore = Directory.GetFiles(applicationDataRoot, "*", SearchOption.AllDirectories);
+            (int exitCode, string output, string error) = RunHeadlessCli(
+                executablePath,
+                applicationDataRoot,
+                WpfHeadlessRuntimeCommandService.EnvironmentSelfTestArgument,
+                WpfHeadlessRuntimeCommandService.JsonArgument);
+
+            AssertTrue(
+                exitCode == WpfHeadlessRuntimeCommandService.SuccessExitCode,
+                "successful headless CLI should return exit code 0");
+            AssertTrue(string.IsNullOrEmpty(error), "successful headless CLI should not write stderr");
+            using (JsonDocument document = JsonDocument.Parse(output))
+            {
+                JsonElement result = document.RootElement;
+                AssertTrue(result.GetProperty("schemaVersion").GetInt32() == 1, "headless CLI schema should be version 1");
+                AssertTrue(string.Equals(result.GetProperty("command").GetString(), "environment-self-test", StringComparison.Ordinal), "headless CLI should identify the requested command");
+                AssertTrue(string.Equals(result.GetProperty("mode").GetString(), "read-only", StringComparison.Ordinal), "headless CLI should disclose read-only mode");
+                AssertTrue(!result.GetProperty("durableWrites").GetBoolean(), "headless self-test must declare no durable writes");
+                AssertTrue(result.GetProperty("counts").GetProperty("failed").GetInt32() == 0, "isolated headless CLI should have no failed checks");
+                AssertTrue(
+                    result.GetProperty("checks").EnumerateArray().Any(check =>
+                        string.Equals(
+                            check.GetProperty("name").GetString(),
+                            WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName,
+                            StringComparison.Ordinal)
+                        && string.Equals(check.GetProperty("status").GetString(), "warning", StringComparison.Ordinal)),
+                    "headless self-test should disclose that viewer graphics requires the UI context");
+            }
+
+            string[] filesAfter = Directory.GetFiles(applicationDataRoot, "*", SearchOption.AllDirectories);
+            AssertTrue(filesBefore.Length == filesAfter.Length, "headless self-test must not add files below the application-data root");
+            AssertTrue(
+                !File.Exists(Path.Combine(applicationDataRoot, "Diagnostics", "self-test-latest.json")),
+                "headless read-only self-test must not persist the latest self-test file");
+
+            (int invalidExitCode, string invalidOutput, string invalidError) = RunHeadlessCli(
+                executablePath,
+                applicationDataRoot,
+                WpfHeadlessRuntimeCommandService.EnvironmentSelfTestArgument);
+            AssertTrue(
+                invalidExitCode == WpfHeadlessRuntimeCommandService.InvalidArgumentsExitCode,
+                "invalid headless CLI arguments should return exit code 64");
+            AssertTrue(string.IsNullOrEmpty(invalidError), "headless usage errors should remain machine-readable on stdout");
+            using JsonDocument invalidDocument = JsonDocument.Parse(invalidOutput);
+            AssertTrue(
+                string.Equals(
+                    invalidDocument.RootElement.GetProperty("error").GetProperty("code").GetString(),
+                    "invalid-arguments",
+                    StringComparison.Ordinal),
+                "invalid headless CLI arguments should return a stable machine-readable error code");
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    private static (int ExitCode, string Output, string Error) RunHeadlessCli(
+        string executablePath,
+        string applicationDataRoot,
+        params string[] arguments)
+    {
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = executablePath,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        startInfo.Environment[WpfRuntimeDiagnosticsService.ApplicationDataRootEnvironmentVariable] = applicationDataRoot;
+        foreach (string argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using System.Diagnostics.Process process = System.Diagnostics.Process.Start(startInfo)
+            ?? throw new InvalidOperationException("headless CLI process did not start");
+        string output = process.StandardOutput.ReadToEnd();
+        string error = process.StandardError.ReadToEnd();
+        AssertTrue(process.WaitForExit(15000), "headless CLI did not exit within 15 seconds");
+        AssertTrue(process.MainWindowHandle == IntPtr.Zero, "headless CLI must not open a product window");
+        return (process.ExitCode, output, error);
+    }
+
     internal static void TestRuntimeDiagnosticsAndSupportBundleContract()
     {
         string root = Path.Combine(

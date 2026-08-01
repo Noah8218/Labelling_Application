@@ -84,7 +84,7 @@ navigation source로 사용합니다.
 | `Library` | 레거시/호환 viewer 계층. `CViewer`는 OpenVisionLab ImageCanvas 기반으로 축소 유지됩니다. |
 | `OpenVisionLab/Library` | 내부 복사본 라이브러리. 특히 `OpenVisionLab.ImageCanvas`가 ROI/OpenGL 캔버스 핵심입니다. |
 | `tests/LabelingApplication.Tests` | 단위/통합/smoke 회귀 테스트. UI 없이 검증하는 구조 검사가 많습니다. |
-| `docs` | 개발 방향, WPF 전환, 검증 체크리스트, 아키텍처 문서. |
+| `docs` | `docs/README.md`에서 현재 권위·운영 가이드·기능 계약·검증 증거·역사 기록으로 분류하는 개발·검증 문서. |
 | `scripts` | 빌드/게시/첫 실행/YOLO smoke 자동화 스크립트. |
 | `config` | runtime path 예제 설정. 개인 설정은 local json으로 분리합니다. |
 | `artifacts` | Git에서 제외되는 빌드·테스트·UI·릴리스·검증 산출물. 삭제 전에 `REPOSITORY_ARTIFACT_INVENTORY_AND_RETENTION_POLICY_20260731.md`의 보존 분류와 승인 gate를 따릅니다. |
@@ -95,6 +95,21 @@ navigation source로 사용합니다.
 테스트 최종 빌드 출력은
 `scripts/Build-LabelingApplicationTests.ps1`을 통해
 `artifacts/tests/<목적>` 아래에 생성합니다.
+
+문서 파일은 물리적으로 이동하지 않아도 `docs/README.md`에서 정확히 한 번
+분류되어야 합니다. `scripts/Test-DocumentationInformationArchitecture.ps1`은
+분류 누락·중복과 탐색 허브의 깨진 로컬 링크를 읽기 전용으로 검사합니다.
+
+`scripts/Get-RepositoryCleanupPreview.ps1`은 최신 읽기 전용 인벤토리에서
+`rebuildable-candidate`만 추출하고 논리 경로를 실제 C/D 물리 경로로
+해석합니다. 이 도구는 정리 대상을 삭제하거나 이동하지 않으며, 출력 JSON도
+`deletionPerformed=false`, `operationsAuthorized=false`로 고정합니다.
+
+`scripts/Invoke-ApprovedRepositoryCleanup.ps1`은 별도 사용자 승인을 받은
+C 드라이브 후보만 실행하는 제한된 소유자입니다. 미리보기의 개수와 바이트,
+저장소 내부 실제 경로, 비접합/비재분석 지점, 비중첩, 실행 직전 파일 합계를
+모두 검증하고 각 대상 처리 후 증적을 갱신합니다. D 드라이브와 보호 분류는
+이 실행 경계에 포함되지 않습니다.
 
 ## 의존 방향
 
@@ -145,7 +160,7 @@ flowchart TD
 | `Annotation*` | ROI, polygon, brush/eraser, undo/redo, save. |
 | `AnnotationMask*` | raster mask brush/eraser preview, commit queue, overlay update. |
 | `ObjectReview*` | 현재 수동 ROI/segment/object review. |
-| `CandidateReview*` | AI 후보 목록, 비교, 확정/스킵/navigation. |
+| `CandidateReview*` | AI 후보 목록, 비교, 확정/스킵/navigation, PatchCore 히트맵 검토 창 수명. |
 | `Detection*` | 단일/배치 검출 실행, 결과 적용, smoke 실행. |
 | `Yolo*` | Python worker runtime/status/settings/training command. |
 | `ProjectConfig*` | recipe/config path, persistence, command. |
@@ -178,7 +193,7 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | --- | --- | --- |
 | `Services/Annotation` | `WpfAnnotationProductivityService`, `WpfAnnotationProductivityContracts`, `WpfSmartMaskPromptSessionService`, `WpfFourPointBoxService`, `WpfAnnotationHistoryService`, `WpfMask*`, `WpfPolygonAnnotationService`, `WpfIntelligentScissorsService` | annotation 단축키/반복/안전한 복제 정책, Smart Mask prompt/generation session, four-point extreme-box draft/geometry, mask 편집 상태와 undo/redo, polygon 유효성/정점 변경, bounded image-edge path 계산. |
 | `Services/Anomaly` | `WpfAnomaly*` | anomaly 평가와 dashboard 표시. |
-| `Services/CandidateReview` | `WpfCandidateReview*`, `WpfCandidateConfirmationService` | AI 후보 row/detail, review state, confirm/skip 정책. |
+| `Services/CandidateReview` | `WpfCandidateReview*`, `WpfCandidateConfirmationService`, `WpfPatchCoreHeatmapReviewService` | AI 후보 row/detail, review state, confirm/skip 정책, PatchCore heatmap 경로 검증과 no-lock decode. |
 | `Services/Dataset` | `WpfDataset*`, `WpfRecipeDatasetVersionPresentationService` | dataset setup, 상태, 품질, version 표시. |
 | `Services/Detection` | `WpfDetection*`, `WpfBatchDetectionProgressService`, `WpfInferenceStatusPresentationService` | 검출 target, result card, batch progress, worker wait. |
 | `Services/ImageQueue` | `WpfImageQueue*`, `WpfImageDecode*`, `WpfImageLoad*` | 큐 선택/표시와 이미지 decode/cache/preload. |
@@ -186,7 +201,7 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | `Services/ObjectReview` | `WpfObjectReview*` | object row text, class/delete plan, selection policy. |
 | `Services/Project` | `WpfProjectRecipe*` | recipe path와 session 상태. |
 | `Services/Training` | `WpfTraining*`, `WpfWorkflow*` | training readiness/progress와 workflow command state. |
-| `Services/Runtime` | `WpfYolo*`, `WpfRuntimeDiagnosticsService`, `WpfOpenGlRuntimeCapabilityProbe` | YOLO runtime/settings 상태, current-user 진단 경로, 시작 기록, 보존, 실제 Main Viewer 그래픽 환경 점검, allow-list support export. |
+| `Services/Runtime` | `WpfYolo*`, `WpfRuntimeDiagnosticsService`, `WpfHeadlessRuntimeCommandService`, `WpfOpenGlRuntimeCapabilityProbe` | YOLO runtime/settings 상태, current-user 진단 경로, 읽기 전용 환경 self-test CLI, 시작 기록, 보존, 실제 Main Viewer 그래픽 환경 점검, allow-list support export. |
 | `Services/Infrastructure` | `WpfFileDialogService`, `WpfWorkspaceLayoutSettingsService`, `WpfApplicationClosePolicyService` | WPF 공통 dialog, workspace layout 설정, 안전 종료 상태/결정 정책. |
 
 새 UI 요구사항이 생기면 먼저 Presenter/Selection/State service로 분리할 수 있는지 봅니다. Shell partial에는 “어느 service를 언제 호출할지” 정도만 남기는 것이 목표입니다.
@@ -239,8 +254,10 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 | `AnomalyClassificationDatasetExportService.cs` | 검토 상태를 Ultralytics classification 폴더 dataset으로 export. |
 | `AnomalyClassificationEvaluationContracts.cs` | anomaly held-out sample·threshold options·adoption report 계약. |
 | `AnomalyClassificationEvaluationService.cs` | summary JSON 해석과 fail-closed accuracy/adoption 판정. |
+| `1. Core/Anomaly/PatchCoreAnomalyTrainingReadinessService.cs` | normal-only PatchCore 학습의 Recipe 목적, 검토 상태, train/val split 준비 계약. |
 | `ModelAdapterCatalogContracts.cs` | Model Center adapter task/data/runtime/evidence 항목 계약. |
 | `ModelAdapterCatalogService.cs` | 구현 capability에서 read-only adapter catalog 구성. |
+| `Runtime/Python/openvisionlab_patchcore_worker.py` | PatchCore 특징 추출, bounded coreset, 정상 임계값 보정, TCP 학습/검사, 위치 후보와 heatmap 생성. |
 | `YoloExternalEvaluationDataAuditContracts.cs` | 외부 평가 폴더와 active dataset의 content 중복 audit 결과 계약. |
 | `YoloExternalEvaluationDataAuditService.cs` | 지원 이미지 탐색과 SHA-256 name/content overlap 계산. |
 | `YoloDatasetDiagnosticsService.cs` | operator-facing 문제/경고 report. |
@@ -889,8 +906,13 @@ candidate confirmation, Recipe Apply, training, or inference.
 
 `scripts/Move-LabelingTestStorageToDDrive.ps1` owns the bounded local
 test-output migration, extended-length path handling, copy verification, and
-junction creation for the canonical D-drive root. It does not move source,
-tracked fixtures, user datasets, or `.proofline` state.
+junction creation for the canonical D-drive root. Its current owned mappings
+include repository/test artifacts, root and component `bin`/`obj`, component
+`artifacts`, local `packages`/`.vs`, and the explicitly approved
+repository-tracked test-fixture `datasets` path. The dataset remains logically
+tracked and Git-identical through its junction. The script does not move
+product source, documentation, product dependencies, user datasets, or
+`.proofline` state.
 
 `scripts/Build-LabelingApplicationTests.ps1` owns the central test output path
 and the local D-drive junction preflight. `Program.ConfigureTestStorageEnvironment`

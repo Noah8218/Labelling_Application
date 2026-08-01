@@ -129,7 +129,23 @@ namespace MvcVisionSystem
 
         public WpfRuntimeSelfTestResult RunSelfTest(bool persistResult = true)
         {
-            paths.EnsureDirectories();
+            return RunSelfTestCore(persistResult, probeWritableDirectories: true);
+        }
+
+        public WpfRuntimeSelfTestResult RunReadOnlySelfTest()
+        {
+            return RunSelfTestCore(persistResult: false, probeWritableDirectories: false);
+        }
+
+        private WpfRuntimeSelfTestResult RunSelfTestCore(
+            bool persistResult,
+            bool probeWritableDirectories)
+        {
+            if (probeWritableDirectories)
+            {
+                paths.EnsureDirectories();
+            }
+
             var checks = new List<WpfRuntimeSelfTestCheck>();
             Assembly productAssembly = typeof(WpfRuntimeDiagnosticsService).Assembly;
             string productVersion = GetProductVersion(productAssembly);
@@ -165,8 +181,12 @@ namespace MvcVisionSystem
                     "개발/테스트 실행: release-manifest.json 없음"));
             }
 
-            checks.Add(CheckWritableDirectory("diagnosticsPath", paths.DiagnosticsDirectory));
-            checks.Add(CheckWritableDirectory("supportBundlePath", paths.SupportBundlesDirectory));
+            checks.Add(probeWritableDirectories
+                ? CheckWritableDirectory("diagnosticsPath", paths.DiagnosticsDirectory)
+                : CheckExistingDirectoryReadOnly("diagnosticsPath", paths.DiagnosticsDirectory));
+            checks.Add(probeWritableDirectories
+                ? CheckWritableDirectory("supportBundlePath", paths.SupportBundlesDirectory)
+                : CheckExistingDirectoryReadOnly("supportBundlePath", paths.SupportBundlesDirectory));
 
             bool logOutsideApplication = !IsSameOrChildPath(paths.LogDirectory, paths.ApplicationRoot);
             checks.Add(new WpfRuntimeSelfTestCheck(
@@ -445,6 +465,17 @@ namespace MvcVisionSystem
                 {
                 }
             }
+        }
+
+        private static WpfRuntimeSelfTestCheck CheckExistingDirectoryReadOnly(string name, string directory)
+        {
+            bool exists = Directory.Exists(directory);
+            return new WpfRuntimeSelfTestCheck(
+                name,
+                exists ? "pass" : "warning",
+                exists
+                    ? "경로 존재 확인 · 읽기 전용 CLI에서는 쓰기 프로브 생략"
+                    : "경로 없음 · 읽기 전용 CLI에서는 생성하지 않음");
         }
 
         private void AddSanitizedLogs(

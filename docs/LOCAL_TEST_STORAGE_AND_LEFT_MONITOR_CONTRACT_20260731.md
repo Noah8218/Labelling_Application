@@ -14,15 +14,18 @@ Included:
 - generated test, smoke, release-validation, screenshot, recording, and
   evidence artifacts;
 - legacy test output and test-project `bin`/`obj` directories;
+- repository root and component-project `bin`/`obj`/`artifacts` directories;
+- local `packages` and `.vs` regeneration paths;
+- the explicitly approved repository-tracked test-fixture `datasets` path,
+  while preserving its Git-visible logical path and content;
 - test-process `TEMP` and `TMP`;
 - actual EXE smoke, UI automation, operator-video, and EXE screenshot windows.
 
 Excluded:
 
-- tracked source fixtures and documentation;
+- product source, documentation, and checked-in product dependencies;
 - user datasets;
 - `.proofline` state;
-- product-project build caches that are not owned by the test project;
 - direct in-process WPF view rendering that does not launch a desktop EXE;
 - CI or targets without a `D:` drive, which must record their isolated fallback.
 
@@ -47,11 +50,24 @@ Windows extended-length paths.
 | `tests\LabelingApplication.Tests\bin` | `D:\OpenVisionLab-TestData\Labelling_Application\build-cache\LabelingApplication.Tests-bin` |
 | `tests\LabelingApplication.Tests\obj` | `D:\OpenVisionLab-TestData\Labelling_Application\build-cache\LabelingApplication.Tests-obj` |
 | `tests\artifacts` | `D:\OpenVisionLab-TestData\Labelling_Application\legacy\tests-artifacts` |
+| `datasets` | `D:\OpenVisionLab-TestData\Labelling_Application\fixtures\repository-datasets` |
+| repository `bin` / `obj` / `packages` | `D:\OpenVisionLab-TestData\Labelling_Application\build-cache\repository-*` |
+| repository `.vs` | `D:\OpenVisionLab-TestData\Labelling_Application\ide-state\repository-vs` |
+| `OpenVisionLab\Library\<project>\bin` / `obj` | `D:\OpenVisionLab-TestData\Labelling_Application\build-cache\components\<project>-*` |
+| `OpenVisionLab\Library\<project>\artifacts` | `D:\OpenVisionLab-TestData\Labelling_Application\component-artifacts\<project>` |
 
 The completed migration moved approximately `14.29 GiB`. C-drive free space
 changed from `130.14 GiB` before migration to `144.16 GiB` after migration and
 the subsequent focused build/smoke. The file-level migration record is
 `D:\OpenVisionLab-TestData\Labelling_Application\migration-evidence\test-storage-migration.json`.
+
+The later explicitly approved expansion moved another 20 nonempty paths with
+1,341 files and exactly `604,817,071` bytes (`576.8 MiB`), then established
+52 verified junction mappings in total. It includes all 516 tracked files in
+the repository test-fixture `datasets` path. The dataset still matches the Git
+index exactly. Windows free-space readings changed because of concurrent
+system activity and are not attributed to this migration; the verified file
+byte total is the authoritative reclaimed-content measurement.
 
 Local test runner startup sets:
 
@@ -104,8 +120,12 @@ native-coordinate verification.
 
 ## Acceptance Criteria And Evidence
 
-- all five local test-output directories physically reside on `D:` -> pass;
-- their established C paths are verified directory junctions -> pass;
+- all 52 owned local data/output paths resolve to their canonical D targets ->
+  pass;
+- newly migrated nonempty paths -> 20 paths, 1,341 files, 604,817,071 bytes,
+  with length and SHA-256 verification before C-source removal -> pass;
+- repository test-fixture dataset -> 516 tracked files and no Git content
+  difference -> pass;
 - local test `TEMP` and `TMP` resolve under the D test root -> pass;
 - central test build produces the logical and physical DLL with identical
   SHA-256 -> pass;
@@ -113,6 +133,11 @@ native-coordinate verification.
   and records the actual rectangle -> pass;
 - focused build -> pass, zero warnings and zero errors;
 - `--priority-workflow-docs` -> pass;
+- post-expansion build -> pass, zero warnings and zero errors;
+- post-expansion default regression -> pass, `264/264`, exit code `0`, `254`
+  seconds;
+- post-expansion artifact inventory -> 45 rebuildable candidates on D, zero
+  rebuildable candidates physically on C;
 - default regression -> pass, `264/264`, exit code `0`, `272.4` seconds;
 - final `git diff --check` -> pass.
 
@@ -125,10 +150,14 @@ Evidence:
 - `artifacts/repository-structure-monitor-20260731/after-left-monitor-desktop.png`;
 - `artifacts/repository-structure-monitor-20260731/after-canonical-class-index.png`;
 - `artifacts/tests/storage-monitor-20260731/LabelingApplication.Tests.dll`.
+- `artifacts/repository-cleanup-preview-20260731/inventory-post-expanded-d-migration.json`;
+- `artifacts/repository-cleanup-preview-20260731/cleanup-preview-post-expanded-d-migration.json`.
 
 Boundary / next dependency:
 
 - this proves local storage routing and current multi-monitor EXE placement;
 - it does not prove the separate P0-C GPU-capable clean-target labeling gate;
-- do not move user datasets or `.proofline`, and do not hard-code the current
-  `DISPLAY2` name if the monitor topology changes.
+- the repository fixture dataset is physically D-backed only on this approved
+  workstation and remains logically tracked; do not extend that rule to user
+  datasets, source, docs, product dependencies, or `.proofline`;
+- do not hard-code the current `DISPLAY2` name if the monitor topology changes.

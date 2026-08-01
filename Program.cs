@@ -12,6 +12,12 @@ namespace MvcVisionSystem
         [STAThread]
         static void Main(string[] args)
         {
+            if (WpfHeadlessRuntimeCommandService.TryExecute(args, Console.Out, out int headlessExitCode))
+            {
+                Environment.ExitCode = headlessExitCode;
+                return;
+            }
+
             WpfRuntimeDiagnosticsService.ConfigureApplicationStartup();
             using (Mutex mutex = new Mutex(true, "MvcVisionSystem", out bool bNew))
             {

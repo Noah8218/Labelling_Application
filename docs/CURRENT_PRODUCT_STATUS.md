@@ -1,6 +1,6 @@
 # Current Product Status
 
-Last updated: 2026-07-31 KST
+Last updated: 2026-08-01 KST
 
 This document is the single current source of truth for product identity,
 verified maturity, the active development priority, and the boundary between
@@ -49,8 +49,12 @@ product direction changes explicitly.
   `3.4/5`.
 - Baseline Git commit for the current operational worktree:
   `ed682b2 fix: verify clean-machine support bundles`.
-- Current protected regression evidence: the clean solo default internal suite
-  passed `264/264` after the P1-B bounded crash-recovery slice.
+- Current protected regression evidence: the solo default internal suite
+  passed `267/267` after the read-only headless environment self-test CLI.
+  The earlier
+  `266/266` PatchCore heatmap/CI-gate, `265/265` bounded PatchCore pilot, and
+  `264/264` P1-B results remain
+  historical evidence.
 
 These are scoped planning estimates. They do not claim production model
 accuracy, commercial-platform parity, installation readiness, or clean-machine
@@ -74,7 +78,10 @@ operability.
 | Installer, upgrade/uninstall, code signing, clean-machine evidence | Partial | Windows Sandbox package-safe checks passed; a clean Windows 11 full Hyper-V VM reproduced the SharpGL framebuffer failure, while installer/signing decisions remain open |
 | Portable project archive | Complete for P1-A | Saved Recipe plus complete dataset root round trip, SHA-256 validation, path rebasing, non-overwrite import, and explicit Apply are covered |
 | Crash recovery journal | Complete for P1-B | One current-image dirty draft, explicit restore/discard, bounded retention/integrity/context validation, and no candidate confirmation or label save |
-| Headless CLI and complete CI release gates | Missing or partial | Scope after release-baseline findings |
+| PatchCore normal-only anomaly pilot and heatmap review | Complete for the bounded local workflow | Normal-only learning, image decision, raw score/threshold, review-only localization, heatmap file/path, and an explicit read-only review window are implemented; a canvas/viewer layer, field quality, and YOLO comparison require later evidence/work |
+| Workstation theme policy | Complete | The theme selector is hidden and legacy/internal light-theme requests resolve to the supported dark palette; do not reopen multi-theme work without an explicit product-direction change |
+| Headless product CLI | Complete for the first read-only environment command | `--environment-self-test --json` emits structured status and bounded exit codes without WPF or durable writes; batch inference/training/archive/label operations are not CLI contracts |
+| CI build/docs/full-regression/release-artifact gates | Complete for the repository workflow contract | The complete suite runs once with a 15-minute timeout; hosted GitHub success requires a pushed run |
 | Independent production accuracy, long-run stability, and takt time | Blocked by external evidence | Requires approved, provenance-confirmed field data and intended hardware/runtime |
 
 ## 5. Protected Completed Areas
@@ -95,6 +102,14 @@ regression:
   guidance;
 - the existing viewer zoom/pan/drag, ROI, brush/eraser, history, layer, and
   annotation persistence contracts.
+- explicit PatchCore heatmap review without automatic open, save, confirm,
+  candidate hide, active-layer change, or model adoption.
+- hidden theme selection and dark-only shell rendering, including legacy light
+  requests resolving safely to dark.
+- one bounded no-argument complete regression invocation in CI before release
+  publishing.
+- read-only `--environment-self-test --json` dispatch before startup logging,
+  mutex acquisition, or WPF creation, with no durable product-data writes.
 
 The detailed completion records remain in `docs/STABLE_VERIFIED_AREAS.md` and
 the linked dated documents.
@@ -287,6 +302,83 @@ Completion evidence:
 `docs/BOUNDED_CRASH_RECOVERY_P1B_20260730.md`
 
 The final clean solo default regression passed `264/264`.
+
+### P1-C. PatchCore Normal-Only Anomaly Pilot
+
+Status: `Complete` for the bounded local implementation.
+
+PatchCore is now a selectable anomaly model profile beside YOLOv8/YOLO11
+supervised classification. It uses reviewed normal train images only, uses
+normal validation images for threshold calibration when available, and
+returns an image decision, raw score, learned threshold, review-only location
+candidates, and a heatmap evidence file/path. A real GTX 1060 smoke trained on three synthetic
+normal images, calibrated on one independent normal image, correctly held a
+normal test image and flagged the synthetic defect image with a location
+candidate.
+
+This is not a field-quality or automatic-adoption claim. The next model gate
+requires approved held-out production images and acceptance thresholds for a
+same-split comparison against the current YOLO classifiers.
+
+Completion evidence:
+
+`docs/PATCHCORE_ANOMALY_PILOT_20260731.md`
+
+Recommended model: `gpt-5.6-terra`
+Reasoning effort: `high`
+
+### P1-D. PatchCore Heatmap Review View
+
+Status: `Complete`.
+
+PatchCore candidates now expose an explicit `히트맵 보기` action in AI
+Candidate Review. Selection performs only path inspection; the image is
+decoded after the action into an owned, themed review window. Missing, moved,
+unsupported, corrupt, and unreadable files fail closed with guidance. Closing
+the window or changing candidate releases the preview. No label, candidate,
+active layer, viewer state, or model selection changes automatically.
+
+Completion evidence:
+
+`docs/PATCHCORE_HEATMAP_REVIEW_VIEW_20260801.md`
+
+Recommended model: `gpt-5.6-terra`
+Reasoning effort: `medium`
+
+### P1-E. CI Complete Regression Gate
+
+Status: `Complete` for the repository workflow contract.
+
+The Windows CI job now runs the complete no-argument regression suite exactly
+once in one process with a 15-minute timeout after build/documentation checks
+and before release publishing. The same command passed `266/266` locally with
+exit code 0, zero failures, and empty stderr. A hosted GitHub Actions success
+claim still requires commit/push and inspection of that run.
+
+Completion evidence:
+
+`docs/CI_COMPLETE_REGRESSION_GATE_20260801.md`
+
+Recommended model: `gpt-5.6-terra`
+Reasoning effort: `medium`
+
+### P1-F. Headless Environment Self-Test CLI
+
+Status: `Complete` for the current-source read-only command.
+
+`OpenVisionLab.LabelingStudio.exe --environment-self-test --json` dispatches
+before startup diagnostics, mutex acquisition, and WPF creation. It emits one
+JSON document, returns exit code 0/2/64/70, does not persist self-test output or
+probe/create directories, and reports the unavailable UI-context graphics
+probe as a warning. The actual product EXE and the full `267/267` regression
+passed; packaged clean-machine behavior remains a separate gate.
+
+Completion evidence:
+
+`docs/HEADLESS_ENVIRONMENT_CHECK_CLI_20260801.md`
+
+Recommended model: `gpt-5.6-terra`
+Reasoning effort: `high`
 
 ### P2. Independent Production Validation
 

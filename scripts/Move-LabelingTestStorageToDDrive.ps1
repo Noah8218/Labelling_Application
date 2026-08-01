@@ -52,8 +52,64 @@ $mappings = @(
         Name = "legacy-tests-artifacts"
         LogicalPath = Join-Path $repoRoot "tests\artifacts"
         PhysicalPath = Join-Path $storageRoot "legacy\tests-artifacts"
+    },
+    [pscustomobject]@{
+        Name = "repository-datasets"
+        LogicalPath = Join-Path $repoRoot "datasets"
+        PhysicalPath = Join-Path $storageRoot "fixtures\repository-datasets"
+    },
+    [pscustomobject]@{
+        Name = "repository-bin"
+        LogicalPath = Join-Path $repoRoot "bin"
+        PhysicalPath = Join-Path $storageRoot "build-cache\repository-bin"
+    },
+    [pscustomobject]@{
+        Name = "repository-obj"
+        LogicalPath = Join-Path $repoRoot "obj"
+        PhysicalPath = Join-Path $storageRoot "build-cache\repository-obj"
+    },
+    [pscustomobject]@{
+        Name = "repository-packages"
+        LogicalPath = Join-Path $repoRoot "packages"
+        PhysicalPath = Join-Path $storageRoot "build-cache\repository-packages"
+    },
+    [pscustomobject]@{
+        Name = "visual-studio-state"
+        LogicalPath = Join-Path $repoRoot ".vs"
+        PhysicalPath = Join-Path $storageRoot "ide-state\repository-vs"
     }
 )
+
+$componentProjectRoot = Join-Path $repoRoot "OpenVisionLab\Library"
+$componentProjects = @(
+    Get-ChildItem -LiteralPath $componentProjectRoot -Filter "*.csproj" -File -Recurse |
+    Sort-Object FullName
+)
+foreach ($componentProject in $componentProjects) {
+    $projectDirectory = Split-Path -Parent $componentProject.FullName
+    $projectName = [System.IO.Path]::GetFileNameWithoutExtension(
+        $componentProject.Name)
+    foreach ($outputName in @("bin", "obj", "artifacts")) {
+        $physicalCategory = if ($outputName -eq "artifacts") {
+            "component-artifacts"
+        }
+        else {
+            "build-cache\components"
+        }
+        $physicalLeaf = if ($outputName -eq "artifacts") {
+            $projectName
+        }
+        else {
+            "$projectName-$outputName"
+        }
+        $mappings += [pscustomobject]@{
+            Name = "component-$projectName-$outputName"
+            LogicalPath = Join-Path $projectDirectory $outputName
+            PhysicalPath = Join-Path (
+                Join-Path $storageRoot $physicalCategory) $physicalLeaf
+        }
+    }
+}
 
 function Get-DirectoryBytes {
     param([Parameter(Mandatory)][string]$Path)
@@ -168,6 +224,8 @@ $freeBytes = [long](Get-PSDrive -Name D).Free
 if ($requiredCopyBytes -gt $freeBytes) {
     throw "D drive does not have enough free space for the planned move."
 }
+$cFreeBytesBefore = [long]([System.IO.DriveInfo]::new("C:")).AvailableFreeSpace
+$dFreeBytesBefore = [long]([System.IO.DriveInfo]::new("D:")).AvailableFreeSpace
 
 foreach ($mapping in $mappings) {
     $logicalPath = [System.IO.Path]::GetFullPath($mapping.LogicalPath).TrimEnd("\")
@@ -203,6 +261,7 @@ foreach ($mapping in $mappings) {
             LogicalPath = $logicalPath
             PhysicalPath = $physicalPath
             Bytes = $bytes
+            Verification = "existing-junction-target"
         })
         continue
     }
@@ -223,6 +282,7 @@ foreach ($mapping in $mappings) {
             LogicalPath = $logicalPath
             PhysicalPath = $physicalPath
             Bytes = [long]0
+            Verification = if ($Apply) { "empty-target-and-junction" } else { "not-run" }
         })
         continue
     }
@@ -251,6 +311,12 @@ foreach ($mapping in $mappings) {
         LogicalPath = $logicalPath
         PhysicalPath = $physicalPath
         Bytes = $bytes
+        Verification = if ($Apply) {
+            if ($null -ne $logicalItem) { "length-and-sha256-pass" } else { "existing-target-and-junction" }
+        }
+        else {
+            "not-run"
+        }
     })
 }
 
@@ -267,11 +333,22 @@ if ($Apply) {
     $evidenceDirectory = Join-Path $storageRoot "migration-evidence"
     New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
     $evidencePath = Join-Path $evidenceDirectory "test-storage-migration.json"
+    $cDriveAfter = [System.IO.DriveInfo]::new("C:")
+    $dDriveAfter = [System.IO.DriveInfo]::new("D:")
     [pscustomobject]@{
-        SchemaVersion = 1
+        SchemaVersion = 2
         CreatedAt = [DateTimeOffset]::Now.ToString("o")
         RepositoryRoot = $repoRoot
         StorageRoot = $storageRoot
+        CopyVerification = "Every newly migrated source file passed length and SHA-256 comparison before source removal."
+        Storage = [pscustomobject]@{
+            CFreeBytesBefore = $cFreeBytesBefore
+            CFreeBytesAfter = [long]$cDriveAfter.AvailableFreeSpace
+            CFreeBytesDelta = [long]$cDriveAfter.AvailableFreeSpace - $cFreeBytesBefore
+            DFreeBytesBefore = $dFreeBytesBefore
+            DFreeBytesAfter = [long]$dDriveAfter.AvailableFreeSpace
+            DFreeBytesDelta = [long]$dDriveAfter.AvailableFreeSpace - $dFreeBytesBefore
+        }
         Results = $results
     } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $evidencePath -Encoding utf8
     Write-Output "MIGRATION_EVIDENCE=$evidencePath"

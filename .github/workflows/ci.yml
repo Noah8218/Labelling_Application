@@ -50,9 +50,18 @@ jobs:
         shell: pwsh
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Build-LabelingApplicationTests.ps1 -OutputName isolated-out
 
+      - name: Verify documentation information architecture
+        shell: pwsh
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Test-DocumentationInformationArchitecture.ps1
+
       - name: Smoke docs
         shell: pwsh
         run: dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs
+
+      - name: Run complete regression once
+        shell: pwsh
+        timeout-minutes: 15
+        run: dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll
 
       - name: Publish versioned self-contained release
         shell: pwsh

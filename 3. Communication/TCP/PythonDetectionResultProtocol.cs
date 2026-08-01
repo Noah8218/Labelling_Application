@@ -33,6 +33,15 @@ namespace MvcVisionSystem._3._Communication.TCP
         [JsonProperty("imageLevel")]
         public bool ImageLevel { get; set; }
 
+        [JsonProperty("anomalyScore")]
+        public double? AnomalyScore { get; set; }
+
+        [JsonProperty("anomalyThreshold")]
+        public double? AnomalyThreshold { get; set; }
+
+        [JsonProperty("heatmapPath")]
+        public string HeatmapPath { get; set; } = "";
+
         [JsonProperty("segmentationType")]
         public string SegmentationType { get; set; } = "";
 

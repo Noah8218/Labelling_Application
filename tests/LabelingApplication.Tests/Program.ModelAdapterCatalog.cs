@@ -16,9 +16,9 @@ internal static class ModelAdapterCatalogTests
     {
         var catalog = ModelAdapterCatalogService.BuildCatalog();
 
-        AssertEqual(6, catalog.Count);
+        AssertEqual(7, catalog.Count);
         AssertEqual(
-            "recipe-interchange,yolov5-detect,yolov8-local,unet-segmentation,onnx-inference,yolo11-local",
+            "recipe-interchange,yolov5-detect,yolov8-local,unet-segmentation,patchcore-anomaly,onnx-inference,yolo11-local",
             string.Join(",", catalog.Select(item => item.AdapterKey)));
         AssertTrue(
             catalog.All(item => !string.IsNullOrWhiteSpace(item.DisplayName)
@@ -51,6 +51,11 @@ internal static class ModelAdapterCatalogTests
         AssertTrue(unet.EvidenceContractText.Contains("Dice/IoU", StringComparison.Ordinal), "U-Net comparison should declare its common mask metric");
         AssertTrue(unet.EvidenceContractText.Contains("자동 채택하지 않습니다", StringComparison.Ordinal), "U-Net comparison must not imply automatic adoption");
 
+        ModelAdapterCatalogItem patchCore = catalog.Single(item => item.AdapterKey == "patchcore-anomaly");
+        AssertTrue(patchCore.TaskContractText.Contains("정상 이미지만", StringComparison.Ordinal), "PatchCore contract should declare normal-only learning");
+        AssertTrue(patchCore.DataContractText.Contains("NG 이미지는 학습 특징에 포함하지 않습니다", StringComparison.Ordinal), "PatchCore contract should exclude abnormal review evidence from the memory bank");
+        AssertTrue(patchCore.EvidenceContractText.Contains("자동 라벨 저장", StringComparison.Ordinal), "PatchCore localization should remain review-only evidence");
+
         ModelAdapterCatalogItem onnx = catalog.Single(item => item.AdapterKey == "onnx-inference");
         AssertTrue(onnx.AvailabilityText.Contains("Inference-only", StringComparison.OrdinalIgnoreCase), "ONNX contract should not imply application-owned training");
         AssertTrue(onnx.NextActionText.Contains("보지 마세요", StringComparison.Ordinal), "ONNX contract should prevent conversion from being mistaken for training evidence");
@@ -78,6 +83,9 @@ internal static class ModelAdapterCatalogTests
         AssertTrue(
             viewModel.ModelAdapterCatalogItems.Any(item => item.AdapterKey == "unet-segmentation"),
             "model settings panel should expose the verified U-Net segmentation adapter");
+        AssertTrue(
+            viewModel.ModelAdapterCatalogItems.Any(item => item.AdapterKey == "patchcore-anomaly"),
+            "model settings panel should expose the bounded PatchCore anomaly adapter");
 
         string xamlPath = Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfYoloModelSettingsPanel.xaml");
         XDocument xaml = XDocument.Load(xamlPath);

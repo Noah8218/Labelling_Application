@@ -174,6 +174,7 @@ namespace MvcVisionSystem
                     _ => "YOLO11 Detect"
                 },
                 PythonModelSettings.EngineUnet => "U-Net Segmentation",
+                PythonModelSettings.EnginePatchCore => "PatchCore Anomaly",
                 PythonModelSettings.EngineOnnx => "ONNX (\uCD94\uB860 \uC804\uC6A9)",
                 _ => string.IsNullOrWhiteSpace(Cfg) ? "-" : Cfg
             };
@@ -194,6 +195,7 @@ namespace MvcVisionSystem
                     _ => "yolo11n.pt"
                 },
                 PythonModelSettings.EngineUnet => "\ub79c\ub364 \ucd08\uae30\ud654 (\uc0c8 \ud559\uc2b5)",
+                PythonModelSettings.EnginePatchCore => "ImageNet WideResNet50-2 특징 추출기",
                 PythonModelSettings.EngineOnnx => "\uD559\uC2B5 \uAC00\uC911\uCE58 \uC5C6\uC74C",
                 _ => string.IsNullOrWhiteSpace(Weight) ? "-" : Weight
             };

@@ -118,6 +118,11 @@ namespace MvcVisionSystem
 
             if (IsImageLevel(candidate))
             {
+                if (IsPatchCore(candidate) && !bounds.IsEmpty)
+                {
+                    return $"{GetClassName(candidate)}  {FormatConfidence(candidate, "P1")}  위치 후보 {FormatBoundsCompact(bounds)}";
+                }
+
                 return $"{GetClassName(candidate)}  {FormatConfidence(candidate, "P1")}  이미지 전체 판정";
             }
 
@@ -141,6 +146,15 @@ namespace MvcVisionSystem
             string threshold = minimumConfidence.ToString("P0", CultureInfo.CurrentCulture);
             if (IsImageLevel(candidate))
             {
+                if (IsPatchCore(candidate))
+                {
+                    string score = candidate.AnomalyScore?.ToString("0.####", CultureInfo.CurrentCulture) ?? "-";
+                    string anomalyThreshold = candidate.AnomalyThreshold?.ToString("0.####", CultureInfo.CurrentCulture) ?? "-";
+                    string location = bounds.IsEmpty ? "정상 판정 / 위치 후보 없음" : FormatBoundsCompact(bounds);
+                    string heatmap = string.IsNullOrWhiteSpace(candidate.HeatmapPath) ? "없음" : candidate.HeatmapPath;
+                    return $"{GetClassName(candidate)} / 판정 신뢰도 {confidence}\nPatchCore 점수 {score} / 임계값 {anomalyThreshold}\n위치 후보: {location}\nHeatmap: {heatmap}\n상태: 미확정 검토 결과";
+                }
+
                 return $"{GetClassName(candidate)} / 신뢰도 {confidence} / 기준 {threshold}\n범위: 이미지 전체 판정\n상태: OK/NG 판정 확인\n위치·겹침: 해당 없음";
             }
 
@@ -272,6 +286,11 @@ namespace MvcVisionSystem
 
             if (IsImageLevel(candidate))
             {
+                if (IsPatchCore(candidate) && !bounds.IsEmpty)
+                {
+                    return $"PatchCore 위치 후보 / {FormatBoundsCompact(bounds)}";
+                }
+
                 return "이미지 전체 판정 / OK/NG 확인";
             }
 
@@ -420,6 +439,9 @@ namespace MvcVisionSystem
 
         private static bool IsImageLevel(YoloWorkerSmokeCandidate candidate)
             => candidate?.ImageLevel == true;
+
+        private static bool IsPatchCore(YoloWorkerSmokeCandidate candidate)
+            => string.Equals(candidate?.PredictionType, "patchcore", StringComparison.OrdinalIgnoreCase);
 
         public static string FormatBoundsCompact(Rectangle bounds)
             => bounds.IsEmpty ? "-" : $"\uD06C\uAE30 {bounds.Width}x{bounds.Height} / \uC704\uCE58 x={bounds.X}, y={bounds.Y}";

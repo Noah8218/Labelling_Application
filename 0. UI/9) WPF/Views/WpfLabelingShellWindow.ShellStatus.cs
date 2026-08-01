@@ -134,93 +134,55 @@ namespace MvcVisionSystem
 
         private void ExecuteToggleThemeCommand()
         {
-            ApplyTheme(currentTheme == ShellTheme.Dark ? ShellTheme.Light : ShellTheme.Dark);
-            AppendLog(currentTheme == ShellTheme.Dark ? "테마 변경: 다크" : "테마 변경: 라이트");
+            ApplyTheme(ShellTheme.Dark);
+            AppendLog("테마 고정: 다크");
         }
 
         private void ApplyTheme(ShellTheme theme)
         {
+            // Theme selection is intentionally hidden for the focused workstation product.
+            // Keep legacy callers safe by treating every request as the supported dark theme.
+            theme = ShellTheme.Dark;
             currentTheme = theme;
-            WpfUiApplicationThemeManager.Apply(ToWpfUiTheme(theme), WpfUiWindowBackdropType.None, updateAccent: true);
+            WpfUiApplicationThemeManager.Apply(WpfUiApplicationTheme.Dark, WpfUiWindowBackdropType.None, updateAccent: true);
             WpfUiApplicationThemeManager.Apply(this);
 
             // Theme resources stay centralized so split view partials do not introduce conflicting palette keys.
-            if (theme == ShellTheme.Light)
-            {
-                SetThemeBrush("AppBackgroundBrush", "#F4F6F8");
-                SetThemeBrush("FrameBrush", "#FFFFFF");
-                SetThemeBrush("PanelBrush", "#FFFFFF");
-                SetThemeBrush("PanelHeaderBrush", "#F1F3F6");
-                SetThemeBrush("CanvasBrush", "#EDF2F8");
-                SetThemeBrush("StatusBarBrush", "#FFFFFF");
-                SetThemeBrush("BorderBrushDark", "#D8DEE8");
-                SetThemeBrush("PrimaryTextBrush", "#151922");
-                SetThemeBrush("SecondaryTextBrush", "#566170");
-                SetThemeBrush("AccentBrush", "#2563EB");
-                SetThemeBrush("InfoBrush", "#2563EB");
-                SetThemeBrush("SuccessBrush", "#16A34A");
-                SetThemeBrush("WarningBrush", "#D97706");
-                SetThemeBrush("ErrorBrush", "#DC2626");
-                SetThemeBrush("ToolbarButtonBrush", "#F7F9FC");
-                SetThemeBrush("ToolbarButtonBorderBrush", "#CBD3DF");
-                SetThemeBrush("ToolbarButtonHoverBrush", "#E8EEF7");
-                SetThemeBrush("ToolbarButtonPressedBrush", "#DCE5F0");
-                SetThemeBrush("ToolbarButtonDisabledBrush", "#EBEFF4");
-                SetThemeBrush("ToolbarButtonDisabledBorderBrush", "#D5DDE8");
-                SetThemeBrush("DisabledTextBrush", "#97A0AE");
-                SetThemeBrush("InputBrush", "#FFFFFF");
-                SetThemeBrush("InputBorderBrush", "#CAD2DD");
-                SetThemeBrush("GridLineBrush", "#D6DEE8");
-                SetThemeBrush("GridHeaderBrush", "#F1F3F6");
-                SetThemeBrush("RowHoverBrush", "#E8EEF7");
-                SetThemeBrush("SelectedRowBrush", "#DCEBFF");
-                SetThemeBrush("SelectedRowTextBrush", "#101820");
-                SetThemeBrush("DetectionOverlayBackgroundBrush", "#EAF7EF");
-                SetThemeBrush("DetectionOverlayBorderBrush", "#3C22A65A");
-                SetThemeBrush("DetectionOverlayTitleTextBrush", "#12351F");
-                SetThemeBrush("DetectionOverlaySummaryTextBrush", "#157F3A");
-                SetThemeBrush("DetectionOverlaySelectedBackgroundBrush", "#D9F4E2");
-                SetThemeBrush("DetectionOverlaySelectedTextBrush", "#0E3B20");
-                SetThemeBrush("DetectionOverlayDetailTextBrush", "#2E5A3D");
-            }
-            else
-            {
-                SetThemeBrush("AppBackgroundBrush", "#0C0D0F");
-                SetThemeBrush("FrameBrush", "#0A0B0D");
-                SetThemeBrush("PanelBrush", "#171717");
-                SetThemeBrush("PanelHeaderBrush", "#1F1F1F");
-                SetThemeBrush("CanvasBrush", "#101820");
-                SetThemeBrush("StatusBarBrush", "#0F1115");
-                SetThemeBrush("BorderBrushDark", "#303030");
-                SetThemeBrush("PrimaryTextBrush", "#F7F7F7");
-                SetThemeBrush("SecondaryTextBrush", "#B7B7B7");
-                SetThemeBrush("AccentBrush", "#3B82F6");
-                SetThemeBrush("InfoBrush", "#3B82F6");
-                SetThemeBrush("SuccessBrush", "#22C55E");
-                SetThemeBrush("WarningBrush", "#F59E0B");
-                SetThemeBrush("ErrorBrush", "#EF4444");
-                SetThemeBrush("ToolbarButtonBrush", "#252525");
-                SetThemeBrush("ToolbarButtonBorderBrush", "#3A3A3A");
-                SetThemeBrush("ToolbarButtonHoverBrush", "#333333");
-                SetThemeBrush("ToolbarButtonPressedBrush", "#1D1D1D");
-                SetThemeBrush("ToolbarButtonDisabledBrush", "#20242A");
-                SetThemeBrush("ToolbarButtonDisabledBorderBrush", "#2B3038");
-                SetThemeBrush("DisabledTextBrush", "#69707A");
-                SetThemeBrush("InputBrush", "#242424");
-                SetThemeBrush("InputBorderBrush", "#3A3A3A");
-                SetThemeBrush("GridLineBrush", "#2A2A2A");
-                SetThemeBrush("GridHeaderBrush", "#202020");
-                SetThemeBrush("RowHoverBrush", "#222A33");
-                SetThemeBrush("SelectedRowBrush", "#26384F");
-                SetThemeBrush("SelectedRowTextBrush", "#FFFFFF");
-                SetThemeBrush("DetectionOverlayBackgroundBrush", "#F00B1320");
-                SetThemeBrush("DetectionOverlayBorderBrush", "#5524D366");
-                SetThemeBrush("DetectionOverlayTitleTextBrush", "#FFFFFF");
-                SetThemeBrush("DetectionOverlaySummaryTextBrush", "#BEEBD0");
-                SetThemeBrush("DetectionOverlaySelectedBackgroundBrush", "#1F24D366");
-                SetThemeBrush("DetectionOverlaySelectedTextBrush", "#FFFFFF");
-                SetThemeBrush("DetectionOverlayDetailTextBrush", "#C9D4E2");
-            }
+            SetThemeBrush("AppBackgroundBrush", "#0C0D0F");
+            SetThemeBrush("FrameBrush", "#0A0B0D");
+            SetThemeBrush("PanelBrush", "#171717");
+            SetThemeBrush("PanelHeaderBrush", "#1F1F1F");
+            SetThemeBrush("CanvasBrush", "#101820");
+            SetThemeBrush("StatusBarBrush", "#0F1115");
+            SetThemeBrush("BorderBrushDark", "#303030");
+            SetThemeBrush("PrimaryTextBrush", "#F7F7F7");
+            SetThemeBrush("SecondaryTextBrush", "#B7B7B7");
+            SetThemeBrush("AccentBrush", "#3B82F6");
+            SetThemeBrush("InfoBrush", "#3B82F6");
+            SetThemeBrush("SuccessBrush", "#22C55E");
+            SetThemeBrush("WarningBrush", "#F59E0B");
+            SetThemeBrush("ErrorBrush", "#EF4444");
+            SetThemeBrush("ToolbarButtonBrush", "#252525");
+            SetThemeBrush("ToolbarButtonBorderBrush", "#3A3A3A");
+            SetThemeBrush("ToolbarButtonHoverBrush", "#333333");
+            SetThemeBrush("ToolbarButtonPressedBrush", "#1D1D1D");
+            SetThemeBrush("ToolbarButtonDisabledBrush", "#20242A");
+            SetThemeBrush("ToolbarButtonDisabledBorderBrush", "#2B3038");
+            SetThemeBrush("DisabledTextBrush", "#69707A");
+            SetThemeBrush("InputBrush", "#242424");
+            SetThemeBrush("InputBorderBrush", "#3A3A3A");
+            SetThemeBrush("GridLineBrush", "#2A2A2A");
+            SetThemeBrush("GridHeaderBrush", "#202020");
+            SetThemeBrush("RowHoverBrush", "#222A33");
+            SetThemeBrush("SelectedRowBrush", "#26384F");
+            SetThemeBrush("SelectedRowTextBrush", "#FFFFFF");
+            SetThemeBrush("DetectionOverlayBackgroundBrush", "#F00B1320");
+            SetThemeBrush("DetectionOverlayBorderBrush", "#5524D366");
+            SetThemeBrush("DetectionOverlayTitleTextBrush", "#FFFFFF");
+            SetThemeBrush("DetectionOverlaySummaryTextBrush", "#BEEBD0");
+            SetThemeBrush("DetectionOverlaySelectedBackgroundBrush", "#1F24D366");
+            SetThemeBrush("DetectionOverlaySelectedTextBrush", "#FFFFFF");
+            SetThemeBrush("DetectionOverlayDetailTextBrush", "#C9D4E2");
 
             ThemeToggleText.Text = theme == ShellTheme.Dark ? "테마: 다크" : "테마: 라이트";
             if (FindResource("AppBackgroundBrush") is MediaBrush backgroundBrush)
@@ -243,11 +205,6 @@ namespace MvcVisionSystem
             {
                 System.Windows.Application.Current.Resources[key] = brush;
             }
-        }
-
-        private static WpfUiApplicationTheme ToWpfUiTheme(ShellTheme theme)
-        {
-            return theme == ShellTheme.Light ? WpfUiApplicationTheme.Light : WpfUiApplicationTheme.Dark;
         }
 
         private void AppendLog(string message)

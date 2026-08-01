@@ -142,22 +142,83 @@ Post-change local evidence:
 
 `artifacts/repository-structure-inventory-20260731/inventory-after-test-centralization.json`
 
-## 6. Next Bounded Structure Slice
+The later explicitly approved D-drive expansion also routes root/component
+`bin`/`obj`/`artifacts`, local `packages`/`.vs`, and the repository-tracked
+test-fixture `datasets` path through verified junctions. It moved 1,341 files
+and 604,817,071 bytes from 20 nonempty paths. This is a storage placement
+contract, not permission to move product source, docs, dependencies, user
+datasets, or `.proofline`. See
+`LOCAL_TEST_STORAGE_AND_LEFT_MONITOR_CONTRACT_20260731.md`.
 
-The next nondestructive repository-structure slice is a documentation
-information architecture: keep current authority documents easy to find and
-classify dated completion/evidence records without rewriting their historical
-claims. Any deletion of the 4.486 GiB rebuildable-candidate set remains a
-separate destructive action requiring an exact target list and explicit
-operator approval.
+## 6. Documentation Information Architecture
 
-## 7. Durable Closure
+Status: `Complete`.
+
+`docs/README.md` now classifies every repository Markdown document below
+`docs` exactly once as current navigation, an operator guide, a feature or
+productization contract, verification evidence, or historical context.
+Current authority order remains unchanged, and no existing document was
+moved, renamed, deleted, or rewritten as part of the classification.
+
+`scripts/Test-DocumentationInformationArchitecture.ps1` fails when a Markdown
+document is missing, classified more than once, lacks a lifecycle label, or
+is linked through a missing local target. The root README links to the index,
+repository instructions define its non-authoritative navigation role, and CI
+runs the verifier before the existing documentation smoke.
+
+Any deletion of the previously inventoried rebuildable-candidate set remains
+a separate destructive action requiring a fresh exact target list, current
+size, and explicit operator approval. It is not an automatic next step.
+
+## 7. Current Read-Only Cleanup Preview
+
+Status: `Complete`.
+
+The post-D-drive-migration preview found 45 rebuildable candidates containing
+8,473 files and 4.455 GiB. Of that total, 3.562 GiB is physically on D and
+0.893 GiB is physically on C. It excluded 98 preserve-review and 51
+manual-review entries. The preview records exact logical/physical paths and
+bytes while keeping `deletionPerformed=false` and
+`operationsAuthorized=false`.
+
+Evidence:
+
+- `docs/REPOSITORY_CLEANUP_PREVIEW_20260731.md`;
+- `artifacts/repository-cleanup-preview-20260731/inventory-current.json`;
+- `artifacts/repository-cleanup-preview-20260731/cleanup-preview.json`.
+
+This preview itself did not authorize deletion. The operator subsequently
+approved only its unchanged 32-entry C-drive subset. See the bounded execution
+record below. The D-drive subset remains unapproved.
+
+## 8. Approved C-Drive Candidate Cleanup
+
+Status: `Complete`.
+
+The approved C-only execution removed 32 rebuildable candidates representing
+6,587 files and 958,721,091 bytes. Direct checks found zero C targets remaining
+and all 13 D candidates still present immediately after deletion. A clean
+current-source test build then completed with zero warnings and errors, and
+the focused priority-workflow documentation test passed. The rebuild recreated
+only eight C `obj` candidates totaling 15,016,091 bytes; the recorded
+post-rebuild C free-space value remained 948,568,064 bytes above the
+pre-delete point-in-time value.
+
+The executor locks the preview's count and bytes, permits only C targets below
+the repository, rejects junction/reparse/overlapping paths, checks live file
+totals, and records progress after every target. Full acceptance evidence is
+in `REPOSITORY_C_CANDIDATE_CLEANUP_EXECUTION_20260731.md`.
+
+The D-drive candidates, protected evidence, user data, source, documentation,
+and `.proofline` remain outside this cleanup.
+
+## 9. Durable Closure
 
 ```text
 Status: Complete
-Scope: Added a read-only artifact inventory and centralized future test final-build outputs below artifacts/tests through one safe build wrapper.
-Acceptance criteria: Inventory is reusable and no-delete; output is constrained below artifacts; the test wrapper rejects unsafe names and owns one central final-output path; active instructions and CI use that path; the protected default suite passes from it.
-Verification: Both PowerShell parsers passed; unsafe output names and out-of-root reports were rejected; central build passed with 0 warnings/errors; --priority-workflow-docs passed; default suite passed 264/264; post-change inventory found one artifacts/tests subtree and reported deletionPerformed=false; git diff --check passed.
-Evidence: scripts/Get-RepositoryArtifactInventory.ps1, scripts/Build-LabelingApplicationTests.ps1, artifacts/repository-structure-inventory-20260731/inventory.json, and inventory-after-test-centralization.json.
-Boundary / next dependency: No existing output or source file was deleted or moved. Historical commands remain historical. Candidate cleanup requires an exact target review and explicit approval; the next nondestructive structure slice is documentation classification.
+Scope: Added a read-only artifact inventory, centralized future test final-build outputs below artifacts/tests, and executed the separately approved 32-entry C-only rebuildable cleanup.
+Acceptance criteria: Inventory and preview remain read-only; test output is constrained below artifacts; approved cleanup is count/byte/path locked; C targets were removed while all D candidates were retained; current-source rebuild and focused test passed.
+Verification: PowerShell parsers passed; unsafe output paths were rejected; C cleanup removed 32/32 targets and preserved D 13/13; post-cleanup build passed with 0 warnings/errors; --priority-workflow-docs passed; post-rebuild inventory remained read-only; git diff --check passed.
+Evidence: scripts/Get-RepositoryArtifactInventory.ps1, scripts/Get-RepositoryCleanupPreview.ps1, scripts/Invoke-ApprovedRepositoryCleanup.ps1, docs/REPOSITORY_C_CANDIDATE_CLEANUP_EXECUTION_20260731.md, and artifacts/repository-cleanup-preview-20260731/*.json.
+Boundary / next dependency: D candidates and all protected scopes remain untouched and require separate approval. Historical commands remain historical. P0-C remains blocked on an accessible GPU-capable clean Windows target.
 ```

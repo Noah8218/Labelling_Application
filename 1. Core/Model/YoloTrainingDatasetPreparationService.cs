@@ -2,6 +2,7 @@ using Lib.Common;
 using MvcVisionSystem.Yolo;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace MvcVisionSystem._1._Core
 {
@@ -32,6 +33,11 @@ namespace MvcVisionSystem._1._Core
             if (string.Equals(model, "unet", StringComparison.OrdinalIgnoreCase))
             {
                 return TryPrepareUnetSegmentationTrainingDataset(data, externalDataset, out trainingRequest);
+            }
+
+            if (string.Equals(model, "patchcore", StringComparison.OrdinalIgnoreCase))
+            {
+                return TryPreparePatchCoreAnomalyTrainingDataset(data, out trainingRequest);
             }
 
             if (externalDataset?.RequiresExplicitReactivation == true)
@@ -211,6 +217,65 @@ namespace MvcVisionSystem._1._Core
 
             AppLog.NORMAL($"YOLO anomaly classification dataset ready. Normal:{result.NormalImageCount}, Abnormal:{result.AbnormalImageCount}, Skipped:{result.SkippedImageCount}, Path:{result.DatasetRootPath}");
             trainingRequest.DataPath = result.DatasetRootPath;
+            return true;
+        }
+
+        private bool TryPreparePatchCoreAnomalyTrainingDataset(
+            CData data,
+            out YoloTrainingDatasetRequest trainingRequest)
+        {
+            trainingRequest = new YoloTrainingDatasetRequest
+            {
+                DataPath = string.Empty,
+                Task = "anomaly"
+            };
+            PatchCoreAnomalyTrainingReadinessReport readiness =
+                PatchCoreAnomalyTrainingReadinessService.Build(data);
+            if (!readiness.IsReady)
+            {
+                LastPreparationFailureMessage = string.Join(Environment.NewLine, readiness.Errors);
+                foreach (string error in readiness.Errors)
+                {
+                    AppLog.ABNORMAL($"PatchCore anomaly training failed: {error}");
+                }
+
+                return false;
+            }
+
+            AnomalyClassificationDatasetExportResult result;
+            try
+            {
+                result = new AnomalyClassificationDatasetExportService()
+                    .Export(data, readiness.SourceImagePaths, Path.Combine(data.OutputRootPath, "patchcore"));
+            }
+            catch (Exception ex)
+            {
+                LastPreparationFailureMessage = $"PatchCore dataset export failed. {ex.Message}";
+                AppLog.ABNORMAL(LastPreparationFailureMessage);
+                return false;
+            }
+
+            string trainNormalPath = Path.Combine(
+                result.DatasetRootPath,
+                YoloDatasetSplitService.TrainMode,
+                AnomalyClassificationDatasetExportService.NormalClassFolderName);
+            int exportedTrainNormalCount = Directory.Exists(trainNormalPath)
+                ? Directory.EnumerateFiles(trainNormalPath, "*", SearchOption.AllDirectories).Count()
+                : 0;
+            if (exportedTrainNormalCount < 2)
+            {
+                LastPreparationFailureMessage = $"{PatchCoreAnomalyTrainingReadinessService.NeedsReviewedNormalError}. ExportedTrainNormal:{exportedTrainNormalCount}";
+                AppLog.ABNORMAL(LastPreparationFailureMessage);
+                return false;
+            }
+
+            foreach (string warning in readiness.Warnings)
+            {
+                AppLog.NORMAL($"PatchCore anomaly training warning: {warning}");
+            }
+
+            trainingRequest.DataPath = result.DatasetRootPath;
+            AppLog.NORMAL($"PatchCore normal-only dataset ready. TrainNormal:{readiness.TrainNormalCount}, ValidationNormal:{readiness.ValidationNormalCount}, ReviewedAbnormalExcludedFromLearning:{readiness.ReviewedAbnormalCount}, Path:{result.DatasetRootPath}");
             return true;
         }
 

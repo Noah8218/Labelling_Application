@@ -67,6 +67,11 @@ namespace MvcVisionSystem._1._Core
                 return $"\uD559\uC2B5: TCP StartTraining(model={model}) -> app-owned U-Net segmentation export / \uBAA8\uB378 \uB8E8\uD2B8 {FormatPathLeaf(modelRootPath)}";
             }
 
+            if (string.Equals(PythonModelSettings.NormalizeModelEngine(engine), PythonModelSettings.EnginePatchCore, StringComparison.Ordinal))
+            {
+                return $"학습: TCP StartTraining(model={model}, task=anomaly) -> 검토 완료 정상 train/val 이미지 / 메모리 뱅크 {FormatPathLeaf(modelRootPath)}";
+            }
+
             return $"\uD559\uC2B5: TCP StartTraining(model={model}) -> \uBAA8\uB378 \uB8E8\uD2B8 {FormatPathLeaf(modelRootPath)} / data.yaml + \uD559\uC2B5 \uC124\uC815";
         }
 
@@ -87,6 +92,7 @@ namespace MvcVisionSystem._1._Core
                 PythonModelSettings.EngineYoloV8 => "YOLOv8 Ultralytics",
                 PythonModelSettings.EngineYolo11 => "YOLO11 Ultralytics",
                 PythonModelSettings.EngineUnet => "PyTorch U-Net",
+                PythonModelSettings.EnginePatchCore => "PyTorch PatchCore",
                 PythonModelSettings.EngineOnnx => "ONNX Runtime",
                 _ => "YOLOv5 repo"
             };

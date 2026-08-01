@@ -57,6 +57,37 @@ namespace MvcVisionSystem._1._Core
                     "Connect C:\\Git\\unet and install the U-Net PyTorch environment");
             }
 
+            if (string.Equals(engine, PythonModelSettings.EnginePatchCore, StringComparison.Ordinal))
+            {
+                bool workerPresent = PythonModelRuntimeBundledWorkerService.IsPatchCoreWorkerScriptPath(settings?.ClientScriptPath);
+                bool runtimeInstalled = IsPatchCoreRuntimeInstalled(settings);
+                bool capabilityMismatch = HasAnyCapability(supportedModels)
+                    && !SupportsModel(adapterKey, supportedModels);
+                if (workerPresent && runtimeInstalled && !capabilityMismatch)
+                {
+                    return new PythonModelRuntimeAdapterSupport(
+                        isExecutionSupported: true,
+                        canTrain: true,
+                        canInspect: true,
+                        "PatchCore worker connection ready",
+                        "Bundled PatchCore worker와 torch/torchvision이 준비되었습니다. 학습은 검토 완료 정상 이미지만 사용하고, 검사 결과는 저장 전 후보입니다.",
+                        "PatchCore 정상-only 학습과 현재 검사 가능");
+                }
+
+                string missing = !workerPresent
+                    ? "bundled PatchCore worker"
+                    : !runtimeInstalled
+                        ? "torch/torchvision/numpy/Pillow runtime"
+                        : "PatchCore worker capability";
+                return new PythonModelRuntimeAdapterSupport(
+                    isExecutionSupported: false,
+                    canTrain: false,
+                    canInspect: false,
+                    "PatchCore runtime connection required",
+                    $"PatchCore 학습과 검사는 {missing} 확인 전까지 차단됩니다.",
+                    "PatchCore PyTorch 실행기와 bundled worker를 연결하세요.");
+            }
+
             if (string.Equals(engine, PythonModelSettings.EngineYoloV8, StringComparison.Ordinal)
                 || string.Equals(engine, PythonModelSettings.EngineYolo11, StringComparison.Ordinal))
             {
@@ -268,6 +299,24 @@ namespace MvcVisionSystem._1._Core
             string venvRootPath = Directory.GetParent(scriptsPath)?.FullName ?? string.Empty;
             string sitePackagesPath = Path.Combine(venvRootPath, "Lib", "site-packages");
             return Directory.Exists(Path.Combine(sitePackagesPath, "torch"))
+                && Directory.Exists(Path.Combine(sitePackagesPath, "PIL"));
+        }
+
+        private static bool IsPatchCoreRuntimeInstalled(PythonModelSettings settings)
+        {
+            string pythonPath = PythonModelSettingsValidator.ResolvePythonExecutable(settings);
+            if (string.IsNullOrWhiteSpace(pythonPath) || !File.Exists(pythonPath))
+            {
+                return false;
+            }
+
+            string pythonDirectory = Path.GetDirectoryName(pythonPath) ?? string.Empty;
+            string sitePackagesPath = string.Equals(Path.GetFileName(pythonDirectory), "Scripts", StringComparison.OrdinalIgnoreCase)
+                ? Path.Combine(Directory.GetParent(pythonDirectory)?.FullName ?? string.Empty, "Lib", "site-packages")
+                : Path.Combine(pythonDirectory, "Lib", "site-packages");
+            return Directory.Exists(Path.Combine(sitePackagesPath, "torch"))
+                && Directory.Exists(Path.Combine(sitePackagesPath, "torchvision"))
+                && Directory.Exists(Path.Combine(sitePackagesPath, "numpy"))
                 && Directory.Exists(Path.Combine(sitePackagesPath, "PIL"));
         }
     }

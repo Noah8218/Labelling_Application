@@ -12,6 +12,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -34,6 +35,106 @@ using static TestSupport;
 
 internal static class ReviewServicesTests
 {
+    internal static void TestWpfPatchCoreHeatmapReviewService()
+    {
+        string panelPath = Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfCandidateReviewPanel.xaml");
+        string panelSource = File.ReadAllText(panelPath);
+        string windowPath = Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Views", "WpfPatchCoreHeatmapWindow.xaml");
+        string windowSource = File.ReadAllText(windowPath);
+        AssertTrue(panelSource.Contains("x:Name=\"TogglePatchCoreHeatmapButton\"", StringComparison.Ordinal), "candidate review should declare a dedicated PatchCore heatmap action");
+        AssertTrue(panelSource.Contains("Visibility=\"{Binding PatchCoreHeatmapVisibility}\"", StringComparison.Ordinal), "non-PatchCore candidates should not show the heatmap surface");
+        AssertTrue(panelSource.Contains("Command=\"{Binding TogglePatchCoreHeatmapCommand}\"", StringComparison.Ordinal), "heatmap preview should require an explicit ViewModel command");
+        AssertTrue(windowSource.Contains("x:Name=\"PatchCoreHeatmapPreviewImage\"", StringComparison.Ordinal), "explicit heatmap action should open a dedicated evidence window without changing panel layout");
+        AssertTrue(windowSource.Contains("Source=\"{Binding PatchCoreHeatmapSource}\"", StringComparison.Ordinal), "heatmap image should bind to ViewModel-owned evidence state");
+        AssertTrue(windowSource.Contains("WindowStartupLocation=\"CenterOwner\"", StringComparison.Ordinal), "heatmap evidence window should inherit the placed parent monitor");
+        AssertTrue(windowSource.Contains("Background=\"{DynamicResource PanelBrush}\"", StringComparison.Ordinal), "heatmap evidence should use semantic theme resources");
+        AssertTrue(windowSource.Contains("<Trigger Property=\"IsMouseOver\" Value=\"True\">", StringComparison.Ordinal), "heatmap window action should define a themed hover state");
+        AssertTrue(windowSource.Contains("<Trigger Property=\"IsPressed\" Value=\"True\">", StringComparison.Ordinal), "heatmap window action should define a themed pressed state");
+        AssertTrue(windowSource.Contains("<Trigger Property=\"IsKeyboardFocusWithin\" Value=\"True\">", StringComparison.Ordinal), "heatmap window action should define a themed keyboard-focus state");
+        AssertTrue(windowSource.Contains("<Trigger Property=\"IsEnabled\" Value=\"False\">", StringComparison.Ordinal), "heatmap window action should define a themed disabled state");
+        AssertTrue(panelSource.Contains("<Trigger Property=\"IsMouseOver\" Value=\"True\">", StringComparison.Ordinal), "candidate action style should define a themed hover state");
+        AssertTrue(panelSource.Contains("<Trigger Property=\"IsPressed\" Value=\"True\">", StringComparison.Ordinal), "candidate action style should define a themed pressed state");
+        AssertTrue(panelSource.Contains("<Trigger Property=\"IsKeyboardFocusWithin\" Value=\"True\">", StringComparison.Ordinal), "candidate action style should define a themed keyboard-focus state");
+
+        string root = CreateTempRoot();
+        try
+        {
+            string heatmapPath = Path.Combine(root, "patchcore-heatmap.png");
+            using (var bitmap = new Bitmap(16, 16))
+            {
+                using Graphics graphics = Graphics.FromImage(bitmap);
+                graphics.Clear(Color.Navy);
+                graphics.FillRectangle(Brushes.Red, 5, 4, 7, 8);
+                bitmap.Save(heatmapPath, ImageFormat.Png);
+            }
+
+            var candidate = new YoloWorkerSmokeCandidate
+            {
+                Index = 1,
+                ClassName = "Defect",
+                PredictionType = "patchcore",
+                ImageLevel = true,
+                HeatmapPath = heatmapPath
+            };
+            var service = new WpfPatchCoreHeatmapReviewService();
+            string originalClassName = candidate.ClassName;
+            string originalPredictionType = candidate.PredictionType;
+            WpfPatchCoreHeatmapAvailability availability = service.Inspect(candidate);
+            AssertTrue(availability.IsPatchCoreCandidate, "PatchCore candidate should expose the heatmap review surface");
+            AssertTrue(availability.CanOpen, "existing PatchCore heatmap should be explicitly openable");
+            AssertEqual(Path.GetFullPath(heatmapPath), availability.FullPath);
+
+            var viewModel = new WpfCandidateReviewPanelViewModel();
+            viewModel.SetPatchCoreHeatmapAvailability(availability);
+            AssertEqual(System.Windows.Visibility.Visible, viewModel.PatchCoreHeatmapVisibility);
+            AssertEqual(System.Windows.Visibility.Collapsed, viewModel.PatchCoreHeatmapPreviewVisibility);
+            AssertTrue(viewModel.PatchCoreHeatmapSource == null, "selection should inspect metadata without decoding or opening the heatmap");
+            AssertTrue(!viewModel.IsPatchCoreHeatmapOpen, "selection should not auto-open the heatmap");
+            AssertEqual(originalClassName, candidate.ClassName);
+            AssertEqual(originalPredictionType, candidate.PredictionType);
+
+            WpfPatchCoreHeatmapLoadResult loaded = service.Load(candidate);
+            AssertTrue(loaded.Succeeded && loaded.ImageSource != null, "explicit heatmap load should decode a valid image");
+            viewModel.ShowPatchCoreHeatmap(loaded);
+            AssertEqual(System.Windows.Visibility.Visible, viewModel.PatchCoreHeatmapPreviewVisibility);
+            AssertTrue(viewModel.IsPatchCoreHeatmapOpen, "explicit open should show the heatmap");
+            AssertTrue(viewModel.PatchCoreHeatmapActionText.Contains("닫기", StringComparison.Ordinal), "open heatmap should expose an explicit close action");
+
+            string movedPath = Path.Combine(root, "moved-after-load.png");
+            File.Move(heatmapPath, movedPath);
+            AssertTrue(File.Exists(movedPath), "OnLoad heatmap decoding should not retain a file lock");
+            viewModel.ClosePatchCoreHeatmap();
+            AssertTrue(viewModel.PatchCoreHeatmapSource == null, "close should release the preview source from the ViewModel");
+            AssertEqual(System.Windows.Visibility.Collapsed, viewModel.PatchCoreHeatmapPreviewVisibility);
+
+            WpfPatchCoreHeatmapAvailability stale = service.Inspect(candidate);
+            AssertTrue(stale.IsPatchCoreCandidate && !stale.CanOpen, "moved heatmap should become a visible unavailable state");
+            AssertTrue(stale.StatusText.Contains("찾을 수 없습니다", StringComparison.Ordinal), "missing heatmap should provide recovery guidance");
+            viewModel.SetPatchCoreHeatmapAvailability(stale);
+            AssertTrue(!viewModel.IsPatchCoreHeatmapActionEnabled, "missing heatmap should disable the open action");
+
+            string corruptPath = Path.Combine(root, "corrupt.png");
+            File.WriteAllText(corruptPath, "not an image");
+            candidate.HeatmapPath = corruptPath;
+            WpfPatchCoreHeatmapLoadResult corrupt = service.Load(candidate);
+            AssertTrue(!corrupt.Succeeded, "corrupt heatmap should fail closed");
+            AssertTrue(corrupt.StatusText.Contains("읽을 수 없습니다", StringComparison.Ordinal), "corrupt heatmap should explain the decode failure");
+
+            var ordinaryCandidate = new YoloWorkerSmokeCandidate
+            {
+                PredictionType = "detect",
+                HeatmapPath = movedPath
+            };
+            viewModel.SetPatchCoreHeatmapAvailability(service.Inspect(ordinaryCandidate));
+            AssertEqual(System.Windows.Visibility.Collapsed, viewModel.PatchCoreHeatmapVisibility);
+            AssertTrue(!viewModel.IsPatchCoreHeatmapOpen, "candidate change should close stale PatchCore evidence");
+        }
+        finally
+        {
+            DeleteTempRoot(root);
+        }
+    }
+
     internal static void TestWpfObjectReviewSelectionService()
     {
         var overlayIds = new List<string> { "roi-a", "roi-b" };

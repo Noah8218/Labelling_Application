@@ -20075,3 +20075,420 @@ Boundary / next dependency:
 - source, tracked fixtures, user datasets, and `.proofline` remain outside the
   migration scope;
 - the external GPU-capable clean-target P0-C labeling gate remains separate.
+
+## 2026-07-31 Documentation information architecture
+
+Status: Complete
+
+Scope:
+
+- added `docs/README.md` as a non-authoritative navigation hub;
+- classified all existing Markdown documents as current navigation, operator
+  guides, productization/feature contracts, verification evidence, or
+  historical records;
+- linked the hub from the root README and recorded its ownership in project
+  instructions and code-structure navigation;
+- added a read-only PowerShell gate and CI step.
+
+Acceptance criteria:
+
+- every existing Markdown file below `docs` classified exactly once -> pass;
+- every classification has one lifecycle label -> pass;
+- broken local links in the documentation index -> zero;
+- existing documents moved, renamed, deleted, or historically rewritten ->
+  zero.
+
+Verification:
+
+- `Test-DocumentationInformationArchitecture.ps1`;
+- `--priority-workflow-docs`;
+- `git diff --check`.
+
+Evidence:
+
+- `docs/README.md`;
+- `scripts/Test-DocumentationInformationArchitecture.ps1`;
+- `.github/workflows/ci.yml`.
+
+Boundary / next dependency:
+
+- the index does not supersede `CURRENT_PRODUCT_STATUS.md`;
+- generated-artifact deletion remains unapproved and requires a fresh exact
+  target list and explicit user approval;
+- the external GPU-capable clean-target P0-C gate remains blocked separately.
+
+## 2026-07-31 Read-only repository cleanup preview
+
+Status: Complete
+
+Scope:
+
+- regenerated the artifact inventory after D-drive test-storage migration;
+- selected only `rebuildable-candidate` entries;
+- resolved every logical candidate to its current C/D physical path;
+- recorded exact candidate and exclusion arrays without creating a cleanup
+  executor.
+
+Acceptance criteria:
+
+- rebuildable candidates -> 45 entries, 8,473 files, 4.455 GiB;
+- D physical candidates -> 13 entries, 3.562 GiB;
+- C physical candidates -> 32 entries, 0.893 GiB;
+- preserve-review excluded -> 98 entries;
+- manual-review excluded -> 51 entries;
+- deletion performed -> false;
+- operations authorized -> false.
+
+Verification:
+
+- both PowerShell scripts parsed and executed;
+- candidate totals matched the source inventory;
+- all logical and physical roots passed containment checks;
+- mutation-command source scan returned zero;
+- out-of-root and inventory-overwrite outputs were rejected;
+- documentation-index, priority-docs, and whitespace gates passed.
+
+Evidence:
+
+- `docs/REPOSITORY_CLEANUP_PREVIEW_20260731.md`;
+- `artifacts/repository-cleanup-preview-20260731/inventory-current.json`;
+- `artifacts/repository-cleanup-preview-20260731/cleanup-preview.json`.
+
+Boundary / next dependency:
+
+- no cleanup operation is authorized or implemented;
+- regenerate the preview after later builds/tests;
+- destructive cleanup requires the user's explicit approval of the fresh
+  exact target list;
+- P0-C remains separately blocked on a GPU-capable clean Windows target.
+
+## 2026-07-31 Approved C-drive rebuildable-candidate cleanup
+
+Status: Complete
+
+Scope:
+
+- locked the fresh preview to the explicitly approved C-only set of 32
+  directories, 6,587 files, and 958,721,091 bytes;
+- deleted only those repository-contained, non-junction generated paths;
+- preserved all 13 D-drive candidates and every protected classification;
+- rebuilt the current test project through the D-backed canonical output and
+  regenerated a read-only post-build inventory.
+
+Acceptance criteria:
+
+- fresh C logical-path set matched the reviewed set -> 32 entries, zero added,
+  zero removed;
+- live count and bytes matched immediately before deletion -> pass;
+- approved C targets deleted -> 32/32;
+- D candidates preserved -> 13/13;
+- current-source rebuild -> 0 warnings, 0 errors;
+- `--priority-workflow-docs` -> pass;
+- post-rebuild C candidate footprint -> 8 `obj` entries, 15,016,091 bytes;
+- recorded post-rebuild C free-space delta -> +948,568,064 bytes.
+
+Verification:
+
+- PowerShell parser for the bounded executor;
+- direct post-delete C/D path-existence audit;
+- `Build-LabelingApplicationTests.ps1 -OutputName post-c-cleanup-20260731`;
+- `--priority-workflow-docs`;
+- post-rebuild inventory and cleanup preview.
+
+Evidence:
+
+- `docs/REPOSITORY_C_CANDIDATE_CLEANUP_EXECUTION_20260731.md`;
+- `scripts/Invoke-ApprovedRepositoryCleanup.ps1`;
+- `artifacts/repository-cleanup-preview-20260731/c-cleanup-execution.json`;
+- `artifacts/repository-cleanup-preview-20260731/inventory-post-rebuild.json`;
+- `artifacts/repository-cleanup-preview-20260731/cleanup-preview-post-rebuild.json`.
+
+Boundary / next dependency:
+
+- removed files were untracked build, package, and IDE outputs and were not
+  backed up; they are recoverable through their owning restore/build paths;
+- no D candidate, protected evidence, source, document, user dataset, or
+  `.proofline` state was removed;
+- P0-C remains separately blocked on an accessible GPU-capable clean Windows
+  target.
+
+## 2026-07-31 Expanded D-drive execution and test-fixture migration
+
+Status: Complete
+
+Scope:
+
+- expanded the canonical D storage mapping to repository and component
+  `bin`/`obj`/`artifacts`, local `packages`/`.vs`, and the explicitly approved
+  repository test-fixture `datasets` path;
+- kept all established repository paths available through junctions;
+- excluded source, documentation, checked-in product dependencies, user
+  datasets, and `.proofline`;
+- preserved the existing D-backed repository/test artifact mappings.
+
+Acceptance criteria:
+
+- total verified D junction mappings -> 52/52;
+- newly migrated nonempty mappings -> 20;
+- newly migrated files and bytes -> 1,341 files, 604,817,071 bytes
+  (`576.8 MiB`);
+- every newly copied file passed length and SHA-256 comparison before its C
+  source directory was removed -> pass;
+- repository test-fixture dataset -> 516 tracked files, Git diff zero;
+- D-backed current-source build -> 0 warnings, 0 errors;
+- default regression -> `264/264`, exit code 0, 254 seconds;
+- D test storage and D test TEMP roots reported by the runner -> pass.
+- final read-only inventory -> 45 rebuildable candidates physically on D and
+  zero physically on C.
+
+Verification:
+
+- migration-script PowerShell parse and read-only dry run;
+- `Move-LabelingTestStorageToDDrive.ps1 -Apply`;
+- direct junction-target and destination-existence audit;
+- `git diff --quiet -- datasets`;
+- `Build-LabelingApplicationTests.ps1 -OutputName post-expanded-d-migration-20260731`;
+- default test DLL from that output.
+
+Evidence:
+
+- `docs/LOCAL_TEST_STORAGE_AND_LEFT_MONITOR_CONTRACT_20260731.md`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\migration-evidence\test-storage-migration.json`;
+- `artifacts/tests/post-expanded-d-migration-20260731/LabelingApplication.Tests.dll`;
+- `artifacts/repository-cleanup-preview-20260731/inventory-post-expanded-d-migration.json`;
+- `artifacts/repository-cleanup-preview-20260731/cleanup-preview-post-expanded-d-migration.json`.
+
+Boundary / next dependency:
+
+- the recorded file-byte total is authoritative; concurrent Windows storage
+  activity makes the observed whole-drive free-space change non-attributable;
+- product source, docs, dependencies, user data, `.git`, and `.proofline`
+  remain on C;
+- P0-C remains blocked on an accessible GPU-capable clean Windows target.
+
+## 2026-07-31 PatchCore normal-only anomaly pilot
+
+Status: Complete
+
+Scope:
+
+- selected PatchCore as the first one-class anomaly candidate beside the
+  existing YOLOv8/YOLO11 supervised classifiers;
+- added a persisted, selectable PatchCore runtime profile and bundled worker;
+- added reviewed-normal-only readiness/export and explicit normal validation
+  threshold calibration with a disclosed train-normal fallback;
+- returned image decision, raw anomaly score, learned threshold, review-only
+  localization candidates, and heatmap path through the existing TCP and WPF
+  candidate contracts;
+- kept label save, candidate confirmation, and model adoption explicit.
+
+Acceptance criteria:
+
+- Python compile/self-test -> pass on CUDA;
+- real synthetic GPU training with full-frame resize -> 3 normal train, 1
+  independent normal val, memory bank 15 x 1536, threshold `0.4214764774`;
+- held-out normal -> score `0.3795436621`, normal;
+- synthetic defect -> score `0.5839282274`, abnormal, location
+  `(82,49,53,29)`;
+- normal and abnormal heatmap PNG -> produced on D;
+- isolated build -> 0 warnings, 0 errors;
+- `--patchcore-anomaly-pilot`, `--model-adapter-catalog`, and
+  `--wpf-yolo-model-settings-panel` -> pass;
+- priority workflow docs and documentation information architecture -> pass;
+- real C# app smoke service -> bundled worker launch and score/threshold/
+  location/heatmap parsing pass;
+- default internal regression -> `265/265`, exit code 0;
+- fresh 1920x1080 PatchCore model-settings capture -> pass on dynamically
+  selected leftmost `DISPLAY2`.
+
+Evidence:
+
+- `docs/PATCHCORE_ANOMALY_PILOT_20260731.md`;
+- `Runtime/Python/openvisionlab_patchcore_worker.py`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\patchcore-pilot-20260731`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\ui\patchcore-anomaly-pilot-20260731\after-patchcore-model-settings-1920.png`.
+
+Boundary / next dependency:
+
+- this is synthetic implementation evidence, not production accuracy;
+- the next model gate requires approved field images, target hardware, and
+  false-positive/false-negative acceptance thresholds for a same-split YOLO
+  versus PatchCore comparison;
+- P0-C remains separately blocked on the selected clean GPU-capable Windows
+  target.
+
+## 2026-08-01 PatchCore explicit heatmap review view
+
+Status: Complete
+
+Scope:
+
+- added a PatchCore-only `히트맵 보기` action to AI Candidate Review;
+- kept candidate selection metadata-only and decoded the image only after the
+  explicit action;
+- added fail-closed missing/moved/unsupported/corrupt guidance and no-lock
+  image loading;
+- used an owned themed window so Compact layouts retain the existing
+  confirm/hide actions;
+- closed and released evidence on explicit close or candidate change without
+  label, candidate, layer, viewer, or model mutation.
+
+Acceptance criteria:
+
+- focused heatmap review contract -> pass;
+- existing candidate navigation and PatchCore pilot regressions -> pass;
+- missing/corrupt paths and file-handle release -> pass;
+- Dark/Wide and Light/Compact parent/window captures -> pass;
+- parent and owned window on dynamically selected leftmost monitor -> pass;
+- isolated build -> 0 warnings, 0 errors;
+- default internal regression -> `266/266`.
+
+Verification:
+
+- `Build-LabelingApplicationTests.ps1 -OutputName isolated-out`;
+- `--patchcore-heatmap-review`;
+- `--wpf-candidate-review-panel`;
+- `--patchcore-anomaly-pilot`;
+- actual WPF visual smoke in both supported theme/layout combinations;
+- default test DLL;
+- documentation information architecture and whitespace gates.
+
+Evidence:
+
+- `docs/PATCHCORE_HEATMAP_REVIEW_VIEW_20260801.md`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\ui\patchcore-heatmap-review-20260801`.
+
+Boundary / next dependency:
+
+- this is not a Main Viewer heatmap layer or an automatic labeling action;
+- production comparison remains blocked on approved same-split field images,
+  acceptance thresholds, runtime/weights, and target hardware;
+- P0-C remains separately blocked on the selected GPU-capable clean Windows
+  target.
+
+## 2026-08-01 Dark-only theme lock
+
+Status: Complete
+
+Scope:
+
+- hid both shell theme-selection entry points;
+- forced startup, dormant toggle-command, and legacy/internal light-theme
+  requests to the supported dark palette;
+- preserved the existing semantic brush resources and all non-theme workflow
+  behavior.
+
+Acceptance criteria:
+
+- expanded and collapsed theme controls -> hidden;
+- explicit internal `Light` request -> dark background `#0C0D0F`;
+- current-source Light-request visual smoke -> dark shell and no visible theme
+  menu entry;
+- isolated build -> 0 warnings, 0 errors;
+- focused WPF shell contract -> pass.
+
+Verification:
+
+- `Build-LabelingApplicationTests.ps1 -OutputName isolated-out`;
+- `LabelingApplication.Tests.dll --wpf-labeling-shell`;
+- `LabelingApplication.Tests.dll --wpf-visual-smoke --theme light
+  --open-header-tools-menu --width 1366 --height 768 --screen-capture`.
+
+Evidence:
+
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\ui\dark-theme-lock-20260801\before-light-theme-toggle-visible-1366.png`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\ui\dark-theme-lock-20260801\after-light-request-dark-locked-1366.png`.
+
+Boundary / next dependency:
+
+- this does not remove semantic theme resources used to keep owned windows
+  visually consistent;
+- multi-theme product work remains out of scope until the user explicitly
+  changes direction.
+
+## 2026-08-01 CI complete regression gate
+
+Status: Complete
+
+Scope:
+
+- added one no-argument complete default-suite invocation to the Windows CI
+  job after build/docs and before release publishing;
+- bounded the step with `timeout-minutes: 15`;
+- extended the priority workflow contract to require exactly one invocation;
+- kept headless product CLI, installer, signing, and external validation out of
+  scope.
+
+Acceptance criteria:
+
+- exact solo CI invocation -> pass;
+- bounded timeout -> pass;
+- isolated build -> 0 warnings, 0 errors;
+- focused workflow-source contract -> pass;
+- local equivalent full regression -> `266/266`, 0 failures, exit code 0,
+  stderr 0 bytes.
+
+Verification:
+
+- `Build-LabelingApplicationTests.ps1 -OutputName isolated-out`;
+- `LabelingApplication.Tests.dll --priority-workflow-docs`;
+- solo no-argument `LabelingApplication.Tests.dll`;
+- documentation information architecture;
+- `git diff --check`.
+
+Evidence:
+
+- `docs/CI_COMPLETE_REGRESSION_GATE_20260801.md`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\ci-complete-regression-gate-20260801`.
+
+Boundary / next dependency:
+
+- hosted GitHub Actions success requires commit/push and inspection of that
+  workflow run;
+- the product CLI remains missing and requires a separately selected operator
+  workflow contract;
+- clean GPU-target and production model validation remain externally blocked.
+
+## 2026-08-01 Headless environment self-test CLI
+
+Status: Complete
+
+Scope:
+
+- added pre-startup `--environment-self-test --json` dispatch to the actual
+  product executable;
+- reused runtime diagnostics through a new read-only mode that does not create
+  directories, run write probes, or persist self-test output;
+- emitted stable JSON and exit codes 0/2/64/70 without WPF or mutex acquisition;
+- kept Main Viewer graphics as an explicit no-context warning.
+
+Acceptance criteria:
+
+- actual current-source product EXE JSON -> pass;
+- no product window -> pass;
+- no added files or persisted self-test -> pass;
+- invalid arguments -> JSON plus exit code 64;
+- existing UI diagnostics/support bundle -> pass;
+- isolated build -> 0 warnings, 0 errors;
+- solo default regression -> `267/267`, 0 failures, exit 0, stderr 0 bytes.
+
+Verification:
+
+- `Build-LabelingApplicationTests.ps1 -OutputName isolated-out`;
+- `LabelingApplication.Tests.dll --headless-environment-self-test`;
+- `LabelingApplication.Tests.dll --runtime-diagnostics-contract`;
+- direct redirected product-EXE run;
+- solo no-argument test DLL;
+- documentation information architecture, priority docs, and whitespace gates.
+
+Evidence:
+
+- `docs/HEADLESS_ENVIRONMENT_CHECK_CLI_20260801.md`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\headless-environment-self-test-20260801`.
+
+Boundary / next dependency:
+
+- a clean-source versioned package and hosted CI run remain separate evidence;
+- other product CLI operations require individual operator workflow and data-
+  safety contracts;
+- clean GPU-target and production model validation remain externally blocked.

@@ -1392,4 +1392,146 @@ internal static class AnomalyClassificationTests
             DeleteTempRoot(runRoot);
         }
     }
+
+    internal static void TestPatchCoreAnomalyPilotContract()
+    {
+        AssertEqual(PythonModelSettings.EnginePatchCore, PythonModelSettings.NormalizeModelEngine("patch-core"));
+        var settings = new PythonModelSettings
+        {
+            ModelEngine = PythonModelSettings.EnginePatchCore
+        };
+        AssertEqual("patchcore", settings.GetProtocolModelName());
+        AssertTrue(
+            PythonModelSettings.GetSupportedModelEngines().Contains(PythonModelSettings.EnginePatchCore),
+            "PatchCore should be a selectable model profile");
+        string workerPath = PythonModelRuntimeBundledWorkerService.ResolvePatchCoreWorkerScriptPath();
+        AssertTrue(File.Exists(workerPath), $"bundled PatchCore worker is missing: {workerPath}");
+        string workerSource = File.ReadAllText(workerPath);
+        AssertTrue(workerSource.Contains("openvisionlab-patchcore-v1", StringComparison.Ordinal), "PatchCore worker should persist a versioned checkpoint contract");
+        AssertTrue(workerSource.Contains("anomalyLocalization", StringComparison.Ordinal), "PatchCore worker should return review-only localization candidates");
+        AssertTrue(workerSource.Contains("heatmapPath", StringComparison.Ordinal), "PatchCore worker should expose a heatmap artifact path");
+        AssertTrue(workerSource.Contains("Resize((self.image_size, self.image_size))", StringComparison.Ordinal), "PatchCore preprocessing should preserve the full frame instead of center-cropping border defects");
+
+        string root = CreateTempRoot();
+        try
+        {
+            string sourceRoot = Path.Combine(root, "source");
+            Directory.CreateDirectory(sourceRoot);
+            string normalOnePath = Path.Combine(sourceRoot, "normal-01.png");
+            string normalTwoPath = Path.Combine(sourceRoot, "normal-02.png");
+            string abnormalPath = Path.Combine(sourceRoot, "abnormal-reference.png");
+            using (Bitmap normalOne = CreateSolidBitmap(18, 14, Color.LightGray))
+            using (Bitmap normalTwo = CreateSolidBitmap(18, 14, Color.Silver))
+            using (Bitmap abnormal = CreateSolidBitmap(18, 14, Color.Black))
+            {
+                normalOne.Save(normalOnePath);
+                normalTwo.Save(normalTwoPath);
+                abnormal.Save(abnormalPath);
+            }
+
+            var data = new CData();
+            data.ConfigureOutputRoot(Path.Combine(root, "dataset"));
+            data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.AnomalyDetection;
+            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EnginePatchCore;
+            data.ProjectSettings.PythonModel.ImageRootPath = sourceRoot;
+            data.ProjectSettings.YoloDataset.ValidationPercent = 0;
+            data.ProjectSettings.YoloDataset.TestPercent = 0;
+
+            var reviewStatus = new AnomalyImageReviewStatusService();
+            reviewStatus.SetImages(new[] { normalOnePath, normalTwoPath, abnormalPath });
+            reviewStatus.MarkNormal(normalOnePath);
+            reviewStatus.MarkNormal(normalTwoPath);
+            reviewStatus.MarkAbnormal(abnormalPath);
+            reviewStatus.SaveReviewStatus(data);
+
+            PatchCoreAnomalyTrainingReadinessReport readiness = PatchCoreAnomalyTrainingReadinessService.Build(data);
+            AssertTrue(readiness.IsReady, string.Join(Environment.NewLine, readiness.Errors));
+            AssertEqual(2, readiness.TrainNormalCount);
+            AssertEqual(1, readiness.ReviewedAbnormalCount);
+            AssertTrue(
+                readiness.Warnings.Contains(PatchCoreAnomalyTrainingReadinessService.NoIndependentCalibrationWarning),
+                "missing normal validation images should be disclosed as train-normal threshold fallback");
+
+            var preparation = new YoloTrainingDatasetPreparationService();
+            AssertTrue(preparation.TryPrepare(data), preparation.LastPreparationFailureMessage);
+            string exportRoot = Path.Combine(data.OutputRootPath, "patchcore");
+            AssertTrue(File.Exists(Path.Combine(exportRoot, "train", "normal", "normal-01.png")), "PatchCore export should include reviewed normal train images");
+            AssertTrue(File.Exists(Path.Combine(exportRoot, "train", "abnormal", "abnormal-reference.png")), "abnormal review evidence may be exported for evaluation even though the worker excludes it from learning");
+            string preparationSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "1. Core", "Model", "YoloTrainingDatasetPreparationService.cs"));
+            AssertTrue(preparationSource.Contains("Task = \"anomaly\"", StringComparison.Ordinal), "PatchCore training should use the explicit anomaly task contract");
+
+            string envelope = "{\"type\":\"DetectImageResult\",\"ok\":true,\"candidates\":[{\"className\":\"abnormal\",\"confidence\":0.82,\"x\":4,\"y\":5,\"width\":8,\"height\":6,\"candidateType\":\"anomalyLocalization\",\"predictionType\":\"patchcore\",\"imageLevel\":true,\"anomalyScore\":0.67,\"anomalyThreshold\":0.42,\"heatmapPath\":\"D:\\\\evidence\\\\heatmap.png\"}]}";
+            DetectionResultParseResult parsed = PythonDetectionResultProtocol.Parse(envelope);
+            AssertEqual(DetectionResultParseStatus.Parsed, parsed.Status);
+            DefectInfo defect = parsed.Defects.Single();
+            AssertEqual(0.67D, defect.AnomalyScore.Value);
+            AssertEqual(0.42D, defect.AnomalyThreshold.Value);
+            AssertTrue(defect.HeatmapPath.EndsWith("heatmap.png", StringComparison.OrdinalIgnoreCase), "PatchCore heatmap path should survive the TCP result contract");
+
+            var candidate = new YoloWorkerSmokeCandidate
+            {
+                ClassName = defect.ClassName,
+                Confidence = defect.Confidence,
+                X = defect.X,
+                Y = defect.Y,
+                Width = defect.Width,
+                Height = defect.Height,
+                CandidateType = defect.CandidateType,
+                PredictionType = defect.PredictionType,
+                ImageLevel = defect.ImageLevel,
+                AnomalyScore = defect.AnomalyScore,
+                AnomalyThreshold = defect.AnomalyThreshold,
+                HeatmapPath = defect.HeatmapPath
+            };
+            string detail = WpfCandidateReviewPresenter.BuildDetail(
+                candidate,
+                candidate.ToRectangle(),
+                new WpfCandidateOverlapInfo(string.Empty, Rectangle.Empty, 0D),
+                0F);
+            AssertTrue(detail.Contains("PatchCore 점수", StringComparison.Ordinal), "PatchCore candidate detail should distinguish raw score from decision confidence");
+            AssertTrue(detail.Contains("미확정 검토 결과", StringComparison.Ordinal), "PatchCore location must remain a review-only result");
+        }
+        finally
+        {
+            DeleteTempRoot(root);
+        }
+    }
+
+    internal static void TestRealPatchCoreAppSmoke()
+    {
+        string root = Environment.GetEnvironmentVariable("OPENVISIONLAB_PATCHCORE_SMOKE_ROOT") ?? string.Empty;
+        string python = Environment.GetEnvironmentVariable("OPENVISIONLAB_PATCHCORE_PYTHON") ?? string.Empty;
+        AssertTrue(Directory.Exists(root), "OPENVISIONLAB_PATCHCORE_SMOKE_ROOT must point to the prepared D-drive evidence root");
+        AssertTrue(File.Exists(python), "OPENVISIONLAB_PATCHCORE_PYTHON must point to the verified Python executable");
+
+        string weights = Path.Combine(root, "runtime", "runs", "anomaly", "pilot", "weights", "best.pt");
+        string image = Path.Combine(root, "test", "abnormal-test.png");
+        var settings = new PythonModelSettings
+        {
+            ModelEngine = PythonModelSettings.EnginePatchCore,
+            PythonExecutablePath = python,
+            ProjectRootPath = Path.Combine(root, "runtime"),
+            ClientScriptPath = PythonModelRuntimeBundledWorkerService.ResolvePatchCoreWorkerScriptPath(),
+            WeightsPath = weights,
+            ImageRootPath = Path.GetDirectoryName(image) ?? string.Empty,
+            InferenceImageSize = 128,
+            DetectionTimeoutSeconds = 120
+        };
+
+        YoloWorkerSmokeTestResult result = YoloWorkerSmokeTestService.RunAsync(settings, image)
+            .GetAwaiter()
+            .GetResult();
+        AssertTrue(result.Succeeded, result.Summary + Environment.NewLine + result.Error + Environment.NewLine + result.Output);
+        YoloWorkerSmokeCandidate candidate = result.Candidates.FirstOrDefault();
+        AssertTrue(candidate != null, "real PatchCore app smoke should return an abnormal location candidate");
+        AssertEqual("patchcore", candidate.PredictionType);
+        AssertTrue(candidate.ImageLevel, "PatchCore location must remain an image-level review result");
+        AssertTrue(
+            candidate.AnomalyScore.HasValue
+                && candidate.AnomalyThreshold.HasValue
+                && candidate.AnomalyScore.Value > candidate.AnomalyThreshold.Value,
+            "real PatchCore defect score should exceed the learned threshold");
+        AssertTrue(candidate.Width > 0 && candidate.Height > 0, "real PatchCore app smoke should preserve location bounds");
+        AssertTrue(File.Exists(candidate.HeatmapPath), "real PatchCore app smoke should preserve the generated heatmap path");
+    }
 }

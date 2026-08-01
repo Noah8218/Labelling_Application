@@ -11,8 +11,8 @@ This file defines how Codex should work in this repository.
 - Keep MVVM boundaries: View code-behind may act as a UI adapter, but command/state/workflow/presentation logic should live in ViewModel or Service classes where feasible.
 - Avoid Viewer/OpenGL/ROI/brush/eraser performance paths unless the task explicitly requires them.
 - Public README/tutorial docs must not include local private paths, conversation notes, portfolio-only wording, or machine-specific details.
-- Store local test data and generated test/smoke/validation artifacts physically under `D:\OpenVisionLab-TestData\Labelling_Application`. Preserve repository-relative paths with verified directory junctions where needed; tracked source fixtures and documentation remain in the repository.
-- Use `scripts\Move-LabelingTestStorageToDDrive.ps1 -Apply` for the bounded local migration. Do not remove the C source directory until the script's file-length and SHA-256 verification passes. CI or a machine without `D:` may use its isolated available storage and must report the fallback.
+- Store local test data and generated test/smoke/validation artifacts physically under `D:\OpenVisionLab-TestData\Labelling_Application`. Preserve repository-relative paths with verified directory junctions. The explicitly approved repository test-fixture `datasets` directory remains logically tracked but is physically D-backed on this workstation; source, documentation, product dependencies, user datasets, and `.proofline` remain outside this migration.
+- Use `scripts\Move-LabelingTestStorageToDDrive.ps1 -Apply` for the bounded local migration of repository/test `artifacts`, root/component `bin` and `obj`, `packages`, `.vs`, and the approved repository test-fixture `datasets`. Do not remove a C source directory until the script's file-length and SHA-256 verification passes. CI or a machine without `D:` may use its isolated available storage and must report the fallback.
 - Local test processes must route `TEMP` and `TMP` to `D:\OpenVisionLab-TestData\Labelling_Application\temp`. Do not move user datasets or `.proofline` state as test data.
 - Every actual EXE smoke, UI automation, operator-video, and EXE screenshot run must use `PlaceExeSmokeWindowOnLeftmostMonitor`, which dynamically selects the active monitor with the smallest bounds `Left` coordinate and verifies the actual window placement. Do not hard-code `DISPLAY2`; on the current topology it resolves to `\\.\DISPLAY2` at `Left=-1920`.
 
@@ -54,6 +54,7 @@ The goal is fast, reliable navigation for both people and LLMs. Prefer clear own
 - Keep `WpfLabelingShellWindow.<Domain>.cs` partials focused on one recognizable shell domain. Do not add a partial simply because an individual method is short.
 - Keep test execution and shared helpers in `tests\LabelingApplication.Tests\Program.cs`; place only large, self-contained domain suites in clearly named `Program.<Domain>.cs` partial files. Do not mechanically split tests to reduce line count.
 - When ownership or physical layout changes, update `docs\CODE_STRUCTURE.md` and every affected in-repository reference. Keep public documentation free of local paths and conversation-specific notes.
+- Use `docs\README.md` as the documentation navigation and lifecycle-classification hub. It does not override `docs\CURRENT_PRODUCT_STATUS.md`. Classify every new Markdown document exactly once and run `scripts\Test-DocumentationInformationArchitecture.ps1`; do not move or rename historical records merely to match a category.
 - Avoid restructuring Viewer, OpenGL, ROI, brush, or eraser paths unless the requested work requires it; these are performance-sensitive areas.
 
 ### Refactor Decision Check
@@ -117,8 +118,8 @@ Do not claim complete if the required verification did not run or did not pass.
   current source of truth for product identity, maturity, the active priority,
   and external prerequisites. Dated records remain evidence, not competing
   current-priority documents.
-- The current protected regression baseline is 264/264 after the P1-B
-  bounded crash-recovery completion. Preserve the loaded-window
+- The current protected regression baseline is 267/267 after the read-only
+  headless environment self-test CLI. Preserve the loaded-window
   safe-close boundary, never-loaded cleanup behavior, non-segmentation
   object-row aggregate-scan optimization, and all completed behavior named in
   `docs/STABLE_VERIFIED_AREAS.md`.
@@ -217,5 +218,9 @@ Do not claim complete if the required verification did not run or did not pass.
   grouping separate from geometry merge, shared movement, training,
   interchange, collaboration, and automatic save.
 - Continue improving OpenVisionLab Labeling Studio as a full workflow tool: dataset setup, image queue, class setup, object detection/segmentation/anomaly labeling, template labeling, training, inference, model runtime setup, and model comparison.
+- The bounded PatchCore normal-only anomaly pilot is Complete in `docs/PATCHCORE_ANOMALY_PILOT_20260731.md`, and the explicit read-only heatmap review view is Complete in `docs/PATCHCORE_HEATMAP_REVIEW_VIEW_20260801.md`. Preserve the separate selectable profile, reviewed-normal-only memory-bank input, full-frame resize without center-crop edge loss, explicit normal-val threshold calibration/fallback warning, image decision plus raw score/threshold, review-only localization and heatmap file/path, explicit-only no-lock heatmap loading, fail-closed missing/corrupt guidance, owned-window close/candidate-change reset, and no automatic label save, candidate hide, active-layer change, or model adoption. The heatmap is not a dedicated Main Viewer layer. Do not claim field quality or replace YOLO classification until approved same-split held-out evidence passes.
+- The workstation shell is dark-only. Keep both theme-selection entry points hidden and force legacy/internal light-theme requests back to the dark palette. Do not resume multi-theme styling or expose theme selection unless the user explicitly changes product direction.
+- The CI complete-regression gate is Complete in `docs/CI_COMPLETE_REGRESSION_GATE_20260801.md`. Preserve one no-argument default-suite invocation in one process, its 15-minute timeout, and its position before release publishing. Do not claim hosted GitHub Actions success until a pushed run is inspected; the internal test runner is not a product CLI.
+- The first product CLI command is Complete in `docs/HEADLESS_ENVIRONMENT_CHECK_CLI_20260801.md`. Preserve pre-startup `--environment-self-test --json` dispatch, JSON-only stdout, exit codes 0/2/64/70, no WPF/mutex/startup-log path, no durable writes, and the explicit warning boundary for the unavailable Main Viewer graphics context. Do not expand this into inference, training, archive, labeling, or model-adoption commands without separate workflow contracts.
 - Avoid repeating items already documented in `docs/WORK_TRACKING.md` and `docs/STABLE_VERIFIED_AREAS.md`.
 - Keep verified items documented after completion.

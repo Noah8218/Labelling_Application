@@ -122,6 +122,29 @@ namespace MvcVisionSystem._1._Core
             return new PythonModelRuntimeConnectionResult(settings, report, summary, detail);
         }
 
+        public static PythonModelRuntimeConnectionResult BuildPatchCoreConnection(
+            PythonModelSettings currentSettings,
+            string pythonExecutablePath = "")
+        {
+            PythonModelSettings settings = Clone(currentSettings);
+            settings.ModelEngine = PythonModelSettings.EnginePatchCore;
+            settings.ProjectRootPath = PythonModelSettings.GetDefaultPatchCoreProjectRootPath();
+            settings.ClientScriptPath = PythonModelRuntimeBundledWorkerService.ResolvePatchCoreWorkerScriptPath();
+            settings.PythonExecutablePath = string.IsNullOrWhiteSpace(pythonExecutablePath)
+                ? PythonModelSettingsValidator.ResolvePythonExecutable(currentSettings)
+                : ResolvePythonOrVenvPath(pythonExecutablePath);
+            settings.WeightsPath = PythonModelSettings.GetDefaultPatchCoreWeightsPath(settings.ProjectRootPath);
+
+            PythonModelRuntimeSelfTestReport report = PythonModelRuntimeSelfTestService.BuildReport(settings);
+            string summary = report.CanTrain
+                ? "PatchCore normal-only runtime ready"
+                : "PatchCore runtime needs setup";
+            string detail = report.CanTrain
+                ? "정상 train 이미지로 메모리 뱅크를 만들고 정상 val 이미지로 임계값을 보정합니다. 결과 위치는 저장 전 검토 후보입니다."
+                : "torch, torchvision, numpy, Pillow가 설치된 Python과 bundled PatchCore worker를 확인하세요.";
+            return new PythonModelRuntimeConnectionResult(settings, report, summary, detail);
+        }
+
         public static string ResolveKnownLocalRuntimeFolder(
             string currentProjectRootPath,
             string expectedFolderName)
@@ -152,7 +175,8 @@ namespace MvcVisionSystem._1._Core
             result = null;
             string engine = PythonModelSettings.NormalizeModelEngine(currentSettings?.ModelEngine);
             if (string.Equals(engine, PythonModelSettings.EngineYoloV8, StringComparison.Ordinal)
-                || string.Equals(engine, PythonModelSettings.EngineYolo11, StringComparison.Ordinal))
+                || string.Equals(engine, PythonModelSettings.EngineYolo11, StringComparison.Ordinal)
+                || string.Equals(engine, PythonModelSettings.EnginePatchCore, StringComparison.Ordinal))
             {
                 return false;
             }

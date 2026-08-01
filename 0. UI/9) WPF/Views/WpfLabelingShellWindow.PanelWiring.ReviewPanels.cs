@@ -147,7 +147,8 @@ namespace MvcVisionSystem
                 ExecuteOpenModelComparisonExampleCommand,
                 ExecuteSaveModelCandidateCommand,
                 ExecuteRejectModelCandidateCommand,
-                ExecuteModelComparisonHistorySelectionChangedCommand);
+                ExecuteModelComparisonHistorySelectionChangedCommand,
+                ExecuteTogglePatchCoreHeatmapCommand);
             RefreshAttachedCommandBindings(CandidateConfidenceSlider, InputCommandBehaviors.ValueInputCommandProperty);
             RefreshAttachedCommandBindings(
                 CandidateListBox,

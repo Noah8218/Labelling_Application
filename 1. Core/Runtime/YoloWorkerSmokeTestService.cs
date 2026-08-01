@@ -310,6 +310,9 @@ namespace MvcVisionSystem._1._Core
                     CandidateType = candidate["candidateType"]?.Value<string>() ?? string.Empty,
                     PredictionType = candidate["predictionType"]?.Value<string>() ?? string.Empty,
                     ImageLevel = candidate["imageLevel"]?.Value<bool?>() ?? false,
+                    AnomalyScore = candidate["anomalyScore"]?.Value<double?>(),
+                    AnomalyThreshold = candidate["anomalyThreshold"]?.Value<double?>(),
+                    HeatmapPath = candidate["heatmapPath"]?.Value<string>() ?? string.Empty,
                     SegmentationType = candidate["segmentationType"]?.Value<string>() ?? string.Empty,
                     PolygonPoints = ParsePolygonPoints(candidate["polygonPoints"]),
                     NormalizedPolygonPoints = ParsePolygonPoints(candidate["normalizedPolygonPoints"])

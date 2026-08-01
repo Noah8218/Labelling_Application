@@ -31,6 +31,17 @@
             <Setter Property="MinHeight" Value="30" />
             <Setter Property="Margin" Value="0,0,4,0" />
             <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource RowHoverBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource SelectedRowTextBrush}" />
+                </Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                </Trigger>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}" />
                     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrushDark}" />
@@ -869,9 +880,14 @@
                 Padding="8,5"
                 Margin="0,0,0,8">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="&#xC120;&#xD0DD; &#xD6C4;&#xBCF4;"
                            Foreground="{DynamicResource DisabledTextBrush}"
@@ -893,6 +909,37 @@
                            LineHeight="13"
                            MaxHeight="28"
                            VerticalAlignment="Center" />
+                <ui:Button x:Name="TogglePatchCoreHeatmapButton"
+                           Grid.Column="2"
+                           Style="{StaticResource CandidateReviewButtonStyle}"
+                           AutomationProperties.AutomationId="TogglePatchCoreHeatmapButton"
+                           AutomationProperties.Name="{Binding PatchCoreHeatmapActionText}"
+                           ToolTip="{Binding PatchCoreHeatmapToolTip}"
+                           Visibility="{Binding PatchCoreHeatmapVisibility}"
+                           IsEnabled="{Binding IsPatchCoreHeatmapActionEnabled}"
+                           Command="{Binding TogglePatchCoreHeatmapCommand}"
+                           Margin="8,0,0,0"
+                           MinWidth="96">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <iconPacks:PackIconMaterial Style="{StaticResource CandidateReviewIconStyle}" Kind="CrosshairsGps" />
+                        <TextBlock Text="{Binding PatchCoreHeatmapActionText}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ui:Button>
+                <TextBlock x:Name="PatchCoreHeatmapStatusText"
+                           Grid.Row="1"
+                           Grid.ColumnSpan="3"
+                           AutomationProperties.AutomationId="PatchCoreHeatmapStatusText"
+                           ToolTip="{Binding PatchCoreHeatmapToolTip}"
+                           Visibility="{Binding PatchCoreHeatmapVisibility}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           FontFamily="Segoe UI"
+                           FontSize="8.5"
+                           TextTrimming="CharacterEllipsis"
+                           Margin="0,3,0,0">
+                    <Run Text="{Binding PatchCoreHeatmapFileName, Mode=OneWay}" />
+                    <Run Text=" &#xB7; " />
+                    <Run Text="{Binding PatchCoreHeatmapStatusText, Mode=OneWay}" />
+                </TextBlock>
             </Grid>
         </Border>
         <Border x:Name="CandidateComparisonPanel"

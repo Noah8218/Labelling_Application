@@ -130,6 +130,8 @@ internal static class WpfShellStructureTests
         AssertNamedXamlBinding(shellXaml, xName, "InferenceModeButton", "IsEnabled", "ShellViewModel.IsInferenceModeButtonEnabled");
         AssertNamedXamlBinding(shellXaml, xName, "InferenceModeButton", "Tag", "ShellViewModel.IsInferenceModeActive");
         AssertNamedXamlBinding(shellXaml, xName, "ThemeToggleButton", "Command", "ShellViewModel.ToggleThemeCommand");
+        AssertNamedXamlValue(shellXaml, xName, "ThemeToggleButton", "Visibility", "Collapsed");
+        AssertNamedXamlValue(shellXaml, xName, "ThemeToggleMenuCollapsedButton", "Visibility", "Collapsed");
         AssertNamedXamlBinding(shellXaml, xName, "LoadSampleButton", "Command", "ShellViewModel.LoadSampleCommand");
         AssertNamedXamlBinding(shellXaml, xName, "AddSampleRoiButton", "Command", "ShellViewModel.AddSampleRoiCommand");
         AssertNamedXamlBinding(shellXaml, xName, "SaveAnnotationsButton", "Command", "ShellViewModel.SaveAnnotationsCommand");
@@ -973,6 +975,14 @@ internal static class WpfShellStructureTests
             AssertTrue(window.FindName("ThemeToggleButton") != null, "WPF theme toggle button was not created");
             AssertTrue(window.FindName("ThemeToggleText") != null, "WPF theme toggle text was not created");
             AssertTrue(window.FindName("ThemeToggleButton").GetType().FullName == "Wpf.Ui.Controls.Button", "WPF theme toggle should use WPF-UI button");
+            AssertEqual(System.Windows.Visibility.Collapsed, ((System.Windows.FrameworkElement)window.FindName("ThemeToggleButton")).Visibility);
+            AssertEqual(System.Windows.Visibility.Collapsed, ((System.Windows.FrameworkElement)window.FindName("ThemeToggleMenuCollapsedButton")).Visibility);
+            Type shellThemeType = typeof(WpfLabelingShellWindow).GetNestedType("ShellTheme", BindingFlags.NonPublic);
+            AssertTrue(shellThemeType != null, "WPF shell theme enum should remain available for legacy callers");
+            object requestedLightTheme = Enum.Parse(shellThemeType, "Light");
+            InvokePrivateResult<object>(window, "ApplyTheme", requestedLightTheme);
+            var lockedThemeBackground = (System.Windows.Media.SolidColorBrush)window.FindResource("AppBackgroundBrush");
+            AssertEqual("#FF0C0D0F", lockedThemeBackground.Color.ToString());
             AssertTrue(window.FindName("YoloCommandStatusText") != null, "WPF YOLO command status text was not created");
             AssertTrue(window.FindName("YoloSettingsScrollViewer") != null, "WPF YOLO settings scroll viewer was not created");
             var modelCenterTaskTabs = window.FindName("YoloModelCenterTaskTabs") as System.Windows.Controls.TabControl;
