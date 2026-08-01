@@ -3853,3 +3853,22 @@ evidence, invalid-argument evidence, and solo default `267/267` regression in
 
 Boundary: this is not a batch inference, training, archive, labeling, or model-
 adoption CLI and is not yet clean-source packaged-target evidence.
+
+## P0-C clean-source 0.1.2 transfer bundle (2026-08-01)
+
+Status: Complete for package preparation and local transfer verification.
+
+Preserve source commit `59e37d8`, product `0.1.2`, `source.dirty=false`, the
+self-contained 504-payload release, two-publish deterministic manifest/full-
+inventory result, packaged read-only CLI no-write behavior, and post-command
+package immutability. Preserve transfer ZIP SHA-256
+`cfb7be9d5055ad45b51411cf10d273749059cd98b5b20a930e4d15991de39c1f`
+and the extracted-harness leftmost-monitor evidence contract.
+
+Covered by `docs/P0C_CLEAN_SOURCE_TRANSFER_BUNDLE_0_1_2_20260801.md` and the
+D-drive package/transfer evidence directories named there.
+
+Boundary: no supported GPU-capable clean target was accessible, so image
+display, rectangle/save, close/relaunch/reopen, and returned target evidence
+remain external gates. This is not installer, signing, or production-quality
+evidence.

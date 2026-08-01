@@ -75,14 +75,14 @@ production image, or credential is required for this fixture-based gate.
 
 ## Prepared Portable Bundle
 
-Host path:
+Current clean-source host path:
 
-`artifacts/p0c-clean-machine/hyperv-guest-transfer/OpenVisionLab-P0C-HyperV-Guest.zip`
+`artifacts/p0c-clean-machine/gpu-target-transfer-0.1.2-59e37d8/OpenVisionLab-P0C-GPU-Target-0.1.2-59e37d8.zip`
 
 Expected SHA-256:
 
 ```text
-1DCA67F42CF25E0A1CB0C001FAA252624600183F593911F96719BAA2B95EAA65
+CFB7BE9D5055AD45B51411CF10D273749059CD98B5B20A930E4D15991DE39C1F
 ```
 
 When the clean target becomes directly accessible, Codex will:
@@ -98,7 +98,8 @@ When the clean target becomes directly accessible, Codex will:
    ```
 
 The script name retains its original Sandbox history, but its path parameters
-are target-independent. It copies the release to `C:\P0C\WorkingRelease`,
+are target-independent. It copies the `0.1.2` release to
+`C:\P0C\WorkingRelease`,
 verifies the manifest, and writes results under `C:\P0C\Evidence`.
 
 The operator does not need to type this command. Run it only once from a clean
@@ -108,13 +109,11 @@ new clean extraction instead.
 
 ### Current-Source Preflight Version Boundary
 
-The prepared bundle above is the immutable `0.1.0` evidence input from commit
-`ed682b2`. It predates the completed current-source graphics capability
-preflight in
-`docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`.
-
-Do not silently overwrite this bundle or claim that it contains the new
-`viewerGraphics` check.
+The current prepared bundle is clean-source `0.1.2` from commit `59e37d8`. It
+contains the completed current-source graphics capability preflight and the
+read-only headless environment command. Its deterministic package and transfer
+verification are recorded in
+`docs/P0C_CLEAN_SOURCE_TRANSFER_BUNDLE_0_1_2_20260801.md`.
 
 A self-contained `0.1.1` dirty-source engineering package now proves the new
 preflight and post-launch package immutability on the current host. Its
@@ -122,9 +121,10 @@ manifest records `source.dirty=true`, and it has no approved target-transfer
 ZIP, so it must not be used for this clean-target gate. Read
 `docs/ENGINEERING_RELEASE_0_1_1_GRAPHICS_PREFLIGHT_EVIDENCE_20260731.md`.
 
-Before the next target run, publish a new clean-source version, verify its full
-manifest, and record its transfer ZIP SHA-256. Preserve both the immutable
-`0.1.0` evidence bundle and the local `0.1.1` engineering evidence.
+The clean-source package prerequisite is now satisfied. Preserve the immutable
+`0.1.0` historical evidence bundle and local dirty-source `0.1.1` engineering
+evidence; do not overwrite either with `0.1.2`. Direct access to the selected
+GPU-capable clean target is the remaining prerequisite for execution.
 
 ## Included Validation
 

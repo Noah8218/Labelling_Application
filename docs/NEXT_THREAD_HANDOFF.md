@@ -21,10 +21,11 @@ Current product:
 
 Current Git/worktree:
 
-- reviewed clean-machine baseline preserved by the workflow contract:
-  `ed682b2 fix: verify clean-machine support bundles`;
-- current operational HEAD before the uncommitted documentation/cleanup work:
-  `56f256a chore: centralize test artifacts and smoke runs`;
+- current clean-source transfer baseline:
+  `59e37d8 test: place P0-C smoke on the leftmost monitor`;
+- reviewed clean-machine historical baseline remains
+  `ed682b2 fix: verify clean-machine support bundles`; preserve it as prior
+  evidence rather than treating it as the current transfer candidate;
 - all safe-close, canonical class-index, Smart Mask, Dataset Health,
   four-point box, Object Review metadata/group, and contextual group-control
   slices are committed and pushed through that baseline;
@@ -76,6 +77,11 @@ Current Git/worktree:
   deterministic publish, real packaged-EXE `8/8` graphics diagnostics, and
   post-launch package immutability. Read
   `docs/ENGINEERING_RELEASE_0_1_1_GRAPHICS_PREFLIGHT_EVIDENCE_20260731.md`;
+- clean-source self-contained `0.1.2` is now the prepared GPU-target transfer
+  candidate. Its two publishes are identical, packaged headless diagnostics
+  pass `7/1/0` without writes, the transfer ZIP verifies `504/504` extracted
+  payload hashes, and its harness records leftmost-monitor placement. Read
+  `docs/P0C_CLEAN_SOURCE_TRANSFER_BUNDLE_0_1_2_20260801.md`;
 - no commit or push is authorized by this handoff.
 
 Current immediate priority:
@@ -117,10 +123,9 @@ Current immediate priority:
   `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`;
 - the immutable `0.1.0` package used by the existing VM evidence predates the
   preflight and must remain unchanged;
-- the new `0.1.1` package records `source.dirty=true`; do not use it as
-  clean-source P0-C target evidence. Republish a clean-source version only
-  after the source is deliberately committed and the GPU-capable target is
-  accessible;
+- the `0.1.1` package records `source.dirty=true`; do not use it as clean-source
+  P0-C target evidence. The clean-source `0.1.2` package and verified transfer
+  ZIP are now prepared; preserve their manifest and ZIP hashes;
 - preserve checkpoint `P0C-Clean-Windows-Installed-20260731` and the evidence
   in `docs/P0C_HYPERV_LABELING_EVIDENCE_20260731.md`;
 - do not repeat the Sandbox or standard Hyper-V viewer loop unless the
@@ -128,8 +133,9 @@ Current immediate priority:
 - the user selected the separate GPU-capable clean Windows PC/VM path in
   `docs/P0C_GPU_CAPABLE_CLEAN_TARGET_VALIDATION_PLAN_20260731.md`; the viewer
   fallback project is not active; the current Windows 10 Pro/GTX 1060 host is
-  not an officially supported Hyper-V DDA/GPU-P target, so execution is
-  blocked until a supported GPU-capable clean target is directly accessible;
+  not an officially supported Hyper-V DDA/GPU-P target. Package preparation is
+  complete; execution is blocked until a supported GPU-capable clean target is
+  directly accessible;
   Codex, not the operator, owns target-side command execution and evidence
   recovery;
 - installer lifecycle and signing decisions remain separate P0-C

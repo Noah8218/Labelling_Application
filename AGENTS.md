@@ -179,8 +179,15 @@ Do not claim complete if the required verification did not run or did not pass.
   `0.1.1` engineering package in
   `docs/ENGINEERING_RELEASE_0_1_1_GRAPHICS_PREFLIGHT_EVIDENCE_20260731.md`;
   preserve its post-launch package immutability and empty-review-cache no-write
-  contract. It is not clean-source GPU-target evidence. A target run requires
-  a clean-source versioned bundle.
+  contract. It is not clean-source GPU-target evidence.
+- The clean-source self-contained `0.1.2` P0-C transfer bundle is Complete in
+  `docs/P0C_CLEAN_SOURCE_TRANSFER_BUNDLE_0_1_2_20260801.md`. Preserve source
+  commit `59e37d8`, `source.dirty=false`, 504/504 payload verification, two-
+  publish determinism, packaged read-only CLI immutability, transfer ZIP
+  SHA-256 `cfb7be9d5055ad45b51411cf10d273749059cd98b5b20a930e4d15991de39c1f`,
+  and the leftmost-monitor evidence contract. The package prerequisite is
+  satisfied; direct access to the selected GPU-capable clean Windows target
+  remains required before running the label/save/reopen gate.
 - Follow
   `docs/LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md`.
   Main-window safe close is Complete in

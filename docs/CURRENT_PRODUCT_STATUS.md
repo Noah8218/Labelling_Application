@@ -47,8 +47,8 @@ product direction changes explicitly.
 - Focused single-workstation workflow maturity: `4.0/5`.
 - Labeling-editor depth against the reviewed commercial-video baseline:
   `3.4/5`.
-- Baseline Git commit for the current operational worktree:
-  `ed682b2 fix: verify clean-machine support bundles`.
+- Baseline Git commit for the current clean-source transfer candidate:
+  `59e37d8 test: place P0-C smoke on the leftmost monitor`.
 - Current protected regression evidence: the solo default internal suite
   passed `267/267` after the read-only headless environment self-test CLI.
   The earlier
@@ -70,11 +70,12 @@ operability.
 | Dataset Health split/class/problem filtering | Complete and read-only | Duplicate, leakage, near-duplicate, and domain-shift analysis are not yet a completed product contract |
 | Object Review metadata and same-image groups | Complete | No automatic save, shared movement, cross-image tracking, or collaboration |
 | Commercial release baseline audit | Complete | Local publishability is verified; commercial release readiness is not |
-| Release/publish scripts | Complete for the engineering package baseline | Versioned self-contained `0.1.0` folder, fail-closed verification, and CI artifact are covered; installer/signing remain separate |
+| Release/publish scripts | Complete through the clean-source `0.1.2` transfer candidate | Versioned self-contained folder, fail-closed verification, deterministic republish, and transfer ZIP are covered; installer/signing remain separate |
 | Explicit version, deterministic package provenance, legal inventory | Complete for P0-B1 | Exact evidence is in `docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md`; formal public-release legal review remains external |
 | Packaged runtime diagnostics and explicit support export | Complete for P0-B2 | Current-user paths, bounded retention, package/environment self-test, allow-list/redaction, and packaged first-launch immutability are covered |
 | Current-source viewer graphics capability preflight | Complete | The actual Main Viewer context and 11 required framebuffer functions are checked; a definite failure is visible in diagnostics/support evidence and blocks image opening before state mutation |
 | `0.1.1` packaged graphics-preflight engineering evidence | Complete | Two deterministic dirty-source publishes, real packaged-EXE `8/8` diagnostics, and post-launch package immutability passed; this is not clean-source GPU-target evidence |
+| `0.1.2` clean-source GPU-target transfer bundle | Complete for package preparation | `source.dirty=false`, two deterministic publishes, packaged headless preflight, 504/504 extracted payload hashes, ZIP SHA-256, and leftmost-monitor harness evidence passed; external GPU labeling remains unexecuted |
 | Installer, upgrade/uninstall, code signing, clean-machine evidence | Partial | Windows Sandbox package-safe checks passed; a clean Windows 11 full Hyper-V VM reproduced the SharpGL framebuffer failure, while installer/signing decisions remain open |
 | Portable project archive | Complete for P1-A | Saved Recipe plus complete dataset root round trip, SHA-256 validation, path rebasing, non-overwrite import, and explicit Apply are covered |
 | Crash recovery journal | Complete for P1-B | One current-image dirty draft, explicit restore/discard, bounded retention/integrity/context validation, and no candidate confirmation or label save |
@@ -246,16 +247,24 @@ candidate rather than clean-source target evidence. Do not silently replace
 the prior immutable `0.1.0` evidence package or send `0.1.1` into the P0-C
 clean-target gate as a release artifact.
 
+A clean-source self-contained `0.1.2` transfer candidate is now prepared from
+commit `59e37d8`. Two publishes produced identical manifests and full-package
+inventories; the packaged read-only environment command passed `7/1/0`
+without writes; the transfer ZIP was newly extracted and all `504/504`
+payload hashes passed with no missing or unlisted files. The included harness
+also records verified leftmost-monitor placement. Exact evidence is in
+`docs/P0C_CLEAN_SOURCE_TRANSFER_BUNDLE_0_1_2_20260801.md`.
+
 Do not repeat the Sandbox or standard Hyper-V viewer loop unless the display
 capability or viewer implementation changes. On 2026-07-31, the operator
 selected a separate GPU-capable clean Windows PC or explicitly GPU-capable VM
 for the next viewer attempt. The viewer compatibility/fallback project is not
 active. The current Windows 10 Pro/GTX 1060 host cannot provide an officially
 supported Hyper-V DDA/GPU-P target, and its only accessible VM has no GPU
-adapter. Execution is blocked until a supported target is directly accessible
-from this workspace. Codex will execute the target-side command; the operator
-does not need to run it manually. Installer lifecycle and signing decisions
-remain separate.
+adapter. The package prerequisite is complete; execution is blocked only until
+a supported target is directly accessible from this workspace. Codex will
+execute the target-side command; the operator does not need to run it manually.
+Installer lifecycle and signing decisions remain separate.
 
 Evidence:
 
@@ -264,6 +273,8 @@ Evidence:
 `docs/P0C_HYPERV_LABELING_EVIDENCE_20260731.md`
 
 `docs/P0C_GPU_CAPABLE_CLEAN_TARGET_VALIDATION_PLAN_20260731.md`
+
+`docs/P0C_CLEAN_SOURCE_TRANSFER_BUNDLE_0_1_2_20260801.md`
 
 `docs/RUNTIME_GRAPHICS_CAPABILITY_PREFLIGHT_P0C_20260731.md`
 
@@ -419,5 +430,5 @@ Scope: Consolidated the current product identity, maturity, protected completed 
 Acceptance criteria: One authority document exists; navigation documents point to it; the immediate audit is bounded and evidence-based; locally implementable work is separated from external prerequisites; completed editor slices are protected.
 Verification: --priority-workflow-docs and git diff --check for this documentation change.
 Evidence: docs/CURRENT_PRODUCT_STATUS.md plus the aligned README.md, AGENTS.md, docs/NEXT_THREAD_HANDOFF.md, CODEX_NEXT_PROMPT.md, WORK_TRACKING.md, and STABLE_VERIFIED_AREAS.md.
-Boundary / next dependency: P0-B1, P0-B2, P1-A portable project archive, P1-B bounded crash recovery, the current-source actual-viewer graphics preflight, and the local 0.1.1 dirty-source packaged-preflight evidence are complete. P0-C package-safe clean-machine evidence is partial; the standard Hyper-V display failed the SharpGL gate. A clean-source versioned package plus direct access to the selected GPU-capable clean Windows target are required before the next packaged labeling attempt. Installer/signing and production validation remain separate.
+Boundary / next dependency: P0-B1, P0-B2, P1-A portable project archive, P1-B bounded crash recovery, the current-source actual-viewer graphics preflight, local 0.1.1 engineering evidence, and the clean-source 0.1.2 transfer bundle are complete. P0-C package-safe clean-machine evidence is partial; the standard Hyper-V display failed the SharpGL gate. Direct access to the selected GPU-capable clean Windows target is required before the next packaged labeling attempt. Installer/signing and production validation remain separate.
 ```

@@ -20449,6 +20449,54 @@ Boundary / next dependency:
   workflow contract;
 - clean GPU-target and production model validation remain externally blocked.
 
+## 2026-08-01 P0-C clean-source 0.1.2 transfer bundle
+
+Status: Complete
+
+Scope:
+
+- committed the verified PatchCore/theme/CI/headless/test-storage work and
+  separated local `.proofline` state;
+- updated the P0-C harness to place the actual EXE on the dynamically selected
+  leftmost monitor and record verified window/monitor bounds;
+- produced clean-source self-contained `0.1.2` from commit `59e37d8` twice;
+- ran the packaged read-only environment command and verified package
+  immutability;
+- assembled, hashed, newly extracted, and fully verified the GPU-target ZIP.
+
+Acceptance criteria:
+
+- release manifest `source.dirty=false` -> pass;
+- two publishes have identical manifest and full-package inventory -> pass;
+- packaged CLI -> `7` pass, `1` warning, `0` fail, exit 0, stderr empty;
+- no persistent self-test and no package mutation -> pass;
+- transfer ZIP SHA-256 -> recorded;
+- new extraction verifies `504/504`, missing 0, unlisted 0 -> pass;
+- extracted harness parses and contains leftmost-monitor evidence -> pass.
+
+Verification:
+
+- `publish-win-x64.ps1 -Configuration Release -ReleaseVersion 0.1.2 -SelfContained` twice;
+- `publish-win-x64.ps1 ... -VerifyOnly`;
+- packaged `--environment-self-test --json`;
+- complete path/length/SHA-256 inventories before and after;
+- `Compress-Archive`, new-directory `Expand-Archive`, and independent per-file
+  length/SHA-256 checks;
+- PowerShell harness parse, documentation information architecture, priority
+  workflow docs, and whitespace checks.
+
+Evidence:
+
+- `docs/P0C_CLEAN_SOURCE_TRANSFER_BUNDLE_0_1_2_20260801.md`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\release-package-0.1.2-clean-59e37d8-20260801`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\p0c-clean-machine\gpu-target-transfer-0.1.2-59e37d8`.
+
+Boundary / next dependency:
+
+- direct access to a supported GPU-capable clean Windows target is still
+  required for display/label/save/reopen execution;
+- installer/signing, hosted CI, and production-data validation remain separate.
+
 ## 2026-08-01 Headless environment self-test CLI
 
 Status: Complete

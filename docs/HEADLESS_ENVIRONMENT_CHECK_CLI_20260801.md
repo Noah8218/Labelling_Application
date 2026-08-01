@@ -76,8 +76,9 @@ Evidence root:
   archive, labeling, or model-adoption CLI.
 - The actual Main Viewer graphics capability remains a UI-context check and is
   intentionally not claimed by headless execution.
-- Current-source EXE behavior is verified; a clean-source versioned package and
-  hosted CI run remain separate evidence.
+- Clean-source packaged behavior is now separately verified in
+  `docs/P0C_CLEAN_SOURCE_TRANSFER_BUNDLE_0_1_2_20260801.md`; hosted CI and the
+  external GPU/UI target run remain separate evidence.
 
 ```text
 Status: Complete
@@ -85,5 +86,5 @@ Scope: Current-source --environment-self-test --json command with read-only JSON
 Acceptance criteria: Pre-WPF dispatch -> pass; valid JSON -> pass; no durable writes -> pass; no window -> pass; invalid arguments -> exit 64 JSON; existing diagnostics regression -> pass; full regression -> 267/267.
 Verification: Isolated build, --headless-environment-self-test, --runtime-diagnostics-contract, direct EXE run, solo default suite, documentation and whitespace gates.
 Evidence: Program.cs, WpfHeadlessRuntimeCommandService.cs, WpfRuntimeDiagnosticsService.cs, tests, and the D-drive evidence root.
-Boundary / next dependency: No packaged/clean-machine claim; other product CLI commands require separate operator workflow contracts.
+Boundary / next dependency: Clean-source 0.1.2 packaged CLI behavior is separately verified; no external GPU/UI clean-target claim; other product CLI commands require separate operator workflow contracts.
 ```
