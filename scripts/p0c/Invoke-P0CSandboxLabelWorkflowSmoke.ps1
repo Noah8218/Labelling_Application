@@ -204,17 +204,14 @@ function Assert-ReleasePayload {
     }
 }
 
-function Save-WindowCapture {
-    param(
-        [IntPtr]$WindowHandle,
-        [string]$Path
-    )
-
+function Initialize-WindowInterop {
     Add-Type -AssemblyName System.Drawing
-    Add-Type @'
+    Add-Type -AssemblyName System.Windows.Forms
+    if ($null -eq ("P0CLabelWorkflowWindow" -as [type])) {
+        Add-Type @'
 using System;
 using System.Runtime.InteropServices;
-public static class P0CLabelWorkflowCapture
+public static class P0CLabelWorkflowWindow
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT
@@ -227,21 +224,116 @@ public static class P0CLabelWorkflowCapture
 
     [DllImport("user32.dll")]
     public static extern bool GetWindowRect(IntPtr windowHandle, out RECT rectangle);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool MoveWindow(
+        IntPtr windowHandle,
+        int x,
+        int y,
+        int width,
+        int height,
+        bool repaint);
 }
 '@
+    }
+}
 
-    $rectangle = New-Object P0CLabelWorkflowCapture+RECT
-    if (-not [P0CLabelWorkflowCapture]::GetWindowRect($WindowHandle, [ref]$rectangle)) {
+function Get-WindowBounds {
+    param([IntPtr]$WindowHandle)
+
+    Initialize-WindowInterop
+    $rectangle = New-Object P0CLabelWorkflowWindow+RECT
+    if (-not [P0CLabelWorkflowWindow]::GetWindowRect($WindowHandle, [ref]$rectangle)) {
         throw "Unable to resolve application window bounds."
     }
+
+    return [System.Drawing.Rectangle]::FromLTRB(
+        $rectangle.Left,
+        $rectangle.Top,
+        $rectangle.Right,
+        $rectangle.Bottom)
+}
+
+function Place-ExeSmokeWindowOnLeftmostMonitor {
+    param(
+        [IntPtr]$WindowHandle,
+        [string]$EvidencePath
+    )
+
+    Initialize-WindowInterop
+    $screens = @([System.Windows.Forms.Screen]::AllScreens)
+    if ($screens.Count -eq 0) {
+        throw "No active display is available for the EXE smoke test."
+    }
+
+    $monitor = $screens |
+        Sort-Object { $_.Bounds.Left }, { $_.Bounds.Top } |
+        Select-Object -First 1
+    $currentBounds = Get-WindowBounds -WindowHandle $WindowHandle
+    $workingArea = $monitor.WorkingArea
+    $width = [Math]::Min($currentBounds.Width, $workingArea.Width)
+    $height = [Math]::Min($currentBounds.Height, $workingArea.Height)
+    $left = $workingArea.Left + [Math]::Max(0, [int](($workingArea.Width - $width) / 2))
+    $top = $workingArea.Top + [Math]::Max(0, [int](($workingArea.Height - $height) / 2))
+
+    if (-not [P0CLabelWorkflowWindow]::MoveWindow(
+        $WindowHandle,
+        $left,
+        $top,
+        $width,
+        $height,
+        $true)) {
+        throw "Unable to place the EXE smoke window on the leftmost monitor."
+    }
+
+    Start-Sleep -Milliseconds 250
+    $actualBounds = Get-WindowBounds -WindowHandle $WindowHandle
+    $intersects = $monitor.Bounds.IntersectsWith($actualBounds)
+    $placement = [ordered]@{
+        recordedAtUtc = [DateTime]::UtcNow.ToString("O")
+        monitorCount = $screens.Count
+        fallback = if ($screens.Count -eq 1) { "single-monitor" } else { "none" }
+        monitor = [ordered]@{
+            deviceName = $monitor.DeviceName
+            left = $monitor.Bounds.Left
+            top = $monitor.Bounds.Top
+            width = $monitor.Bounds.Width
+            height = $monitor.Bounds.Height
+        }
+        window = [ordered]@{
+            left = $actualBounds.Left
+            top = $actualBounds.Top
+            width = $actualBounds.Width
+            height = $actualBounds.Height
+        }
+        intersects = $intersects
+    }
+    $placement |
+        ConvertTo-Json -Depth 5 |
+        Set-Content -LiteralPath $EvidencePath -Encoding UTF8
+
+    if (-not $intersects) {
+        throw "The EXE smoke window does not intersect the selected leftmost monitor '$($monitor.DeviceName)'."
+    }
+
+    return $placement
+}
+
+function Save-WindowCapture {
+    param(
+        [IntPtr]$WindowHandle,
+        [string]$Path
+    )
+
+    $bounds = Get-WindowBounds -WindowHandle $WindowHandle
     $bitmap = New-Object System.Drawing.Bitmap(
-        ($rectangle.Right - $rectangle.Left),
-        ($rectangle.Bottom - $rectangle.Top))
+        $bounds.Width,
+        $bounds.Height)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     try {
         $graphics.CopyFromScreen(
-            $rectangle.Left,
-            $rectangle.Top,
+            $bounds.Left,
+            $bounds.Top,
             0,
             0,
             $bitmap.Size)
@@ -289,6 +381,13 @@ try {
         -PassThru
     Wait-MainWindow -Process $applicationProcess
     Add-Step "packaged-first-launch" "pass" "PID $($applicationProcess.Id)"
+    $placement = Place-ExeSmokeWindowOnLeftmostMonitor `
+        -WindowHandle $applicationProcess.MainWindowHandle `
+        -EvidencePath (Join-Path $EvidenceDirectory "monitor-placement.json")
+    Add-Step `
+        "exe-window-leftmost-monitor" `
+        "pass" `
+        "$($placement.monitor.deviceName) | $($placement.window.left),$($placement.window.top),$($placement.window.width),$($placement.window.height)"
 
     $changeDataset = Find-AutomationElement `
         -ProcessId $applicationProcess.Id `

@@ -136,7 +136,8 @@ The gate must prove, in order:
 
 1. target identity and graphics driver evidence;
 2. transfer ZIP and release-manifest SHA-256 verification;
-3. all `503` manifest payload files verified in a writable target-local copy;
+3. every manifest-declared payload file verified in a writable target-local
+   copy (the current `0.1.2` candidate contains `504` payload files);
 4. packaged first launch;
 5. real detection dataset creation;
 6. fixture image display without an OpenGL/SharpGL exception;
@@ -148,9 +149,11 @@ The gate must prove, in order:
 12. the same Recipe/dataset/image reopened with the saved rectangle visible;
 13. staged release payload unchanged after the workflow.
 
-The existing UI Automation harness may prove steps 3 through 10. Reopen is a
-separate required check until the harness records explicit relaunch and saved
-object restoration evidence.
+The existing UI Automation harness may prove steps 3 through 10. It now moves
+the packaged EXE to the active monitor with the smallest `Left` bound, verifies
+that the resulting window intersects that monitor, and writes
+`monitor-placement.json`. Reopen is a separate required check until the
+harness records explicit relaunch and saved-object restoration evidence.
 
 ## Target Readiness Record
 
@@ -175,6 +178,8 @@ Return one evidence folder containing:
 
 - target-readiness JSON and `dxdiag.txt`;
 - transfer ZIP SHA-256 and release manifest;
+- `monitor-placement.json` with monitor name/bounds, actual window bounds, and
+  the single-monitor fallback when applicable;
 - `label-workflow-progress.json`;
 - `label-workflow-result.json`;
 - successful image/box/save screenshot;
@@ -207,7 +212,8 @@ Return one evidence folder containing:
 [ ] GPU driver and dxdiag evidence are captured
 [ ] Clean checkpoint exists when target is a VM
 [ ] Transfer ZIP SHA-256 matches
-[ ] 503/503 release payload hashes pass
+[ ] 504/504 release payload hashes pass
+[ ] EXE window intersects the dynamically selected leftmost monitor
 [ ] Packaged application launches
 [ ] Dataset is created
 [ ] Fixture image renders without SharpGL/OpenGL error
@@ -225,7 +231,7 @@ Return one evidence folder containing:
 ```text
 Status: Blocked
 Scope: Execute the selected GPU-capable clean Windows target labeling validation without changing the viewer implementation.
-Acceptance criteria: Target/driver evidence; 503/503 payload verification; image display; one rectangle; explicit save; non-empty label; normal close; relaunch; saved-image reopen; unchanged package.
+Acceptance criteria: Target/driver evidence; all 504 payload hashes verified; leftmost-monitor placement evidence; image display; one rectangle; explicit save; non-empty label; normal close; relaunch; saved-image reopen; unchanged package.
 Verification: Target-side UI Automation plus console screenshots, persisted artifacts, diagnostics/logs, and package hash comparison.
 Evidence: docs/P0C_GPU_CAPABLE_CLEAN_TARGET_VALIDATION_PLAN_20260731.md; execution evidence does not yet exist.
 Boundary / next dependency: Direct access from this Codex workspace to a supported GPU-capable clean Windows PC or VM. Codex will execute the prepared command and recover the evidence; the operator does not need to run it manually.
