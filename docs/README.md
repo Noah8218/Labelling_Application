@@ -127,6 +127,7 @@ WORK_TRACKING.md -> 개별 날짜 문서` 순서가 우선합니다. 날짜가 �
 - `EVIDENCE` [Segmentation E30 Error Analysis](SEGMENTATION_E30_ERROR_ANALYSIS_20260721.md)
 - `EVIDENCE` [Segmentation E30 Three-Model Comparison](SEGMENTATION_E30_THREE_MODEL_COMPARISON_20260722.md)
 - `EVIDENCE` [Smart Mask Correction Effectiveness](SMART_MASK_CORRECTION_EFFECTIVENESS_20260728.md)
+- `EVIDENCE` [Tutorial Guide Currency And Followability Audit](TUTORIAL_GUIDE_AUDIT_20260802.md)
 - `EVIDENCE` [U-Net E30 Class Confusion Analysis](UNET_E30_CLASS_CONFUSION_ANALYSIS_20260722.md)
 - `EVIDENCE` [U-Net Segmentation Adapter Design](UNET_SEGMENTATION_ADAPTER_DESIGN_20260721.md)
 - `EVIDENCE` [WPF Annotation Object Verification](WPF_ANNOTATION_OBJECT_VERIFICATION.md)

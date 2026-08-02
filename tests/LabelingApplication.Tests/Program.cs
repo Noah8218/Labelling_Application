@@ -25662,28 +25662,47 @@ internal static partial class Program
 
         int linkedTutorialImageCount = tutorialHtml.Split(new[] { "src=\"images/" }, StringSplitOptions.None).Length - 1;
         int embeddedTutorialImageCount = tutorialStandaloneHtml.Split(new[] { "src=\"data:image" }, StringSplitOptions.None).Length - 1;
-        int annotatedAltTextCount = tutorialHtml.Split(new[] { "alt=\"번호와 화살표" }, StringSplitOptions.None).Length - 1;
+        int tutorialImageAltTextCount = tutorialHtml.Split(new[] { " alt=\"" }, StringSplitOptions.None).Length - 1;
 
-        AssertTrue(linkedTutorialImageCount >= 10, "tutorial HTML should keep the full annotated screenshot walkthrough");
+        AssertTrue(linkedTutorialImageCount >= 10, "tutorial HTML should keep the full screenshot walkthrough");
         AssertEqual(linkedTutorialImageCount, embeddedTutorialImageCount);
-        AssertEqual(linkedTutorialImageCount, annotatedAltTextCount);
+        AssertEqual(linkedTutorialImageCount, tutorialImageAltTextCount);
         AssertTrue(!tutorialStandaloneHtml.Contains("src=\"images/", StringComparison.Ordinal), "standalone tutorial should embed screenshots instead of referencing local image files");
+        AssertTrue(tutorialHtml.Contains("PatchCore", StringComparison.Ordinal), "tutorial HTML should cover the current PatchCore workflow");
+        AssertTrue(tutorialHtml.Contains("Dataset Health", StringComparison.Ordinal), "tutorial HTML should cover the current Dataset Health workflow");
+        AssertTrue(tutorialHtml.Contains("비정상 종료 편집 복구", StringComparison.Ordinal), "tutorial HTML should cover the bounded crash-recovery workflow");
 
+        int currentFeatureImageCount = 0;
         foreach (string imageSource in ExtractHtmlImageSources(tutorialHtml))
         {
             AssertTrue(
-                imageSource.StartsWith("images/annotated/", StringComparison.Ordinal),
-                $"tutorial HTML should use annotated screenshots only: {imageSource}");
+                imageSource.StartsWith("images/", StringComparison.Ordinal),
+                $"tutorial HTML should use repository-local screenshot assets: {imageSource}");
             AssertTrue(
-                imageSource.EndsWith("-annotated.png", StringComparison.Ordinal),
-                $"tutorial screenshot should use the annotated export, not a raw capture: {imageSource}");
+                !imageSource.Contains("..", StringComparison.Ordinal),
+                $"tutorial screenshot should not escape the tutorial image root: {imageSource}");
             AssertTrue(
-                imageSource.Contains("-1920-", StringComparison.Ordinal) || imageSource.Contains("-actual-", StringComparison.Ordinal),
-                $"tutorial screenshot should use current large EXE captures: {imageSource}");
+                imageSource.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                    || imageSource.EndsWith(".gif", StringComparison.OrdinalIgnoreCase),
+                $"tutorial screenshot should use a supported local image format: {imageSource}");
+
+            if (imageSource.StartsWith("images/annotated/", StringComparison.Ordinal))
+            {
+                AssertTrue(
+                    imageSource.EndsWith("-annotated.png", StringComparison.Ordinal),
+                    $"annotated tutorial screenshots should use the annotated export name: {imageSource}");
+            }
+
+            if (imageSource.StartsWith("images/features-20260802/", StringComparison.Ordinal))
+            {
+                currentFeatureImageCount++;
+            }
 
             string imagePath = Path.Combine(root, "docs", "tutorial", imageSource.Replace('/', Path.DirectorySeparatorChar));
             AssertTrue(File.Exists(imagePath), $"tutorial screenshot file should exist: {imageSource}");
         }
+
+        AssertTrue(currentFeatureImageCount >= 5, "tutorial HTML should show current feature screenshots for the latest operator workflows");
     }
 
     private static IReadOnlyList<string> ExtractHtmlImageSources(string html)

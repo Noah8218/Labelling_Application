@@ -233,8 +233,9 @@ GitHub Actions의 `.github/workflows/ci.yml`은 다음을 확인합니다.
 | [현재 제품 상태와 개발 우선순위](docs/CURRENT_PRODUCT_STATUS.md) | 제품 정체성, 검증된 완성 범위, 상용화 전환 순서, 외부 선행조건의 단일 기준 |
 | [상용 릴리스 기준 감사](docs/COMMERCIAL_READINESS_AUDIT_20260730.md) | 현재 빌드·전체 회귀·게시·첫 실행 결과와 릴리스 누락 항목 |
 | [다음 개발 결정](docs/NEXT_DEVELOPMENT_DECISION_20260730.md) | 버전이 지정된 결정적 self-contained 릴리스 번들의 단일 구현 계약 |
-| [단계별 사용 가이드](docs/tutorial/README.md) | 객체탐지·세그멘테이션·이상탐지 라벨링과 학습 절차 |
-| [화면 캡처 튜토리얼](docs/tutorial/labeling-workbench-tutorial.html) | 번호가 표시된 전체 화면 안내 |
+| [단계별 사용자 매뉴얼](docs/tutorial/README.md) | 데이터셋부터 객체탐지·세그멘테이션·PatchCore·검수·학습·복구까지 기능별 절차와 완료 신호 |
+| [웹형 화면 가이드](docs/tutorial/labeling-workbench-tutorial.html) | 목차, 현재 화면, 문제 해결을 포함한 따라하기형 시각 매뉴얼 |
+| [단일 파일 화면 가이드](docs/tutorial/labeling-workbench-tutorial-standalone.html) | 다른 PC로 복사해도 이미지가 함께 열리는 휴대형 HTML |
 | [YOLOv5 학습 결과 판단 기준](docs/YOLOV5_TRAINING_RESULT_WORKFLOW.md) | 학습 완료 후 후보를 채택하기 전 확인할 기준 |
 | [세그멘테이션 UX 기준](docs/SEGMENTATION_UX_COMPLETION.md) | 마스크·폴리곤 저장과 검증 기준 |
 | [이상탐지 흐름](docs/ANOMALY_DETECTION_FLOW.md) | OK/NG 판정, 분류 학습, 검증 절차 |
