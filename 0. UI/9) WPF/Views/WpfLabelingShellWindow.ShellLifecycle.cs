@@ -206,6 +206,7 @@ namespace MvcVisionSystem
             CloseModelBenchmarkWindow();
             CloseDatasetHealthWindow();
             CloseDatasetInterchangeWindow();
+            CloseEnvironmentSetupCenterWindow();
             StopInferenceStatusPulse();
             inferenceStatusPulseTimer.Tick -= InferenceStatusPulseTimer_Tick;
             StopTrainingStatusPolling();

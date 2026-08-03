@@ -29,6 +29,8 @@ namespace MvcVisionSystem.Yolo
 
     public sealed class AnomalyClassificationEvaluationReport
     {
+        public string ModelName { get; set; } = string.Empty;
+
         public int TotalImageCount { get; set; }
 
         public int NormalImageCount { get; set; }
@@ -48,6 +50,18 @@ namespace MvcVisionSystem.Yolo
         public double NormalAccuracy { get; set; }
 
         public double AbnormalAccuracy { get; set; }
+
+        public double BalancedAccuracy { get; set; }
+
+        public int FalsePositiveCount { get; set; }
+
+        public int FalseNegativeCount { get; set; }
+
+        public int LocalizationEvidenceCount { get; set; }
+
+        public int HeatmapEvidenceCount { get; set; }
+
+        public string LocalizationGroundTruthStatus { get; set; } = string.Empty;
 
         public IReadOnlyList<string> HoldReasons { get; set; } = Array.Empty<string>();
 

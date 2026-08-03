@@ -12,6 +12,7 @@ namespace MvcVisionSystem
         private string statusTitleText = "환경 점검 전";
         private string statusDetailText = "지원 자료는 버튼을 눌러야 생성되며 이미지·라벨·가중치는 제외됩니다.";
         private WpfRuntimeSelfTestCheck lastGraphicsCapabilityCheck;
+        private Action openSetupCenterAction;
         private bool isBusy;
 
         public WpfRuntimeDiagnosticsViewModel()
@@ -24,10 +25,12 @@ namespace MvcVisionSystem
             this.diagnosticsService = diagnosticsService ?? throw new ArgumentNullException(nameof(diagnosticsService));
             RunSelfTestCommand = new RelayCommand(RunSelfTest, () => !IsBusy);
             CreateSupportBundleCommand = new RelayCommand(CreateSupportBundle, () => !IsBusy);
+            OpenSetupCenterCommand = new RelayCommand(OpenSetupCenter, () => !IsBusy && openSetupCenterAction != null);
         }
 
         public ICommand RunSelfTestCommand { get; }
         public ICommand CreateSupportBundleCommand { get; }
+        public ICommand OpenSetupCenterCommand { get; }
 
         public string StatusTitleText
         {
@@ -59,6 +62,12 @@ namespace MvcVisionSystem
         {
             diagnosticsService.SetGraphicsCapabilityProvider(provider);
             lastGraphicsCapabilityCheck = null;
+        }
+
+        public void ConfigureOpenSetupCenterAction(Action action)
+        {
+            openSetupCenterAction = action;
+            CommandManager.InvalidateRequerySuggested();
         }
 
         public bool EnsureViewerReadyForImageLoad(out string detail)
@@ -113,6 +122,11 @@ namespace MvcVisionSystem
                     StatusDetailText =
                         $"{Path.GetFileName(result.ArchivePath)} · 이미지/라벨/가중치/자격 증명 제외";
                 });
+        }
+
+        private void OpenSetupCenter()
+        {
+            openSetupCenterAction?.Invoke();
         }
 
         private void RememberGraphicsCapability(WpfRuntimeSelfTestCheck check)

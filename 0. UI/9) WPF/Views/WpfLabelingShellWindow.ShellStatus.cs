@@ -193,6 +193,7 @@ namespace MvcVisionSystem
             RefreshModelBenchmarkWindowTheme();
             RefreshDatasetHealthWindowTheme();
             RefreshDatasetInterchangeWindowTheme();
+            RefreshEnvironmentSetupCenterWindowTheme();
             UpdateWorkflowModeUi();
             UpdateQueueQuickFilterButtons();
         }

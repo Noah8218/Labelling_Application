@@ -1,6 +1,6 @@
 # Work Tracking
 
-Last updated: 2026-07-31
+Last updated: 2026-08-03
 
 ## 2026-07-31 Engineering Release 0.1.1 Graphics Preflight
 
@@ -20540,3 +20540,386 @@ Boundary / next dependency:
 - other product CLI operations require individual operator workflow and data-
   safety contracts;
 - clean GPU-target and production model validation remain externally blocked.
+## 2026-08-03 Environment Setup Center P1-G
+
+Status: Complete
+
+Scope:
+
+- added a dedicated environment setup/recovery center under
+  `설정/도구 -> 진단/지원`;
+- combined the existing read-only product diagnostics and selected model-
+  runtime self-test into required/optional status rows with concrete next
+  actions;
+- added an explicit YOLOv5 repository-integrity row after the restored folder
+  was proven incomplete despite its surviving root/Python/worker/weight paths;
+- connected one explicit action to the existing model-runtime settings and
+  package installation surface;
+- documented the install order and preserved Python/GPU/CUDA as guide-only
+  external prerequisites;
+- added dark responsive Wide/Compact UI and an actual-EXE regression switch.
+
+Acceptance criteria:
+
+- setup-center entry and owned-window lifecycle -> pass;
+- app/viewer/current runtime combined without a second settings store -> pass;
+- incomplete YOLOv5 root is reported as required recovery work -> pass;
+- open/refresh do not persist a full self-test or execute setup/model work ->
+  pass;
+- explicit model-settings handoff -> pass;
+- Wide `1120x760` and Compact `920x620` actual-EXE layouts -> pass;
+- dynamic active leftmost/only monitor placement -> `DISPLAY1`, pass.
+
+Verification:
+
+- current-source Debug application/test build -> 0 warnings, 0 errors;
+- `--runtime-diagnostics-contract` -> pass;
+- `--headless-environment-self-test` -> pass;
+- `--wpf-labeling-shell` -> pass;
+- `--priority-workflow-docs` -> pass;
+- `--exe-environment-setup-center-smoke` Wide and Compact -> pass;
+- documentation IA -> 108/108 classified, 0 broken links, 0 duplicates;
+- `git diff --check` -> pass.
+
+Evidence:
+
+- `docs/ENVIRONMENT_SETUP_CENTER_P1G_20260803.md`;
+- bounded local test-evidence bundle `environment-setup-center-20260803`.
+
+Boundary / next dependency:
+
+- Python/GPU/CUDA installation, installer/signing lifecycle, clean GPU-target
+  label/save/reopen evidence, and production model quality remain separate;
+- the restored repository test-storage junctions were subsequently returned to
+  the canonical D-drive topology and the official repository build script was
+  verified in the completion record below.
+
+## 2026-08-03 Restored-workstation test storage E-to-D rebind
+
+Status: Complete
+
+Scope:
+
+- copied the 52 managed repository/test storage targets from the restored
+  `E:\OpenVisionLab-TestData\Labelling_Application` topology to the canonical
+  `D:\OpenVisionLab-TestData\Labelling_Application` topology;
+- preserved source, documentation, product dependencies, user datasets, and
+  `.proofline` outside the migration;
+- retained the E-drive source copy as a recoverable legacy snapshot and changed
+  only the 52 verified repository junctions after all copy checks completed;
+- kept local test-process `TEMP` and `TMP` on the canonical D-drive temp root.
+
+Acceptance criteria:
+
+- all legacy targets stay inside the expected E-drive test root -> pass;
+- D-drive free space exceeds the verified copy size -> pass;
+- every copied file passes relative-path placement, length, and SHA-256
+  comparison before junction changes -> pass;
+- copied inventory -> `105969` files, `17694242461` bytes;
+- managed junctions point to existing canonical D-drive targets -> `52/52`;
+- official migration script reports `already-migrated` -> `52/52`;
+- official isolated test build from the D-backed paths -> 0 warnings, 0 errors;
+- runtime diagnostics and headless environment focused tests -> pass;
+- Git worktree status retains only the pre-existing Environment Setup Center
+  source/documentation changes -> pass.
+
+Verification:
+
+- long-path-aware source/destination inventory;
+- per-file relative path, length, and SHA-256 copy comparison;
+- independent junction-target and destination-existence audit;
+- `Move-LabelingTestStorageToDDrive.ps1` read-only verification;
+- `Build-LabelingApplicationTests.ps1 -OutputName isolated-out`;
+- `LabelingApplication.Tests.dll --runtime-diagnostics-contract`;
+- `LabelingApplication.Tests.dll --headless-environment-self-test`;
+- `git diff --check`.
+
+Evidence:
+
+- `D:\OpenVisionLab-TestData\Labelling_Application\migration-evidence\legacy-e-to-d-preflight-20260803.json`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\migration-evidence\legacy-e-to-d-migration-20260803.json`.
+
+Boundary / next dependency:
+
+- the E-drive legacy copy remains intentionally retained for recoverability and
+  is not an active test target; deleting that copy is a separate destructive
+  cleanup decision;
+- this workstation storage repair does not complete the external GPU-capable
+  clean-target label/save/reopen gate.
+
+## 2026-08-03 Post-recovery complete regression and tutorial contract alignment
+
+Status: Complete
+
+Scope:
+
+- ran the protected no-argument internal suite in one process against the
+  current Environment Setup Center worktree and canonical D-drive test paths;
+- traced the only initial stop to a stale test assertion left by the previously
+  committed tutorial refresh;
+- aligned that one assertion with the HTML guide's existing current-source
+  overview image, without changing the guide, screenshot, product UI, or
+  runtime behavior;
+- reran the focused guide contract and complete regression.
+
+Acceptance criteria:
+
+- tutorial HTML and referenced current-source overview image exist -> pass;
+- focused `--wpf-learning-workflow-panel` contract -> pass;
+- official isolated test build -> 0 warnings, 0 errors;
+- complete no-argument suite in one process -> `267/267`;
+- complete-suite exit code -> 0;
+- complete-suite failure count and stderr -> 0 and 0 bytes;
+- suite-reported storage and temp roots -> canonical D-drive paths;
+- `git diff --check` -> pass.
+
+Verification:
+
+- `Build-LabelingApplicationTests.ps1 -OutputName isolated-out`;
+- `LabelingApplication.Tests.dll --wpf-learning-workflow-panel`;
+- solo no-argument `LabelingApplication.Tests.dll` with a 15-minute limit;
+- captured stdout, stderr, exit code, pass count, elapsed time, and path roots;
+- documentation information architecture, priority workflow docs, and
+  whitespace checks.
+
+Evidence:
+
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\full-regression-after-recovery-20260803\summary.json` records the initial stale assertion;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\full-regression-after-recovery-20260803\summary-after-fix.json` records the final `267/267` pass;
+- `tests\LabelingApplication.Tests\Program.cs` owns the aligned tutorial-image
+  contract.
+
+Boundary / next dependency:
+
+- this proves the current internal regression baseline on this workstation; it
+  does not complete the external GPU-capable clean-target label/save/reopen
+  gate, installer/signing lifecycle, or production model-quality validation.
+
+## 2026-08-03 P0-C native-boot feasibility recheck after Windows reinstall
+
+Status: Blocked
+
+Scope:
+
+- rechecked the current host OS, GPU, disk/firmware layout, Hyper-V presence,
+  prepared transfer bundle, local ISO availability, and privileged boot-state
+  access without changing the machine;
+- compared the post-reinstall state with the historical Windows 10 MBR/legacy
+  native-boot rejection;
+- kept Windows Sandbox, standard Hyper-V, unofficial GPU partitioning, VHDX
+  creation, BCD mutation, and restart out of the read-only check.
+
+Acceptance criteria:
+
+- Windows 11 x64 host and GTX 1060 driver state -> pass, build 26100 and `OK`;
+- GPT system disk and EFI system partition -> pass;
+- prepared clean-source `0.1.2` transfer ZIP SHA-256 -> pass;
+- Hyper-V synthetic-display path remains inactive -> pass, module absent;
+- official Windows installation ISO locally available -> fail, none found;
+- Secure Boot enabled -> fail, registry state `0`;
+- privileged BCD and BitLocker state verified -> fail, elevation required;
+- ISO download, VHDX creation, boot-menu mutation, or restart -> not performed.
+
+Verification:
+
+- `Win32_OperatingSystem`, `Win32_VideoController`, `Get-Disk`, and
+  `Get-Partition` inventory;
+- Secure Boot registry state plus non-elevated `Confirm-SecureBootUEFI`, BCD,
+  and BitLocker probes;
+- bounded local ISO search;
+- SHA-256 recheck of the prepared transfer ZIP;
+- `git diff --check` and priority documentation gates after recording the
+  changed prerequisite state.
+
+Evidence:
+
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\p0c-clean-machine\native-boot-host-prerequisites-20260803.json`;
+- `docs\P0C_GPU_CAPABLE_CLEAN_TARGET_VALIDATION_PLAN_20260731.md`;
+- `docs\CURRENT_PRODUCT_STATUS.md`.
+
+Boundary / next dependency:
+
+- user approval is required before downloading a multi-gigabyte official
+  Windows ISO and preparing a D-drive native-boot VHDX;
+- administrator elevation is required for final BitLocker/BCD verification and
+  boot-menu registration;
+- restart remains a separate explicit approval and was not performed.
+
+## 2026-08-03 Native-boot rejection and real-PC graphics policy
+
+Status: Complete
+
+Scope:
+
+- recorded the operator's explicit decision not to use same-PC native boot;
+- closed ISO download, VHDX creation, BCD modification, restart, standard
+  Hyper-V, Windows Sandbox, and unofficial GPU-partitioning as P0-C
+  continuation paths;
+- retained normal real-Windows GPU/driver use with the existing actual-viewer
+  11-function graphics preflight and fail-before-mutation guidance;
+- kept the prepared portable bundle available for an opportunistic later run
+  on another ordinary GPU-equipped Windows PC.
+
+Acceptance criteria:
+
+- native boot is not presented as the next action -> pass;
+- no ISO download, VHDX, boot-menu mutation, or restart -> pass;
+- existing graphics capability preflight remains the product safety boundary
+  -> pass;
+- external clean-target evidence is not misrepresented as complete -> pass.
+
+Verification:
+
+- P0-C plan and current product-status wording review;
+- `--priority-workflow-docs`;
+- documentation information architecture;
+- `git diff --check`.
+
+Evidence:
+
+- `docs\P0C_GPU_CAPABLE_CLEAN_TARGET_VALIDATION_PLAN_20260731.md`;
+- `docs\CURRENT_PRODUCT_STATUS.md`;
+- operator decision in the 2026-08-03 project conversation.
+
+Boundary / next dependency:
+
+- no dedicated clean-target work is scheduled. The remaining fixture-based
+  label/save/reopen evidence may be collected only when an ordinary separate
+  GPU-equipped Windows PC is naturally available;
+- this decision does not establish production model accuracy or installer and
+  signing readiness.
+
+## 2026-08-03 P1-H anomaly same-split comparison
+
+Status: Complete
+
+Scope:
+
+- generalized the existing persistent image-level classification evaluator so
+  YOLOv8, YOLO11, and PatchCore emit one compatible summary schema;
+- retained model-specific decision rules while adding shared balanced
+  accuracy, normal false-positive, abnormal-miss, fingerprint, hashes,
+  hardware/device, and timing evidence;
+- routed PatchCore heatmaps into the evaluation artifact and retained review-
+  only locations with `groundTruthStatus=not-evaluated`;
+- made the existing Model Benchmark catalog discover current-project anomaly
+  summaries and preselect matching-fingerprint runs;
+- kept evaluation and comparison read-only with no label, training, Recipe
+  model, or adoption mutation.
+
+Evidence:
+
+- common synthetic fingerprint
+  `6baabdd0383f8ad1193e0f2520b94d0b59e5b527e077806e5a72301286ea807e`;
+- three current-worker CPU summaries under
+  `D:\OpenVisionLab-TestData\Labelling_Application\anomaly-comparison-real-smoke-20260803\output`;
+- before/after current-source UI evidence under
+  `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\ui\anomaly-same-split-comparison-20260803`;
+- full result and quality boundary in
+  `docs/ANOMALY_SAME_SPLIT_COMPARISON_P1H_20260803.md`.
+
+Boundary / next dependency:
+
+- the retained input has only two synthetic images and is not representative
+  of the YOLO training domains; no model-quality or Takt winner is declared;
+- independent production validation still requires approved field images,
+  thresholds, intended weights/runtime, target hardware, and region ground
+  truth when localization quality is claimed.
+
+## 2026-08-03 P1-I anomaly evaluation error worklist
+
+Status: Complete
+
+Scope:
+
+- connected existing anomaly evaluation `samples` to the existing Model
+  Benchmark summary, class/error table, and lazy source-image preview;
+- added cross-run error-first ordering with a 500-row display bound;
+- separated class mismatch, class match below threshold, and correct outcomes;
+- exposed saved confidence or PatchCore score/threshold, location count, and
+  heatmap-path presence without rerunning inference;
+- kept detection comparison labels and behavior unchanged.
+
+Acceptance criteria:
+
+- aggregate correct/normal-FP/abnormal-miss rows for selected anomaly runs ->
+  pass;
+- per-image expected/predicted outcome and source preview -> pass;
+- low-confidence class match does not read as FP/FN mismatch -> pass;
+- PatchCore score/threshold/location/heatmap evidence -> pass;
+- errors sort before correct outcomes across selected runs -> pass;
+- no label, review, navigation, threshold, training, or adoption mutation ->
+  pass.
+
+Verification:
+
+- isolated build -> 0 warnings, 0 errors;
+- `--wpf-model-benchmark-window` -> pass;
+- `--anomaly-classification-evaluation` -> pass;
+- `--patchcore-anomaly-pilot` -> pass;
+- solo default protected regression -> pass, exit code 0;
+- actual-EXE 1920x1080 summary and class/error captures -> pass;
+- actual-EXE 1366x768 class/error capture -> pass;
+- monitor placement -> `\\.\DISPLAY1`, pass.
+
+Evidence:
+
+- `docs/ANOMALY_EVALUATION_ERROR_WORKLIST_P1I_20260803.md`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\ui\anomaly-evaluation-error-worklist-20260803`.
+
+Boundary / next dependency:
+
+- this is saved-evidence review, not production-quality evidence;
+- external validation still requires approved field data, acceptance
+  thresholds, intended runtime/weights, target hardware, and localization
+  ground truth when location accuracy is claimed.
+
+## 2026-08-03 P1-J anomaly evaluation content-leakage preflight
+
+Status: Complete
+
+Scope:
+
+- reused the existing length plus SHA-256 external-evaluation audit in the
+  anomaly evaluation run service;
+- blocked exact content reused across populated train/valid/test pairs;
+- blocked exact content reused as normal and abnormal inside one split;
+- returned actionable scope, example, directory, and correction guidance
+  before process start;
+- failed closed when a populated audit scope could not be read;
+- kept file movement, split mutation, labeling state, training, inference,
+  and adoption outside the change.
+
+Acceptance criteria:
+
+- clean request validates before and after temporary leakage fixtures -> pass;
+- renamed train/test duplicate -> blocked by exact SHA-256 content;
+- test normal/abnormal duplicate -> blocked by exact SHA-256 content;
+- direct `RunAsync` cannot bypass the pre-worker gate -> pass;
+- Wide/Compact operator message remains readable in the dark shell -> pass;
+- protected regression -> 267/267, exit code 0.
+
+Verification:
+
+- isolated build -> 0 warnings, 0 errors;
+- `--anomaly-classification-evaluation` -> pass;
+- solo default protected regression -> 267/267, exit code 0, 362.3 seconds,
+  empty stderr;
+- current-source WPF visual smoke -> 1920x1080 and 1366x768 pass;
+- monitor placement -> only active/leftmost `\\.\DISPLAY1`, bounds
+  `0,0,1920,1080`.
+
+Evidence:
+
+- `docs/ANOMALY_EVALUATION_CONTENT_LEAKAGE_PREFLIGHT_P1J_20260803.md`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\logs\anomaly-evaluation-leakage-preflight-20260803`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\ui\anomaly-evaluation-leakage-preflight-20260803`.
+
+Boundary / next dependency:
+
+- exact byte-content separation does not prove camera/session independence,
+  near-duplicate separation, domain coverage, model accuracy, or production
+  Takt;
+- P2 remains blocked until approved field data, acceptance thresholds,
+  intended runtime/weights, target hardware, and localization ground truth
+  when needed are available.

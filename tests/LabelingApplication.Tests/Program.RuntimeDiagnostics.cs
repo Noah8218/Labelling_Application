@@ -1,5 +1,6 @@
 using MvcVisionSystem;
 using MvcVisionSystem.Yolo;
+using MvcVisionSystem._1._Core;
 using OpenVisionLab.Logging;
 using System;
 using System.IO;
@@ -284,6 +285,7 @@ internal static class RuntimeDiagnosticsContractTests
                 "reopened self-test should retain the environment checks");
 
             VerifyGraphicsCapabilityFailurePresentation(applicationRoot, root);
+            VerifyEnvironmentSetupCenterReadOnlyContract(applicationRoot, root);
             VerifyShellSurface();
         }
         finally
@@ -293,6 +295,76 @@ internal static class RuntimeDiagnosticsContractTests
                 Directory.Delete(root, recursive: true);
             }
         }
+    }
+
+    private static void VerifyEnvironmentSetupCenterReadOnlyContract(string applicationRoot, string root)
+    {
+        string applicationDataRoot = Path.Combine(root, "setup-center-app-data");
+        var service = new WpfRuntimeDiagnosticsService(applicationRoot, applicationDataRoot);
+        service.SetGraphicsCapabilityProvider(() => new WpfRuntimeSelfTestCheck(
+            WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName,
+            "pass",
+            "이미지 뷰어 사용 가능 · setup-center-test"));
+        bool modelSettingsOpened = false;
+        var missingSettings = new PythonModelSettings
+        {
+            ModelEngine = PythonModelSettings.EngineYolo11,
+            PythonExecutablePath = Path.Combine(root, "missing-runtime", ".venv", "Scripts", "python.exe"),
+            ProjectRootPath = Path.Combine(root, "missing-runtime"),
+            ClientScriptPath = Path.Combine(root, "missing-runtime", "labeling_tcp_client.py")
+        };
+
+        string[] filesBefore = Directory.Exists(applicationDataRoot)
+            ? Directory.GetFiles(applicationDataRoot, "*", SearchOption.AllDirectories)
+            : Array.Empty<string>();
+        var viewModel = new WpfEnvironmentSetupCenterViewModel(
+            service,
+            () => missingSettings,
+            () => modelSettingsOpened = true);
+
+        AssertTrue(viewModel.Items.Count >= 12, "setup center should combine application and selected-runtime checks");
+        AssertTrue(viewModel.AttentionCount > 0, "missing Python/runtime should be visible as required setup work");
+        AssertTrue(
+            viewModel.Items.Any(item => string.Equals(item.NameText, "Python", StringComparison.Ordinal)
+                && !item.IsReady
+                && item.IsRequired),
+            "setup center should mark a missing Python executable as required");
+        AssertTrue(
+            viewModel.Items.Any(item => string.Equals(item.NameText, "GPU 가속 드라이버 / CUDA", StringComparison.Ordinal)
+                && !item.IsRequired),
+            "GPU/CUDA should remain an optional guided utility instead of an automatic requirement");
+        AssertTrue(!modelSettingsOpened, "constructing and refreshing the setup center must not navigate or run setup actions");
+
+        viewModel.RefreshCommand.Execute(null);
+        AssertTrue(!modelSettingsOpened, "explicit read-only refresh must not open model settings");
+        string[] filesAfter = Directory.Exists(applicationDataRoot)
+            ? Directory.GetFiles(applicationDataRoot, "*", SearchOption.AllDirectories)
+            : Array.Empty<string>();
+        AssertTrue(filesBefore.Length == filesAfter.Length, "setup-center refresh must not persist diagnostics or settings");
+        AssertTrue(!File.Exists(service.Paths.LatestSelfTestPath), "setup center must use the read-only diagnostics path");
+
+        viewModel.OpenModelSettingsCommand.Execute(null);
+        AssertTrue(modelSettingsOpened, "model settings should open only after the explicit user command");
+
+        string incompleteYoloV5Root = Path.Combine(root, "incomplete-yolov5");
+        Directory.CreateDirectory(incompleteYoloV5Root);
+        var incompleteYoloV5Settings = new PythonModelSettings
+        {
+            ModelEngine = PythonModelSettings.EngineYoloV5,
+            ProjectRootPath = incompleteYoloV5Root
+        };
+        var yoloV5ViewModel = new WpfEnvironmentSetupCenterViewModel(
+            service,
+            () => incompleteYoloV5Settings,
+            null);
+        AssertTrue(
+            yoloV5ViewModel.Items.Any(item =>
+                string.Equals(item.NameText, "YOLOv5 실행 파일 묶음", StringComparison.Ordinal)
+                && !item.IsReady
+                && item.IsRequired
+                && item.DetailText.Contains("hubconf.py", StringComparison.Ordinal)
+                && item.DetailText.Contains("models/common.py", StringComparison.Ordinal)),
+            "setup center should fail an incomplete YOLOv5 repository instead of treating its root path as ready");
     }
 
     private static void VerifyGraphicsCapabilityFailurePresentation(string applicationRoot, string root)
@@ -363,6 +435,7 @@ internal static class RuntimeDiagnosticsContractTests
         foreach (string requiredToken in new[]
         {
             "HeaderToolsMenuSupportSection",
+            "OpenEnvironmentSetupCenterButton",
             "RuntimeSelfTestButton",
             "CreateSupportBundleButton",
             "RuntimeDiagnosticsStatusCard",
@@ -372,6 +445,21 @@ internal static class RuntimeDiagnosticsContractTests
         })
         {
             AssertTrue(xaml.Contains(requiredToken, StringComparison.Ordinal), $"diagnostics UI token missing: {requiredToken}");
+        }
+
+        string setupCenterXaml = File.ReadAllText(
+            Path.Combine(repoRoot, "0. UI", "9) WPF", "Views", "WpfEnvironmentSetupCenterWindow.xaml"));
+        foreach (string requiredToken in new[]
+        {
+            "EnvironmentSetupRefreshButton",
+            "EnvironmentSetupOpenModelSettingsButton",
+            "EnvironmentSetupCloseButton",
+            "설치 순서",
+            "안전 경계",
+            "SafetyBoundaryText"
+        })
+        {
+            AssertTrue(setupCenterXaml.Contains(requiredToken, StringComparison.Ordinal), $"setup-center UI token missing: {requiredToken}");
         }
 
         string graphicsProbeSource = File.ReadAllText(

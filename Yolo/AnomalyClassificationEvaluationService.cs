@@ -32,9 +32,11 @@ namespace MvcVisionSystem.Yolo
             JsonElement root = document.RootElement;
             JsonElement metrics = TryGetProperty(root, "metrics");
             JsonElement promotion = TryGetProperty(root, "promotion");
+            JsonElement localization = TryGetProperty(root, "localization");
 
-            return new AnomalyClassificationEvaluationReport
+            var report = new AnomalyClassificationEvaluationReport
             {
+                ModelName = ReadString(root, "modelName"),
                 TotalImageCount = ReadInt(metrics, "totalImageCount"),
                 NormalImageCount = ReadInt(metrics, "normalImageCount"),
                 AbnormalImageCount = ReadInt(metrics, "abnormalImageCount"),
@@ -45,9 +47,31 @@ namespace MvcVisionSystem.Yolo
                 Accuracy = ReadDouble(metrics, "accuracy"),
                 NormalAccuracy = ReadDouble(metrics, "normalAccuracy"),
                 AbnormalAccuracy = ReadDouble(metrics, "abnormalAccuracy"),
+                BalancedAccuracy = ReadDouble(metrics, "balancedAccuracy"),
+                FalsePositiveCount = ReadInt(metrics, "falsePositiveCount"),
+                FalseNegativeCount = ReadInt(metrics, "falseNegativeCount"),
+                LocalizationEvidenceCount = ReadInt(metrics, "localizationEvidenceCount"),
+                HeatmapEvidenceCount = ReadInt(metrics, "heatmapEvidenceCount"),
+                LocalizationGroundTruthStatus = ReadString(localization, "groundTruthStatus"),
                 Recommendation = ReadString(promotion, "recommendation"),
                 HoldReasons = ReadStringArray(promotion, "reasons")
             };
+            if (!HasProperty(metrics, "balancedAccuracy"))
+            {
+                report.BalancedAccuracy = (report.NormalAccuracy + report.AbnormalAccuracy) / 2D;
+            }
+
+            if (!HasProperty(metrics, "falsePositiveCount"))
+            {
+                report.FalsePositiveCount = Math.Max(0, report.NormalImageCount - report.NormalCorrectCount);
+            }
+
+            if (!HasProperty(metrics, "falseNegativeCount"))
+            {
+                report.FalseNegativeCount = Math.Max(0, report.AbnormalImageCount - report.AbnormalCorrectCount);
+            }
+
+            return report;
         }
 
         public static AnomalyClassificationEvaluationReport Build(
@@ -70,6 +94,7 @@ namespace MvcVisionSystem.Yolo
             double accuracy = SafeRatio(correctCount, totalCount);
             double normalAccuracy = SafeRatio(normalCorrect, normalCount);
             double abnormalAccuracy = SafeRatio(abnormalCorrect, abnormalCount);
+            double balancedAccuracy = (normalAccuracy + abnormalAccuracy) / 2D;
             var holdReasons = new List<string>();
 
             if (totalCount < Math.Max(1, options.MinimumTotalImageCount))
@@ -119,6 +144,9 @@ namespace MvcVisionSystem.Yolo
                 Accuracy = accuracy,
                 NormalAccuracy = normalAccuracy,
                 AbnormalAccuracy = abnormalAccuracy,
+                BalancedAccuracy = balancedAccuracy,
+                FalsePositiveCount = Math.Max(0, normalCount - normalCorrect),
+                FalseNegativeCount = Math.Max(0, abnormalCount - abnormalCorrect),
                 Recommendation = holdReasons.Count == 0 ? "adopt" : "hold",
                 HoldReasons = holdReasons
             };
@@ -131,6 +159,9 @@ namespace MvcVisionSystem.Yolo
             => element.ValueKind == JsonValueKind.Object && element.TryGetProperty(propertyName, out JsonElement value)
                 ? value
                 : default;
+
+        private static bool HasProperty(JsonElement element, string propertyName)
+            => element.ValueKind == JsonValueKind.Object && element.TryGetProperty(propertyName, out _);
 
         private static int ReadInt(JsonElement element, string propertyName)
         {

@@ -1,6 +1,6 @@
 # Current Product Status
 
-Last updated: 2026-08-01 KST
+Last updated: 2026-08-03 KST
 
 This document is the single current source of truth for product identity,
 verified maturity, the active development priority, and the boundary between
@@ -50,7 +50,11 @@ product direction changes explicitly.
 - Baseline Git commit for the current clean-source transfer candidate:
   `59e37d8 test: place P0-C smoke on the leftmost monitor`.
 - Current protected regression evidence: the solo default internal suite
-  passed `267/267` after the read-only headless environment self-test CLI.
+  passed `267/267` again on 2026-08-03 after the Environment Setup Center,
+  restored-workstation D-drive rebind, current tutorial-image contract
+  alignment, P1-I anomaly error worklist, and P1-J anomaly evaluation exact-
+  content leakage preflight. Exit code was 0 and the current P1-J run
+  completed in 362.3 seconds.
   The earlier
   `266/266` PatchCore heatmap/CI-gate, `265/265` bounded PatchCore pilot, and
   `264/264` P1-B results remain
@@ -67,19 +71,20 @@ operability.
 | Detection, segmentation, and anomaly labeling workflows | Complete for the focused workstation scope | Preserve explicit save/confirm and current geometry contracts |
 | Recipe, class, queue, training, inference, and model-evidence flow | Complete for verified local workflows | Field accuracy and throughput require independent production evidence |
 | Smart Mask auto-first labeling and correction | Complete | No production-boundary accuracy claim |
-| Dataset Health split/class/problem filtering | Complete and read-only | Duplicate, leakage, near-duplicate, and domain-shift analysis are not yet a completed product contract |
+| Dataset Health split/class/problem filtering | Complete and read-only | The anomaly-evaluation run gate now blocks exact content leakage; general duplicate, near-duplicate, and domain-shift analysis are not completed Dataset Health contracts |
 | Object Review metadata and same-image groups | Complete | No automatic save, shared movement, cross-image tracking, or collaboration |
 | Commercial release baseline audit | Complete | Local publishability is verified; commercial release readiness is not |
 | Release/publish scripts | Complete through the clean-source `0.1.2` transfer candidate | Versioned self-contained folder, fail-closed verification, deterministic republish, and transfer ZIP are covered; installer/signing remain separate |
 | Explicit version, deterministic package provenance, legal inventory | Complete for P0-B1 | Exact evidence is in `docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md`; formal public-release legal review remains external |
 | Packaged runtime diagnostics and explicit support export | Complete for P0-B2 | Current-user paths, bounded retention, package/environment self-test, allow-list/redaction, and packaged first-launch immutability are covered |
+| Environment Setup Center | Complete for the current-source guided workflow | Read-only app/viewer/current-model-runtime inventory, required/optional status, installation order, safety boundaries, and explicit handoff to the existing model-runtime install surface are covered; no silent install or driver/CUDA automation |
 | Current-source viewer graphics capability preflight | Complete | The actual Main Viewer context and 11 required framebuffer functions are checked; a definite failure is visible in diagnostics/support evidence and blocks image opening before state mutation |
 | `0.1.1` packaged graphics-preflight engineering evidence | Complete | Two deterministic dirty-source publishes, real packaged-EXE `8/8` diagnostics, and post-launch package immutability passed; this is not clean-source GPU-target evidence |
 | `0.1.2` clean-source GPU-target transfer bundle | Complete for package preparation | `source.dirty=false`, two deterministic publishes, packaged headless preflight, 504/504 extracted payload hashes, ZIP SHA-256, and leftmost-monitor harness evidence passed; external GPU labeling remains unexecuted |
 | Installer, upgrade/uninstall, code signing, clean-machine evidence | Partial | Windows Sandbox package-safe checks passed; a clean Windows 11 full Hyper-V VM reproduced the SharpGL framebuffer failure, while installer/signing decisions remain open |
 | Portable project archive | Complete for P1-A | Saved Recipe plus complete dataset root round trip, SHA-256 validation, path rebasing, non-overwrite import, and explicit Apply are covered |
 | Crash recovery journal | Complete for P1-B | One current-image dirty draft, explicit restore/discard, bounded retention/integrity/context validation, and no candidate confirmation or label save |
-| PatchCore normal-only anomaly pilot and heatmap review | Complete for the bounded local workflow | Normal-only learning, image decision, raw score/threshold, review-only localization, heatmap file/path, and an explicit read-only review window are implemented; a canvas/viewer layer, field quality, and YOLO comparison require later evidence/work |
+| PatchCore anomaly pilot, heatmap review, same-split comparison, error worklist, and exact-content leakage preflight | Complete for the bounded local workflow | Normal-only learning, image decision, raw score/threshold, review-only localization, matching-fingerprint comparison, bounded image-level outcome review, and pre-worker split/class exact-leakage blocking are implemented; field quality and location accuracy require approved external evidence |
 | Workstation theme policy | Complete | The theme selector is hidden and legacy/internal light-theme requests resolve to the supported dark palette; do not reopen multi-theme work without an explicit product-direction change |
 | Headless product CLI | Complete for the first read-only environment command | `--environment-self-test --json` emits structured status and bounded exit codes without WPF or durable writes; batch inference/training/archive/label operations are not CLI contracts |
 | CI build/docs/full-regression/release-artifact gates | Complete for the repository workflow contract | The complete suite runs once with a 15-minute timeout; hosted GitHub success requires a pushed run |
@@ -111,6 +116,9 @@ regression:
   publishing.
 - read-only `--environment-self-test --json` dispatch before startup logging,
   mutex acquisition, or WPF creation, with no durable product-data writes.
+- read-only Environment Setup Center refresh, explicit model-runtime settings
+  handoff, and no automatic package/driver install, training, inference, model
+  adoption, or settings save.
 
 The detailed completion records remain in `docs/STABLE_VERIFIED_AREAS.md` and
 the linked dated documents.
@@ -259,12 +267,21 @@ Do not repeat the Sandbox or standard Hyper-V viewer loop unless the display
 capability or viewer implementation changes. On 2026-07-31, the operator
 selected a separate GPU-capable clean Windows PC or explicitly GPU-capable VM
 for the next viewer attempt. The viewer compatibility/fallback project is not
-active. The current Windows 10 Pro/GTX 1060 host cannot provide an officially
-supported Hyper-V DDA/GPU-P target, and its only accessible VM has no GPU
-adapter. The package prerequisite is complete; execution is blocked only until
-a supported target is directly accessible from this workspace. Codex will
-execute the target-side command; the operator does not need to run it manually.
-Installer lifecycle and signing decisions remain separate.
+active. The historical Windows 10 Pro/GTX 1060 host could not provide an
+officially supported Hyper-V DDA/GPU-P target, and its accessible VM had no GPU
+adapter.
+
+After the 2026-08-03 Windows reinstall, the host is Windows 11 Pro build 26100
+on GPT/EFI and the GTX 1060 driver reports `OK`; Hyper-V is absent. This removes
+the previous MBR barrier, but the operator explicitly declined same-PC native
+boot. Do not download an ISO, create a VHDX, modify BCD, or request a restart
+for P0-C. The package prerequisite remains complete and its transfer ZIP hash
+was reverified. Normal product use relies on a real Windows GPU/driver plus the
+actual-viewer 11-function graphics capability preflight; incompatible graphics
+paths fail before annotation-state mutation with recovery guidance. A later
+ordinary GPU-equipped Windows PC may supply the remaining clean-target
+label/save/reopen evidence opportunistically. Installer lifecycle and signing
+decisions remain separate.
 
 Evidence:
 
@@ -356,6 +373,73 @@ Completion evidence:
 Recommended model: `gpt-5.6-terra`
 Reasoning effort: `medium`
 
+### P1-H. Anomaly Same-Split Comparison
+
+Status: `Complete` for the bounded local workflow contract.
+
+Model Center can run the existing anomaly evaluation route for YOLOv8,
+YOLO11, or PatchCore. Every summary records a common content fingerprint,
+model/worker hashes, model-specific decision threshold, balanced accuracy,
+normal false positives, abnormal misses, timing conditions, and PatchCore
+location/heatmap evidence. Opening Model Benchmark from a project anomaly
+summary includes and preselects the current-project anomaly runs with the same
+evidence fingerprint. The comparison is read-only and never saves labels,
+relabels images, retrains, or adopts a model automatically.
+
+The retained two-image CPU smoke proves the shared execution/evidence contract
+only. It is not field-quality or production-Takt evidence, and PatchCore
+location quality remains `not-evaluated` without defect-region ground truth.
+
+Completion evidence:
+
+`docs/ANOMALY_SAME_SPLIT_COMPARISON_P1H_20260803.md`
+
+Recommended model: `gpt-5.6-terra`
+Reasoning effort: `high`
+
+### P1-I. Anomaly Evaluation Error Worklist
+
+Status: `Complete` for the bounded read-only workflow.
+
+Model Benchmark now reads the existing image-level anomaly `samples` from
+selected same-fingerprint evaluation summaries. The summary shows each run's
+correct, normal false-positive, and abnormal-miss counts. The class/error tab
+shows a bounded 500-row, error-first worklist with saved source-image preview,
+expected-to-predicted class flow, confidence or anomaly score, decision
+threshold, and PatchCore location/heatmap evidence. Class-matching predictions
+below threshold are identified separately from class mismatches.
+
+The worklist does not rerun inference, navigate the labeling workspace, edit
+labels, change review state, tune thresholds, train, or adopt a model.
+
+Completion evidence:
+
+`docs/ANOMALY_EVALUATION_ERROR_WORKLIST_P1I_20260803.md`
+
+Recommended model: `gpt-5.6-terra`
+Reasoning effort: `medium`
+
+### P1-J. Anomaly Evaluation Content-Leakage Preflight
+
+Status: `Complete` for exact content identity in the app-exported anomaly
+evaluation dataset.
+
+Before any evaluation worker starts, the run service now reuses the existing
+file-length plus SHA-256 audit to compare populated train/valid/test pairs and
+normal/abnormal folders within every populated split. Renamed exact duplicates
+are blocked with the affected scope, example, directories, and corrective
+guidance. An unreadable populated audit scope also fails closed.
+
+This does not detect perceptual near-duplicates or domain shift and does not
+move, delete, relabel, or reassign any image automatically.
+
+Completion evidence:
+
+`docs/ANOMALY_EVALUATION_CONTENT_LEAKAGE_PREFLIGHT_P1J_20260803.md`
+
+Recommended model: `gpt-5.6-terra`
+Reasoning effort: `high`
+
 ### P1-E. CI Complete Regression Gate
 
 Status: `Complete` for the repository workflow contract.
@@ -391,6 +475,33 @@ Completion evidence:
 Recommended model: `gpt-5.6-terra`
 Reasoning effort: `high`
 
+### P1-G. Environment Setup Center
+
+Status: `Complete` for the current-source guided setup workflow.
+
+`설정/도구 -> 진단/지원 -> 환경 설정 센터` combines the existing application
+diagnostics and selected model-runtime self-test into one dedicated dark UI.
+It classifies required and optional items, shows the next action for each
+missing path/package, and explains a deterministic setup order. Opening or
+refreshing the center uses the read-only diagnostics path and does not persist
+a self-test, install/remove packages, save model settings, train, infer, or
+adopt a model. The explicit `모델 실행기 설정` action returns to the existing
+model center, where the operator can verify the target venv and command before
+running an already supported package installation.
+
+Python itself, GPU drivers, and CUDA remain guided external prerequisites.
+They are not silently downloaded or installed because administrator rights,
+hardware compatibility, licensing, and reboot requirements vary by target.
+This center does not complete the installer/signing lifecycle or the external
+GPU-capable clean-target labeling gate.
+
+Completion evidence:
+
+`docs/ENVIRONMENT_SETUP_CENTER_P1G_20260803.md`
+
+Recommended model: `gpt-5.6-terra`
+Reasoning effort: `medium`
+
 ### P2. Independent Production Validation
 
 Measure accuracy, stability, failure modes, and takt time on approved,
@@ -403,10 +514,11 @@ local product evidence.
 
 ### P3. Data-Centric QA And Active-Learning Efficiency
 
-Duplicate/leakage/domain-shift analysis, uncertainty triage, and
-human-in-the-loop relabeling may follow only after P0/P1 and after a measured
-operator/data problem establishes the contract. Do not add broad editor
-features by default.
+Perceptual near-duplicate/domain-shift analysis, uncertainty triage, and
+human-in-the-loop relabeling may follow only after a measured operator/data
+problem establishes the contract. Exact anomaly-evaluation byte-content
+leakage is already blocked by P1-J. Do not add broad editor features by
+default.
 
 Recommended model: `gpt-5.6-terra`  
 Reasoning effort: `high`

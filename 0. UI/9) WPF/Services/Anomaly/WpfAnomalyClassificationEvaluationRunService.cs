@@ -52,6 +52,8 @@ namespace MvcVisionSystem
                 Split = "test",
                 ImageSize = Math.Max(64, settings.InferenceImageSize),
                 Confidence = 0D,
+                MaximumCandidates = settings.MaximumDetectionCandidates,
+                Device = "cpu",
                 OutputDirectory = outputRoot,
                 MinimumConfidence = data?.ProjectSettings?.AnomalyClassification?.MinimumConfidence ?? 0D,
                 ModelName = settings.GetProtocolModelName(),
@@ -75,20 +77,22 @@ namespace MvcVisionSystem
 
             bool isSupportedModel =
                 string.Equals(request.ModelName, "yolov8", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(request.ModelName, "yolo11", StringComparison.OrdinalIgnoreCase);
+                string.Equals(request.ModelName, "yolo11", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(request.ModelName, "patchcore", StringComparison.OrdinalIgnoreCase);
             if (!isSupportedModel)
             {
-                errors.Add("\uC774\uC0C1\uD0D0\uC9C0 \uBD84\uB958 \uD3C9\uAC00\uB294 YOLOv8 \uB610\uB294 YOLO11 \uB7F0\uD0C0\uC784\uC5D0\uC11C\uB9CC \uC2E4\uD589\uD569\uB2C8\uB2E4.");
+                errors.Add("\uC774\uC0C1\uD0D0\uC9C0 \uD3C9\uAC00\uB294 YOLOv8, YOLO11 \uB610\uB294 PatchCore \uB7F0\uD0C0\uC784\uC5D0\uC11C\uB9CC \uC2E4\uD589\uD569\uB2C8\uB2E4.");
             }
 
-            ValidateFile(request.ScriptPath, "\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00 \uC2A4\uD06C\uB9BD\uD2B8", errors);
+            ValidateFile(request.ScriptPath, "\uC774\uC0C1\uD0D0\uC9C0 \uD3C9\uAC00 \uC2A4\uD06C\uB9BD\uD2B8", errors);
             ValidateFile(request.PythonExecutablePath, "Python \uC2E4\uD589 \uD30C\uC77C", errors);
-            ValidateFile(request.WorkerScriptPath, "Ultralytics TCP adapter", errors);
-            ValidateDirectory(request.ModelRootPath, "Ultralytics \uB85C\uCEEC \uC18C\uC2A4 \uD3F4\uB354", errors);
+            ValidateFile(request.WorkerScriptPath, "\uC774\uC0C1\uD0D0\uC9C0 worker", errors);
+            ValidateDirectory(request.ModelRootPath, "\uBAA8\uB378 \uB7F0\uD0C0\uC784 \uD3F4\uB354", errors);
             ValidateFile(request.WeightsPath, "\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378 \uD30C\uC77C", errors);
             ValidateDirectory(request.DatasetRootPath, "anomaly classification \uD3C9\uAC00 \uB370\uC774\uD130\uC14B", errors);
             ValidateDirectory(request.OutputDirectory, "\uD3C9\uAC00 \uACB0\uACFC \uC800\uC7A5 \uD3F4\uB354", errors);
             ValidateSplitImages(request, errors);
+            ValidateDatasetContentLeakage(request, errors);
 
             if (request.ImageSize < 64 || request.ImageSize > 2048)
             {
@@ -98,6 +102,11 @@ namespace MvcVisionSystem
             if (request.MinimumConfidence < 0D || request.MinimumConfidence > 1D)
             {
                 errors.Add($"\uD3C9\uAC00 \uC2E0\uB8B0\uB3C4 \uAE30\uC900\uC740 0~1 \uC0AC\uC774\uC5EC\uC57C \uD569\uB2C8\uB2E4: {request.MinimumConfidence}");
+            }
+
+            if (request.MaximumCandidates < 1 || request.MaximumCandidates > 200)
+            {
+                errors.Add($"\uC704\uCE58 \uD6C4\uBCF4 \uCD5C\uB300 \uAC1C\uC218\uB294 1~200\uC774\uC5B4\uC57C \uD569\uB2C8\uB2E4: {request.MaximumCandidates}");
             }
 
             return errors;
@@ -194,6 +203,12 @@ namespace MvcVisionSystem
                 request.ImageSize.ToString(CultureInfo.InvariantCulture),
                 "-Confidence",
                 request.Confidence.ToString(CultureInfo.InvariantCulture),
+                "-ModelName",
+                request.ModelName,
+                "-Device",
+                request.Device,
+                "-MaximumCandidates",
+                request.MaximumCandidates.ToString(CultureInfo.InvariantCulture),
                 "-OutputDirectory",
                 request.OutputDirectory,
                 "-MinimumTotalImageCount",
@@ -243,6 +258,110 @@ namespace MvcVisionSystem
             if (normalCount <= 0 || abnormalCount <= 0)
             {
                 errors.Add($"\uD3C9\uAC00\uC5D0\uB294 {split} normal/abnormal \uC774\uBBF8\uC9C0\uAC00 \uAC01\uAC01 1\uC7A5 \uC774\uC0C1 \uD544\uC694\uD569\uB2C8\uB2E4. normal:{normalCount}, abnormal:{abnormalCount}");
+            }
+        }
+
+        private static void ValidateDatasetContentLeakage(
+            WpfAnomalyClassificationEvaluationRunRequest request,
+            List<string> errors)
+        {
+            if (string.IsNullOrWhiteSpace(request?.DatasetRootPath) || !Directory.Exists(request.DatasetRootPath))
+            {
+                return;
+            }
+
+            string[] splits =
+            {
+                YoloDatasetSplitService.TrainMode,
+                YoloDatasetSplitService.ValidMode,
+                YoloDatasetSplitService.TestMode
+            };
+
+            for (int leftIndex = 0; leftIndex < splits.Length; leftIndex++)
+            {
+                string leftSplit = splits[leftIndex];
+                string leftRoot = Path.Combine(request.DatasetRootPath, leftSplit);
+                if (!HasSplitImages(leftRoot))
+                {
+                    continue;
+                }
+
+                for (int rightIndex = leftIndex + 1; rightIndex < splits.Length; rightIndex++)
+                {
+                    string rightSplit = splits[rightIndex];
+                    string rightRoot = Path.Combine(request.DatasetRootPath, rightSplit);
+                    if (!HasSplitImages(rightRoot))
+                    {
+                        continue;
+                    }
+
+                    ValidateNoContentOverlap(
+                        new[] { leftRoot },
+                        rightRoot,
+                        $"{leftSplit}/{rightSplit} \uBD84\uD560",
+                        $"\uAC19\uC740 \uCD2C\uC601 \uC774\uBBF8\uC9C0\uB97C \uD558\uB098\uC758 \uBD84\uD560\uC5D0\uB9CC \uB450\uC138\uC694: {leftRoot} | {rightRoot}",
+                        errors);
+                }
+            }
+
+            foreach (string split in splits)
+            {
+                string splitRoot = Path.Combine(request.DatasetRootPath, split);
+                string normalRoot = Path.Combine(splitRoot, AnomalyClassificationDatasetExportService.NormalClassFolderName);
+                string abnormalRoot = Path.Combine(splitRoot, AnomalyClassificationDatasetExportService.AbnormalClassFolderName);
+                if (CountImages(normalRoot) <= 0 || CountImages(abnormalRoot) <= 0)
+                {
+                    continue;
+                }
+
+                ValidateNoContentOverlap(
+                    new[] { normalRoot },
+                    abnormalRoot,
+                    $"{split} normal/abnormal",
+                    $"\uAC19\uC740 \uC774\uBBF8\uC9C0\uB97C \uC815\uC0C1\uACFC \uC774\uC0C1\uC5D0 \uB3D9\uC2DC\uC5D0 \uB450\uC9C0 \uB9C8\uC138\uC694: {normalRoot} | {abnormalRoot}",
+                    errors);
+            }
+        }
+
+        private static bool HasSplitImages(string splitRoot)
+        {
+            return CountImages(Path.Combine(splitRoot, AnomalyClassificationDatasetExportService.NormalClassFolderName)) > 0
+                || CountImages(Path.Combine(splitRoot, AnomalyClassificationDatasetExportService.AbnormalClassFolderName)) > 0;
+        }
+
+        private static void ValidateNoContentOverlap(
+            IEnumerable<string> referenceDirectories,
+            string comparisonDirectory,
+            string scope,
+            string guidance,
+            List<string> errors)
+        {
+            YoloExternalEvaluationDataAuditReport report =
+                YoloExternalEvaluationDataAuditService.Build(referenceDirectories, comparisonDirectory);
+            foreach (string auditError in report.Errors)
+            {
+                AddDistinct(
+                    errors,
+                    $"\uD3C9\uAC00 \uB370\uC774\uD130 \uB204\uC218 \uAC80\uC0AC\uB97C \uC644\uB8CC\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4 ({scope}): {auditError} " +
+                    "\uC77D\uC744 \uC218 \uC5C6\uB294 \uD30C\uC77C\uC744 \uC815\uB9AC\uD55C \uB4A4 \uB2E4\uC2DC \uC2E4\uD589\uD558\uC138\uC694.");
+            }
+
+            if (report.HasContentOverlap)
+            {
+                string example = string.IsNullOrWhiteSpace(report.OverlapExample)
+                    ? string.Empty
+                    : $" \uC608: {report.OverlapExample}.";
+                AddDistinct(
+                    errors,
+                    $"\uD3C9\uAC00 \uB370\uC774\uD130 \uB204\uC218: {scope}\uC5D0 \uAE38\uC774+SHA-256\uC774 \uAC19\uC740 \uC774\uBBF8\uC9C0 \uCF58\uD150\uCE20 {report.ContentOverlapCount}\uAC74\uC774 \uC788\uC2B5\uB2C8\uB2E4.{example} {guidance}");
+            }
+        }
+
+        private static void AddDistinct(List<string> errors, string error)
+        {
+            if (!errors.Contains(error, StringComparer.Ordinal))
+            {
+                errors.Add(error);
             }
         }
 
@@ -346,6 +465,10 @@ namespace MvcVisionSystem
         public int ImageSize { get; set; } = 64;
 
         public double Confidence { get; set; }
+
+        public int MaximumCandidates { get; set; } = 20;
+
+        public string Device { get; set; } = "cpu";
 
         public string OutputDirectory { get; set; } = string.Empty;
 

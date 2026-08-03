@@ -608,7 +608,7 @@ namespace MvcVisionSystem
             private set => SetProperty(ref modelCenterDecisionActionText, value ?? string.Empty);
         }
 
-        public string ModelCenterAnomalyEvaluationTitleText => "\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00";
+        public string ModelCenterAnomalyEvaluationTitleText => "\uC774\uC0C1\uD0D0\uC9C0 \uD3C9\uAC00";
 
         public bool IsModelCenterAnomalyEvaluationVisible
         {

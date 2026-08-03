@@ -1054,7 +1054,7 @@
                             </DataGrid>
 
                             <TextBlock Grid.Row="3"
-                                       Text="&#xC815;&#xB2F5; &#xB300;&#xC870; &#xC624;&#xB958; &#xC608;&#xC2DC;"
+                                       Text="{Binding GroundTruthExamplesTitleText}"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                        FontFamily="Segoe UI"
                                        FontSize="12"
@@ -1211,6 +1211,7 @@
                                         </StackPanel>
                                         <TextBlock Grid.Row="3"
                                                    Text="{Binding GroundTruthPreviewDetailText}"
+                                                   ToolTip="{Binding SelectedGroundTruthExample.EvidencePath}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                                    FontFamily="Segoe UI"
                                                    FontSize="9.5"

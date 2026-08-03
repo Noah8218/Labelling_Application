@@ -1117,6 +1117,8 @@ internal static class AnomalyClassificationTests
         AssertEqual(10, imbalancedReport.TotalImageCount);
         AssertEqual(0.6D, imbalancedReport.Accuracy);
         AssertEqual(0.2D, imbalancedReport.AbnormalAccuracy);
+        AssertEqual(0.6D, imbalancedReport.BalancedAccuracy);
+        AssertEqual(4, imbalancedReport.FalseNegativeCount);
         AssertTrue(imbalancedReport.HoldReasons.Any(reason => reason.Contains("Abnormal accuracy", StringComparison.Ordinal)), "evaluation should expose abnormal-class accuracy blockers");
 
         var lowConfidenceSamples = new List<AnomalyClassificationEvaluationSample>();
@@ -1162,6 +1164,7 @@ internal static class AnomalyClassificationTests
             summaryPath,
             JsonConvert.SerializeObject(new
             {
+                modelName = "patchcore",
                 metrics = new
                 {
                     totalImageCount = 4,
@@ -1173,8 +1176,14 @@ internal static class AnomalyClassificationTests
                     lowConfidenceClassMatchCount = 2,
                     accuracy = 0.25,
                     normalAccuracy = 0.5,
-                    abnormalAccuracy = 0.0
+                    abnormalAccuracy = 0.0,
+                    balancedAccuracy = 0.25,
+                    falsePositiveCount = 1,
+                    falseNegativeCount = 2,
+                    localizationEvidenceCount = 1,
+                    heatmapEvidenceCount = 4
                 },
+                localization = new { groundTruthStatus = "not-evaluated" },
                 promotion = new
                 {
                     recommendation = "hold",
@@ -1188,6 +1197,10 @@ internal static class AnomalyClassificationTests
         AssertEqual(4, parsedSummary.TotalImageCount);
         AssertEqual(2, parsedSummary.LowConfidenceClassMatchCount);
         AssertEqual(0.25D, parsedSummary.Accuracy);
+        AssertEqual("patchcore", parsedSummary.ModelName);
+        AssertEqual(1, parsedSummary.LocalizationEvidenceCount);
+        AssertEqual(4, parsedSummary.HeatmapEvidenceCount);
+        AssertEqual("not-evaluated", parsedSummary.LocalizationGroundTruthStatus);
         AssertTrue(parsedSummary.HoldReasons.Any(reason => reason.Contains("minimum confidence", StringComparison.OrdinalIgnoreCase)), "summary loader should preserve confidence hold reasons");
         WpfAnomalyClassificationEvaluationPresentation parsedPresentation =
             WpfAnomalyClassificationEvaluationPresentationService.Build(
@@ -1218,6 +1231,9 @@ internal static class AnomalyClassificationTests
         AnomalyClassificationEvaluationReport holdWithoutReasonsReport =
             AnomalyClassificationEvaluationService.ParseSummaryJson(holdWithoutReasonsJson);
         AssertTrue(!holdWithoutReasonsReport.IsAdoptionCandidate, "summary loader should honor explicit hold recommendation even when reasons are absent");
+        AssertEqual(1D, holdWithoutReasonsReport.BalancedAccuracy);
+        AssertEqual(0, holdWithoutReasonsReport.FalsePositiveCount);
+        AssertEqual(0, holdWithoutReasonsReport.FalseNegativeCount);
         WpfAnomalyClassificationEvaluationPresentation holdWithoutReasonsPresentation =
             WpfAnomalyClassificationEvaluationPresentationService.Build(holdWithoutReasonsReport);
         AssertTrue(holdWithoutReasonsPresentation.RecommendationText.Contains("\uBCF4\uB958", StringComparison.Ordinal), "explicit hold recommendation should remain visible as hold");
@@ -1301,7 +1317,11 @@ internal static class AnomalyClassificationTests
         AssertTrue(evaluationScript.Contains("minimumPerClassImageCount", StringComparison.Ordinal), "classification evaluation summary should persist per-class adoption thresholds");
         AssertTrue(evaluationScript.Contains("minimumConfidence", StringComparison.Ordinal), "classification evaluation summary should persist the confidence adoption threshold");
         AssertTrue(evaluationScript.Contains("lowConfidenceClassMatchCount", StringComparison.Ordinal), "classification evaluation summary should persist low-confidence class-match counts");
-        AssertTrue(evaluationScript.Contains("$confidenceValue -ge $MinimumConfidence", StringComparison.Ordinal), "classification evaluation script should require enough confidence before counting a prediction as correct");
+        AssertTrue(evaluationScript.Contains("$confidenceValue -ge $effectiveMinimumConfidence", StringComparison.Ordinal), "anomaly evaluation should apply class confidence only when the selected model uses that decision rule");
+        AssertTrue(evaluationScript.Contains("checkpoint-anomaly-threshold", StringComparison.Ordinal), "PatchCore evaluation should record its checkpoint threshold decision rule instead of comparing raw scores with YOLO confidence");
+        AssertTrue(evaluationScript.Contains("balancedAccuracy", StringComparison.Ordinal), "anomaly evaluation should persist balanced accuracy for class-balanced comparison");
+        AssertTrue(evaluationScript.Contains("falsePositiveCount", StringComparison.Ordinal) && evaluationScript.Contains("falseNegativeCount", StringComparison.Ordinal), "anomaly evaluation should persist normal false positives and abnormal misses");
+        AssertTrue(evaluationScript.Contains("groundTruthStatus = \"not-evaluated\"", StringComparison.Ordinal), "PatchCore localization should fail closed as not evaluated when location ground truth is absent");
         AssertTrue(evaluationScript.Contains("class-matching predictions were below minimum confidence", StringComparison.Ordinal), "classification evaluation script should explain confidence-gated hold reasons");
         AssertTrue(evaluationScript.Contains("recommendation = $recommendation", StringComparison.Ordinal), "classification evaluation summary should persist adopt/hold recommendation");
         AssertTrue(evaluationScript.Contains("reasons = $holdReasons", StringComparison.Ordinal), "classification evaluation summary should persist hold reasons");
@@ -1309,6 +1329,8 @@ internal static class AnomalyClassificationTests
         AssertTrue(batchEvaluationScript.Contains("spec_from_file_location", StringComparison.Ordinal), "batch classification evaluation should load the selected local YOLO adapter instead of a second model implementation");
         AssertTrue(batchEvaluationScript.Contains("build_detector", StringComparison.Ordinal), "batch classification evaluation should build the detector through the selected adapter");
         AssertTrue(batchEvaluationScript.Contains("detector.detect_path", StringComparison.Ordinal), "batch classification evaluation should preserve adapter-owned candidate mapping");
+        AssertTrue(batchEvaluationScript.Contains("anomalyLocalization", StringComparison.Ordinal), "batch anomaly evaluation should retain PatchCore location evidence");
+        AssertTrue(batchEvaluationScript.Contains("evidence_output", StringComparison.Ordinal), "PatchCore heatmaps should be routed into the evaluation artifact instead of the model checkpoint folder");
 
         string runRoot = CreateTempRoot();
         try
@@ -1364,6 +1386,36 @@ internal static class AnomalyClassificationTests
             AssertTrue(File.Exists(Path.Combine(request.DatasetRootPath, "test", "normal", "normal-eval.png")), "WPF anomaly evaluation runner should export reviewed normal test images");
             AssertTrue(File.Exists(Path.Combine(request.DatasetRootPath, "test", "abnormal", "abnormal-eval.png")), "WPF anomaly evaluation runner should export reviewed abnormal test images");
             AssertEqual(0, runService.ValidateRequest(request).Count);
+
+            string exportedNormalPath = Path.Combine(request.DatasetRootPath, "test", "normal", "normal-eval.png");
+            string exportedAbnormalPath = Path.Combine(request.DatasetRootPath, "test", "abnormal", "abnormal-eval.png");
+            File.Copy(exportedNormalPath, exportedAbnormalPath, overwrite: true);
+            IReadOnlyList<string> sameClassContentErrors = runService.ValidateRequest(request);
+            AssertTrue(
+                sameClassContentErrors.Any(error =>
+                    error.Contains("test normal/abnormal", StringComparison.Ordinal) &&
+                    error.Contains("SHA-256", StringComparison.Ordinal)),
+                "anomaly evaluation should reject exact image content reused as both normal and abnormal");
+            WpfAnomalyClassificationEvaluationRunResult blockedResult =
+                runService.RunAsync(request).GetAwaiter().GetResult();
+            AssertTrue(!blockedResult.Succeeded, "anomaly evaluation should fail before starting the worker when exact class leakage exists");
+            AssertTrue(
+                blockedResult.Error.Contains("test normal/abnormal", StringComparison.Ordinal),
+                "anomaly evaluation should return the actionable class-leakage validation error before worker execution");
+
+            File.Copy(abnormalPath, exportedAbnormalPath, overwrite: true);
+            string trainNormalRoot = Path.Combine(request.DatasetRootPath, "train", "normal");
+            Directory.CreateDirectory(trainNormalRoot);
+            File.Copy(exportedNormalPath, Path.Combine(trainNormalRoot, "renamed-train-normal.png"), overwrite: true);
+            IReadOnlyList<string> crossSplitContentErrors = runService.ValidateRequest(request);
+            AssertTrue(
+                crossSplitContentErrors.Any(error =>
+                    error.Contains("train/test", StringComparison.Ordinal) &&
+                    error.Contains("SHA-256", StringComparison.Ordinal)),
+                "anomaly evaluation should reject exact image content reused across train and test under a different file name");
+            Directory.Delete(Path.Combine(request.DatasetRootPath, "train"), recursive: true);
+            AssertEqual(0, runService.ValidateRequest(request).Count);
+
             IReadOnlyList<string> arguments = runService.BuildPowerShellArguments(request);
             AssertTrue(arguments.Contains("-WorkerScript"), "WPF anomaly evaluation runner should pass the local YOLOv8 TCP adapter");
             AssertTrue(arguments.Contains(workerPath), "WPF anomaly evaluation runner should pass the configured local adapter path");
@@ -1371,6 +1423,7 @@ internal static class AnomalyClassificationTests
             AssertTrue(arguments.Contains(request.DatasetRootPath), "WPF anomaly evaluation runner should pass the exported dataset path");
             AssertTrue(arguments.Contains("-MinimumConfidence"), "WPF anomaly evaluation runner should pass the confidence adoption threshold");
             AssertTrue(arguments.Contains("0.8"), "WPF anomaly evaluation runner should pass the configured confidence adoption threshold value");
+            AssertTrue(arguments.Contains("-ModelName") && arguments.Contains("yolov8"), "WPF anomaly evaluation runner should pass the selected engine explicitly");
 
             runData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYolo11;
             WpfAnomalyClassificationEvaluationRunRequest yolo11Request = runService.BuildRequest(runData);
@@ -1380,12 +1433,25 @@ internal static class AnomalyClassificationTests
                 runService.BuildPowerShellArguments(yolo11Request).Contains(workerPath),
                 "WPF anomaly evaluation runner should preserve the selected YOLO11-compatible adapter path");
 
-            yolo11Request.ModelName = "unsupported";
+            runData.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EnginePatchCore;
+            runData.ProjectSettings.PythonModel.ProjectRootPath = yoloRoot;
+            runData.ProjectSettings.PythonModel.ClientScriptPath = workerPath;
+            runData.ProjectSettings.PythonModel.WeightsPath = weightsPath;
+            WpfAnomalyClassificationEvaluationRunRequest patchCoreRequest = runService.BuildRequest(runData);
+            AssertEqual("patchcore", patchCoreRequest.ModelName);
+            AssertEqual("cpu", patchCoreRequest.Device);
+            AssertEqual(0, runService.ValidateRequest(patchCoreRequest).Count);
+            IReadOnlyList<string> patchCoreArguments = runService.BuildPowerShellArguments(patchCoreRequest);
+            AssertTrue(patchCoreArguments.Contains("patchcore"), "WPF anomaly evaluation runner should route the selected PatchCore worker through the shared evaluation contract");
+            AssertTrue(patchCoreArguments.Contains("-MaximumCandidates"), "PatchCore evaluation should bound review-only location candidates");
+
+            patchCoreRequest.ModelName = "unsupported";
             AssertTrue(
-                runService.ValidateRequest(yolo11Request).Any(error =>
+                runService.ValidateRequest(patchCoreRequest).Any(error =>
                     error.Contains("YOLOv8", StringComparison.Ordinal) &&
-                    error.Contains("YOLO11", StringComparison.Ordinal)),
-                "WPF anomaly evaluation runner should reject model engines outside the verified YOLOv8/YOLO11 scope");
+                    error.Contains("YOLO11", StringComparison.Ordinal) &&
+                    error.Contains("PatchCore", StringComparison.Ordinal)),
+                "WPF anomaly evaluation runner should reject model engines outside the verified YOLOv8/YOLO11/PatchCore scope");
         }
         finally
         {

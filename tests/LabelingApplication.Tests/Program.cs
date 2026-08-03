@@ -792,6 +792,11 @@ internal static partial class Program
             return RunExeRuntimeGraphicsSmoke(args);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--exe-environment-setup-center-smoke", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunExeEnvironmentSetupCenterSmoke(args);
+        }
+
         if (args.Any(arg => string.Equals(arg, "--wpf-image-queue-status", StringComparison.OrdinalIgnoreCase)))
         {
             return RunSingleSmoke("WPF image queue presents row status with icons", TestWpfImageQueueStatusPresentation);
@@ -2030,6 +2035,7 @@ internal static partial class Program
         bool showBatchFailedBaselineStatus = HasArgument(args, "--show-batch-failed-baseline-status");
         bool showBatchFailedInferenceStatus = HasArgument(args, "--show-batch-failed-inference-status");
         bool showBatchFailureResultCard = HasArgument(args, "--show-batch-failure-result-card");
+        bool showAnomalyEvaluationLeakageStatus = HasArgument(args, "--show-anomaly-evaluation-leakage-status");
         bool expandLearningConcepts = HasArgument(args, "--expand-learning-concepts");
         bool focusTemplateWorkflow = HasArgument(args, "--focus-template-workflow");
         bool focusYoloValidationReport = HasArgument(args, "--focus-yolo-validation-report");
@@ -2047,6 +2053,7 @@ internal static partial class Program
         bool showObjectMetadata = HasArgument(args, "--show-object-metadata");
         bool showObjectGroup = HasArgument(args, "--show-object-group");
         bool openHeaderToolsMenu = HasArgument(args, "--open-header-tools-menu");
+        bool openEnvironmentSetupCenter = HasArgument(args, "--open-environment-setup-center");
         bool showWorkspaceLayoutControls = HasArgument(args, "--show-workspace-layout-controls");
         bool runRuntimeSelfTest = HasArgument(args, "--run-runtime-self-test");
         bool showFailedGraphicsCapability = HasArgument(args, "--show-failed-graphics-capability");
@@ -2572,6 +2579,22 @@ internal static partial class Program
                             });
                         PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
                     }
+                    if (showAnomalyEvaluationLeakageStatus)
+                    {
+                        const string leakageStatus =
+                            "\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00 \uC2E4\uD589 \uBD88\uAC00: \uD3C9\uAC00 \uB370\uC774\uD130 \uB204\uC218: test normal/abnormal\uC5D0 \uAE38\uC774+SHA-256\uC774 \uAC19\uC740 \uC774\uBBF8\uC9C0 \uCF58\uD150\uCE20 1\uAC74\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uAC19\uC740 \uC774\uBBF8\uC9C0\uB97C \uC815\uC0C1\uACFC \uC774\uC0C1\uC5D0 \uB3D9\uC2DC\uC5D0 \uB450\uC9C0 \uB9C8\uC138\uC694.";
+                        InvokePrivateResult<object>(window, "SetYoloCommandStatus", leakageStatus, false);
+                        InvokePrivateResult<object>(window, "AppendLog", leakageStatus);
+                        AssertEqual(leakageStatus, window.YoloStatusViewModel.CommandStatusText);
+                        if (window.FindName("ShellLogPanelControl") is WpfShellLogPanel logPanel
+                            && !logPanel.ViewModel.IsLogPaneExpanded)
+                        {
+                            logPanel.ViewModel.ToggleLogPaneCommand.Execute(null);
+                        }
+
+                        window.UpdateLayout();
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
+                    }
                     ApplyVisualSmokeAnnotationTool(window, annotationTool, imageSize);
                     if (!string.IsNullOrWhiteSpace(boxDrawingMethod))
                     {
@@ -3081,7 +3104,28 @@ internal static partial class Program
                         PumpWpfDispatcher(TimeSpan.FromMilliseconds(500));
                     }
 
-                    System.Windows.Window captureTarget = (System.Windows.Window)batchDetectionPreflightWindow
+                    WpfEnvironmentSetupCenterWindow environmentSetupCenterWindow = null;
+                    if (openEnvironmentSetupCenter)
+                    {
+                        window.RuntimeDiagnosticsViewModel.OpenSetupCenterCommand.Execute(null);
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(500));
+                        environmentSetupCenterWindow = System.Windows.Application.Current.Windows
+                            .OfType<WpfEnvironmentSetupCenterWindow>()
+                            .FirstOrDefault(candidate => ReferenceEquals(candidate.Owner, window));
+                        AssertTrue(environmentSetupCenterWindow != null, "WPF visual smoke did not open the Environment Setup Center window");
+                        environmentSetupCenterWindow.Width = Math.Max(920, windowWidth);
+                        environmentSetupCenterWindow.Height = Math.Max(620, windowHeight);
+                        environmentSetupCenterWindow.Left = screenCapture ? 0 : 24;
+                        environmentSetupCenterWindow.Top = screenCapture ? 0 : 24;
+                        environmentSetupCenterWindow.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
+                        environmentSetupCenterWindow.Topmost = true;
+                        environmentSetupCenterWindow.UpdateLayout();
+                        environmentSetupCenterWindow.Activate();
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(500));
+                    }
+
+                    System.Windows.Window captureTarget = (System.Windows.Window)environmentSetupCenterWindow
+                        ?? (System.Windows.Window)batchDetectionPreflightWindow
                         ?? (System.Windows.Window)datasetInterchangeWindow
                         ?? (System.Windows.Window)datasetHealthWindow
                         ?? (System.Windows.Window)modelBenchmarkWindow
@@ -3794,6 +3838,7 @@ internal static partial class Program
         AssertTrue(!string.IsNullOrWhiteSpace(presentation.MetricsText), "visual smoke anomaly classification summary did not produce metrics text");
         Console.WriteLine("WPF visual smoke anomaly evaluation: " + presentation.RecommendationText + " / " + presentation.MetricsText);
 
+        SetPrivateField(window, "manualModelCenterAnomalyEvaluationSummaryPath", fullSummaryPath);
         SelectVisualSmokeReviewTab(window, "yolo");
         window.ShellViewModel.SetModelCenterAnomalyEvaluationPickerVisible(true);
         window.ShellViewModel.SetModelCenterAnomalyEvaluationState(presentation);
@@ -4453,6 +4498,145 @@ internal static partial class Program
                     process.WaitForExit(5000);
                 }
             }
+        }
+    }
+
+    private static int RunExeEnvironmentSetupCenterSmoke(string[] args)
+    {
+        Process process = null;
+        try
+        {
+            string root = FindRepositoryRoot();
+            string exePath = Path.GetFullPath(GetArgumentValue(
+                args,
+                "--exe",
+                Path.Combine(root, "artifacts", "run", "Debug", "OpenVisionLab.LabelingStudio.exe")));
+            string outputPath = Path.GetFullPath(GetArgumentValue(
+                args,
+                "--output",
+                Path.Combine(root, "artifacts", "ui", "environment-setup-center-exe.png")));
+            string appDataRoot = Path.GetFullPath(GetArgumentValue(
+                args,
+                "--app-data-root",
+                Path.Combine(Path.GetTempPath(), "ovl-environment-setup-center-exe-" + Guid.NewGuid().ToString("N"))));
+            int holdSeconds = Math.Min(45, Math.Max(0, TryParseInt(GetArgumentValue(args, "--hold-seconds", "0"), 0)));
+            int setupWidth = Math.Max(920, TryParseInt(GetArgumentValue(args, "--window-width", "1120"), 1120));
+            int setupHeight = Math.Max(620, TryParseInt(GetArgumentValue(args, "--window-height", "760"), 760));
+
+            AssertTrue(File.Exists(exePath), "environment setup-center EXE target was not found");
+            AssertTrue(!Directory.Exists(appDataRoot), "environment setup-center app-data root must be a new path");
+            Directory.CreateDirectory(appDataRoot);
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = exePath,
+                WorkingDirectory = Path.GetDirectoryName(exePath)!,
+                UseShellExecute = false
+            };
+            startInfo.Environment[WpfRuntimeDiagnosticsService.ApplicationDataRootEnvironmentVariable] = appDataRoot;
+            process = Process.Start(startInfo);
+            AssertTrue(process != null, "environment setup-center EXE did not start");
+
+            IntPtr mainHandle = WaitForMainWindowHandle(process, TimeSpan.FromSeconds(45));
+            var mainRoot = RefreshAutomationRoot(process, mainHandle, bringToFront: false);
+            AssertTrue(
+                TryInvokeAutomationButtonByAutomationId(mainRoot, "HeaderToolsMenuButton"),
+                "environment setup-center smoke could not open Settings/Tools");
+
+            System.Windows.Automation.AutomationElement openButton = null;
+            AssertTrue(
+                WaitUntil(
+                    () =>
+                    {
+                        openButton = FindProcessAutomationElementById(process.Id, "OpenEnvironmentSetupCenterButton");
+                        return openButton != null && openButton.Current.IsEnabled;
+                    },
+                    TimeSpan.FromSeconds(10)),
+                "environment setup-center entry was not available");
+            AssertTrue(TryInvokeAutomationElement(openButton), "environment setup-center entry was not invokable");
+
+            var setupRoot = WaitForProcessWindowByName(process, "환경 설정 센터", TimeSpan.FromSeconds(15));
+            AssertTrue(setupRoot != null, "environment setup-center window did not open");
+            IntPtr setupHandle = new IntPtr(setupRoot.Current.NativeWindowHandle);
+            Screen expectedScreen = PlaceExeSmokeWindowOnLeftmostMonitor(setupHandle, setupWidth, setupHeight);
+            BringNativeWindowToFront(setupHandle);
+            setupRoot = System.Windows.Automation.AutomationElement.FromHandle(setupHandle);
+
+            foreach (string requiredAutomationId in new[]
+            {
+                "EnvironmentSetupRefreshButton",
+                "EnvironmentSetupOpenModelSettingsButton",
+                "EnvironmentSetupCloseButton"
+            })
+            {
+                System.Windows.Automation.AutomationElement element = FindProcessAutomationElementById(process.Id, requiredAutomationId);
+                AssertTrue(element != null && element.Current.IsEnabled, $"setup-center action should be enabled: {requiredAutomationId}");
+            }
+
+            AssertTrue(
+                ContainsAutomationText(setupRoot, "설치 순서")
+                && ContainsAutomationText(setupRoot, "안전 경계")
+                && ContainsAutomationText(setupRoot, "GPU 드라이버와 CUDA"),
+                "setup-center should disclose installation guidance and the automatic-install safety boundary");
+            AssertTrue(
+                !File.Exists(Path.Combine(appDataRoot, "Diagnostics", "self-test-latest.json")),
+                "opening setup center must not persist a full self-test");
+
+            AssertTrue(
+                TryInvokeAutomationElement(FindProcessAutomationElementById(process.Id, "EnvironmentSetupRefreshButton")),
+                "setup-center refresh was not invokable");
+            Thread.Sleep(400);
+            AssertTrue(
+                !File.Exists(Path.Combine(appDataRoot, "Diagnostics", "self-test-latest.json")),
+                "setup-center refresh must remain read-only");
+
+            System.Windows.Rect automationBounds = setupRoot.Current.BoundingRectangle;
+            var windowBounds = new Rectangle(
+                (int)Math.Round(automationBounds.X),
+                (int)Math.Round(automationBounds.Y),
+                Math.Max(1, (int)Math.Round(automationBounds.Width)),
+                Math.Max(1, (int)Math.Round(automationBounds.Height)));
+            AssertTrue(
+                expectedScreen.Bounds.IntersectsWith(windowBounds),
+                "setup-center child window should remain on the leftmost monitor");
+            CaptureAutomationRoot(setupRoot, outputPath);
+            Console.WriteLine(
+                $"EXE_ENVIRONMENT_SETUP_CENTER=PASS MONITOR={expectedScreen.DeviceName} "
+                + $"BOUNDS={windowBounds.Left},{windowBounds.Top},{windowBounds.Width},{windowBounds.Height} "
+                + $"SCREENSHOT={outputPath}");
+
+            AssertTrue(
+                TryInvokeAutomationElement(FindProcessAutomationElementById(process.Id, "EnvironmentSetupOpenModelSettingsButton")),
+                "setup-center model-settings handoff was not invokable");
+            AssertTrue(
+                WaitUntil(
+                    () =>
+                    {
+                        System.Windows.Automation.AutomationElement modelSettings =
+                            FindProcessAutomationElementById(process.Id, "YoloModelSettingsExpander");
+                        return modelSettings != null && !modelSettings.Current.IsOffscreen;
+                    },
+                    TimeSpan.FromSeconds(10)),
+                "setup-center model-settings handoff did not reveal the existing model runtime surface");
+
+            if (holdSeconds > 0)
+            {
+                Console.WriteLine($"EXE_ENVIRONMENT_SETUP_CENTER_HOLD_SECONDS={holdSeconds}");
+                Thread.Sleep(TimeSpan.FromSeconds(holdSeconds));
+            }
+
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"FAIL environment setup-center EXE smoke: {ex.Message}");
+            Console.Error.WriteLine(ex.ToString());
+            return 1;
+        }
+        finally
+        {
+            CloseExeSmokeProcess(process);
         }
     }
 
@@ -23985,7 +24169,7 @@ internal static partial class Program
         string resolvedTutorialHtmlPath = InvokePrivateStaticResult<string>(typeof(WpfLabelingShellWindow), "ResolveTutorialHtmlGuidePath");
         AssertTrue(File.Exists(resolvedTutorialHtmlPath), $"HTML tutorial resolver should find the guide file: {resolvedTutorialHtmlPath}");
         string tutorialHtml = File.ReadAllText(tutorialHtmlPath);
-        AssertTrue(tutorialHtml.Contains("images/annotated/01-overview-1920-annotated.png", StringComparison.Ordinal), "HTML tutorial should include the latest annotated overview screenshot");
+        AssertTrue(tutorialHtml.Contains("images/features-20260802/01-labeling-overview-current-1920x1080.png", StringComparison.Ordinal), "HTML tutorial should include the latest current-source overview screenshot");
         AssertTrue(tutorialHtml.Contains("images/annotated/12-inference-dock-1920-annotated.png", StringComparison.Ordinal), "HTML tutorial should include the latest annotated inference review screenshot");
         AssertTrue(viewModel.YoloTrainingWorkflowSteps[0].Title.Contains("\uB370\uC774\uD130\uC14B", StringComparison.Ordinal), "YOLO workflow should start with dataset creation");
         AssertTrue(viewModel.YoloTrainingWorkflowSteps[1].Title.Contains("\uC774\uBBF8\uC9C0", StringComparison.Ordinal), "YOLO workflow should make image loading an explicit step");

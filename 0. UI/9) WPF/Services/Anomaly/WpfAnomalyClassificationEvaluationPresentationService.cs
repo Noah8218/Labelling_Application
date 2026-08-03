@@ -29,8 +29,8 @@ namespace MvcVisionSystem
             return new WpfAnomalyClassificationEvaluationPresentation
             {
                 RecommendationText = canAdopt
-                    ? "\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00: \uCC44\uD0DD \uAC00\uB2A5"
-                    : "\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00: \uBCF4\uB958",
+                    ? "\uC774\uC0C1\uD0D0\uC9C0 \uD3C9\uAC00: \uCC44\uD0DD \uAC00\uB2A5"
+                    : "\uC774\uC0C1\uD0D0\uC9C0 \uD3C9\uAC00: \uBCF4\uB958",
                 MetricsText = BuildMetricsText(report),
                 DetailText = canAdopt
                     ? BuildAdoptDetailText(options)
@@ -45,14 +45,28 @@ namespace MvcVisionSystem
         {
             return string.Format(
                 CultureInfo.InvariantCulture,
-                "\uD3C9\uAC00 {0}\uC7A5 / \uC815\uC0C1 {1}/{2}, \uC774\uC0C1 {3}/{4} / \uC804\uCCB4 {5} / \uB0AE\uC740 \uC2E0\uB8B0\uB3C4 \uC815\uB2F5 {6}\uAC74",
+                "{0} / \uD3C9\uAC00 {1}\uC7A5 / \uC815\uC0C1 {2}/{3}, \uC774\uC0C1 {4}/{5} / balanced {6} / \uC815\uC0C1 \uC624\uAC80\uCD9C {7}, \uC774\uC0C1 \uBBF8\uAC80\uCD9C {8} / \uB0AE\uC740 \uC2E0\uB8B0\uB3C4 \uC815\uB2F5 {9}\uAC74",
+                FormatModelName(report.ModelName),
                 report.TotalImageCount,
                 report.NormalCorrectCount,
                 report.NormalImageCount,
                 report.AbnormalCorrectCount,
                 report.AbnormalImageCount,
-                FormatPercent(report.Accuracy),
+                FormatPercent(report.BalancedAccuracy),
+                report.FalsePositiveCount,
+                report.FalseNegativeCount,
                 report.LowConfidenceClassMatchCount);
+        }
+
+        private static string FormatModelName(string modelName)
+        {
+            return (modelName ?? string.Empty).Trim().ToLowerInvariant() switch
+            {
+                "yolov8" => "YOLOv8",
+                "yolo11" => "YOLO11",
+                "patchcore" => "PatchCore",
+                _ => "\uBAA8\uB378 \uBBF8\uAE30\uB85D"
+            };
         }
 
         private static string BuildAdoptDetailText(AnomalyClassificationEvaluationOptions options)

@@ -44,11 +44,32 @@ or a different supported Windows image, plus boot-menu modification and a
 user-approved restart. Do not treat that as an automatic continuation of this
 GPU-target decision.
 
+The 2026-08-03 post-reinstall recheck materially changed that historical host
+condition. The host is now Windows 11 Pro build 26100 on a GPT NVMe system disk
+with an EFI system partition, and the GTX 1060 driver reports `OK`. The
+prepared `0.1.2` transfer ZIP still matches its expected SHA-256. Hyper-V is no
+longer installed, so the rejected synthetic-display path remains inactive.
+
+The recheck found that the historical MBR barrier had been removed, while
+Secure Boot remained disabled, privileged BCD and BitLocker reads were
+unavailable from the current non-elevated session, and no official Windows ISO
+was found in the checked local paths. No ISO download, D-drive VHDX creation,
+administrator-elevated boot-menu mutation, or restart was performed.
+
+On 2026-08-03 the operator explicitly declined the native-boot approach. Do
+not download an ISO, create a native-boot VHDX, modify BCD, or request a restart
+for this P0-C path. Keep the existing actual-viewer graphics capability
+preflight as the normal compatibility boundary on real Windows PCs. If another
+ordinary GPU-equipped Windows PC becomes available later, the prepared
+portable bundle may be validated there without reopening native boot,
+standard Hyper-V, Windows Sandbox, or unofficial GPU-partitioning work.
+
 Evidence:
 
 - `artifacts/p0c-clean-machine/gpu-target-local-inventory.json`;
 - `artifacts/p0c-clean-machine/native-boot-host-prerequisites.json`;
-- `artifacts/p0c-clean-machine/native-boot-feasibility-cleanup.json`.
+- `artifacts/p0c-clean-machine/native-boot-feasibility-cleanup.json`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\p0c-clean-machine\native-boot-host-prerequisites-20260803.json`.
 
 ## Exact External Prerequisite
 

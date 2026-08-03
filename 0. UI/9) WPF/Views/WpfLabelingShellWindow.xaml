@@ -1108,6 +1108,20 @@
                                           IsExpanded="True"
                                           Margin="0">
                                     <StackPanel>
+                                        <ui:Button x:Name="OpenEnvironmentSetupCenterButton"
+                                                   Style="{StaticResource WpfUiToolbarButtonStyle}"
+                                                   HorizontalAlignment="Stretch"
+                                                   MinWidth="258"
+                                                   Margin="0,0,0,4"
+                                                   AutomationProperties.AutomationId="OpenEnvironmentSetupCenterButton"
+                                                   AutomationProperties.Name="환경 설정 센터"
+                                                   ToolTip="설치 후 필요한 앱 환경과 모델 실행 유틸리티를 한 화면에서 확인하고 설정으로 이동합니다."
+                                                   Command="{Binding RuntimeDiagnosticsViewModel.OpenSetupCenterCommand}">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="Tools" />
+                                                <TextBlock Text="환경 설정 센터" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </ui:Button>
                                         <ui:Button x:Name="RuntimeSelfTestButton"
                                                    Style="{StaticResource WpfUiToolbarButtonStyle}"
                                                    HorizontalAlignment="Stretch"
@@ -2903,7 +2917,7 @@
                                                            Style="{StaticResource WpfUiToolbarButtonStyle}"
                                                            AutomationProperties.AutomationId="YoloAnomalyEvaluationRunButton"
                                                            AutomationProperties.Name="&#xD3C9;&#xAC00; &#xC2E4;&#xD589;"
-                                                           ToolTip="&#xD604;&#xC7AC; &#xAC80;&#xC0AC; &#xBAA8;&#xB378;&#xACFC; test normal/abnormal &#xBD84;&#xD560;&#xB85C; classification-evaluation-summary.json&#xC744; &#xC0DD;&#xC131;"
+                                                           ToolTip="&#xD604;&#xC7AC; YOLOv8&#xB7;YOLO11&#xB7;PatchCore &#xBAA8;&#xB378;&#xC744; test normal/abnormal &#xBD84;&#xD560;&#xB85C; &#xD3C9;&#xAC00;&#xD558;&#xACE0; &#xB3D9;&#xC77C; &#xB370;&#xC774;&#xD130; &#xC9C0;&#xBB38;&#xC758; &#xACB0;&#xACFC;&#xB97C; &#xBAA8;&#xB378; &#xC131;&#xB2A5; &#xBE44;&#xAD50;&#xC5D0;&#xC11C; &#xD655;&#xC778;"
                                                            Command="{Binding ShellViewModel.RunAnomalyEvaluationCommand}"
                                                            IsEnabled="{Binding ShellViewModel.IsModelCenterAnomalyEvaluationPickerEnabled}"
                                                            Visibility="{Binding ShellViewModel.IsModelCenterAnomalyEvaluationPickerVisible, Converter={StaticResource BooleanToVisibilityConverter}}"

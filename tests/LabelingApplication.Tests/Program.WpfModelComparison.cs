@@ -256,6 +256,124 @@ internal static class WpfModelComparisonTests
             AssertEqual(new string('c', 64), anomalyRun.EvidenceFingerprintSha256);
             AssertTrue(runs.Where(run => run.TaskKey == "segmentation").All(run => string.IsNullOrEmpty(run.EvidenceFingerprintSha256)), "historical reports without evidence fingerprints should remain loadable");
 
+            string projectOutputRoot = Path.Combine(root, "current-anomaly-output");
+            string yoloEvaluationRoot = Path.Combine(projectOutputRoot, "classification-evaluation-20260803-010000");
+            string patchCoreEvaluationRoot = Path.Combine(projectOutputRoot, "classification-evaluation-20260803-020000");
+            Directory.CreateDirectory(yoloEvaluationRoot);
+            Directory.CreateDirectory(patchCoreEvaluationRoot);
+            string yoloEvaluationPath = Path.Combine(yoloEvaluationRoot, "classification-evaluation-summary.json");
+            string patchCoreEvaluationPath = Path.Combine(patchCoreEvaluationRoot, "classification-evaluation-summary.json");
+            object BuildAnomalyComparisonSummary(string model, string weights, double takt)
+            {
+                bool patchCore = string.Equals(model, "patchcore", StringComparison.OrdinalIgnoreCase);
+                object[] samples =
+                {
+                    new
+                    {
+                        imagePath = Path.Combine(previewImageDirectory, "missed-ng.jpg"),
+                        expectedClassName = "normal",
+                        predictedClassName = patchCore ? "normal" : "abnormal",
+                        confidence = patchCore ? 0.55D : 0.70D,
+                        anomalyScore = patchCore ? (double?)0.20D : null,
+                        anomalyThreshold = patchCore ? (double?)0.40D : null,
+                        heatmapPath = patchCore ? Path.Combine(previewImageDirectory, "missed-ng.jpg") : string.Empty,
+                        localizationCount = 0,
+                        correct = patchCore
+                    },
+                    new
+                    {
+                        imagePath = Path.Combine(previewImageDirectory, "false-ng.jpg"),
+                        expectedClassName = "abnormal",
+                        predictedClassName = "abnormal",
+                        confidence = patchCore ? 0.69D : 0.65D,
+                        anomalyScore = patchCore ? (double?)0.70D : null,
+                        anomalyThreshold = patchCore ? (double?)0.40D : null,
+                        heatmapPath = patchCore ? Path.Combine(previewImageDirectory, "false-ng.jpg") : string.Empty,
+                        localizationCount = patchCore ? 1 : 0,
+                        correct = patchCore
+                    }
+                };
+                double accuracy = patchCore ? 1D : 0D;
+                return new
+                {
+                generatedUtc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                modelName = model,
+                weightsPath = weights,
+                weightsSha256 = model == "patchcore" ? new string('1', 64) : new string('2', 64),
+                datasetRoot = Path.Combine(projectOutputRoot, "classification-evaluation-input", "fixed"),
+                split = "test",
+                averageEvaluationMsPerImage = takt,
+                runtime = new
+                {
+                    imageSize = 224,
+                    batchSize = 1,
+                    timingSource = "persistent-adapter-wall-clock",
+                    timingRepeatCount = 1,
+                    device = "cpu",
+                    hardware = new { machineName = "ANOMALY-BENCH" }
+                },
+                evidence = new { fingerprintSha256 = new string('9', 64) },
+                thresholds = new { minimumConfidence = model == "patchcore" ? 0D : 0.8D },
+                metrics = new
+                {
+                    totalImageCount = 2,
+                    normalImageCount = 1,
+                    abnormalImageCount = 1,
+                    correctImageCount = patchCore ? 2 : 0,
+                    normalCorrectCount = patchCore ? 1 : 0,
+                    abnormalCorrectCount = patchCore ? 1 : 0,
+                    accuracy,
+                    balancedAccuracy = accuracy,
+                    normalAccuracy = patchCore ? 1D : 0D,
+                    abnormalAccuracy = patchCore ? 1D : 0D,
+                    falsePositiveCount = patchCore ? 0 : 1,
+                    falseNegativeCount = patchCore ? 0 : 1,
+                    localizationEvidenceCount = patchCore ? 1 : 0,
+                    heatmapEvidenceCount = patchCore ? 2 : 0
+                },
+                localization = new { groundTruthStatus = "not-evaluated" },
+                promotion = new { recommendation = "hold" },
+                samples
+                };
+            }
+            File.WriteAllText(yoloEvaluationPath, JsonConvert.SerializeObject(
+                BuildAnomalyComparisonSummary("yolov8", Path.Combine(root, "weights", "yolov8-anomaly.pt"), 12D),
+                Formatting.Indented));
+            File.WriteAllText(patchCoreEvaluationPath, JsonConvert.SerializeObject(
+                BuildAnomalyComparisonSummary("patchcore", Path.Combine(root, "weights", "patchcore-anomaly.pt"), 18D),
+                Formatting.Indented));
+
+            IReadOnlyList<WpfModelBenchmarkRun> projectRuns = service.Load(root, patchCoreEvaluationPath);
+            WpfModelBenchmarkRun projectPatchCore = projectRuns.Single(run => run.SourcePath == patchCoreEvaluationPath);
+            WpfModelBenchmarkRun projectYolo = projectRuns.Single(run => run.SourcePath == yoloEvaluationPath);
+            AssertEqual("PatchCore", projectPatchCore.RuntimeName);
+            AssertEqual(224, projectPatchCore.ImageSize);
+            AssertEqual(18D, projectPatchCore.TaktMs.Value);
+            AssertTrue(projectPatchCore.Metrics.Any(metric => metric.Key == "balancedAccuracy"), "PatchCore summary should expose balanced accuracy in the shared benchmark table");
+            AssertTrue(projectPatchCore.Metrics.Any(metric => metric.Key == "localizationEvidenceCount" && metric.Value == 1D), "PatchCore summary should retain review-only location evidence counts");
+            AssertEqual(2, projectPatchCore.GroundTruthReview.Examples.Count);
+            AssertTrue(projectPatchCore.GroundTruthReview.Examples.Any(example => example.EvidencePath.EndsWith("false-ng.jpg", StringComparison.OrdinalIgnoreCase)
+                    && example.DetailText.Contains("\uC704\uCE58 1", StringComparison.Ordinal)),
+                "PatchCore image outcomes should retain heatmap and location review evidence");
+            AssertTrue(projectYolo.GroundTruthReview.Examples.First().ErrorType == "false-positive",
+                "anomaly image outcomes should prioritize errors before correct samples");
+            var anomalyComparisonViewModel = new WpfModelBenchmarkViewModel(service, root, patchCoreEvaluationPath);
+            AssertEqual(2, anomalyComparisonViewModel.SelectedRuns.Count);
+            AssertTrue(anomalyComparisonViewModel.SelectedRuns.Any(item => item.RuntimeName == "PatchCore")
+                && anomalyComparisonViewModel.SelectedRuns.Any(item => item.RuntimeName == "Ultralytics YOLOv8"),
+                "opening a project anomaly summary should preselect all current-project runs with the same evidence fingerprint");
+            AssertTrue(anomalyComparisonViewModel.ComparisonNoticeText.Contains("\uC815\uD655\uB3C4/Takt \uBE44\uAD50 \uAC00\uB2A5", StringComparison.Ordinal),
+                "same-split same-runtime-condition anomaly reports should state that accuracy and timing are comparable");
+            AssertEqual(4, anomalyComparisonViewModel.GroundTruthExamples.Count);
+            AssertTrue(anomalyComparisonViewModel.GroundTruthExamples.First().ErrorTypeText.Contains("FP", StringComparison.Ordinal)
+                    && anomalyComparisonViewModel.GroundTruthExamples.Any(example => example.DetailText.Contains("\uC774\uC0C1 \uC810\uC218", StringComparison.Ordinal)),
+                "anomaly comparison should expose error-first image decisions and PatchCore score evidence");
+            AssertTrue(anomalyComparisonViewModel.GroundTruthExamples.Any(example => example.ErrorTypeText == "\uC784\uACC4\uAC12 \uBBF8\uB2EC"),
+                "class-matching predictions below the decision threshold should not be mislabeled as a class mismatch");
+            AssertEqual(2, anomalyComparisonViewModel.DashboardOutcomeRows.Count);
+            AssertTrue(anomalyComparisonViewModel.DashboardOutcomeRows.All(row => row.TruePositiveText.StartsWith("\uC815\uB2F5 ", StringComparison.Ordinal)),
+                "anomaly dashboard outcomes should use image-decision labels instead of detection TP wording");
+
             WpfModelBenchmarkRun preferredBaseline = runs.Single(run => run.SourcePath == preferredSummaryPath && run.SourceRole == "baseline");
             WpfModelBenchmarkRun otherDetectionBaseline = runs.Single(run => run.TaskKey == "object-detection" && run.SourceRole == "baseline" && run.SourcePath != preferredSummaryPath);
             AssertTrue(!string.Equals(preferredBaseline.QualityComparisonKey, otherDetectionBaseline.QualityComparisonKey, StringComparison.OrdinalIgnoreCase), "different evidence fingerprints should produce different quality-comparison identities even when the legacy path/count fields match");

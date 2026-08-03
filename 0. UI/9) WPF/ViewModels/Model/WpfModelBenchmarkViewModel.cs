@@ -21,6 +21,7 @@ namespace MvcVisionSystem
         private readonly WpfModelBenchmarkCatalogService catalogService;
         private readonly string repositoryRoot;
         private readonly ICollectionView filteredRuns;
+        private string preferredSourcePath = string.Empty;
         private string searchText = string.Empty;
         private string selectedTaskFilter = "\uC804\uCCB4";
         private string baselineRunId = string.Empty;
@@ -29,6 +30,7 @@ namespace MvcVisionSystem
         private string comparisonNoticeText = string.Empty;
         private string groundTruthReviewNoticeText = string.Empty;
         private string groundTruthErrorExampleStatusText = string.Empty;
+        private string groundTruthExamplesTitleText = string.Empty;
         private string thresholdReviewStatusText = string.Empty;
         private string dashboardEvidenceText = string.Empty;
         private string dashboardEvidenceDetailText = string.Empty;
@@ -115,7 +117,13 @@ namespace MvcVisionSystem
 
         public string GroundTruthPreviewDetailText => SelectedGroundTruthExample == null
             ? string.Empty
-            : $"{SelectedGroundTruthExample.ModelName} · {SelectedGroundTruthExample.ErrorTypeText} · {SelectedGroundTruthExample.ClassName}";
+            : string.Join(" \u00B7 ", new[]
+            {
+                SelectedGroundTruthExample.ModelName,
+                SelectedGroundTruthExample.ErrorTypeText,
+                SelectedGroundTruthExample.ClassName,
+                SelectedGroundTruthExample.DetailText
+            }.Where(value => !string.IsNullOrWhiteSpace(value)));
 
         public string GroundTruthPreviewStatusText => SelectedGroundTruthExample == null
             ? "오류 예시를 선택하세요."
@@ -183,6 +191,12 @@ namespace MvcVisionSystem
         {
             get => groundTruthErrorExampleStatusText;
             private set => SetProperty(ref groundTruthErrorExampleStatusText, value ?? string.Empty);
+        }
+
+        public string GroundTruthExamplesTitleText
+        {
+            get => groundTruthExamplesTitleText;
+            private set => SetProperty(ref groundTruthExamplesTitleText, value ?? string.Empty);
         }
 
         public string ThresholdReviewStatusText
@@ -289,12 +303,17 @@ namespace MvcVisionSystem
 
         public void Refresh(string preferredSourcePath = "")
         {
+            if (!string.IsNullOrWhiteSpace(preferredSourcePath))
+            {
+                this.preferredSourcePath = preferredSourcePath;
+            }
+
             HashSet<string> selectedIds = CatalogRuns
                 .Where(item => item.IsSelected)
                 .Select(item => item.Run.Id)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             string previousBaselineId = baselineRunId;
-            IReadOnlyList<WpfModelBenchmarkRun> runs = catalogService.Load(repositoryRoot);
+            IReadOnlyList<WpfModelBenchmarkRun> runs = catalogService.Load(repositoryRoot, this.preferredSourcePath);
 
             suppressSelectionRefresh = true;
             try
@@ -309,7 +328,7 @@ namespace MvcVisionSystem
                 }
 
                 RefreshTaskFilters(runs);
-                bool restored = RestorePreferredSelection(preferredSourcePath);
+                bool restored = RestorePreferredSelection(this.preferredSourcePath);
                 if (!restored)
                 {
                     foreach (WpfModelBenchmarkRunItemViewModel item in CatalogRuns.Where(item => selectedIds.Contains(item.Run.Id)))
@@ -351,6 +370,18 @@ namespace MvcVisionSystem
                 .Where(item => string.Equals(NormalizePath(item.Run.SourcePath), preferred, StringComparison.OrdinalIgnoreCase))
                 .Take(MaximumSelectedRunCount)
                 .ToList();
+            WpfModelBenchmarkRun anomalyRun = matches
+                .Select(item => item.Run)
+                .FirstOrDefault(run => string.Equals(run.TaskKey, "anomaly-classification", StringComparison.OrdinalIgnoreCase));
+            if (anomalyRun != null)
+            {
+                matches.AddRange(CatalogRuns
+                    .Where(item => string.Equals(item.Run.TaskKey, anomalyRun.TaskKey, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(item.Run.QualityComparisonKey, anomalyRun.QualityComparisonKey, StringComparison.OrdinalIgnoreCase)
+                        && !matches.Contains(item))
+                    .OrderByDescending(item => item.Run.CreatedAt)
+                    .Take(MaximumSelectedRunCount - matches.Count));
+            }
             foreach (WpfModelBenchmarkRunItemViewModel match in matches)
             {
                 match.SetSelected(true);
@@ -571,6 +602,12 @@ namespace MvcVisionSystem
             SelectedGroundTruthExample = null;
             GroundTruthExamples.Clear();
             var notices = new List<string>();
+            var exampleSources = new List<(string ModelName, WpfModelBenchmarkGroundTruthExample Example)>();
+            bool anomalyOnly = selectedRuns.Count > 0
+                && selectedRuns.All(run => string.Equals(run.TaskKey, "anomaly-classification", StringComparison.OrdinalIgnoreCase));
+            GroundTruthExamplesTitleText = anomalyOnly
+                ? "\uC774\uBBF8\uC9C0\uBCC4 \uD310\uC815 \uACB0\uACFC"
+                : "\uC815\uB2F5 \uB300\uC870 \uC624\uB958 \uC608\uC2DC";
             foreach (WpfModelBenchmarkRun run in selectedRuns)
             {
                 IReadOnlyDictionary<int, WpfModelBenchmarkClassMetric> metricsByClass = run.ClassMetrics
@@ -590,29 +627,44 @@ namespace MvcVisionSystem
                 if (run.GroundTruthReview != null)
                 {
                     WpfModelBenchmarkGroundTruthReview review = run.GroundTruthReview;
-                    string nmsIouText = review.PredictionNmsIouThreshold?.ToString("P0", CultureInfo.CurrentCulture) ?? "미기록";
-                    notices.Add(string.Format(
-                        CultureInfo.CurrentCulture,
-                        "{0}: 신뢰도 {1:P0} · NMS IoU {2} · 정답 매칭 IoU {3:P0} · TP {4} / FP {5} / FN {6}",
-                        run.DisplayName,
-                        review.Confidence ?? 0D,
-                        nmsIouText,
-                        review.IouThreshold ?? 0D,
-                        review.TruePositiveCount,
-                        review.FalsePositiveCount,
-                        review.FalseNegativeCount));
+                    if (string.Equals(run.TaskKey, "anomaly-classification", StringComparison.OrdinalIgnoreCase))
+                    {
+                        notices.Add($"{run.DisplayName}: \uC774\uBBF8\uC9C0 {review.ImageCount}\uC7A5 \u00B7 \uC815\uC0C1 \uC624\uAC80\uCD9C {review.FalsePositiveCount} \u00B7 \uC774\uC0C1 \uBBF8\uAC80\uCD9C {review.FalseNegativeCount} \u00B7 \uC800\uC7A5\uB41C \uD310\uC815 \uACB0\uACFC {review.Examples.Count}\uAC74");
+                    }
+                    else
+                    {
+                        string nmsIouText = review.PredictionNmsIouThreshold?.ToString("P0", CultureInfo.CurrentCulture) ?? "\uBBF8\uAE30\uB85D";
+                        notices.Add(string.Format(
+                            CultureInfo.CurrentCulture,
+                            "{0}: \uC2E0\uB8B0\uB3C4 {1:P0} \u00B7 NMS IoU {2} \u00B7 \uC815\uB2F5 \uB9E4\uCE6D IoU {3:P0} \u00B7 TP {4} / FP {5} / FN {6}",
+                            run.DisplayName,
+                            review.Confidence ?? 0D,
+                            nmsIouText,
+                            review.IouThreshold ?? 0D,
+                            review.TruePositiveCount,
+                            review.FalsePositiveCount,
+                            review.FalseNegativeCount));
+                    }
                     foreach (WpfModelBenchmarkGroundTruthExample example in review.Examples)
                     {
-                        GroundTruthExamples.Add(new WpfModelBenchmarkGroundTruthExampleViewModel(run.DisplayName, example));
+                        exampleSources.Add((run.DisplayName, example));
                     }
                 }
+            }
+
+            foreach ((string modelName, WpfModelBenchmarkGroundTruthExample example) in exampleSources
+                .OrderBy(item => string.Equals(item.Example.ErrorType, "correct", StringComparison.OrdinalIgnoreCase) ? 1 : 0))
+            {
+                GroundTruthExamples.Add(new WpfModelBenchmarkGroundTruthExampleViewModel(modelName, example));
             }
 
             GroundTruthReviewNoticeText = notices.Count > 0
                 ? string.Join("  |  ", notices)
                 : "선택한 리포트에 클래스별/정답 대조 정보가 없습니다. 새 비교를 실행하면 추가됩니다.";
             GroundTruthErrorExampleStatusText = GroundTruthExamples.Count > 0
-                ? $"리포트에 저장된 오류 예시 {GroundTruthExamples.Count}건"
+                ? anomalyOnly
+                    ? $"\uC624\uB958 \uC6B0\uC120\uC73C\uB85C \uC800\uC7A5\uB41C \uC774\uBBF8\uC9C0\uBCC4 \uD310\uC815 \uACB0\uACFC {GroundTruthExamples.Count}\uAC74\uC785\uB2C8\uB2E4. \uD45C\uC2DC\uB294 \uCD5C\uB300 500\uAC74\uC785\uB2C8\uB2E4."
+                    : $"\uB9AC\uD3EC\uD2B8\uC5D0 \uC800\uC7A5\uB41C \uC624\uB958 \uC608\uC2DC {GroundTruthExamples.Count}\uAC74"
                 : "리포트에 저장된 미검출/오검출 예시가 없습니다.";
             if (notices.Count == 0
                 && selectedRuns.Count > 0
@@ -710,11 +762,15 @@ namespace MvcVisionSystem
                     continue;
                 }
 
+                bool anomaly = string.Equals(run.TaskKey, "anomaly-classification", StringComparison.OrdinalIgnoreCase);
                 DashboardOutcomeRows.Add(new WpfModelBenchmarkDashboardOutcomeRowViewModel(
                     run.DisplayName,
                     review.TruePositiveCount,
                     review.FalsePositiveCount,
-                    review.FalseNegativeCount));
+                    review.FalseNegativeCount,
+                    anomaly ? "\uC815\uB2F5" : "TP",
+                    anomaly ? "\uC624\uAC80\uCD9C" : "FP",
+                    anomaly ? "\uBBF8\uAC80\uCD9C" : "FN"));
             }
 
             HasDashboardQualityTaktPoints = DashboardQualityTaktPoints.Count >= 2;
@@ -770,7 +826,9 @@ namespace MvcVisionSystem
                     ? "\uAE30\uC900 \uC2E4\uD589 \uD310\uC815"
                     : "\uBE44\uAD50 \uC2E4\uD589: " + decisionRun.DisplayName;
             DashboardOutcomeStatusText = DashboardOutcomeRows.Count > 0
-                ? "\uAC01 \uC2E4\uD589 \uBCF4\uACE0\uC11C\uC758 \uC815\uB2F5 \uB300\uC870 \uC6D0\uC2DC \uC218\uCE58\uC785\uB2C8\uB2E4. \uC0C1\uD638 \uC6B0\uC5F4\uC740 \uBCF4\uACE0\uC11C \uC870\uAC74\uC774 \uC77C\uCE58\uD560 \uB54C\uB9CC \uD310\uB2E8\uD569\uB2C8\uB2E4."
+                ? selectedRuns.All(run => string.Equals(run.TaskKey, "anomaly-classification", StringComparison.OrdinalIgnoreCase))
+                    ? "\uAC01 \uC2E4\uD589\uC758 \uC815\uB2F5, \uC815\uC0C1 \uC624\uAC80\uCD9C, \uC774\uC0C1 \uBBF8\uAC80\uCD9C \uC218\uC785\uB2C8\uB2E4. \uC774\uBBF8\uC9C0\uBCC4 \uACB0\uACFC\uB294 \uD074\uB798\uC2A4/\uC624\uB958 \uD0ED\uC5D0\uC11C \uD655\uC778\uD569\uB2C8\uB2E4."
+                    : "\uAC01 \uC2E4\uD589 \uBCF4\uACE0\uC11C\uC758 \uC815\uB2F5 \uB300\uC870 \uC6D0\uC2DC \uC218\uCE58\uC785\uB2C8\uB2E4. \uC0C1\uD638 \uC6B0\uC5F4\uC740 \uBCF4\uACE0\uC11C \uC870\uAC74\uC774 \uC77C\uCE58\uD560 \uB54C\uB9CC \uD310\uB2E8\uD569\uB2C8\uB2E4."
                 : "\uC120\uD0DD\uB41C \uBCF4\uACE0\uC11C\uC5D0 \uC815\uB2F5 \uB300\uC870(TP/FP/FN) \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.";
             if (DashboardOutcomeRows.Count == 0
                 && selectedRuns.Count > 0

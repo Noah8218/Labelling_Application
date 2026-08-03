@@ -15,6 +15,10 @@ param(
     [double]$MinimumAccuracy = 0.9,
     [double]$MinimumPerClassAccuracy = 0.8,
     [double]$MinimumConfidence = 0.0,
+    [ValidateSet("yolov8", "yolo11", "patchcore")]
+    [string]$ModelName = "yolov8",
+    [string]$Device = "cpu",
+    [int]$MaximumCandidates = 20,
     [switch]$UseLegacyPerImageWorker
 )
 
@@ -101,12 +105,12 @@ function Invoke-ClassificationSmoke([string]$ImagePath) {
     $arguments = @(
         $WorkerScript,
         "--smoke-test",
-        "--model", "yolov8",
+        "--model", $ModelName,
         "--weights", $Weights,
         "--image", $ImagePath,
         "--model-root", $ModelRoot,
         "--image-root", (Split-Path -Parent $ImagePath),
-        "--device", "cpu",
+        "--device", $Device,
         "--img-size", $ImageSize.ToString([System.Globalization.CultureInfo]::InvariantCulture),
         "--conf", $Confidence.ToString([System.Globalization.CultureInfo]::InvariantCulture)
     )
@@ -172,9 +176,12 @@ function Invoke-ClassificationBatch {
         "--model-root", $ModelRoot,
         "--dataset-root", $DatasetRoot,
         "--split", $Split,
-        "--device", "cpu",
+        "--device", $Device,
         "--img-size", $ImageSize.ToString([System.Globalization.CultureInfo]::InvariantCulture),
-        "--conf", $Confidence.ToString([System.Globalization.CultureInfo]::InvariantCulture)
+        "--conf", $Confidence.ToString([System.Globalization.CultureInfo]::InvariantCulture),
+        "--max-candidates", $MaximumCandidates.ToString([System.Globalization.CultureInfo]::InvariantCulture),
+        "--model", $ModelName,
+        "--evidence-output", (Join-Path $runDirectory "heatmaps")
     )
 
     $output = & $PythonExe @arguments 2>&1
@@ -193,10 +200,15 @@ function Invoke-ClassificationBatch {
                 expectedClassName = [string]$result.expectedClassName
                 predictedClassName = [string]$result.predictedClassName
                 confidence = $confidenceValue
+                anomalyScore = $result.anomalyScore
+                anomalyThreshold = $result.anomalyThreshold
+                heatmapPath = [string]$result.heatmapPath
+                localizationCount = [int]$result.localizationCount
+                localizations = @($result.localizations)
                 correct = ([string]$result.predictedClassName).Equals(
                     [string]$result.expectedClassName,
                     [System.StringComparison]::OrdinalIgnoreCase) -and
-                    $confidenceValue -ge $MinimumConfidence
+                    $confidenceValue -ge $effectiveMinimumConfidence
             }
         })
 }
@@ -239,6 +251,24 @@ function Format-Ratio([double]$Value) {
     return (Get-ClampedRatio $Value).ToString("0.###", [System.Globalization.CultureInfo]::InvariantCulture)
 }
 
+function Get-HardwareSummary {
+    try {
+        $processor = @(Get-CimInstance Win32_Processor -ErrorAction Stop | ForEach-Object { $_.Name.Trim() })
+        $videoControllers = @(Get-CimInstance Win32_VideoController -ErrorAction Stop | ForEach-Object { $_.Name.Trim() })
+    }
+    catch {
+        $processor = @()
+        $videoControllers = @()
+    }
+
+    return [ordered]@{
+        machineName = [Environment]::MachineName
+        osVersion = [Environment]::OSVersion.VersionString
+        processor = $processor
+        videoControllers = $videoControllers
+    }
+}
+
 $PythonExe = Resolve-PathValue $PythonExe
 $WorkerScript = Resolve-PathValue $WorkerScript
 $BatchEvaluatorScript = Resolve-PathValue $BatchEvaluatorScript
@@ -247,6 +277,8 @@ $Weights = Resolve-PathValue $Weights
 $DatasetRoot = Resolve-PathValue $DatasetRoot
 $OutputDirectory = Resolve-PathValue $OutputDirectory
 $MinimumConfidence = Get-ClampedRatio $MinimumConfidence
+$MaximumCandidates = [Math]::Max(1, [Math]::Min(200, $MaximumCandidates))
+$effectiveMinimumConfidence = if ($ModelName -eq "patchcore") { 0.0 } else { $MinimumConfidence }
 
 Assert-File $PythonExe "Python executable"
 Assert-File $WorkerScript "YOLO worker script"
@@ -259,15 +291,18 @@ Assert-Directory $DatasetRoot "Classification dataset root"
 
 $normalImages = @(Get-ClassImages $DatasetRoot $Split "normal")
 $abnormalImages = @(Get-ClassImages $DatasetRoot $Split "abnormal")
+$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$runDirectory = Join-Path $OutputDirectory ("classification-evaluation-" + $timestamp)
+New-Item -ItemType Directory -Force -Path $runDirectory | Out-Null
 $evaluationMode = if ($UseLegacyPerImageWorker) { "per-image-smoke-test" } else { "persistent-adapter-batch" }
 $evaluationStopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 $samples = if ($UseLegacyPerImageWorker) {
     @(
         foreach ($imagePath in $normalImages) {
-            New-Sample $imagePath "normal" $MinimumConfidence
+            New-Sample $imagePath "normal" $effectiveMinimumConfidence
         }
         foreach ($imagePath in $abnormalImages) {
-            New-Sample $imagePath "abnormal" $MinimumConfidence
+            New-Sample $imagePath "abnormal" $effectiveMinimumConfidence
         }
     )
 }
@@ -287,10 +322,15 @@ $abnormalCount = Get-Count $samples "abnormal"
 $normalCorrectCount = Get-CorrectCount $samples "normal"
 $abnormalCorrectCount = Get-CorrectCount $samples "abnormal"
 $correctCount = $normalCorrectCount + $abnormalCorrectCount
-$lowConfidenceClassMatchCount = Get-LowConfidenceClassMatchCount $samples $MinimumConfidence
+$lowConfidenceClassMatchCount = Get-LowConfidenceClassMatchCount $samples $effectiveMinimumConfidence
 $accuracy = Get-Ratio $correctCount $totalCount
 $normalAccuracy = Get-Ratio $normalCorrectCount $normalCount
 $abnormalAccuracy = Get-Ratio $abnormalCorrectCount $abnormalCount
+$balancedAccuracy = ($normalAccuracy + $abnormalAccuracy) / 2.0
+$falsePositiveCount = [Math]::Max(0, $normalCount - $normalCorrectCount)
+$falseNegativeCount = [Math]::Max(0, $abnormalCount - $abnormalCorrectCount)
+$localizationEvidenceCount = @($samples | Where-Object { [int]$_.localizationCount -gt 0 }).Count
+$heatmapEvidenceCount = @($samples | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_.heatmapPath) }).Count
 $holdReasons = @()
 
 if ($totalCount -lt $MinimumTotalImageCount) {
@@ -310,7 +350,7 @@ if ($accuracy -lt $MinimumAccuracy) {
 }
 
 if ($lowConfidenceClassMatchCount -gt 0) {
-    $holdReasons += "$lowConfidenceClassMatchCount class-matching predictions were below minimum confidence $(Format-Ratio $MinimumConfidence)."
+    $holdReasons += "$lowConfidenceClassMatchCount class-matching predictions were below minimum confidence $(Format-Ratio $effectiveMinimumConfidence)."
 }
 
 if ($normalAccuracy -lt $MinimumPerClassAccuracy) {
@@ -321,13 +361,11 @@ if ($abnormalAccuracy -lt $MinimumPerClassAccuracy) {
     $holdReasons += "Abnormal accuracy $(Format-Ratio $abnormalAccuracy) is below minimum $(Format-Ratio $MinimumPerClassAccuracy)."
 }
 
-$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$runDirectory = Join-Path $OutputDirectory ("classification-evaluation-" + $timestamp)
-New-Item -ItemType Directory -Force -Path $runDirectory | Out-Null
 $summaryPath = Join-Path $runDirectory "classification-evaluation-summary.json"
 $recommendation = if ($holdReasons.Count -eq 0) { "adopt" } else { "hold" }
 $summary = [ordered]@{
     generatedUtc = (Get-Date).ToUniversalTime().ToString("o")
+    modelName = $ModelName
     weightsPath = $Weights
     weightsSha256 = Get-FileSha256 $Weights
     datasetRoot = $DatasetRoot
@@ -335,6 +373,17 @@ $summary = [ordered]@{
     evaluationMode = $evaluationMode
     evaluationElapsedMs = $evaluationElapsedMs
     averageEvaluationMsPerImage = if ($samples.Count -gt 0) { $evaluationStopwatch.Elapsed.TotalMilliseconds / $samples.Count } else { 0.0 }
+    runtime = [ordered]@{
+        workerScriptPath = $WorkerScript
+        workerScriptSha256 = Get-FileSha256 $WorkerScript
+        modelRootPath = $ModelRoot
+        device = $Device
+        imageSize = $ImageSize
+        batchSize = 1
+        timingSource = "persistent-adapter-wall-clock"
+        timingRepeatCount = 1
+        hardware = Get-HardwareSummary
+    }
     evidence = [ordered]@{
         fingerprintAlgorithm = "sha256-class-image-pairs-v1"
         fingerprintSha256 = Get-ClassificationEvidenceFingerprint $normalImages $abnormalImages
@@ -344,7 +393,9 @@ $summary = [ordered]@{
         minimumPerClassImageCount = $MinimumPerClassImageCount
         minimumAccuracy = $MinimumAccuracy
         minimumPerClassAccuracy = $MinimumPerClassAccuracy
-        minimumConfidence = $MinimumConfidence
+        minimumConfidence = $effectiveMinimumConfidence
+        configuredMinimumConfidence = $MinimumConfidence
+        decisionThresholdSource = if ($ModelName -eq "patchcore") { "checkpoint-anomaly-threshold" } else { "class-confidence" }
     }
     metrics = [ordered]@{
         totalImageCount = $totalCount
@@ -357,6 +408,17 @@ $summary = [ordered]@{
         accuracy = $accuracy
         normalAccuracy = $normalAccuracy
         abnormalAccuracy = $abnormalAccuracy
+        balancedAccuracy = $balancedAccuracy
+        falsePositiveCount = $falsePositiveCount
+        falseNegativeCount = $falseNegativeCount
+        localizationEvidenceCount = $localizationEvidenceCount
+        heatmapEvidenceCount = $heatmapEvidenceCount
+    }
+    localization = [ordered]@{
+        groundTruthStatus = "not-evaluated"
+        evidenceImageCount = $localizationEvidenceCount
+        heatmapImageCount = $heatmapEvidenceCount
+        note = "PatchCore locations and heatmaps are review evidence; no location ground truth was scored."
     }
     promotion = [ordered]@{
         recommendation = $recommendation

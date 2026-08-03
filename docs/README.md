@@ -56,6 +56,7 @@ WORK_TRACKING.md -> 개별 날짜 문서` 순서가 우선합니다. 날짜가 �
 
 - `CONTRACT` [CI Complete Regression Gate](CI_COMPLETE_REGRESSION_GATE_20260801.md)
 - `CONTRACT` [Headless Environment Self-Test CLI](HEADLESS_ENVIRONMENT_CHECK_CLI_20260801.md)
+- `CONTRACT` [Environment Setup Center P1-G](ENVIRONMENT_SETUP_CENTER_P1G_20260803.md)
 - `CONTRACT` [P1-B Bounded Crash Recovery Journal](BOUNDED_CRASH_RECOVERY_P1B_20260730.md)
 - `EVIDENCE` [Commercial Readiness Audit](COMMERCIAL_READINESS_AUDIT_20260730.md)
 - `EVIDENCE` [Engineering Release 0.1.1 Graphics Preflight Evidence](ENGINEERING_RELEASE_0_1_1_GRAPHICS_PREFLIGHT_EVIDENCE_20260731.md)
@@ -87,6 +88,9 @@ WORK_TRACKING.md -> 개별 날짜 문서` 순서가 우선합니다. 날짜가 �
 - `CONTRACT` [Image Queue Action Worklist](IMAGE_QUEUE_ACTION_WORKLIST_20260722.md)
 - `CONTRACT` [P2 Intelligent Scissors](INTELLIGENT_SCISSORS_P2_20260728.md)
 - `CONTRACT` [Model, Anomaly, and Comparison Review Slices](MODEL_ANOMALY_COMPARISON_REVIEW_SLICES.md)
+- `CONTRACT` [P1-H Anomaly Same-Split Comparison](ANOMALY_SAME_SPLIT_COMPARISON_P1H_20260803.md)
+- `CONTRACT` [P1-I Anomaly Evaluation Error Worklist](ANOMALY_EVALUATION_ERROR_WORKLIST_P1I_20260803.md)
+- `CONTRACT` [P1-J Anomaly Evaluation Content-Leakage Preflight](ANOMALY_EVALUATION_CONTENT_LEAKAGE_PREFLIGHT_P1J_20260803.md)
 - `CONTRACT` [PatchCore Normal-Only Anomaly Pilot](PATCHCORE_ANOMALY_PILOT_20260731.md)
 - `CONTRACT` [PatchCore Heatmap Review View](PATCHCORE_HEATMAP_REVIEW_VIEW_20260801.md)
 - `CONTRACT` [Object Detection MVP Completion](OBJECT_DETECTION_MVP_COMPLETION.md)

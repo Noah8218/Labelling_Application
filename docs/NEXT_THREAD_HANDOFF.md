@@ -1,6 +1,6 @@
 # Next Thread Handoff
 
-Last updated: 2026-08-01 KST
+Last updated: 2026-08-03 KST
 
 This is the current operational handoff for C:\Git\Labelling_Application. It is intentionally shorter than the historical journal. Use it to choose the next task; use the linked records only for the detailed evidence behind a claim.
 
@@ -30,7 +30,10 @@ Current Git/worktree:
   four-point box, Object Review metadata/group, and contextual group-control
   slices are committed and pushed through that baseline;
 - the latest solo default internal regression evidence is 267/267 with no
-  failures after the read-only headless environment self-test CLI. The actual
+  failures after the P1-J anomaly-evaluation exact-content leakage preflight.
+  That gate blocks renamed SHA-256-identical content across train/valid/test
+  and normal/abnormal before the worker starts; read
+  `docs/ANOMALY_EVALUATION_CONTENT_LEAKAGE_PREFLIGHT_P1J_20260803.md`. The actual
   current-source product EXE returns structured JSON without startup logging,
   mutex acquisition, WPF, or durable writes; Main Viewer graphics remains an
   explicit warning because no UI/OpenGL context exists. Read

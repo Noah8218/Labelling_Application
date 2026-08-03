@@ -9,7 +9,9 @@ namespace MvcVisionSystem
 {
     public sealed class WpfModelBenchmarkCatalogService
     {
-        public IReadOnlyList<WpfModelBenchmarkRun> Load(string repositoryRoot = "")
+        private const int MaximumAnomalyReviewSampleCount = 500;
+
+        public IReadOnlyList<WpfModelBenchmarkRun> Load(string repositoryRoot = "", string preferredSourcePath = "")
         {
             string root = string.IsNullOrWhiteSpace(repositoryRoot)
                 ? FindRepositoryRoot()
@@ -18,6 +20,11 @@ namespace MvcVisionSystem
 
             LoadPairwiseComparisons(Path.Combine(root, "artifacts", "yolo-model-comparison"), runs);
             LoadAnomalyClassifications(Path.Combine(root, "artifacts", "yolo-classification-evaluation"), runs);
+            string projectEvaluationRoot = ResolveProjectEvaluationRoot(preferredSourcePath);
+            if (!string.IsNullOrWhiteSpace(projectEvaluationRoot))
+            {
+                LoadAnomalyClassifications(projectEvaluationRoot, runs);
+            }
 
             return runs
                 .GroupBy(run => run.Id, StringComparer.OrdinalIgnoreCase)
@@ -158,6 +165,7 @@ namespace MvcVisionSystem
                 taktMs: model.SelectToken("benchmark.taktMs")?.Value<double?>(),
                 taktMinMs: model.SelectToken("benchmark.taktMinMs")?.Value<double?>(),
                 taktMaxMs: model.SelectToken("benchmark.taktMaxMs")?.Value<double?>(),
+                timingDevice: model.SelectToken("benchmark.device")?.Value<string>() ?? string.Empty,
                 decisionText: FormatDecisionText(summary.SelectToken("promotion.recommendation")?.Value<string>()),
                 metrics: metrics.Where(metric => metric != null).ToArray(),
                 classMetrics: ReadClassMetrics(model.SelectToken("classMetrics")),
@@ -173,12 +181,20 @@ namespace MvcVisionSystem
                     JObject summary = JObject.Parse(File.ReadAllText(summaryPath));
                     string weightsPath = summary.SelectToken("weightsPath")?.Value<string>() ?? string.Empty;
                     string modelName = BuildModelName(weightsPath, "Classification model");
-                    string runtimeName = InferClassificationRuntime(weightsPath, modelName);
+                    string runtimeName = InferClassificationRuntime(
+                        summary.SelectToken("modelName")?.Value<string>(),
+                        weightsPath,
+                        modelName);
                     var metrics = new List<WpfModelBenchmarkMetric>
                     {
                         ReadMetric(summary, "metrics.accuracy", "accuracy", "Accuracy", 10, isPercent: true, supportsDelta: true),
+                        ReadMetric(summary, "metrics.balancedAccuracy", "balancedAccuracy", "Balanced accuracy", 15, isPercent: true, supportsDelta: true),
                         ReadMetric(summary, "metrics.normalAccuracy", "normalAccuracy", "Normal accuracy", 20, isPercent: true, supportsDelta: true),
                         ReadMetric(summary, "metrics.abnormalAccuracy", "abnormalAccuracy", "Abnormal accuracy", 30, isPercent: true, supportsDelta: true),
+                        ReadMetric(summary, "metrics.falsePositiveCount", "falsePositiveCount", "Normal false positives", 40, isPercent: false, supportsDelta: true),
+                        ReadMetric(summary, "metrics.falseNegativeCount", "falseNegativeCount", "Abnormal misses", 50, isPercent: false, supportsDelta: true),
+                        ReadMetric(summary, "metrics.localizationEvidenceCount", "localizationEvidenceCount", "Location evidence", 60, isPercent: false, supportsDelta: false),
+                        ReadMetric(summary, "metrics.heatmapEvidenceCount", "heatmapEvidenceCount", "Heatmap evidence", 65, isPercent: false, supportsDelta: false),
                         ReadMetric(summary, "metrics.totalImageCount", "totalImageCount", "Images", 70, isPercent: false, supportsDelta: false),
                         ReadMetric(summary, "metrics.correctImageCount", "correctImageCount", "Correct", 80, isPercent: false, supportsDelta: false)
                     };
@@ -199,11 +215,11 @@ namespace MvcVisionSystem
                         id: summaryPath + "|evaluation",
                         sourcePath: summaryPath,
                         sourceRole: "evaluation",
-                        sourceTypeText: "\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00",
+                        sourceTypeText: "\uC774\uC0C1\uD0D0\uC9C0 \uD3C9\uAC00",
                         createdAt: ReadDateTimeOffset(
                             summary.SelectToken("generatedUtc")?.Value<string>(),
                             File.GetLastWriteTimeUtc(summaryPath)),
-                        displayName: modelName,
+                        displayName: runtimeName + " \u00B7 " + modelName,
                         modelName: modelName,
                         runtimeName: runtimeName,
                         taskKey: "anomaly-classification",
@@ -214,18 +230,21 @@ namespace MvcVisionSystem
                         evidenceFingerprintSha256: summary.SelectToken("evidence.fingerprintSha256")?.Value<string>() ?? string.Empty,
                         split: summary.SelectToken("split")?.Value<string>() ?? "unknown",
                         evidenceCount: summary.SelectToken("metrics.totalImageCount")?.Value<int?>() ?? 0,
-                        imageSize: 0,
-                        batchSize: 0,
+                        imageSize: summary.SelectToken("runtime.imageSize")?.Value<int?>() ?? 0,
+                        batchSize: summary.SelectToken("runtime.batchSize")?.Value<int?>() ?? 0,
                         confidence: summary.SelectToken("thresholds.minimumConfidence")?.Value<double?>(),
-                        timingSource: string.Empty,
-                        timingRepeatCount: 0,
-                        taktMs: null,
+                        timingSource: summary.SelectToken("runtime.timingSource")?.Value<string>() ?? string.Empty,
+                        timingRepeatCount: summary.SelectToken("runtime.timingRepeatCount")?.Value<int?>() ?? 0,
+                        taktMs: summary.SelectToken("averageEvaluationMsPerImage")?.Value<double?>(),
                         taktMinMs: null,
                         taktMaxMs: null,
+                        timingDevice: string.Join("@",
+                            summary.SelectToken("runtime.device")?.Value<string>() ?? string.Empty,
+                            summary.SelectToken("runtime.hardware.machineName")?.Value<string>() ?? string.Empty),
                         decisionText: FormatDecisionText(summary.SelectToken("promotion.recommendation")?.Value<string>()),
                         metrics: metrics.Where(metric => metric != null).ToArray(),
                         classMetrics: Array.Empty<WpfModelBenchmarkClassMetric>(),
-                        groundTruthReview: null));
+                        groundTruthReview: ReadAnomalyGroundTruthReview(summary)));
                 }
                 catch
                 {
@@ -351,6 +370,122 @@ namespace MvcVisionSystem
                 thresholdSweep);
         }
 
+        private static WpfModelBenchmarkGroundTruthReview ReadAnomalyGroundTruthReview(JObject summary)
+        {
+            JObject[] samples = summary.SelectToken("samples")?.Children<JObject>().ToArray()
+                ?? Array.Empty<JObject>();
+            if (samples.Length == 0)
+            {
+                return null;
+            }
+
+            double? decisionThreshold = ReadFiniteDouble(summary.SelectToken("thresholds.minimumConfidence"));
+            IReadOnlyList<WpfModelBenchmarkGroundTruthExample> examples = samples
+                .Select((sample, index) => new
+                {
+                    Sample = sample,
+                    Index = index,
+                    Correct = sample.SelectToken("correct")?.Value<bool?>()
+                })
+                .Where(item => item.Correct.HasValue)
+                .OrderBy(item => item.Correct.Value ? 1 : 0)
+                .ThenBy(item => item.Index)
+                .Take(MaximumAnomalyReviewSampleCount)
+                .Select(item => BuildAnomalyReviewExample(item.Sample, item.Correct.Value, decisionThreshold))
+                .ToArray();
+            if (examples.Count == 0)
+            {
+                return null;
+            }
+
+            int normalCount = ReadNonNegativeInt(summary.SelectToken("metrics.normalImageCount")) ?? 0;
+            int abnormalCount = ReadNonNegativeInt(summary.SelectToken("metrics.abnormalImageCount")) ?? 0;
+            int normalCorrect = ReadNonNegativeInt(summary.SelectToken("metrics.normalCorrectCount")) ?? 0;
+            int abnormalCorrect = ReadNonNegativeInt(summary.SelectToken("metrics.abnormalCorrectCount")) ?? 0;
+            int falsePositive = ReadNonNegativeInt(summary.SelectToken("metrics.falsePositiveCount")) ?? 0;
+            int falseNegative = ReadNonNegativeInt(summary.SelectToken("metrics.falseNegativeCount")) ?? 0;
+            var perClass = new[]
+            {
+                new WpfModelBenchmarkGroundTruthClassReview(
+                    0,
+                    "\uC815\uC0C1",
+                    normalCount,
+                    samples.Count(sample => string.Equals(sample.SelectToken("predictedClassName")?.Value<string>(), "normal", StringComparison.OrdinalIgnoreCase)),
+                    normalCorrect,
+                    falseNegative,
+                    falsePositive),
+                new WpfModelBenchmarkGroundTruthClassReview(
+                    1,
+                    "\uC774\uC0C1",
+                    abnormalCount,
+                    samples.Count(sample => string.Equals(sample.SelectToken("predictedClassName")?.Value<string>(), "abnormal", StringComparison.OrdinalIgnoreCase)),
+                    abnormalCorrect,
+                    falsePositive,
+                    falseNegative)
+            };
+
+            return new WpfModelBenchmarkGroundTruthReview(
+                decisionThreshold,
+                null,
+                null,
+                ReadNonNegativeInt(summary.SelectToken("metrics.totalImageCount")) ?? samples.Length,
+                normalCorrect + abnormalCorrect,
+                falsePositive,
+                falseNegative,
+                perClass,
+                examples,
+                schemaVersion: 1,
+                schema: "image-classification-review-v1");
+        }
+
+        private static WpfModelBenchmarkGroundTruthExample BuildAnomalyReviewExample(
+            JObject sample,
+            bool correct,
+            double? decisionThreshold)
+        {
+            string imagePath = sample.SelectToken("imagePath")?.Value<string>() ?? string.Empty;
+            string expected = sample.SelectToken("expectedClassName")?.Value<string>() ?? string.Empty;
+            string predicted = sample.SelectToken("predictedClassName")?.Value<string>() ?? string.Empty;
+            string errorType = correct
+                ? "correct"
+                : string.Equals(expected, predicted, StringComparison.OrdinalIgnoreCase)
+                    ? "low-confidence"
+                : string.Equals(expected, "normal", StringComparison.OrdinalIgnoreCase)
+                    ? "false-positive"
+                    : string.Equals(expected, "abnormal", StringComparison.OrdinalIgnoreCase)
+                        ? "false-negative"
+                        : "incorrect";
+            double? confidence = ReadUnitIntervalDouble(sample.SelectToken("confidence"));
+            double? anomalyScore = ReadFiniteDouble(sample.SelectToken("anomalyScore"));
+            double? anomalyThreshold = ReadFiniteDouble(sample.SelectToken("anomalyThreshold"));
+            int localizationCount = ReadNonNegativeInt(sample.SelectToken("localizationCount")) ?? 0;
+            string heatmapPath = sample.SelectToken("heatmapPath")?.Value<string>() ?? string.Empty;
+            string detailText = anomalyScore.HasValue
+                ? $"\uC774\uC0C1 \uC810\uC218 {anomalyScore.Value:0.###} \u00B7 \uC784\uACC4\uAC12 {(anomalyThreshold.HasValue ? anomalyThreshold.Value.ToString("0.###", CultureInfo.CurrentCulture) : "-")} \u00B7 \uC704\uCE58 {localizationCount} \u00B7 \uD788\uD2B8\uB9F5 {(string.IsNullOrWhiteSpace(heatmapPath) ? "\uC5C6\uC74C" : "\uC788\uC74C")}"
+                : $"\uC2E0\uB8B0\uB3C4 {(confidence.HasValue ? confidence.Value.ToString("P1", CultureInfo.CurrentCulture) : "-")} \u00B7 \uD310\uC815 \uC784\uACC4\uAC12 {(decisionThreshold.HasValue ? decisionThreshold.Value.ToString("P1", CultureInfo.CurrentCulture) : "-")}";
+
+            return new WpfModelBenchmarkGroundTruthExample(
+                imagePath,
+                Path.GetFileName(imagePath),
+                errorType,
+                string.Equals(expected, "abnormal", StringComparison.OrdinalIgnoreCase) ? 1 : 0,
+                FormatAnomalyClassName(expected) + " \u2192 " + FormatAnomalyClassName(predicted),
+                confidence,
+                null,
+                detailText: detailText,
+                evidencePath: heatmapPath);
+        }
+
+        private static string FormatAnomalyClassName(string value)
+        {
+            return (value ?? string.Empty).Trim().ToLowerInvariant() switch
+            {
+                "normal" => "\uC815\uC0C1",
+                "abnormal" => "\uC774\uC0C1",
+                _ => string.IsNullOrWhiteSpace(value) ? "-" : value.Trim()
+            };
+        }
+
         private static WpfModelBenchmarkThresholdReview ReadGroundTruthThresholdReview(JObject token)
         {
             double? confidence = ReadUnitIntervalDouble(token?.SelectToken("confidence"));
@@ -467,8 +602,24 @@ namespace MvcVisionSystem
             return string.IsNullOrWhiteSpace(fallback) ? "Model" : fallback.Trim();
         }
 
-        private static string InferClassificationRuntime(string weightsPath, string modelName)
+        private static string InferClassificationRuntime(string declaredModelName, string weightsPath, string modelName)
         {
+            string declared = (declaredModelName ?? string.Empty).Trim().ToLowerInvariant();
+            if (declared == "patchcore")
+            {
+                return "PatchCore";
+            }
+
+            if (declared == "yolo11")
+            {
+                return "Ultralytics YOLO11";
+            }
+
+            if (declared == "yolov8")
+            {
+                return "Ultralytics YOLOv8";
+            }
+
             string source = (weightsPath + " " + modelName).ToLowerInvariant();
             if (source.Contains("yolov8", StringComparison.Ordinal))
             {
@@ -481,6 +632,31 @@ namespace MvcVisionSystem
             }
 
             return "Classification runtime";
+        }
+
+        private static string ResolveProjectEvaluationRoot(string preferredSourcePath)
+        {
+            if (string.IsNullOrWhiteSpace(preferredSourcePath)
+                || !string.Equals(Path.GetFileName(preferredSourcePath), "classification-evaluation-summary.json", StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                DirectoryInfo runDirectory = Directory.GetParent(Path.GetFullPath(preferredSourcePath));
+                if (runDirectory?.Parent == null
+                    || !runDirectory.Name.StartsWith("classification-evaluation", StringComparison.OrdinalIgnoreCase))
+                {
+                    return string.Empty;
+                }
+
+                return runDirectory.Parent.FullName;
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         private static string NormalizeTaskKey(string task)
@@ -566,6 +742,7 @@ namespace MvcVisionSystem
             double? taktMs,
             double? taktMinMs,
             double? taktMaxMs,
+            string timingDevice,
             string decisionText,
             IReadOnlyList<WpfModelBenchmarkMetric> metrics,
             IReadOnlyList<WpfModelBenchmarkClassMetric> classMetrics,
@@ -595,6 +772,7 @@ namespace MvcVisionSystem
             TaktMs = taktMs;
             TaktMinMs = taktMinMs;
             TaktMaxMs = taktMaxMs;
+            TimingDevice = timingDevice ?? string.Empty;
             DecisionText = decisionText ?? string.Empty;
             Metrics = metrics ?? Array.Empty<WpfModelBenchmarkMetric>();
             ClassMetrics = classMetrics ?? Array.Empty<WpfModelBenchmarkClassMetric>();
@@ -625,6 +803,7 @@ namespace MvcVisionSystem
         public double? TaktMs { get; }
         public double? TaktMinMs { get; }
         public double? TaktMaxMs { get; }
+        public string TimingDevice { get; }
         public string DecisionText { get; }
         public IReadOnlyList<WpfModelBenchmarkMetric> Metrics { get; }
         public IReadOnlyList<WpfModelBenchmarkClassMetric> ClassMetrics { get; }
@@ -645,6 +824,7 @@ namespace MvcVisionSystem
             ImageSize.ToString(CultureInfo.InvariantCulture),
             BatchSize.ToString(CultureInfo.InvariantCulture),
             TimingSource.Trim().ToLowerInvariant(),
+            TimingDevice.Trim().ToLowerInvariant(),
             TimingRepeatCount.ToString(CultureInfo.InvariantCulture));
 
         private static string NormalizePath(string path)
@@ -825,7 +1005,9 @@ namespace MvcVisionSystem
             double? confidence,
             double? bestIou,
             WpfModelBenchmarkNormalizedBox predictionBox = null,
-            WpfModelBenchmarkNormalizedBox groundTruthBox = null)
+            WpfModelBenchmarkNormalizedBox groundTruthBox = null,
+            string detailText = "",
+            string evidencePath = "")
         {
             ImagePath = imagePath ?? string.Empty;
             ImageName = imageName ?? string.Empty;
@@ -836,6 +1018,8 @@ namespace MvcVisionSystem
             BestIou = bestIou;
             PredictionBox = predictionBox;
             GroundTruthBox = groundTruthBox;
+            DetailText = detailText ?? string.Empty;
+            EvidencePath = evidencePath ?? string.Empty;
         }
 
         public string ImagePath { get; }
@@ -847,6 +1031,8 @@ namespace MvcVisionSystem
         public double? BestIou { get; }
         public WpfModelBenchmarkNormalizedBox PredictionBox { get; }
         public WpfModelBenchmarkNormalizedBox GroundTruthBox { get; }
+        public string DetailText { get; }
+        public string EvidencePath { get; }
     }
 
     public sealed class WpfModelBenchmarkThresholdReview

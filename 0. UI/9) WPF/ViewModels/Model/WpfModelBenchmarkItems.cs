@@ -49,7 +49,10 @@ namespace MvcVisionSystem
             string displayName,
             int truePositiveCount,
             int falsePositiveCount,
-            int falseNegativeCount)
+            int falseNegativeCount,
+            string truePositiveLabel = "TP",
+            string falsePositiveLabel = "FP",
+            string falseNegativeLabel = "FN")
         {
             DisplayName = displayName ?? string.Empty;
             TruePositiveCount = Math.Max(0, truePositiveCount);
@@ -59,6 +62,9 @@ namespace MvcVisionSystem
             TruePositivePercent = TruePositiveCount * 100D / total;
             FalsePositivePercent = FalsePositiveCount * 100D / total;
             FalseNegativePercent = FalseNegativeCount * 100D / total;
+            TruePositiveLabel = truePositiveLabel ?? "TP";
+            FalsePositiveLabel = falsePositiveLabel ?? "FP";
+            FalseNegativeLabel = falseNegativeLabel ?? "FN";
         }
 
         public string DisplayName { get; }
@@ -68,9 +74,12 @@ namespace MvcVisionSystem
         public double TruePositivePercent { get; }
         public double FalsePositivePercent { get; }
         public double FalseNegativePercent { get; }
-        public string TruePositiveText => "TP " + TruePositiveCount.ToString(CultureInfo.CurrentCulture);
-        public string FalsePositiveText => "FP " + FalsePositiveCount.ToString(CultureInfo.CurrentCulture);
-        public string FalseNegativeText => "FN " + FalseNegativeCount.ToString(CultureInfo.CurrentCulture);
+        public string TruePositiveLabel { get; }
+        public string FalsePositiveLabel { get; }
+        public string FalseNegativeLabel { get; }
+        public string TruePositiveText => TruePositiveLabel + " " + TruePositiveCount.ToString(CultureInfo.CurrentCulture);
+        public string FalsePositiveText => FalsePositiveLabel + " " + FalsePositiveCount.ToString(CultureInfo.CurrentCulture);
+        public string FalseNegativeText => FalseNegativeLabel + " " + FalseNegativeCount.ToString(CultureInfo.CurrentCulture);
     }
 
     public sealed class WpfModelBenchmarkRunItemViewModel : WpfObservableViewModel
@@ -393,15 +402,23 @@ namespace MvcVisionSystem
                 ? example.ImageName
                 : Path.GetFileName(ImagePath);
             ErrorTypeText = string.Equals(example?.ErrorType, "false-negative", StringComparison.OrdinalIgnoreCase)
-                ? "미검출 (FN)"
+                ? "\uBBF8\uAC80\uCD9C(FN)"
                 : string.Equals(example?.ErrorType, "false-positive", StringComparison.OrdinalIgnoreCase)
-                    ? "오검출 (FP)"
-                    : example?.ErrorType ?? string.Empty;
+                    ? "\uC624\uAC80\uCD9C(FP)"
+                    : string.Equals(example?.ErrorType, "correct", StringComparison.OrdinalIgnoreCase)
+                        ? "\uC815\uB2F5"
+                        : string.Equals(example?.ErrorType, "low-confidence", StringComparison.OrdinalIgnoreCase)
+                            ? "\uC784\uACC4\uAC12 \uBBF8\uB2EC"
+                        : string.Equals(example?.ErrorType, "incorrect", StringComparison.OrdinalIgnoreCase)
+                            ? "\uC624\uB958"
+                            : example?.ErrorType ?? string.Empty;
             ClassName = example?.ClassName ?? string.Empty;
             ConfidenceText = example?.Confidence?.ToString("P1", CultureInfo.CurrentCulture) ?? "-";
             BestIouText = example?.BestIou?.ToString("P1", CultureInfo.CurrentCulture) ?? "-";
             PredictionBox = example?.PredictionBox;
             GroundTruthBox = example?.GroundTruthBox;
+            DetailText = example?.DetailText ?? string.Empty;
+            EvidencePath = example?.EvidencePath ?? string.Empty;
         }
 
         public string ModelName { get; }
@@ -413,6 +430,8 @@ namespace MvcVisionSystem
         public string BestIouText { get; }
         public WpfModelBenchmarkNormalizedBox PredictionBox { get; }
         public WpfModelBenchmarkNormalizedBox GroundTruthBox { get; }
+        public string DetailText { get; }
+        public string EvidencePath { get; }
         public bool HasGroundTruthBoxOverlay => IsRenderableBox(GroundTruthBox);
         public bool HasPredictionBoxOverlay => IsRenderableBox(PredictionBox);
         public bool HasOverlay => HasGroundTruthBoxOverlay || HasPredictionBoxOverlay;

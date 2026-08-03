@@ -287,6 +287,7 @@ namespace MvcVisionSystem
             DataContext = viewModels;
             RuntimeDiagnosticsViewModel.AttachGraphicsCapabilityProvider(
                 () => WpfOpenGlRuntimeCapabilityProbe.Probe(MainCanvasViewModel.ImageViewer));
+            RuntimeDiagnosticsViewModel.ConfigureOpenSetupCenterAction(ExecuteOpenEnvironmentSetupCenterCommand);
             RestoreWorkspaceLayoutSettings();
             TemplateMatchingAutoLabelViewModel.ConfigureHost(this);
             ComposePanelViewModels();

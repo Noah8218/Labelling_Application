@@ -3872,3 +3872,133 @@ Boundary: no supported GPU-capable clean target was accessible, so image
 display, rectangle/save, close/relaunch/reopen, and returned target evidence
 remain external gates. This is not installer, signing, or production-quality
 evidence.
+## Environment Setup Center (2026-08-03)
+
+Status: stable for the current-source guided setup/recovery workflow.
+
+- `설정/도구 -> 진단/지원 -> 환경 설정 센터` combines product/package/user-
+  path/Main Viewer graphics checks with the currently selected model-runtime
+  self-test in one owned dark window.
+- Opening and `다시 점검` use the read-only diagnostics path. They must not
+  persist `self-test-latest.json`, save settings, install/remove packages,
+  train, infer, adopt a model, or change labeling state.
+- Required work, optional/recommended work, installation order, and next
+  action remain visible. `모델 실행기 설정` is the only handoff to the
+  existing target-venv package installation surface.
+- A YOLOv5 folder is ready only when `hubconf.py`, `train.py`, `detect.py`,
+  and `models/common.py` are all present; do not regress to root-path-only
+  recovery claims.
+- Python itself, GPU drivers, and CUDA remain guided external prerequisites;
+  no administrator, reboot, license, or hardware decision is hidden behind an
+  automatic installation action.
+- Current-source Debug build passed with 0 warnings and 0 errors. Focused
+  runtime diagnostics, headless environment, WPF shell, priority docs,
+  documentation IA, and whitespace checks passed. The actual EXE opened and
+  refreshed the center without writing a full self-test and passed Wide
+  `1120x760` and Compact `920x620` captures on the dynamically selected active
+  leftmost/only `DISPLAY1` (`0,0,1920,1080`).
+
+Completion evidence: `docs/ENVIRONMENT_SETUP_CENTER_P1G_20260803.md`.
+
+## Restored-workstation canonical D-drive test storage (2026-08-03)
+
+Status: stable for this workstation's managed repository/test storage topology.
+
+- All 52 managed `artifacts`, root/component `bin`/`obj`, `packages`, `.vs`,
+  legacy test-output, and approved tracked-fixture `datasets` junctions point to
+  existing targets below
+  `D:\OpenVisionLab-TestData\Labelling_Application`.
+- The restored E-drive source inventory contained 105,969 files and
+  17,694,242,461 bytes. Every copied file passed relative-path placement,
+  length, and SHA-256 comparison before any junction changed.
+- The official migration script subsequently reported all 52 mappings as
+  `already-migrated`. The official isolated test build completed with zero
+  warnings and zero errors, and runtime-diagnostics/headless-environment focused
+  tests reported the canonical D storage and temp roots.
+- The E-drive legacy copy is retained only as a recoverable snapshot. No active
+  managed repository junction points to it; deleting it requires a separate
+  destructive-cleanup decision.
+
+Completion evidence:
+`D:\OpenVisionLab-TestData\Labelling_Application\migration-evidence\legacy-e-to-d-migration-20260803.json`.
+
+## Anomaly same-split comparison (2026-08-03)
+
+Status: stable for the bounded local comparison workflow.
+
+- The shared image-level anomaly evaluator supports only verified YOLOv8,
+  YOLO11, and PatchCore profiles and exports one content-fingerprinted
+  `test/normal` plus `test/abnormal` evidence contract.
+- YOLO class confidence and PatchCore anomaly score remain different domains.
+  Each report records its own decision-threshold source; raw values are not
+  ranked against one another.
+- Preserve balanced accuracy, normal false-positive, abnormal-miss, weights
+  and worker SHA-256, device/hardware, and average wall-time evidence.
+- PatchCore heatmaps belong below the evaluation artifact. Location candidates
+  remain review evidence and must read `not-evaluated` when region ground truth
+  is unavailable.
+- Opening Model Benchmark from a project anomaly summary includes matching-
+  fingerprint project runs. Comparison remains read-only and never changes
+  labels, candidates, model settings, or adoption history.
+
+Covered by the zero-warning/error isolated build, focused anomaly evaluation,
+model-benchmark and PatchCore gates, Python batch self-test, script parser,
+three real current-worker CPU summary runs on one synthetic fingerprint, and
+the current-source visual evidence recorded in
+`docs/ANOMALY_SAME_SPLIT_COMPARISON_P1H_20260803.md`.
+
+Boundary: the two-image synthetic smoke proves transport and report joining,
+not model superiority, field accuracy, location accuracy, stability, or
+production Takt. Those claims still require approved independent field data,
+acceptance thresholds, region ground truth when location is scored, and target
+hardware.
+
+## Anomaly evaluation error worklist (2026-08-03)
+
+Status: stable for the bounded read-only Model Benchmark workflow.
+
+- Existing anomaly evaluation `samples` are the only source; opening or
+  selecting the worklist must not rerun inference.
+- Preserve the cross-run error-first order and 500-row display bound while
+  retaining aggregate report counts.
+- Keep `오검출(FP)`, `미검출(FN)`, `임계값 미달`, and `정답` distinct. A
+  class-matching prediction below threshold must not read as a class mismatch.
+- Preserve lazy source-image preview plus expected-to-predicted class flow,
+  saved confidence/score, threshold, and PatchCore location/heatmap evidence.
+- Keep anomaly summary labels image-decision-specific; detection comparison
+  retains its existing TP/FP/FN meaning.
+- No worklist action changes labeling navigation, labels, review state,
+  candidates, Recipe settings, thresholds, training, or adoption.
+
+Covered by the zero-warning/error isolated build, focused Model Benchmark,
+anomaly-evaluation and PatchCore tests, the protected default regression, and
+current-source 1920x1080 plus 1366x768 actual-EXE captures on the leftmost
+monitor.
+
+Completion evidence:
+`docs/ANOMALY_EVALUATION_ERROR_WORKLIST_P1I_20260803.md`.
+
+## Anomaly evaluation exact-content leakage preflight (2026-08-03)
+
+Status: stable for the app-exported anomaly evaluation run boundary.
+
+- Preserve the existing file-length plus SHA-256 audit implementation as the
+  exact-content identity source.
+- Compare every populated train/valid/test pair and normal/abnormal within
+  every populated split before starting PowerShell or the Python worker.
+- Renamed identical files remain duplicates; file-name overlap alone does not
+  block evaluation.
+- An unreadable image in a populated audit scope fails closed with actionable
+  guidance.
+- The gate must not move, delete, relabel, reassign, train, infer, register, or
+  adopt automatically.
+- Near-duplicate, camera/session provenance, and domain-shift analysis remain
+  outside this exact-content contract.
+
+Covered by the zero-warning/error isolated build,
+`--anomaly-classification-evaluation`, the protected 267/267 default suite,
+and current-source Wide/Compact WPF log captures on the only active and
+leftmost monitor.
+
+Completion evidence:
+`docs/ANOMALY_EVALUATION_CONTENT_LEAKAGE_PREFLIGHT_P1J_20260803.md`.
