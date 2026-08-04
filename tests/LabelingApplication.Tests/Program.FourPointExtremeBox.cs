@@ -175,15 +175,10 @@ internal static partial class Program
 
         WpfLabelingShellWindow window = null;
         Bitmap bitmap = new Bitmap(100, 80);
-        using var canvasImage = new OpenCvSharp.Mat(
-            80,
-            100,
-            OpenCvSharp.MatType.CV_8UC3,
-            OpenCvSharp.Scalar.All(0));
         try
         {
             window = new WpfLabelingShellWindow();
-            window.MainCanvasViewModel.LoadImage(canvasImage, "four-point-test.png");
+            SetPrivateField(window.MainCanvasViewModel, "_imageSize", new Size(100, 80));
             SetPrivateField(window, "activeImageSize", new Size(100, 80));
             SetPrivateField(window, "activeImageBitmap", bitmap);
             SetPrivateField(window, "activeAnnotationTool", WpfAnnotationTool.Rectangle);
