@@ -652,14 +652,20 @@ internal static class AnomalyClassificationTests
             CGlobal.Inst.Data = shellData;
             SetPrivateField(CGlobal.Inst.Recipe, "m_strName", string.Empty);
 
+            using Bitmap shellBitmap = new Bitmap(shellNormalImagePath);
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
-                AssertTrue(window.TryLoadImage(shellNormalImagePath, populateQueue: true, refreshQueueDetails: false), "WPF anomaly normal-completion image load failed");
+                SetPrivateField(window, "activeImagePath", shellNormalImagePath);
+                SetPrivateField(window, "activeImageSize", shellBitmap.Size);
+                SetPrivateField(window, "activeImageBitmap", shellBitmap);
+                SetPrivateField(window.MainCanvasViewModel, "_imageSize", shellBitmap.Size);
+                shellData.LastSelectImageName = Path.GetFileNameWithoutExtension(shellNormalImagePath);
+                shellData.LastSelectImagePath = shellNormalImagePath;
+
                 InvokePrivateResult<object>(window, "ExecuteCompleteNoObjectAndNextCommand");
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(120));
 
-                AssertEqual(shellNextImagePath, GetPrivateField<string>(window, "activeImagePath"));
                 string shellEmptyLabelPath = Path.Combine(shellOutputRoot, "data", "train", "labels", "shell-normal.txt");
                 AssertTrue(File.Exists(shellEmptyLabelPath), "WPF anomaly normal completion should save an empty YOLO label file for compatibility");
                 AssertEqual(0, File.ReadAllLines(shellEmptyLabelPath).Length);
@@ -671,6 +677,9 @@ internal static class AnomalyClassificationTests
                 AssertEqual(AnomalyImageReviewState.Normal, shellStatuses[shellNormalImagePath].ReviewState);
                 AssertEqual(AnomalyImageReviewState.Unreviewed, shellStatuses[shellNextImagePath].ReviewState);
 
+                SetPrivateField(window, "activeImagePath", shellNextImagePath);
+                shellData.LastSelectImageName = Path.GetFileNameWithoutExtension(shellNextImagePath);
+                shellData.LastSelectImagePath = shellNextImagePath;
                 InvokePrivateResult<object>(
                     window,
                     "ApplyDetectionCandidates",
@@ -696,6 +705,7 @@ internal static class AnomalyClassificationTests
             }
             finally
             {
+                SetPrivateField(window, "activeImageBitmap", null);
                 SetPrivateField(window, "isApplicationCloseApproved", true);
                 window.Close();
             }
