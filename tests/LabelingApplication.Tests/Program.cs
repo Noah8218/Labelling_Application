@@ -26018,6 +26018,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 var learningPanel = (WpfLearningWorkflowPanel)window.FindName("LearningWorkflowPanelControl");
                 var detectButton = (System.Windows.Controls.Control)window.FindName("DetectButton");
                 var objectsTab = (System.Windows.Controls.TabItem)window.FindName("ObjectsReviewTab");
@@ -26090,6 +26091,7 @@ internal static partial class Program
 
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 window.Show();
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(200));
                 WpfLabelingSessionResult result = ExecuteWpfLabelingSessionFlow(window, imagePath, outputRoot);
@@ -26154,6 +26156,7 @@ internal static partial class Program
 
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 window.Show();
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(200));
                 WpfYoloTrainingSessionResult result = ExecuteWpfYoloTrainingSessionFlow(
