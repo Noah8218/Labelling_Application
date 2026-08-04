@@ -9,9 +9,6 @@ namespace MvcVisionSystem
 {
     public partial class WpfLabelingShellWindow
     {
-        // ponytail: one private seam keeps queue-command tests independent of GPU canvas upload.
-        private Func<string, bool> imageQueueNavigationLoadOverride = null;
-
         // Queue commands are invoked through WpfImageQueuePanelViewModel; the shell keeps only workflow orchestration here.
         private void ExecuteLoadImageRootQueueCommand()
         {
@@ -129,14 +126,12 @@ namespace MvcVisionSystem
             {
                 if (anomalyImageReviewStatus.TryFindNextUnreviewed(orderedPaths, currentImagePath, out string nextAnomalyImagePath))
                 {
-                    bool loaded = imageQueueNavigationLoadOverride?.Invoke(nextAnomalyImagePath)
-                        ?? TryLoadImage(
-                            nextAnomalyImagePath,
-                            populateQueue: false,
-                            refreshQueueDetails: false,
-                            refreshActiveStatus: false,
-                            appendLoadLog: false);
-                    if (loaded)
+                    if (TryLoadImage(
+                        nextAnomalyImagePath,
+                        populateQueue: false,
+                        refreshQueueDetails: false,
+                        refreshActiveStatus: false,
+                        appendLoadLog: false))
                     {
                         // The queue already contains this image. Keep its rows intact and move only the active selection.
                         SelectImageQueueItem(nextAnomalyImagePath);

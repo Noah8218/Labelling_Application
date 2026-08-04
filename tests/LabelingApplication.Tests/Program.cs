@@ -1511,6 +1511,11 @@ internal static partial class Program
             return RunSingleSmoke("MVVM infrastructure observable and command helpers", TestMvvmInfrastructure);
         }
 
+        if (args.Any(arg => string.Equals(arg, "--wpf-image-load-texture-replacement", StringComparison.OrdinalIgnoreCase)))
+        {
+            return RunSingleSmoke("WPF image load replaces previous viewer textures", TestWpfImageLoadReplacesPreviousViewerTextures);
+        }
+
         using IDisposable startupRestoreScope = TestSupport.SuppressLastOpenedDatasetRestore();
         var tests = new (string Name, Action Test)[]
         {
@@ -1731,7 +1736,7 @@ internal static partial class Program
             ("WPF image decode service owns Bitmap and Mat creation", TestWpfImageDecodeService),
             ("WPF image decode cache service owns memory policy", TestWpfImageDecodeCacheService),
             ("WPF image decode preload service owns scheduling", TestWpfImageDecodePreloadService),
-            ("WPF image load replaces previous viewer textures", TestWpfImageLoadReplacesPreviousViewerTextures),
+            ("WPF headless image load replaces active decoded state", TestWpfHeadlessImageLoadReplacesActiveState),
             ("WPF startup image load does not scan every queue image", TestWpfStartupImageLoadDoesNotScanEveryQueueImage),
             ("WPF image queue click uses the lightweight load path", TestWpfImageQueueClickUsesLightweightLoadPath),
             ("WPF image queue preloads adjacent image decodes", TestWpfImageQueuePreloadsAdjacentDecodes),
@@ -16420,6 +16425,7 @@ internal static partial class Program
         Bitmap bitmap = new Bitmap(40, 40);
         try
         {
+            TestSupport.ConfigureHeadlessWpfImageLoading(window);
             SetPrivateField(window, "activeImageSize", new Size(40, 40));
             SetPrivateField(window, "activeImageBitmap", bitmap);
             SetPrivateField(window.MainCanvasViewModel, "_imageSize", new Size(40, 40));
@@ -22445,6 +22451,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 AssertTrue(window.TryLoadImage(imagePath, populateQueue: true, refreshQueueDetails: false), "WPF shell image load failed for ROI object verification");
                 ConfigureCanvasForRoiObjectVerification(window.MainCanvasViewModel);
                 AddWpfSessionRoi(window, new Rectangle(20, 20, 40, 40), CanvasRoiShapeKind.Rectangle, new Size(100, 100), "shell-roi");
@@ -28455,6 +28462,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 var teachingButton = (System.Windows.Controls.Control)window.FindName("TeachingModeButton");
                 var inferenceButton = (System.Windows.Controls.Control)window.FindName("InferenceModeButton");
                 var detectButton = (System.Windows.Controls.Control)window.FindName("DetectButton");
@@ -29621,6 +29629,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 CGlobal.Inst.Data = data;
                 SetPrivateField(CGlobal.Inst.Recipe, "m_strName", recipeName);
                 AssertTrue(window.TryLoadImage(imagePath, populateQueue: false, refreshQueueDetails: false), "WPF image load should read the old output-root label");
@@ -30218,6 +30227,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 int count = window.LoadImageQueueFromRoot(root, loadFirstImage: false, refreshDetails: false);
 
                 AssertEqual(3, count);
@@ -30410,6 +30420,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 AssertEqual(imageCount, window.LoadImageQueueFromRoot(imageRoot, loadFirstImage: true, refreshDetails: false));
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
 
@@ -30827,6 +30838,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 AssertTrue(window.TryLoadImage(activePath, populateQueue: true, refreshQueueDetails: false), "WPF startup-style image load failed");
                 AssertEqual(2, window.ImageQueueItems.Count);
 
@@ -31012,7 +31024,17 @@ internal static partial class Program
         AssertTrue(previousTicks <= afterTicks, "elapsed helper should advance the previous tick marker");
     }
 
+    private static void TestWpfHeadlessImageLoadReplacesActiveState()
+    {
+        TestWpfImageLoadReplacement(useHeadlessViewer: true);
+    }
+
     private static void TestWpfImageLoadReplacesPreviousViewerTextures()
+    {
+        TestWpfImageLoadReplacement(useHeadlessViewer: false);
+    }
+
+    private static void TestWpfImageLoadReplacement(bool useHeadlessViewer)
     {
         if (System.Windows.Application.Current == null)
         {
@@ -31050,11 +31072,30 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                if (useHeadlessViewer)
+                {
+                    TestSupport.ConfigureHeadlessWpfImageLoading(window);
+                }
+
                 AssertTrue(window.TryLoadImage(firstPath, populateQueue: true, refreshQueueDetails: false), "first WPF image load failed");
-                AssertEqual(1, window.MainCanvasViewModel.LoadedTextureGroupCount);
+                AssertEqual(new Size(16, 12), GetPrivateField<Size>(window, "activeImageSize"));
+                AssertEqual(16, CGlobal.Inst.ImageWorkspace.ActiveImage.Width);
+                AssertEqual(12, CGlobal.Inst.ImageWorkspace.ActiveImage.Height);
+                if (!useHeadlessViewer)
+                {
+                    AssertEqual(1, window.MainCanvasViewModel.LoadedTextureGroupCount);
+                }
 
                 AssertTrue(window.TryLoadImage(secondPath, populateQueue: false, refreshQueueDetails: false), "second WPF image load failed");
-                AssertEqual(1, window.MainCanvasViewModel.LoadedTextureGroupCount);
+                AssertEqual(new Size(12, 16), GetPrivateField<Size>(window, "activeImageSize"));
+                AssertEqual(12, CGlobal.Inst.ImageWorkspace.ActiveImage.Width);
+                AssertEqual(16, CGlobal.Inst.ImageWorkspace.ActiveImage.Height);
+                AssertEqual(12, CDisplayManager.ImageSrc.Cols);
+                AssertEqual(16, CDisplayManager.ImageSrc.Rows);
+                if (!useHeadlessViewer)
+                {
+                    AssertEqual(1, window.MainCanvasViewModel.LoadedTextureGroupCount);
+                }
             }
             finally
             {
@@ -31210,6 +31251,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 AssertTrue(window.TryLoadImage(firstPath, populateQueue: true, refreshQueueDetails: false), "WPF initial image load failed");
                 var grid = (System.Windows.Controls.DataGrid)window.FindName("ImageQueueGrid");
                 var queuePanel = (WpfImageQueuePanel)window.FindName("ImageQueuePanelControl");
@@ -31285,6 +31327,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 AssertTrue(window.TryLoadImage(firstPath, populateQueue: true, refreshQueueDetails: false), "WPF initial image load failed");
                 AssertEqual(firstPath, GetPrivateField<string>(window, "activeImagePath"));
 
@@ -31374,6 +31417,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 AssertTrue(window.TryLoadImage(imagePath, populateQueue: true, refreshQueueDetails: false), "WPF image load failed");
                 var candidates = new List<YoloWorkerSmokeCandidate>
                 {
@@ -31553,6 +31597,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 AssertTrue(window.TryLoadImage(imagePath, populateQueue: true, refreshQueueDetails: false), "WPF current-image smoke test image load failed");
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(20));
 
@@ -31716,6 +31761,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 AssertTrue(window.TryLoadImage(imagePath, populateQueue: true, refreshQueueDetails: false), "WPF batch image load failed");
                 WpfImageQueueItem item = WpfImageQueueItem.CreateShell(imagePath);
                 var result = new YoloWorkerSmokeTestResult

@@ -16,6 +16,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
+using CvMat = OpenCvSharp.Mat;
 
 namespace LabelingApplication.Tests;
 
@@ -527,6 +528,18 @@ internal static class TestSupport
         FieldInfo field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
         AssertTrue(field != null, $"private field was not found: {fieldName}");
         field.SetValue(instance, value);
+    }
+
+    internal static void ConfigureHeadlessWpfImageLoading(WpfLabelingShellWindow window)
+    {
+        SetPrivateField(
+            window,
+            "imageViewerLoadOverride",
+            new Action<CvMat, string>((image, _) =>
+                SetPrivateField(
+                    window.MainCanvasViewModel,
+                    "_imageSize",
+                    new Size(image.Width, image.Height))));
     }
 
     internal static bool WaitUntilWpf(Func<bool> condition, TimeSpan timeout)

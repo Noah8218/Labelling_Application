@@ -788,6 +788,7 @@ internal static class TemplateAutoLabelTests
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                ConfigureHeadlessWpfImageLoading(window);
                 AssertTrue(window.TryLoadImage(imagePath, populateQueue: true, refreshQueueDetails: false), "WPF template no-candidate test image load failed");
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(20));
 

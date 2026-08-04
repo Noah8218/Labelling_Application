@@ -55,6 +55,28 @@ dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll `
 dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll
 ```
 
+## Headless Viewer Boundary
+
+The no-argument suite verifies image decoding, active-image replacement,
+workspace transfer, queue navigation, annotation reload/reset, save state, and
+candidate presentation without requiring an OpenGL framebuffer. Tests that
+exercise those workflows configure the shared test-only viewer upload seam;
+the production field remains unset, so normal application image loading still
+runs the actual Main Viewer graphics capability preflight and OpenGL upload.
+
+The real texture replacement check remains available as an explicit local GPU
+test and is intentionally outside the hosted no-argument suite:
+
+```powershell
+dotnet .\artifacts\tests\isolated-out\LabelingApplication.Tests.dll `
+  --wpf-image-load-texture-replacement
+```
+
+Do not use the headless seam to bypass image decoding, active image/workspace
+state, queue routing, annotation persistence, or candidate presentation. It
+replaces only the GPU canvas upload step. Do not treat the headless CI pass as
+clean-target GPU labeling evidence.
+
 ## Boundary
 
 - The first headless product command is now separately complete as a read-only

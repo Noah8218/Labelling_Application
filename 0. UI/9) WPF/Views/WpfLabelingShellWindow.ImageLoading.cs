@@ -13,6 +13,9 @@ namespace MvcVisionSystem
 {
     public partial class WpfLabelingShellWindow
     {
+        // ponytail: tests may replace only the GPU upload while preserving the full image-load workflow.
+        private Action<CvMat, string> imageViewerLoadOverride = null;
+
         // Image loading still coordinates shell state, but lives outside the event-heavy code-behind for easier diagnosis.
         public WpfImageLoadDiagnostics LastImageLoadDiagnostics => lastImageLoadDiagnostics;
 
@@ -43,7 +46,8 @@ namespace MvcVisionSystem
                 return false;
             }
 
-            if (!RuntimeDiagnosticsViewModel.EnsureViewerReadyForImageLoad(out string graphicsDetail))
+            if (imageViewerLoadOverride == null
+                && !RuntimeDiagnosticsViewModel.EnsureViewerReadyForImageLoad(out string graphicsDetail))
             {
                 SetDatasetStatus("이미지 뷰어 환경 확인 필요");
                 AppendLog("이미지 열기 차단: " + graphicsDetail);
@@ -112,7 +116,15 @@ namespace MvcVisionSystem
                 string imageName = Path.GetFileNameWithoutExtension(imagePath);
                 using (MainCanvasViewModel.ImageViewer.SuppressRefresh())
                 {
-                    MainCanvasViewModel.LoadImage(imageMat, Path.GetFileName(imagePath));
+                    if (imageViewerLoadOverride != null)
+                    {
+                        imageViewerLoadOverride(imageMat, Path.GetFileName(imagePath));
+                    }
+                    else
+                    {
+                        MainCanvasViewModel.LoadImage(imageMat, Path.GetFileName(imagePath));
+                    }
+
                     MainCanvasViewModel.ClearRois();
                     MainCanvasViewModel.SetDetectionOverlays(Array.Empty<RoiImageCanvasDetectionOverlay>());
                     MainCanvasViewModel.SetMaskOverlays(Array.Empty<RoiImageCanvasMaskOverlay>());
@@ -120,7 +132,11 @@ namespace MvcVisionSystem
                     MainCanvasViewModel.ClearMaskStrokePreview(refresh: false, clearTexture: true);
                 }
                 canvasUploadMilliseconds = WpfImageLoadDiagnosticsService.TakeElapsedMilliseconds(loadStopwatch, ref stepStartTicks);
-                MainCanvasViewModel.ImageViewer.RefreshGL();
+                if (imageViewerLoadOverride == null)
+                {
+                    MainCanvasViewModel.ImageViewer.RefreshGL();
+                }
+
                 canvasRefreshMilliseconds = WpfImageLoadDiagnosticsService.TakeElapsedMilliseconds(loadStopwatch, ref stepStartTicks);
 
                 activeImageBitmap?.Dispose();
