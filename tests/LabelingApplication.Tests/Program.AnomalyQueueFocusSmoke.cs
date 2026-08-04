@@ -70,16 +70,45 @@ internal static class AnomalyQueueFocusSmokeTests
             };
             try
             {
-                ConfigureHeadlessWpfImageLoading(window);
+                SetPrivateField(
+                    window,
+                    "imageQueueNavigationLoadOverride",
+                    new Func<string, bool>(nextImagePath =>
+                    {
+                        SetPrivateField(window, "activeImagePath", nextImagePath);
+                        data.LastSelectImageName = Path.GetFileNameWithoutExtension(nextImagePath);
+                        data.LastSelectImagePath = nextImagePath;
+                        SetPrivateField(
+                            window,
+                            "lastImageLoadDiagnostics",
+                            new WpfImageLoadDiagnostics(
+                                nextImagePath,
+                                cacheHit: false,
+                                totalMilliseconds: 0D,
+                                decodeMilliseconds: 0D,
+                                canvasUploadMilliseconds: 0D,
+                                canvasRefreshMilliseconds: 0D,
+                                stateTransferMilliseconds: 0D,
+                                annotationResetMilliseconds: 0D,
+                                queuePopulateMilliseconds: 0D,
+                                reviewRefreshMilliseconds: 0D,
+                                preloadScheduleMilliseconds: 0D));
+                        return true;
+                    }));
 
                 window.Show();
+                string firstImagePath = imagePaths[0];
                 AssertEqual(
                     imageCount,
                     window.LoadImageQueueFromRoot(
                         imageRoot,
-                        loadFirstImage: true,
+                        selectedImagePath: firstImagePath,
+                        loadFirstImage: false,
                         refreshDetails: false));
-                PumpWpfDispatcherBounded(TimeSpan.FromMilliseconds(200));
+                SetPrivateField(window, "activeImagePath", firstImagePath);
+                data.LastSelectImageName = Path.GetFileNameWithoutExtension(firstImagePath);
+                data.LastSelectImagePath = firstImagePath;
+                PumpWpfDispatcher(TimeSpan.FromMilliseconds(200));
                 AssertEqual(
                     LabelingDatasetPurpose.AnomalyDetection,
                     CGlobal.Inst.Data.ProjectSettings.DatasetPurpose);
@@ -87,7 +116,7 @@ internal static class AnomalyQueueFocusSmokeTests
                     "anomaly queue fixture should keep the queue ViewModel in image-level review mode");
                 window.Activate();
                 window.Focus();
-                PumpWpfDispatcherBounded(TimeSpan.FromMilliseconds(100));
+                PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
 
                 string[] requiredApplicationResourceKeys =
                 {
@@ -132,7 +161,7 @@ internal static class AnomalyQueueFocusSmokeTests
                         viewResetCount++;
                     }
                 };
-                PumpWpfDispatcherBounded(TimeSpan.FromMilliseconds(40));
+                PumpWpfDispatcher(TimeSpan.FromMilliseconds(40));
                 bool allGridSelectionsFollowed = true;
                 bool allViewModelSelectionsFollowed = true;
                 bool allCurrentRowsFollowed = true;
@@ -165,7 +194,7 @@ internal static class AnomalyQueueFocusSmokeTests
                             InvokeAnomalyDecisionButton(abnormalButton);
                         }
 
-                        PumpWpfDispatcherBounded(TimeSpan.FromMilliseconds(80));
+                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(80));
                         decisionStopwatch.Stop();
                         decisionDurations.Add(decisionStopwatch.Elapsed.TotalMilliseconds);
 

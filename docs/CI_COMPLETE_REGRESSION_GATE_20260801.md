@@ -77,6 +77,12 @@ state, queue routing, annotation persistence, or candidate presentation. It
 replaces only the GPU canvas upload step. Do not treat the headless CI pass as
 clean-target GPU labeling evidence.
 
+The anomaly queue-focus performance test is the bounded exception: it stubs
+only next-image loading so the test measures 18 selection, focus, filter, and
+view-reset transitions without mixing image decoding or GPU work into that
+latency contract. Dedicated default tests separately cover headless decoding,
+active state replacement, queue image loading, and annotation/candidate state.
+
 ## Boundary
 
 - The first headless product command is now separately complete as a read-only
