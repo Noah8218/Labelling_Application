@@ -26137,8 +26137,11 @@ internal static partial class Program
         {
             string imageRoot = Path.Combine(root, "images");
             string outputRoot = Path.Combine(root, "dataset");
+            string clientScriptPath = Path.Combine(root, "labelling_tcp_client.py");
             Directory.CreateDirectory(imageRoot);
+            File.WriteAllText(clientScriptPath, "print('ready')");
             CGlobal.Inst.Data = CreateWpfLabelingSessionData(root, imageRoot, outputRoot);
+            CGlobal.Inst.Data.ProjectSettings.PythonModel.ClientScriptPath = clientScriptPath;
             CGlobal.Inst.Data.ProjectSettings.PythonModel.AutoStartClient = false;
             CGlobal.Inst.Data.ProjectSettings.YoloDataset.ValidationPercent = 50;
             CGlobal.Inst.Data.ProjectSettings.YoloDataset.SplitSeed = 17;
