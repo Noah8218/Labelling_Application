@@ -26005,12 +26005,19 @@ internal static partial class Program
             string outputRoot = Path.Combine(root, "dataset");
             Directory.CreateDirectory(sampleRoot);
             string imagePath = Path.Combine(sampleRoot, "tutorial-sample.jpg");
+            string clientScriptPath = Path.Combine(root, "labelling_tcp_client.py");
+            string weightsPath = Path.Combine(root, "best.pt");
             CreateVisualSmokeImage(imagePath);
+            File.WriteAllText(clientScriptPath, "print('ready')");
+            File.WriteAllText(weightsPath, "weights");
 
             var data = new CData();
             data.ConfigureOutputRoot(outputRoot);
+            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.EngineYoloV5;
             data.ProjectSettings.PythonModel.ImageRootPath = sampleRoot;
             data.ProjectSettings.PythonModel.ProjectRootPath = root;
+            data.ProjectSettings.PythonModel.ClientScriptPath = clientScriptPath;
+            data.ProjectSettings.PythonModel.WeightsPath = weightsPath;
             data.ProjectSettings.YoloDataset.ValidationPercent = 0;
             data.ClassNamedList.Add(new CClassItem { Text = "Defect", DrawColor = Color.Lime });
             CGlobal.Inst.Data = data;
