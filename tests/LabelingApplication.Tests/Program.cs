@@ -26099,7 +26099,6 @@ internal static partial class Program
             try
             {
                 TestSupport.ConfigureHeadlessWpfImageLoading(window);
-                window.Show();
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(200));
                 WpfLabelingSessionResult result = ExecuteWpfLabelingSessionFlow(window, imagePath, outputRoot);
                 AssertTrue(result.SavedLabelLines >= 2, "session should save YOLO box labels");
@@ -26164,7 +26163,6 @@ internal static partial class Program
             try
             {
                 TestSupport.ConfigureHeadlessWpfImageLoading(window);
-                window.Show();
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(200));
                 WpfYoloTrainingSessionResult result = ExecuteWpfYoloTrainingSessionFlow(
                     window,
