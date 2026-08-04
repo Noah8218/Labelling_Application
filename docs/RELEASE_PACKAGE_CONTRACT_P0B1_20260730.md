@@ -16,7 +16,8 @@ validation.
 
 ## 2. Completed Scope
 
-- `global.json` pins .NET SDK `8.0.421` with latest-patch roll-forward only.
+- `global.json` pins .NET SDK `8.0.421` with roll-forward disabled so a newer
+  preinstalled feature-band patch cannot change the release manifest.
 - `Directory.Build.props` owns product `0.1.0`, assembly/file `0.1.0.0`,
   explicit informational-version policy, and deterministic compilation.
 - the legacy `1.0.*` wildcard and project-level deterministic opt-outs were

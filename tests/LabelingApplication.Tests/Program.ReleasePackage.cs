@@ -66,6 +66,11 @@ internal static class ReleasePackageContractTests
             .GetProperty("version")
             .GetString() ?? string.Empty;
         AssertEqual(ExpectedSdkVersion, sdkVersion, "global.json SDK version");
+        string sdkRollForward = globalJson.RootElement
+            .GetProperty("sdk")
+            .GetProperty("rollForward")
+            .GetString() ?? string.Empty;
+        AssertEqual("disable", sdkRollForward, "global.json SDK roll-forward policy");
 
         XDocument buildProps = XDocument.Load(Path.Combine(repoRoot, "Directory.Build.props"));
         XElement propertyGroup = buildProps.Root?
