@@ -478,10 +478,19 @@ internal static class TestSupport
     }
 
     internal static void PumpWpfDispatcher(TimeSpan duration)
+        => PumpWpfDispatcher(duration, System.Windows.Threading.DispatcherPriority.Background);
+
+    // A Send-priority stop timer keeps render-heavy hosted WPF tests bounded without changing
+    // the Background-priority semantics used by tests that wait for deferred focus/layout work.
+    internal static void PumpWpfDispatcherBounded(TimeSpan duration)
+        => PumpWpfDispatcher(duration, System.Windows.Threading.DispatcherPriority.Send);
+
+    private static void PumpWpfDispatcher(
+        TimeSpan duration,
+        System.Windows.Threading.DispatcherPriority stopPriority)
     {
         System.Windows.Threading.DispatcherFrame frame = new System.Windows.Threading.DispatcherFrame();
-        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer(
-            System.Windows.Threading.DispatcherPriority.Background)
+        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer(stopPriority)
         {
             Interval = duration
         };

@@ -79,7 +79,7 @@ internal static class AnomalyQueueFocusSmokeTests
                         imageRoot,
                         loadFirstImage: true,
                         refreshDetails: false));
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(200));
+                PumpWpfDispatcherBounded(TimeSpan.FromMilliseconds(200));
                 AssertEqual(
                     LabelingDatasetPurpose.AnomalyDetection,
                     CGlobal.Inst.Data.ProjectSettings.DatasetPurpose);
@@ -87,7 +87,7 @@ internal static class AnomalyQueueFocusSmokeTests
                     "anomaly queue fixture should keep the queue ViewModel in image-level review mode");
                 window.Activate();
                 window.Focus();
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(100));
+                PumpWpfDispatcherBounded(TimeSpan.FromMilliseconds(100));
 
                 string[] requiredApplicationResourceKeys =
                 {
@@ -132,7 +132,7 @@ internal static class AnomalyQueueFocusSmokeTests
                         viewResetCount++;
                     }
                 };
-                PumpWpfDispatcher(TimeSpan.FromMilliseconds(40));
+                PumpWpfDispatcherBounded(TimeSpan.FromMilliseconds(40));
                 bool allGridSelectionsFollowed = true;
                 bool allViewModelSelectionsFollowed = true;
                 bool allCurrentRowsFollowed = true;
@@ -165,7 +165,7 @@ internal static class AnomalyQueueFocusSmokeTests
                             InvokeAnomalyDecisionButton(abnormalButton);
                         }
 
-                        PumpWpfDispatcher(TimeSpan.FromMilliseconds(80));
+                        PumpWpfDispatcherBounded(TimeSpan.FromMilliseconds(80));
                         decisionStopwatch.Stop();
                         decisionDurations.Add(decisionStopwatch.Elapsed.TotalMilliseconds);
 
