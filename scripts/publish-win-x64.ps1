@@ -68,6 +68,23 @@ function Get-NormalizedRelativePath {
     return $resolvedFullPath.Substring($resolvedBasePath.Length).Replace('\', '/')
 }
 
+function Get-Sha256Hash {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    $stream = [System.IO.File]::OpenRead($Path)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString($sha256.ComputeHash($stream))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha256.Dispose()
+        $stream.Dispose()
+    }
+}
+
 function Get-PayloadFiles {
     if (-not (Test-Path -LiteralPath $publishDir -PathType Container)) {
         throw "Release directory does not exist: $publishDir"
@@ -209,7 +226,7 @@ function Assert-ReleasePackage {
             throw "Release file length mismatch: $relativePath"
         }
 
-        $actualHash = (Get-FileHash -LiteralPath $fullPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $actualHash = Get-Sha256Hash -Path $fullPath
         if ($actualHash -ne ([string]$entry.sha256).ToLowerInvariant()) {
             throw "Release file SHA256 mismatch: $relativePath"
         }
@@ -278,7 +295,7 @@ $payloadEntries = @(
             [ordered]@{
                 path = Get-NormalizedRelativePath -BasePath $publishDir -FullPath $_.FullName
                 length = $_.Length
-                sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+                sha256 = Get-Sha256Hash -Path $_.FullName
             }
         }
 )

@@ -105,8 +105,8 @@ internal static class ReleasePackageContractTests
             "FrameworkDependent",
             "VerifyOnly",
             "release-manifest.json",
-            "Get-FileHash",
-            "SHA256"
+            "Get-Sha256Hash",
+            "System.Security.Cryptography.SHA256"
         })
         {
             AssertTrue(

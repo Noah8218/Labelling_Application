@@ -28,6 +28,8 @@ validation.
 - `release-manifest.json` records schema, product/assembly/informational
   identity, full source commit and dirty state, SDK/configuration/RID/mode,
   and normalized path/length/SHA-256 for every package payload;
+- manifest creation and verification calculate SHA-256 through the .NET
+  cryptography API so verification does not depend on shell module discovery;
 - `publish-manifest.txt` provides the same payload hashes in a compact
   text form;
 - `LICENSE`, `NOTICE`, and `THIRD-PARTY-NOTICES.txt` ship in the package;
