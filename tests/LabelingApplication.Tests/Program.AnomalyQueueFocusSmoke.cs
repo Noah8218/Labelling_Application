@@ -46,7 +46,8 @@ internal static class AnomalyQueueFocusSmokeTests
                     CreateVisualSmokeImage(Path.Combine(imageRoot, $"focus-{index:000}.jpg"), index + 1);
                 }
             }
-            int imageCount = new WpfImageQueueSelectionService().EnumerateImageFiles(imageRoot).Count;
+            IReadOnlyList<string> imagePaths = new WpfImageQueueSelectionService().EnumerateImageFiles(imageRoot);
+            int imageCount = imagePaths.Count;
             AssertTrue(imageCount > decisionCount,
                 $"Anomaly queue focus fixture requires more than {decisionCount} images: {imageCount}");
 
@@ -69,8 +70,44 @@ internal static class AnomalyQueueFocusSmokeTests
             };
             try
             {
+                SetPrivateField(
+                    window,
+                    "imageQueueNavigationLoadOverride",
+                    new Func<string, bool>(nextImagePath =>
+                    {
+                        SetPrivateField(window, "activeImagePath", nextImagePath);
+                        data.LastSelectImageName = Path.GetFileNameWithoutExtension(nextImagePath);
+                        data.LastSelectImagePath = nextImagePath;
+                        SetPrivateField(
+                            window,
+                            "lastImageLoadDiagnostics",
+                            new WpfImageLoadDiagnostics(
+                                nextImagePath,
+                                cacheHit: false,
+                                totalMilliseconds: 0D,
+                                decodeMilliseconds: 0D,
+                                canvasUploadMilliseconds: 0D,
+                                canvasRefreshMilliseconds: 0D,
+                                stateTransferMilliseconds: 0D,
+                                annotationResetMilliseconds: 0D,
+                                queuePopulateMilliseconds: 0D,
+                                reviewRefreshMilliseconds: 0D,
+                                preloadScheduleMilliseconds: 0D));
+                        return true;
+                    }));
+
                 window.Show();
-                AssertEqual(imageCount, window.LoadImageQueueFromRoot(imageRoot, loadFirstImage: true, refreshDetails: false));
+                string firstImagePath = imagePaths[0];
+                AssertEqual(
+                    imageCount,
+                    window.LoadImageQueueFromRoot(
+                        imageRoot,
+                        selectedImagePath: firstImagePath,
+                        loadFirstImage: false,
+                        refreshDetails: false));
+                SetPrivateField(window, "activeImagePath", firstImagePath);
+                data.LastSelectImageName = Path.GetFileNameWithoutExtension(firstImagePath);
+                data.LastSelectImagePath = firstImagePath;
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(200));
                 AssertEqual(
                     LabelingDatasetPurpose.AnomalyDetection,
