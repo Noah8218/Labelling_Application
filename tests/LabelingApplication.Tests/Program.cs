@@ -31524,6 +31524,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 var example = new WpfModelComparisonReviewExample(
                     "comparison",
                     "CandidateOnly",
