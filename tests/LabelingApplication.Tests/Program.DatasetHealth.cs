@@ -382,6 +382,12 @@ internal static class DatasetHealthTests
                     .OfType<WpfDatasetHealthWindow>()
                     .FirstOrDefault(candidate => ReferenceEquals(candidate.Owner, shell));
                 AssertTrue(healthWindow != null, "Dataset Health command should open a separate owned window");
+                string openedImagePath = null;
+                healthWindow.ViewModel.ConfigureVisualQaOpen(imagePath =>
+                {
+                    openedImagePath = imagePath;
+                    healthWindow.Close();
+                });
                 AssertEqual("데이터셋 상태 분석", healthWindow.Title);
                 AssertTrue(healthWindow.GetType().BaseType?.FullName == "Wpf.Ui.Controls.FluentWindow",
                     "Dataset Health window should use the existing WPF-UI window library");
@@ -449,7 +455,7 @@ internal static class DatasetHealthTests
                 string selectedImageHash = ComputeFileSha256(selectedImagePath);
                 healthWindow.ViewModel.OpenSelectedVisualQaImageCommand.Execute(null);
                 PumpWpfDispatcher(TimeSpan.FromMilliseconds(350));
-                AssertEqual(selectedImagePath, GetPrivateField<string>(shell, "activeImagePath"));
+                AssertEqual(selectedImagePath, openedImagePath);
                 AssertTrue(!healthWindow.IsVisible,
                     "opening a visual QA item should close the read-only health window and return to the main editor");
                 AssertEqual(selectedImageHash, ComputeFileSha256(selectedImagePath));
