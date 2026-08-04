@@ -16610,6 +16610,7 @@ internal static partial class Program
         WpfLabelingShellWindow window = new WpfLabelingShellWindow();
         try
         {
+            TestSupport.ConfigureHeadlessWpfImageLoading(window);
             string currentImagePath = Path.Combine(root, "wpf-auto-save-current.jpeg");
             string nextImagePath = Path.Combine(root, "wpf-auto-save-next.jpeg");
             CreateVisualSmokeImage(currentImagePath);
@@ -16690,6 +16691,7 @@ internal static partial class Program
         WpfLabelingShellWindow window = new WpfLabelingShellWindow();
         try
         {
+            TestSupport.ConfigureHeadlessWpfImageLoading(window);
             string currentImagePath = Path.Combine(root, "wpf-auto-save-brush-current.jpeg");
             string nextImagePath = Path.Combine(root, "wpf-auto-save-brush-next.jpeg");
             CreateVisualSmokeImage(currentImagePath);
@@ -22370,6 +22372,7 @@ internal static partial class Program
             WpfLabelingShellWindow window = new WpfLabelingShellWindow();
             try
             {
+                TestSupport.ConfigureHeadlessWpfImageLoading(window);
                 AssertTrue(window.TryLoadImage(imagePath, populateQueue: true, refreshQueueDetails: false), "WPF shell image load failed for ROI copy/paste class verification");
                 ConfigureCanvasForRoiObjectVerification(window.MainCanvasViewModel);
 

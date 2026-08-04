@@ -294,6 +294,7 @@ internal static partial class Program
                 }
 
                 sourceWindow = new WpfLabelingShellWindow();
+                TestSupport.ConfigureHeadlessWpfImageLoading(sourceWindow);
                 CGlobal.Inst.Data = testData;
                 CGlobal.Inst.Recipe = testRecipe;
                 AssertTrue(
@@ -328,6 +329,7 @@ internal static partial class Program
                     $"shell recovery journal should be available: {read.Error} / {read.QuarantinePath}");
 
                 restoredWindow = new WpfLabelingShellWindow();
+                TestSupport.ConfigureHeadlessWpfImageLoading(restoredWindow);
                 CGlobal.Inst.Data = testData;
                 CGlobal.Inst.Recipe = testRecipe;
                 bool restored = InvokePrivateResult<bool>(
