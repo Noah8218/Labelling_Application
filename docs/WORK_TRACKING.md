@@ -21091,6 +21091,12 @@ Verification:
   `--release-package-contract` -> pass, 505 payloads, fail-closed tamper/restore
   verification, manifest SHA-256
   `248D35136D19FBE4D24CB7C2A85E33A892736ECDEF69C3142A0DF86DBB3533E4`.
+- clean-source self-contained `0.1.4` publish from commit
+  `c15901423fe440e5789b90bcb818b4211b04ae1b` -> pass,
+  `source.dirty=false`, 505 payloads, version-selected
+  `--release-package-contract`, and independent `-VerifyOnly` verification;
+  manifest SHA-256
+  `3F3771C5C4CBEB6F5A9563A2A87071661A46008C8637F60FC8C0579C00B9DFAE`.
 
 Evidence:
 
@@ -21102,7 +21108,8 @@ Evidence:
 
 Boundary / next dependency:
 
-- this is local consumer-integration evidence, not field accuracy or
-  clean-target package evidence;
-- `0.1.3` records `source.dirty=true` and is engineering evidence only;
+- this is local consumer-integration and clean-source package evidence, not
+  field accuracy or clean-target operator-workflow evidence;
+- `0.1.3` remains dirty-source engineering evidence; `0.1.4` is the
+  clean-source SDK-migration package evidence;
 - P0-C still requires access to the selected GPU-capable clean Windows target.

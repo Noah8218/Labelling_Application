@@ -74,6 +74,14 @@ managed or native version.
   payloads; manifest SHA-256 is
   `248D35136D19FBE4D24CB7C2A85E33A892736ECDEF69C3142A0DF86DBB3533E4`.
   The historical immutable `0.1.0` package was not overwritten.
+- Clean-source self-contained publish `0.1.4`: passed from Labeling Studio
+  commit `c15901423fe440e5789b90bcb818b4211b04ae1b` with
+  `source.dirty=false`, `505` manifest payloads, version-selected package
+  contract, deliberate tamper/restore coverage, and independent `-VerifyOnly`
+  verification. Manifest SHA-256 is
+  `3F3771C5C4CBEB6F5A9563A2A87071661A46008C8637F60FC8C0579C00B9DFAE`.
+  The payload contains `OpenVisionLab.Core.dll` and
+  `OpenVisionLab.Vision2D.dll`, with no superseded `Lib.*` or unused Blob DLL.
 
 ## Upgrade Checklist
 
@@ -95,7 +103,7 @@ managed or native version.
 Status: Complete
 Scope: Replaced the active Lib.Common/Lib.OpenCV consumer contract with OpenVisionLab Vision SDK 3.0.0 assemblies and public APIs while retaining app-owned UI adapters and the pinned OpenCvSharp runtime.
 Acceptance criteria: Old project/runtime dependencies removed; required SDK assemblies and APIs used; behavior-preserving focused tests pass; full protected regression passes; notices and durable direction are updated.
-Verification: SDK Release build, SDK 142/142 smoke, Labeling Studio zero-warning isolated build, focused template/detection checks, output inventory, solo 267/267 regression, and versioned 0.1.3 self-contained release-package contract.
+Verification: SDK Release build, SDK 142/142 smoke, Labeling Studio zero-warning isolated build, focused template/detection checks, output inventory, solo 267/267 regression, versioned 0.1.3 engineering package contract, and clean-source 0.1.4 publish/package verification.
 Evidence: OpenVisionLab.LabelingStudio.csproj, migrated consumers, checked-in SDK assembly hashes above, tests/LabelingApplication.Tests/Program.cs, and this completion record.
-Boundary / next dependency: The 0.1.3 package is dirty-source engineering evidence, not a clean-source release candidate. This work does not prove field model accuracy, a new installer/signing contract, or the separate P0-C GPU-capable clean-target labeling gate.
+Boundary / next dependency: The 0.1.4 package proves local clean-source packaging of the SDK migration, not field model accuracy, a new installer/signing contract, or the separate P0-C GPU-capable clean-target label/save/reopen gate.
 ```
