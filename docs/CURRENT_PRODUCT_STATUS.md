@@ -50,9 +50,11 @@ product direction changes explicitly.
 - Baseline Git commit for the current clean-source transfer candidate:
   `59e37d8 test: place P0-C smoke on the leftmost monitor`.
 - Current protected regression evidence: the solo default internal suite
-  passed `267/267` again on 2026-08-05 after the operational viewer-stability
-  correction and actual-EXE GIF refresh. Exit code was 0 and the single-runner
-  rerun completed in 251.2 seconds. The 2026-08-03 Environment Setup Center,
+  passed `267/267` again on 2026-08-05 after the OpenVisionLab Vision SDK 3.0.0
+  migration. Exit code was 0 and the single-runner run completed in 329.7
+  seconds. The earlier same-day operational viewer-stability correction and
+  actual-EXE GIF refresh passed the same `267/267` baseline in 251.2 seconds.
+  The 2026-08-03 Environment Setup Center,
   restored-workstation D-drive rebind, tutorial-image contract, P1-I anomaly
   error worklist, and P1-J exact-content leakage results remain earlier
   protected evidence.
@@ -80,6 +82,7 @@ operability.
 | Explicit version, deterministic package provenance, legal inventory | Complete for P0-B1 | Exact evidence is in `docs/RELEASE_PACKAGE_CONTRACT_P0B1_20260730.md`; formal public-release legal review remains external |
 | Packaged runtime diagnostics and explicit support export | Complete for P0-B2 | Current-user paths, bounded retention, package/environment self-test, allow-list/redaction, and packaged first-launch immutability are covered |
 | Environment Setup Center | Complete for the current-source guided workflow | Read-only app/viewer/current-model-runtime inventory, required/optional status, installation order, safety boundaries, and explicit handoff to the existing model-runtime install surface are covered; no silent install or driver/CUDA automation |
+| OpenVisionLab Vision SDK consumer integration | Complete for SDK `3.0.0` | `OpenVisionLab.Core` and `OpenVisionLab.Vision2D` replace the active `Lib.Common`/`Lib.OpenCV` contract; the app retains its pinned OpenCvSharp runtime and UI-only adapters |
 | Current-source viewer graphics capability preflight | Complete | The actual Main Viewer context and 11 required framebuffer functions are checked; a definite failure is visible in diagnostics/support evidence and blocks image opening before state mutation |
 | `0.1.1` packaged graphics-preflight engineering evidence | Complete | Two deterministic dirty-source publishes, real packaged-EXE `8/8` diagnostics, and post-launch package immutability passed; this is not clean-source GPU-target evidence |
 | `0.1.2` clean-source GPU-target transfer bundle | Complete for package preparation | `source.dirty=false`, two deterministic publishes, packaged headless preflight, 504/504 extracted payload hashes, ZIP SHA-256, and leftmost-monitor harness evidence passed; external GPU labeling remains unexecuted |
@@ -123,6 +126,9 @@ regression:
 - read-only Environment Setup Center refresh, explicit model-runtime settings
   handoff, and no automatic package/driver install, training, inference, model
   adoption, or settings save.
+- OpenVisionLab Vision SDK `3.0.0` checked-in assembly hashes, public
+  property/result/tool usage, app-owned UI conversion boundary, and absence of
+  the superseded `Lib.*` and unused Blob payloads.
 
 The detailed completion records remain in `docs/STABLE_VERIFIED_AREAS.md` and
 the linked dated documents.

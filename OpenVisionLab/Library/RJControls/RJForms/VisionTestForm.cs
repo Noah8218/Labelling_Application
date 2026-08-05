@@ -11,10 +11,10 @@ using RJCodeUI_M1.Utils;
 using RJCodeUI_M1.RJControls;
 using OpenVisionLab;
 using OpenVisionLab._1._Core;
-using Lib.Common;
-using Lib.OpenCV;
-using Lib.OpenCV.Tool;
 using OpenCvSharp;
+using OpenCvSharp.Extensions;
+using OpenVisionLab.Core;
+using OpenVisionLab.Vision2D;
 using System.Reflection;
 using System.Diagnostics;
 using OpenVisionLab.Vision._1._Tools.OpenCV;
@@ -331,7 +331,7 @@ namespace RJCodeUI_M1.RJForms
 
             if (updateActiveImage && image != null)
             {
-                displayManager.SetImageSrc(BitmapImageConverter.ToMat(image));
+                displayManager.SetImageSrc(BitmapConverter.ToMat(image));
             }
         }
 
@@ -641,7 +641,7 @@ namespace RJCodeUI_M1.RJForms
                 throw new InvalidOperationException(OpenVisionLanguageService.T("VisionTest.Error.SourceImageNotLoaded"));
             }
 
-            Mat sourceMat = BitmapImageConverter.ToMat(sourceViewer.DisplayBitmap).Clone();
+            Mat sourceMat = BitmapConverter.ToMat(sourceViewer.DisplayBitmap).Clone();
             resultBitmap = BitmapDrawing.GetBitmapFormat24bppRgb(sourceViewer.DisplayBitmap);
             OpenCvHelper.SetImageChannel1(sourceMat);
 
@@ -744,19 +744,30 @@ namespace RJCodeUI_M1.RJForms
             if (displayManager.IsLayerRoiEmpty(source1_Index))
             {
                 processImage(sourceMat, false);
-                return BitmapImageConverter.ToBitmap(sourceMat);
+                return BitmapConverter.ToBitmap(sourceMat);
             }
 
             Rect roiRect = CommonConverter.RectangleToRect(GetLayerRoi(source1_Index));
             using (Mat imageRoi = sourceMat.SubMat(roiRect))
             {
                 processImage(imageRoi, true);
-                using (Bitmap sourceBitmap = BitmapImageConverter.ToBitmap(sourceMat))
-                using (Bitmap roiBitmap = BitmapImageConverter.ToBitmap(imageRoi))
+                using (Bitmap sourceBitmap = BitmapConverter.ToBitmap(sourceMat))
+                using (Bitmap roiBitmap = BitmapConverter.ToBitmap(imageRoi))
                 {
-                    return BitmapProcessing.OverlayImage(sourceBitmap, roiBitmap, roiRect.Left, roiRect.Top);
+                    return OverlayImage(sourceBitmap, roiBitmap, roiRect.Left, roiRect.Top);
                 }
             }
+        }
+
+        private static Bitmap OverlayImage(Bitmap source, Bitmap overlay, int left, int top)
+        {
+            var result = (Bitmap)source.Clone();
+            using (Graphics graphics = Graphics.FromImage(result))
+            {
+                graphics.DrawImageUnscaled(overlay, left, top);
+            }
+
+            return result;
         }
 
         protected void InitializeSingleInputViewers(
@@ -1059,9 +1070,9 @@ namespace RJCodeUI_M1.RJForms
                 return;
             }
 
-            using (Mat source = BitmapImageConverter.ToMat(thresholdPreviewSourceViewer.DisplayBitmap).Clone())
+            using (Mat source = BitmapConverter.ToMat(thresholdPreviewSourceViewer.DisplayBitmap).Clone())
             using (Mat preview = CreateThresholdPreview(source, thresholdPreviewProperty))
-            using (Bitmap previewBitmap = BitmapImageConverter.ToBitmap(preview))
+            using (Bitmap previewBitmap = BitmapConverter.ToBitmap(preview))
             {
                 PublishPreviewBitmap(thresholdPreviewDestinationComboBox, thresholdPreviewDestinationViewer, previewBitmap);
             }
@@ -1084,11 +1095,11 @@ namespace RJCodeUI_M1.RJForms
             Rect roi = CommonConverter.RectangleToRect(GetLayerRoi(source1_Index));
             using (Mat sourceRoi = source.SubMat(roi))
             using (Mat roiPreview = CreateThresholdPreviewImage(sourceRoi, property))
-            using (Bitmap sourceBitmap = BitmapImageConverter.ToBitmap(source))
-            using (Bitmap roiBitmap = BitmapImageConverter.ToBitmap(roiPreview))
-            using (Bitmap overlay = BitmapProcessing.OverlayImage(sourceBitmap, roiBitmap, roi.Left, roi.Top))
+            using (Bitmap sourceBitmap = BitmapConverter.ToBitmap(source))
+            using (Bitmap roiBitmap = BitmapConverter.ToBitmap(roiPreview))
+            using (Bitmap overlay = OverlayImage(sourceBitmap, roiBitmap, roi.Left, roi.Top))
             {
-                return BitmapImageConverter.ToMat(overlay).Clone();
+                return BitmapConverter.ToMat(overlay).Clone();
             }
         }
 

@@ -11,6 +11,7 @@ Resolved NuGet packages
 Apache-2.0:
 - log4net 3.3.1
 - OpenCvSharp4 4.5.5.20211231
+- OpenCvSharp4.Extensions 4.5.5.20211231
 - OpenCvSharp4.runtime.win 4.5.5.20211231
 
 MIT:
@@ -54,9 +55,11 @@ Apache-2.0:
   https://github.com/shimat/opencvsharp
   https://opencv.org/license/
 
-Project components covered by the repository LICENSE:
-- Lib.Common.dll 2.1.0.0
-- Lib.OpenCV.dll 2.1.0.0
+MIT project components:
+- OpenVisionLab.Core.dll 3.0.0.0
+- OpenVisionLab.Vision2D.dll 3.0.0.0
+  Copyright (c) 2026 최노아(Noah-Choi)
+  https://github.com/Noah8218/OpenVisionLab-Vision-SDK
 - OpenVisionLab.* assemblies built from this repository
 
 Bundled .NET runtime

@@ -1,4 +1,4 @@
-using Lib.Common;
+using OpenCvSharp.Extensions;
 using MvcVisionSystem._1._Core;
 using OpenVisionLab.ImageCanvas;
 using System;
@@ -32,7 +32,7 @@ namespace MvcVisionSystem
             CGlobal.Inst.Data.LastSelectImagePath = imagePath ?? string.Empty;
             SetCurrentImage(image, true);
             CGlobal.Inst.ImageWorkspace.SetActiveImage(imageName ?? string.Empty, imagePath ?? string.Empty, _currentImage);
-            CDisplayManager.ImageSrc = BitmapImageConverter.ToMat(_currentImage);
+            CDisplayManager.ImageSrc = BitmapConverter.ToMat(_currentImage);
         }
 
         private void SetCurrentImage(Bitmap image, bool zoomToFit)
@@ -92,7 +92,7 @@ namespace MvcVisionSystem
             {
                 _pendingImageLoad = false;
 
-                using CvMat mat = BitmapImageConverter.ToMat(_currentImage);
+                using CvMat mat = BitmapConverter.ToMat(_currentImage);
                 CanvasImageLoader.UploadMatAsTexture(Canvas, mat, TextureName, ref _imageSize, zoomToFit);
                 if (!zoomToFit)
                 {

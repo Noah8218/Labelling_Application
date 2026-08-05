@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Threading.Tasks;
-using Lib.Common;
 
 namespace MvcVisionSystem
 {
@@ -59,7 +58,7 @@ namespace MvcVisionSystem
                     }
                     catch { }
 
-                    CUtil.InitDirectory($"RECIPE\\{m_strName}\\VISION");
+                    Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, RECIPE_DIRECTORY, m_strName, "VISION"));
 
                     LoadToolsTask = Task.Run(() =>
                     {

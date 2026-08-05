@@ -1,4 +1,3 @@
-using Lib.Common;
 using MvcVisionSystem.DrawObject;
 using MvcVisionSystem.Yolo;
 using System;

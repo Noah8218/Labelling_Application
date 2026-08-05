@@ -1,6 +1,6 @@
 # Work Tracking
 
-Last updated: 2026-08-03
+Last updated: 2026-08-05
 
 ## 2026-07-31 Engineering Release 0.1.1 Graphics Preflight
 
@@ -21038,3 +21038,71 @@ Boundary / next dependency:
 - no field segmentation-accuracy claim is made;
 - P0-C still requires direct access to the selected GPU-capable clean Windows
   target.
+
+## 2026-08-05 OpenVisionLab Vision SDK 3.0.0 migration
+
+Status: Complete
+
+Scope:
+
+- replaced checked-in `Lib.Common.dll` and `Lib.OpenCV.dll` with
+  `OpenVisionLab.Core.dll` and `OpenVisionLab.Vision2D.dll` from SDK `3.0.0`;
+- migrated active namespaces, geometry helpers, template matching, display and
+  Bitmap/Mat adapter calls;
+- removed stale legacy imports and the app-local duplicate matching-property
+  implementation;
+- retained the app-owned OpenCvSharp `4.5.5.20211231` managed/native runtime;
+- excluded the unused SDK Blob dependency from the application payload;
+- updated tests, dependency output contract, release notices, and durable
+  development direction.
+
+Acceptance criteria:
+
+- SDK product source and version identified -> pass, SDK `3.0.0`, commit
+  `ba0055b713e0bf434b9d0a7fd3f4b0e445c1f982`;
+- SDK baseline valid -> pass, Release build with zero warnings/errors and
+  `142/142` SDK smoke;
+- old dependency absent -> pass, no active `Lib.Common`/`Lib.OpenCV` source or
+  project references and no old output DLLs;
+- required new dependency present -> pass, exact two SDK assemblies in the app
+  output with recorded SHA-256 hashes;
+- active workflows preserved -> pass, focused template/detection checks and
+  solo `267/267` complete regression;
+- source/output structure changed, not only names -> pass, SDK-owned property,
+  result, tool, geometry, and conversion namespaces replace the old owners;
+- external scope remains bounded -> pass, no SDK source modification, field
+  model claim, installer/signing change, or P0-C GPU-target claim.
+
+Verification:
+
+- `dotnet build OpenVisionLab.VisionSdk.sln -c Release` through the isolated
+  SDK artifact path -> 0 warnings, 0 errors;
+- SDK smoke executable -> `142/142`;
+- `scripts/Build-LabelingApplicationTests.ps1 -OutputName sdk-migration-final`
+  -> 0 warnings, 0 errors;
+- `--template-batch-autolabel-storage` -> 3/3;
+- `--wpf-template-current-image-no-candidate` -> 2/2;
+- detection overlay/display focused checks -> pass;
+- solo no-argument suite -> `267/267`, exit code 0, 329.7 seconds.
+- initial `--release-package-contract` against the preserved historical
+  `0.1.0` package -> expected stale-package failure because it predates the new
+  package notice and SDK payload; the immutable evidence was not overwritten;
+- self-contained `0.1.3` engineering publish and version-selected
+  `--release-package-contract` -> pass, 505 payloads, fail-closed tamper/restore
+  verification, manifest SHA-256
+  `248D35136D19FBE4D24CB7C2A85E33A892736ECDEF69C3142A0DF86DBB3533E4`.
+
+Evidence:
+
+- `docs/OPENVISIONLAB_VISION_SDK_MIGRATION_20260805.md`;
+- `OpenVisionLab.LabelingStudio.csproj`;
+- migrated application consumers and dependency assertions in
+  `tests/LabelingApplication.Tests/Program.cs`;
+- checked-in SDK binaries under `dll`.
+
+Boundary / next dependency:
+
+- this is local consumer-integration evidence, not field accuracy or
+  clean-target package evidence;
+- `0.1.3` records `source.dirty=true` and is engineering evidence only;
+- P0-C still requires access to the selected GPU-capable clean Windows target.

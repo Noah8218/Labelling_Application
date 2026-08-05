@@ -1,4 +1,3 @@
-using Lib.Common;
 using MvcVisionSystem._1._Core;
 using MvcVisionSystem.DrawObject;
 using OpenVisionLab.ImageCanvas;

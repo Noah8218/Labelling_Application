@@ -13,7 +13,6 @@ using RJCodeUI_M1.RJControls;
 using log4net.Repository.Hierarchy;
 using log4net;
 using log4net.Core;
-using Lib.Common;
 
 namespace OpenVisionLab
 {

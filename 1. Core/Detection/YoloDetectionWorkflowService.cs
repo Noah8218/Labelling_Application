@@ -1,4 +1,3 @@
-using Lib.Common;
 using MvcVisionSystem._3._Communication.TCP;
 using System;
 using System.Drawing;

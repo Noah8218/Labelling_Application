@@ -25477,6 +25477,7 @@ internal static partial class Program
         string fourPointExtremeBoxImplementationPath = Path.Combine(root, "docs", "FOUR_POINT_EXTREME_BOX_IMPLEMENTATION_20260729.md");
         string datasetHealthClassFilterPath = Path.Combine(root, "docs", "DATASET_HEALTH_CLASS_FILTER_20260729.md");
         string currentWorktreeIntegrationPath = Path.Combine(root, "docs", "CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md");
+        string visionSdkMigrationPath = Path.Combine(root, "docs", "OPENVISIONLAB_VISION_SDK_MIGRATION_20260805.md");
         string currentProductStatusPath = Path.Combine(root, "docs", "CURRENT_PRODUCT_STATUS.md");
         string commercialReadinessAuditPath = Path.Combine(root, "docs", "COMMERCIAL_READINESS_AUDIT_20260730.md");
         string nextDevelopmentDecisionPath = Path.Combine(root, "docs", "NEXT_DEVELOPMENT_DECISION_20260730.md");
@@ -25498,9 +25499,18 @@ internal static partial class Program
         string mobileSamGuidePath = Path.Combine(root, "docs", "MOBILE_SAM_SMART_MASK.md");
         string tutorialHtmlPath = Path.Combine(root, "docs", "tutorial", "labeling-workbench-tutorial.html");
         string tutorialStandaloneHtmlPath = Path.Combine(root, "docs", "tutorial", "labeling-workbench-tutorial-standalone.html");
+        string templateMatchingServicePath = Path.Combine(root, "1. Core", "Labeling", "TemplateMatchingAutoLabelService.cs");
 
-        AssertTrue(File.Exists(Path.Combine(root, "dll", "Lib.Common.dll")), "Lib.Common should be available as a checked-in DLL");
-        AssertTrue(File.Exists(Path.Combine(root, "dll", "Lib.OpenCV.dll")), "Lib.OpenCV should be available as a checked-in DLL");
+        AssertTrue(File.Exists(Path.Combine(root, "dll", "OpenVisionLab.Core.dll")), "OpenVisionLab.Core should be available as a checked-in SDK DLL");
+        AssertTrue(File.Exists(Path.Combine(root, "dll", "OpenVisionLab.Vision2D.dll")), "OpenVisionLab.Vision2D should be available as a checked-in SDK DLL");
+        AssertTrue(!File.Exists(Path.Combine(root, "dll", "OpenCvSharp.Blob.dll")), "the unused SDK Blob dependency should not be redistributed by the app");
+        AssertTrue(!File.Exists(Path.Combine(root, "dll", "Lib.Common.dll")), "the superseded Lib.Common DLL should not remain checked in");
+        AssertTrue(!File.Exists(Path.Combine(root, "dll", "Lib.OpenCV.dll")), "the superseded Lib.OpenCV DLL should not remain checked in");
+        AssertTrue(File.Exists(Path.Combine(AppContext.BaseDirectory, "OpenVisionLab.Core.dll")), "the SDK Core DLL should be copied into the application/test output");
+        AssertTrue(File.Exists(Path.Combine(AppContext.BaseDirectory, "OpenVisionLab.Vision2D.dll")), "the SDK Vision2D DLL should be copied into the application/test output");
+        AssertTrue(!File.Exists(Path.Combine(AppContext.BaseDirectory, "OpenCvSharp.Blob.dll")), "the unused SDK Blob dependency should not be copied into output");
+        AssertTrue(!File.Exists(Path.Combine(AppContext.BaseDirectory, "Lib.Common.dll")), "the superseded Lib.Common DLL should not be copied into output");
+        AssertTrue(!File.Exists(Path.Combine(AppContext.BaseDirectory, "Lib.OpenCV.dll")), "the superseded Lib.OpenCV DLL should not be copied into output");
         AssertTrue(File.Exists(directoryBuildPropsPath), "shared build properties should exist");
         AssertTrue(File.Exists(yoloWorkflowPath), "YOLOv5 training/result workflow document should exist");
         AssertTrue(File.Exists(segmentationWorkflowPath), "segmentation UX completion document should exist");
@@ -25511,6 +25521,7 @@ internal static partial class Program
         AssertTrue(File.Exists(fourPointExtremeBoxImplementationPath), "four-point extreme-box implementation record should exist");
         AssertTrue(File.Exists(datasetHealthClassFilterPath), "Dataset Health class-filter completion record should exist");
         AssertTrue(File.Exists(currentWorktreeIntegrationPath), "current-worktree integration completion record should exist");
+        AssertTrue(File.Exists(visionSdkMigrationPath), "OpenVisionLab Vision SDK migration completion record should exist");
         AssertTrue(File.Exists(currentProductStatusPath), "single current product-status authority should exist");
         AssertTrue(File.Exists(commercialReadinessAuditPath), "commercial readiness audit should exist");
         AssertTrue(File.Exists(nextDevelopmentDecisionPath), "next development decision should exist");
@@ -25546,6 +25557,7 @@ internal static partial class Program
         string fourPointExtremeBoxImplementation = File.ReadAllText(fourPointExtremeBoxImplementationPath, Encoding.UTF8);
         string datasetHealthClassFilter = File.ReadAllText(datasetHealthClassFilterPath, Encoding.UTF8);
         string currentWorktreeIntegration = File.ReadAllText(currentWorktreeIntegrationPath, Encoding.UTF8);
+        string visionSdkMigration = File.ReadAllText(visionSdkMigrationPath, Encoding.UTF8);
         string currentProductStatus = File.ReadAllText(currentProductStatusPath, Encoding.UTF8);
         string commercialReadinessAudit = File.ReadAllText(commercialReadinessAuditPath, Encoding.UTF8);
         string nextDevelopmentDecision = File.ReadAllText(nextDevelopmentDecisionPath, Encoding.UTF8);
@@ -25567,6 +25579,7 @@ internal static partial class Program
         string mobileSamGuide = File.ReadAllText(mobileSamGuidePath, Encoding.UTF8);
         string tutorialHtml = File.ReadAllText(tutorialHtmlPath, Encoding.UTF8);
         string tutorialStandaloneHtml = File.ReadAllText(tutorialStandaloneHtmlPath, Encoding.UTF8);
+        string templateMatchingService = File.ReadAllText(templateMatchingServicePath, Encoding.UTF8);
 
         AssertTrue(readme.Contains("YOLOV5_TRAINING_RESULT_WORKFLOW.md", StringComparison.Ordinal), "README should link the YOLOv5 workflow criteria");
         AssertTrue(readme.Contains("SEGMENTATION_UX_COMPLETION.md", StringComparison.Ordinal), "README should link the segmentation UX criteria");
@@ -25597,6 +25610,14 @@ internal static partial class Program
                 && currentProductStatus.Contains("glGenFramebuffersEXT not supported", StringComparison.Ordinal)
                 && currentProductStatus.Contains("260/260", StringComparison.Ordinal),
             "current product status should preserve completed P0-A/B1/B2 work and the current P0-C Hyper-V evidence boundary");
+        AssertTrue(
+            visionSdkMigration.Contains("Status: Complete", StringComparison.Ordinal)
+                && visionSdkMigration.Contains("OpenVisionLab.Vision2D.dll", StringComparison.Ordinal)
+                && visionSdkMigration.Contains("ba0055b713e0bf434b9d0a7fd3f4b0e445c1f982", StringComparison.Ordinal)
+                && visionSdkMigration.Contains("267/267", StringComparison.Ordinal)
+                && visionSdkMigration.Contains("0.1.3", StringComparison.Ordinal)
+                && currentProductStatus.Contains("OpenVisionLab Vision SDK consumer integration", StringComparison.Ordinal),
+            "Vision SDK migration record and current status should preserve source, payload, regression, and boundary evidence");
         AssertTrue(
             commercialReadinessAudit.Contains("Status: Complete", StringComparison.Ordinal)
                 && commercialReadinessAudit.Contains("260/260", StringComparison.Ordinal)
@@ -25673,6 +25694,8 @@ internal static partial class Program
         AssertTrue(testStorageMigrationScript.Contains("foreach ($outputName in @(\"bin\", \"obj\", \"artifacts\"))", StringComparison.Ordinal), "test-storage migration should own every component build-output family");
         AssertTrue(agent.Contains(@"D:\OpenVisionLab-TestData\Labelling_Application", StringComparison.Ordinal), "repository instructions should preserve D-drive local test storage");
         AssertTrue(agent.Contains("PlaceExeSmokeWindowOnLeftmostMonitor", StringComparison.Ordinal), "repository instructions should preserve dynamic leftmost-monitor EXE placement");
+        AssertTrue(agent.Contains("OpenVisionLab-Vision-SDK", StringComparison.Ordinal), "repository instructions should define the Vision SDK as the reusable vision-contract authority");
+        AssertTrue(agent.Contains("Do not add new `Lib.Common`, `Lib.OpenCV`, `Library-Noah`", StringComparison.Ordinal), "repository instructions should prevent reintroducing superseded Noah dependencies");
         AssertTrue(localTestStorageContract.Contains("Status: Complete", StringComparison.Ordinal), "local test-storage contract should use the durable completion state");
         AssertTrue(localTestStorageContract.Contains("264/264", StringComparison.Ordinal), "local test-storage contract should preserve final regression evidence");
         AssertTrue(ciWorkflow.Contains("--priority-workflow-docs", StringComparison.Ordinal), "CI workflow should run the docs smoke");
@@ -25689,11 +25712,18 @@ internal static partial class Program
         AssertTrue(ciWorkflow.Contains("timeout-minutes: 15", StringComparison.Ordinal), "CI complete regression should have a bounded timeout");
         AssertTrue(ciWorkflow.Contains("--release-package-contract", StringComparison.Ordinal), "CI workflow should run the release package contract");
         AssertTrue(ciWorkflow.Contains("actions/upload-artifact@v4", StringComparison.Ordinal), "CI workflow should upload the verified release package");
-        AssertTrue(appProject.Contains("dll\\Lib.Common.dll", StringComparison.Ordinal), "app project should reference Lib.Common by checked-in DLL");
-        AssertTrue(appProject.Contains("dll\\Lib.OpenCV.dll", StringComparison.Ordinal), "app project should reference Lib.OpenCV by checked-in DLL");
-        AssertTrue(appProject.Contains("CopyCheckedInNoahLibrariesToOutput", StringComparison.Ordinal), "app project should force checked-in Noah DLLs into the EXE output");
-        AssertTrue(appProject.Contains("<CheckedInNoahLibrary Include=\"$(MSBuildProjectDirectory)\\dll\\Lib.Common.dll\"", StringComparison.Ordinal), "app project should copy checked-in Lib.Common into the EXE output");
-        AssertTrue(appProject.Contains("<CheckedInNoahLibrary Include=\"$(MSBuildProjectDirectory)\\dll\\Lib.OpenCV.dll\"", StringComparison.Ordinal), "app project should copy checked-in Lib.OpenCV into the EXE output");
+        AssertTrue(appProject.Contains("dll\\OpenVisionLab.Core.dll", StringComparison.Ordinal), "app project should reference OpenVisionLab.Core by checked-in SDK DLL");
+        AssertTrue(appProject.Contains("dll\\OpenVisionLab.Vision2D.dll", StringComparison.Ordinal), "app project should reference OpenVisionLab.Vision2D by checked-in SDK DLL");
+        AssertTrue(!appProject.Contains("OpenCvSharp.Blob", StringComparison.Ordinal), "app project should not reference the unused SDK Blob dependency");
+        AssertTrue(appProject.Contains("CopyCheckedInVisionSdkLibrariesToOutput", StringComparison.Ordinal), "app project should force checked-in Vision SDK DLLs into the EXE output");
+        AssertTrue(appProject.Contains("<CheckedInVisionSdkLibrary Include=\"$(MSBuildProjectDirectory)\\dll\\OpenVisionLab.Core.dll\"", StringComparison.Ordinal), "app project should copy checked-in OpenVisionLab.Core into the EXE output");
+        AssertTrue(appProject.Contains("<CheckedInVisionSdkLibrary Include=\"$(MSBuildProjectDirectory)\\dll\\OpenVisionLab.Vision2D.dll\"", StringComparison.Ordinal), "app project should copy checked-in OpenVisionLab.Vision2D into the EXE output");
+        AssertTrue(appProject.Contains("<PackageReference Include=\"OpenCvSharp4.Extensions\" Version=\"$(OpenCvSharpVersion)\"", StringComparison.Ordinal), "the app should use the aligned package Bitmap/Mat adapter for the UI boundary");
+        AssertTrue(!appProject.Contains("Lib.Common", StringComparison.Ordinal) && !appProject.Contains("Lib.OpenCV", StringComparison.Ordinal), "app project should not retain superseded Noah DLL references");
+        AssertTrue(templateMatchingService.Contains("using OpenVisionLab.Vision2D.Property;", StringComparison.Ordinal), "template matching should consume the Vision SDK property namespace");
+        AssertTrue(templateMatchingService.Contains("new MatchingToolProperty", StringComparison.Ordinal), "template matching should use the SDK-owned ready-to-use property type");
+        AssertTrue(templateMatchingService.Contains("using VisionToolResult toolResult = tool.Execute(sourceMat);", StringComparison.Ordinal), "template matching should consume and dispose the SDK execution result");
+        AssertTrue(!templateMatchingService.Contains("TemplateMatchingProperty : IOpenCVPropertyMatching", StringComparison.Ordinal), "the app should not duplicate the SDK matching property contract");
         AssertTrue(directoryBuildProps.Contains("<OpenCvSharpVersion>4.5.5.20211231</OpenCvSharpVersion>", StringComparison.Ordinal), "shared build properties should pin one compatible OpenCvSharp managed/native version");
         foreach (string project in new[] { appProject, testProject, imageCanvasProject, displayCoreProject })
         {
@@ -25712,6 +25742,7 @@ internal static partial class Program
         AssertTrue(!appProject.Contains("LibraryNoahSourceRoot", StringComparison.Ordinal), "app project should not depend on sibling Library-Noah source");
         AssertTrue(!testProject.Contains("LibraryNoahSourceRoot", StringComparison.Ordinal), "test project should not depend on sibling Library-Noah source");
         AssertTrue(!displayCoreProject.Contains("LibraryNoahSourceRoot", StringComparison.Ordinal), "display core project should not depend on sibling Library-Noah source");
+        AssertTrue(!appProject.Contains("CopyCheckedInNoahLibrariesToOutput", StringComparison.Ordinal), "the superseded Noah output-copy target should be removed");
         AssertTrue(codeStructure.Contains("OpenVisionLab Labeling Studio", StringComparison.Ordinal), "code structure should use the public product name");
         AssertTrue(!codeStructure.Contains("`Labelling_Application`", StringComparison.Ordinal), "code structure should not present the repository folder name as the product identity");
         AssertTrue(codeStructure.Contains("docs/YOLOV5_TRAINING_RESULT_WORKFLOW.md", StringComparison.Ordinal), "code structure should route priority 3 to the YOLOv5 workflow criteria");

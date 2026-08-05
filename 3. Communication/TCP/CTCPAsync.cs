@@ -16,7 +16,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Reflection;
-using Lib.Common;
 
 namespace MvcVisionSystem._3._Communication.TCP
 {

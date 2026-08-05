@@ -3,7 +3,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
-using Lib.Common;
 using MvcVisionSystem.Yolo;
 
 namespace MvcVisionSystem

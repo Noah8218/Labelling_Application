@@ -1,5 +1,4 @@
-﻿using Lib.Common;
-using MvcVisionSystem._1._Core;
+﻿using MvcVisionSystem._1._Core;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

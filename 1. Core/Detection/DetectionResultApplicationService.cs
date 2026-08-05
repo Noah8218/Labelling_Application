@@ -1,4 +1,4 @@
-using Lib.Common;
+using OpenCvSharp.Extensions;
 using MvcVisionSystem._3._Communication.TCP;
 using MvcVisionSystem.Yolo;
 using System;
@@ -137,7 +137,7 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            using (Bitmap bitmap = CImageConverter.ToBitmap(CDisplayManager.ImageSrc))
+            using (Bitmap bitmap = BitmapConverter.ToBitmap(CDisplayManager.ImageSrc))
             {
                 DetectionImageContext context = CaptureCurrentContext(CGlobal.Inst.Data, bitmap.Size);
                 string requestId = Guid.NewGuid().ToString("N");
@@ -345,7 +345,7 @@ namespace MvcVisionSystem._1._Core
             SetLastResult(reviewDefects, detectionContext);
             if (CDisplayManager.GetMainDisplayOrNull() == null)
             {
-                using (Bitmap source = CImageConverter.ToBitmap(CDisplayManager.ImageSrc))
+                using (Bitmap source = BitmapConverter.ToBitmap(CDisplayManager.ImageSrc))
                 using (Bitmap image = CDrawBitmap.GetBitmapFormat24bppRgb(source))
                 {
                     CDisplayManager.CreateLayerDisplay(image, "Main", false, overlays, activate: true);

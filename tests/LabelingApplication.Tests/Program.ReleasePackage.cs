@@ -11,8 +11,10 @@ namespace LabelingApplication.Tests;
 
 internal static class ReleasePackageContractTests
 {
-    private const string ExpectedVersion = "0.1.0";
-    private const string ExpectedAssemblyVersion = "0.1.0.0";
+    private const string SourceVersion = "0.1.0";
+    private static readonly string ExpectedVersion =
+        Environment.GetEnvironmentVariable("OPENVISIONLAB_RELEASE_CONTRACT_VERSION") ?? SourceVersion;
+    private static string ExpectedAssemblyVersion => $"{ExpectedVersion}.0";
     private const string ExpectedSdkVersion = "8.0.421";
 
     internal static void TestReleasePackageContract()
@@ -77,8 +79,8 @@ internal static class ReleasePackageContractTests
             .Elements("PropertyGroup")
             .FirstOrDefault(group => group.Element("VersionPrefix") is not null)
             ?? throw new InvalidOperationException("Directory.Build.props does not declare VersionPrefix.");
-        AssertEqual(ExpectedVersion, propertyGroup.Element("VersionPrefix")?.Value, "VersionPrefix");
-        AssertEqual(ExpectedAssemblyVersion, propertyGroup.Element("AssemblyVersion")?.Value, "AssemblyVersion");
+        AssertEqual(SourceVersion, propertyGroup.Element("VersionPrefix")?.Value, "VersionPrefix");
+        AssertEqual($"{SourceVersion}.0", propertyGroup.Element("AssemblyVersion")?.Value, "AssemblyVersion");
         AssertEqual("true", propertyGroup.Element("Deterministic")?.Value, "Deterministic build policy");
         AssertEqual(
             "false",
@@ -147,6 +149,8 @@ internal static class ReleasePackageContractTests
         {
             "OpenVisionLab.LabelingStudio.exe",
             "OpenVisionLab.LabelingStudio.dll",
+            "OpenVisionLab.Core.dll",
+            "OpenVisionLab.Vision2D.dll",
             "hostfxr.dll",
             "LICENSE",
             "NOTICE",
@@ -157,6 +161,10 @@ internal static class ReleasePackageContractTests
                 File.Exists(Path.Combine(releaseDirectory, requiredFile)),
                 $"Required release file is missing: {requiredFile}");
         }
+
+        AssertTrue(!File.Exists(Path.Combine(releaseDirectory, "Lib.Common.dll")), "Release package must not contain superseded Lib.Common.dll.");
+        AssertTrue(!File.Exists(Path.Combine(releaseDirectory, "Lib.OpenCV.dll")), "Release package must not contain superseded Lib.OpenCV.dll.");
+        AssertTrue(!File.Exists(Path.Combine(releaseDirectory, "OpenCvSharp.Blob.dll")), "Release package must not contain the unused SDK Blob dependency.");
 
         Dictionary<string, ManifestEntry> manifestFiles =
             new(StringComparer.OrdinalIgnoreCase);

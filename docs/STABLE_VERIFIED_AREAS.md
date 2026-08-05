@@ -2,6 +2,34 @@
 
 This document records code paths that have already been performance- or UX-verified and should not be casually refactored. Treat these areas as protected product behavior: change them only when the user reports a new issue in that exact path, or when a focused verification gate proves the change is necessary.
 
+## 2026-08-05 OpenVisionLab Vision SDK 3.0.0 Consumer Contract
+
+Status: stable and Complete for the Labeling Studio consumer integration.
+
+Protected behavior:
+
+- `OpenVisionLab.Core.dll` and `OpenVisionLab.Vision2D.dll` version `3.0.0.0`
+  are the only checked-in Vision SDK payloads required by the app;
+- `Lib.Common.dll`, `Lib.OpenCV.dll`, and unused `OpenCvSharp.Blob.dll` do not
+  return to the project or application output;
+- the app's `OpenCvSharp4`, `OpenCvSharp4.Extensions`, and
+  `OpenCvSharp4.runtime.win` stay aligned at `4.5.5.20211231`;
+- template matching uses SDK `MatchingToolProperty` and disposes both
+  `MatchingTool` and `VisionToolResult`, while a valid no-match remains a
+  successful zero-candidate result;
+- Bitmap/Mat conversion stays in the application UI boundary; the SDK remains
+  UI-framework agnostic;
+- future SDK refreshes record version, source commit, payload hashes, focused
+  results, and a complete regression result.
+
+Protected gates: SDK Release build and `142/142` smoke, isolated Labeling
+Studio build, template/detection focused tests, dependency output inventory,
+version-selected self-contained release-package verification,
+`--priority-workflow-docs`, documentation IA, and the complete no-argument
+suite.
+
+Evidence: `docs/OPENVISIONLAB_VISION_SDK_MIGRATION_20260805.md`.
+
 ## 2026-07-31 Packaged Graphics Preflight And Empty-Cache Immutability
 
 Status: stable and Complete for the local `0.1.1` dirty-source engineering
@@ -3139,7 +3167,7 @@ Model-center current-inspection reachability is covered by `--wpf-status-panels`
 
 2026-07-07 model candidate decision wording contract: model-candidate save/reject/rejected/saved/no-candidate and reject-result text should stay owned by `WpfModelCandidateDecisionPresentationService`, not shell code-behind. The rejected state should be readable Korean guidance that the candidate was not adopted as the inspection model, and `WpfCandidateReviewPanel.xaml` should keep `ModelValidationRoleDetailText` collapsed by default while preserving the binding for accessibility/diagnostics. This is presentation and compact-layout protection only; it does not run training/inference, change registry persistence schema, or touch Viewer/OpenGL/ROI/brush/eraser paths. Covered by isolated test build, `--wpf-labeling-shell`, `--model-registry`, `--wpf-candidate-review-panel`, `--mvvm-infra`, 1920x1080 Candidate Review visual smoke captures under `artifacts\ui`, and `git diff --check`.
 
-2026-07-07 checked-in Noah DLL output-copy contract, updated 2026-07-15 for clean runtime alignment: `OpenVisionLab.LabelingStudio.csproj` must reference and copy `dll\Lib.Common.dll` and `dll\Lib.OpenCV.dll` into the EXE output after build. `Directory.Build.props` owns `OpenCvSharpVersion=4.5.5.20211231`, and the app, tests, ImageCanvas, and Display.Core must use matching `OpenCvSharp4` and `OpenCvSharp4.runtime.win` package references rather than checked-in OpenCvSharp HintPaths. The app's post-build copy may place only the matching native runtime and ffmpeg assets at the root; it must not overwrite the managed package output with the old netstandard binary. This prevents both clean-checkout compile failures and the managed-4.4/native-4.5.5 `Cv2.FindContours` access violation reproduced in isolated output. Covered by the required isolated build, package/output hash checks, `--priority-workflow-docs`, segmentation focused tests, and the complete no-argument suite.
+2026-07-07 checked-in Noah DLL output-copy contract, updated 2026-07-15 for clean runtime alignment and superseded on 2026-08-05: this line is retained as historical evidence only. The current protected dependency contract is the OpenVisionLab Vision SDK `3.0.0` section above and `docs/OPENVISIONLAB_VISION_SDK_MIGRATION_20260805.md`. The still-relevant OpenCvSharp rule remains: all consumers use the one aligned managed/native package version, and no SDK refresh may overwrite it with a second runtime set.
 
 2026-07-07 circular SEG 20-label EXE rerun contract: after a current `artifacts\run\Debug` build, the real EXE circular segmentation workflow should load `D:\circular_defect_labeling_dataset_v1\images`, save 20 NG segmentation masks plus 20 OK/background empty labels, split positives into at least 10 train, 5 valid, and 5 test segment artifacts, train YOLOv8 SEG through the local `C:\Git\yolov8` adapter, apply `openvisionlab-yolov8-segment\weights\best.pt`, and complete current-image inference with a visible AI candidate. This is EXE operating-path and data-evidence coverage only; it does not claim production model accuracy or adoption readiness. Covered by app build, checked-in/output `Lib.OpenCV.dll` hash match, and `--exe-circular-segmentation-workflow --label-count 20` artifact `artifacts\exe-circular-segmentation-workflow\circular_seg_exe_20260707_221147`.
 

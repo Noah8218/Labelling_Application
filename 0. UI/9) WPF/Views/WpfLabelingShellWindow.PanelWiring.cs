@@ -1,4 +1,3 @@
-using Lib.Common;
 using MvcVisionSystem.Yolo;
 using OpenVisionLab.ImageCanvas.CanvasShapes;
 using OpenVisionLab.ImageCanvas.ViewModels;

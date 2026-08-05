@@ -1,4 +1,4 @@
-using Lib.Common;
+using OpenCvSharp.Extensions;
 using OpenCvSharp;
 using OpenVisionLab.ImageCanvas;
 using System;
@@ -116,7 +116,7 @@ namespace MvcVisionSystem._1._Core
 
         public static void CreateLayerDisplay(Mat imageSource, string strTitle, bool bUseClose = true, bool activate = true)
         {
-            using Bitmap image = CImageConverter.ToBitmap(imageSource);
+            using Bitmap image = BitmapConverter.ToBitmap(imageSource);
             CreateLayerDisplay(image, strTitle, bUseClose, null, activate);
         }
 
@@ -276,7 +276,7 @@ namespace MvcVisionSystem._1._Core
                 return;
             }
 
-            ImageSrc = BitmapImageConverter.ToMat(image);
+            ImageSrc = BitmapConverter.ToMat(image);
         }
     }
 

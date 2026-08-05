@@ -1,5 +1,4 @@
 ﻿using MvcVisionSystem._1._Core;
-using Lib.Common;
 using System;
 using System.Reflection;
 using MvcVisionSystem._3._Communication.TCP;

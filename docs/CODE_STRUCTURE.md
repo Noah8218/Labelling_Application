@@ -83,6 +83,7 @@ navigation source로 사용합니다.
 | `Yolo` | YOLO 클래스/라벨 저장, dataset yaml, split, readiness/validation/statistics, review status. |
 | `Library` | 레거시/호환 viewer 계층. `CViewer`는 OpenVisionLab ImageCanvas 기반으로 축소 유지됩니다. |
 | `OpenVisionLab/Library` | 내부 복사본 라이브러리. 특히 `OpenVisionLab.ImageCanvas`가 ROI/OpenGL 캔버스 핵심입니다. |
+| `dll` | 깨끗한 체크아웃에 필요한 재배포 의존성. 비전 알고리즘과 기하는 정확히 고정된 `OpenVisionLab.Core.dll` 및 `OpenVisionLab.Vision2D.dll` SDK 페이로드가 소유하고, UI 어댑터와 정렬된 OpenCvSharp 런타임은 앱이 소유합니다. |
 | `tests/LabelingApplication.Tests` | 단위/통합/smoke 회귀 테스트. UI 없이 검증하는 구조 검사가 많습니다. |
 | `docs` | `docs/README.md`에서 현재 권위·운영 가이드·기능 계약·검증 증거·역사 기록으로 분류하는 개발·검증 문서. |
 | `scripts` | 빌드/게시/첫 실행/YOLO smoke 자동화 스크립트. |
@@ -141,10 +142,16 @@ flowchart TD
     WpfServices --> Yolo["Yolo services"]
     CanvasVm --> ImageCanvas["OpenVisionLab.ImageCanvas"]
     ImageCanvas --> OpenGL["SharpGL/OpenGL"]
+    Core --> VisionSdk["OpenVisionLab Vision SDK"]
     Core --> Tcp["3. Communication/TCP"]
     Tcp --> Python["Python YOLO worker"]
     Yolo --> Files["YOLO labels / masks / data.yaml"]
 ```
+
+재사용 가능한 매칭, OpenCV 도구 속성/결과, 측정 기하는 OpenVisionLab
+Vision SDK가 소유합니다. 앱에는 UI 변환과 워크플로 조정만 남깁니다. 정확한
+소비 및 업그레이드 계약은
+`docs/OPENVISIONLAB_VISION_SDK_MIGRATION_20260805.md`에 기록합니다.
 
 핵심 원칙은 View가 로직을 직접 소유하지 않는 것입니다. 단, `WpfLabelingShellWindow`는 아직 composition root이자 전환 중인 shell orchestration 지점이므로, partial 파일로 책임을 나누고 service/ViewModel로 계속 빼는 방향입니다.
 

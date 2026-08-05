@@ -55,12 +55,12 @@
       <HintPath>dll\CircularProgressBar.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Lib.Common">
-      <HintPath>dll\Lib.Common.dll</HintPath>
+    <Reference Include="OpenVisionLab.Core">
+      <HintPath>dll\OpenVisionLab.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Lib.OpenCV">
-      <HintPath>dll\Lib.OpenCV.dll</HintPath>
+    <Reference Include="OpenVisionLab.Vision2D">
+      <HintPath>dll\OpenVisionLab.Vision2D.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="OpenVisionLab.Logging" Condition="!Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging\OpenVisionLab.Logging.csproj')">
@@ -110,6 +110,7 @@
     <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="6.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OpenCvSharp4" Version="$(OpenCvSharpVersion)" />
+    <PackageReference Include="OpenCvSharp4.Extensions" Version="$(OpenCvSharpVersion)" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="$(OpenCvSharpVersion)" />
     <PackageReference Include="System.Buffers" Version="4.5.1" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.8" />
@@ -197,12 +198,12 @@
           SkipUnchangedFiles="false" />
   </Target>
 
-  <Target Name="CopyCheckedInNoahLibrariesToOutput" AfterTargets="CopyFilesToOutputDirectory">
+  <Target Name="CopyCheckedInVisionSdkLibrariesToOutput" AfterTargets="CopyFilesToOutputDirectory">
     <ItemGroup>
-      <CheckedInNoahLibrary Include="$(MSBuildProjectDirectory)\dll\Lib.Common.dll" />
-      <CheckedInNoahLibrary Include="$(MSBuildProjectDirectory)\dll\Lib.OpenCV.dll" />
+      <CheckedInVisionSdkLibrary Include="$(MSBuildProjectDirectory)\dll\OpenVisionLab.Core.dll" />
+      <CheckedInVisionSdkLibrary Include="$(MSBuildProjectDirectory)\dll\OpenVisionLab.Vision2D.dll" />
     </ItemGroup>
-    <Copy SourceFiles="@(CheckedInNoahLibrary)"
+    <Copy SourceFiles="@(CheckedInVisionSdkLibrary)"
           DestinationFolder="$(OutDir)"
           SkipUnchangedFiles="false" />
   </Target>

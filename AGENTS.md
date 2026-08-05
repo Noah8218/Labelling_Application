@@ -16,6 +16,25 @@ This file defines how Codex should work in this repository.
 - Local test processes must route `TEMP` and `TMP` to `D:\OpenVisionLab-TestData\Labelling_Application\temp`. Do not move user datasets or `.proofline` state as test data.
 - Every actual EXE smoke, UI automation, operator-video, and EXE screenshot run must use `PlaceExeSmokeWindowOnLeftmostMonitor`, which dynamically selects the active monitor with the smallest bounds `Left` coordinate and verifies the actual window placement. Do not hard-code `DISPLAY2`; on the current topology it resolves to `\\.\DISPLAY2` at `Left=-1920`.
 
+## OpenVisionLab Vision SDK Dependency
+
+- Treat `OpenVisionLab-Vision-SDK` as the authoritative owner of reusable
+  vision algorithms, properties, results, geometry, and OpenCV tool contracts.
+- Do not add new `Lib.Common`, `Lib.OpenCV`, `Library-Noah`, or app-local copies
+  of a public Vision SDK contract. Use `OpenVisionLab.Core` and
+  `OpenVisionLab.Vision2D` public APIs.
+- Keep WPF, WinForms, Bitmap, and other UI-framework adapters in this app; do
+  not push UI coupling into the SDK.
+- Until a verified package feed replaces the current contract, refresh the two
+  checked-in SDK consumer assemblies only from a clean SDK product-source
+  build. Record SDK version, source commit, exact hashes, focused tests, output
+  inventory, and the complete regression result.
+- Preserve the app-owned aligned OpenCvSharp managed/native version. A Vision
+  SDK refresh must not copy a second `OpenCvSharp.dll` or
+  `OpenCvSharpExtern.dll` over the application runtime.
+- Add only SDK modules actually used by this app. Do not redistribute optional
+  SDK binaries solely because they appear in the SDK build output.
+
 ## Think Before Coding
 
 - State the concrete goal before editing.

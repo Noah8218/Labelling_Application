@@ -1,8 +1,8 @@
-using Lib.Common;
-using Lib.OpenCV.Property;
-using Lib.OpenCV.Result;
-using Lib.OpenCV.Tool;
 using OpenCvSharp;
+using OpenCvSharp.Extensions;
+using OpenVisionLab.Vision2D.Property;
+using OpenVisionLab.Vision2D.Result;
+using OpenVisionLab.Vision2D.Tool;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -118,13 +118,17 @@ namespace MvcVisionSystem._1._Core
 
             try
             {
-                using (Mat sourceMat = BitmapImageConverter.ToMat(sourceImage))
-                using (Mat templateMat = BitmapImageConverter.ToMat(templateImage))
+                using (Mat sourceMat = BitmapConverter.ToMat(sourceImage))
+                using (Mat templateMat = BitmapConverter.ToMat(templateImage))
+                using (var tool = new MatchingTool())
                 {
-                    var tool = new MatchingTool();
                     tool.SetProperty(CreateProperty(options));
                     tool.SetTemplateImage(templateMat);
-                    tool.Execute(sourceMat);
+                    using VisionToolResult toolResult = tool.Execute(sourceMat);
+                    if (!toolResult.Success && toolResult.ErrorCode != VisionToolErrorCode.MatchingNoResult)
+                    {
+                        return Failed(toolResult.Message, stopwatch.Elapsed);
+                    }
 
                     List<YoloWorkerSmokeCandidate> candidates = ConvertResults(
                         tool.results,
@@ -177,9 +181,9 @@ namespace MvcVisionSystem._1._Core
             return clone;
         }
 
-        private static IOpenCVPropertyMatching CreateProperty(TemplateMatchingAutoLabelOptions options)
+        private static MatchingToolProperty CreateProperty(TemplateMatchingAutoLabelOptions options)
         {
-            return new TemplateMatchingProperty
+            return new MatchingToolProperty
             {
                 NAME = "AutoLabelTemplateMatching",
                 MATCH_MODE = options.MatchMode,
@@ -188,7 +192,11 @@ namespace MvcVisionSystem._1._Core
                 NUM_MATCH = Math.Clamp(options.MaximumCandidates, 1, 200),
                 USE_CANNY = options.UseCanny,
                 CANNY_LOW = Math.Max(0, options.CannyLow),
-                CANNY_HIGH = Math.Max(options.CannyLow + 1, options.CannyHigh)
+                CANNY_HIGH = Math.Max(options.CannyLow + 1, options.CannyHigh),
+                USE_FIND_ANGLE = false,
+                USE_PYRAMID_POSITION_PROPOSAL = true,
+                PYRAMID_POSITION_TOP_N = 32,
+                PYRAMID_POSITION_MIN_SCORE = 0.65D
             };
         }
 
@@ -261,48 +269,5 @@ namespace MvcVisionSystem._1._Core
             return unionArea <= 0D ? 0D : intersectionArea / unionArea;
         }
 
-        private sealed class TemplateMatchingProperty : IOpenCVPropertyMatching
-        {
-            public string NAME { get; set; } = string.Empty;
-            public double PIXELPERMM { get; set; } = 1D;
-            public bool USE_THRESHOLD { get; set; }
-            public bool USE_BITWISENOT { get; set; }
-            public ThresholdTypes THRESHOLD_TYPES { get; set; } = ThresholdTypes.Binary;
-            public double THRESHOLD { get; set; } = 128D;
-            public bool USE_ADAPTIVE_THRESHOLD { get; set; }
-            public double ADAPTIVE_THRESHOLD { get; set; } = 255D;
-            public ThresholdTypes ADAPTIVE_THRESHOLD_TYPES { get; set; } = ThresholdTypes.Binary;
-            public AdaptiveThresholdTypes ADAPTIVE_THRESHOLD_ALGORITHM { get; set; } = AdaptiveThresholdTypes.GaussianC;
-            public int BlockSize { get; set; } = 11;
-            public int Weight { get; set; } = 2;
-            public bool USE_ROI { get; set; }
-            public bool USE_MULTI_ROI { get; set; }
-            public Rect CvROI { get; set; } = new Rect();
-            public List<Rect> CvROIS { get; set; } = new List<Rect>();
-            public List<Rect> CvMASKS { get; set; } = new List<Rect>();
-            public TemplateMatchModes MATCH_MODE { get; set; } = TemplateMatchModes.CCoeffNormed;
-            public double SCORE_MIN { get; set; } = 0.82D;
-            public double MAGNIFIATION { get; set; } = 1D;
-            public int NUM_MATCH { get; set; } = 50;
-            public bool USE_FIND_SCALE { get; set; }
-            public double FIND_SCALE_MIN { get; set; } = 1D;
-            public double FIND_SCALE_MAX { get; set; } = 1D;
-            public double FIND_SCALE_STEP { get; set; } = 0.1D;
-            public bool USE_FIND_ANGLE { get; set; }
-            public double FIND_ANGLE { get; set; } = 1D;
-            public int FIND_ANGLE_MAX { get; set; }
-            public int FIND_ANGLE_MIN { get; set; }
-            public bool USE_COARSE_TO_FINE_ANGLE_SEARCH { get; set; }
-            public double COARSE_ANGLE_STEP { get; set; } = 5D;
-            public int COARSE_ANGLE_TOP_K { get; set; } = 3;
-            public bool USE_PYRAMID_POSITION_PROPOSAL { get; set; } = true;
-            public int PYRAMID_POSITION_TOP_N { get; set; } = 32;
-            public double PYRAMID_POSITION_MIN_SCORE { get; set; } = 0.65D;
-            public string PATTERN_PATH { get; set; } = string.Empty;
-            public bool USE_CANNY { get; set; }
-            public int CANNY_HIGH { get; set; } = 150;
-            public int CANNY_LOW { get; set; } = 50;
-            public bool USE_PADDING_COLOR_WHITE { get; set; }
-        }
     }
 }

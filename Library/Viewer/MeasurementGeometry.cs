@@ -1,5 +1,5 @@
-using Lib.Common;
-using Lib.Line;
+using OpenVisionLab.Core;
+using OpenVisionLab.Core.Geometry2D;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

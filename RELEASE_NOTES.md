@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- The active `Lib.Common.dll` / `Lib.OpenCV.dll` integration has been replaced
+  by OpenVisionLab Vision SDK `3.0.0` (`OpenVisionLab.Core` and
+  `OpenVisionLab.Vision2D`). Template matching now uses the SDK-owned property
+  and execution-result contracts, UI Bitmap/Mat conversion uses the aligned
+  OpenCvSharp extension package, and the old or unused binaries are no longer
+  redistributed. The complete `267/267` protected regression remains green.
 - Saved Recipe and dataset state can now be exported as one validated portable
   project archive and imported into new, non-overwriting targets. Export is
   blocked while annotations, mask commits, AI candidates, or named work remain
@@ -87,7 +93,9 @@ Recent verified areas:
 - Image queue usability and save-before-navigation protection.
 - Candidate Review wording and rejected-model adoption guard.
 - README, release-note, CI, and known-limitations documentation skeleton.
-- `Library-Noah` source-project dependency removed from the app/test build path in favor of checked-in DLL references.
+- OpenVisionLab Vision SDK `3.0.0` now owns the active common geometry and
+  OpenCV tool contracts through checked-in, hash-recorded SDK assemblies; the
+  app no longer references or ships the superseded `Lib.*` binaries.
 
 Not a release claim:
 
@@ -96,4 +104,6 @@ Not a release claim:
 - The current object-detection comparison uses validation with one NG object because the test split is empty; it is not model-adoption evidence.
 - Production YOLOv8 segmentation accuracy still requires held-out evaluation on real labeled datasets.
 - Anomaly detection remains an active workflow area, not a completed product mode.
-- Updating the checked-in `Lib.*` DLLs still needs an intentional binary refresh and build verification.
+- Updating the checked-in Vision SDK assemblies requires an intentional,
+  versioned SDK build, hash refresh, focused integration tests, and complete
+  regression verification.

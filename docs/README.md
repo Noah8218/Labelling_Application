@@ -95,6 +95,7 @@ WORK_TRACKING.md -> 개별 날짜 문서` 순서가 우선합니다. 날짜가 �
 - `CONTRACT` [PatchCore Normal-Only Anomaly Pilot](PATCHCORE_ANOMALY_PILOT_20260731.md)
 - `CONTRACT` [PatchCore Heatmap Review View](PATCHCORE_HEATMAP_REVIEW_VIEW_20260801.md)
 - `CONTRACT` [Object Detection MVP Completion](OBJECT_DETECTION_MVP_COMPLETION.md)
+- `CONTRACT` [OpenVisionLab Vision SDK Migration](OPENVISIONLAB_VISION_SDK_MIGRATION_20260805.md)
 - `CONTRACT` [Object Review Contextual Group Controls](OBJECT_GROUP_CONTEXTUAL_CONTROLS_20260730.md)
 - `CONTRACT` [Object Group Review Contract P5](OBJECT_GROUP_REVIEW_CONTRACT_P5_20260729.md)
 - `CONTRACT` [Object Group Review Implementation P5](OBJECT_GROUP_REVIEW_IMPLEMENTATION_P5_20260729.md)

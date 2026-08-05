@@ -1,4 +1,3 @@
-using Lib.Common;
 using MahApps.Metro.IconPacks;
 using MvcVisionSystem._1._Core;
 using MvcVisionSystem._3._Communication.TCP;
