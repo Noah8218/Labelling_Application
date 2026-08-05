@@ -308,7 +308,8 @@ internal static partial class Program
 
     private static System.Windows.Automation.AutomationElement FindSmartMaskConfirmButton(
         System.Windows.Automation.AutomationElement root)
-        => FindAutomationElementByAutomationId(root, "CanvasOverlayConfirmSelectedCandidateButton")
+        => FindAutomationElementByAutomationId(root, "ConfirmSelectedCandidateButton")
+            ?? FindAutomationElementByAutomationId(root, "CanvasOverlayConfirmSelectedCandidateButton")
             ?? FindEnabledAutomationButton(root, "선택 확정")
             ?? FindEnabledAutomationButton(root, "라벨 확정")
             ?? FindEnabledAutomationButton(root, "확정");

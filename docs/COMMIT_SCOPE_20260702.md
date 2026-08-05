@@ -176,8 +176,8 @@ Recommended split if continuing:
 
 ## Do Not Stage by Default
 
-- `CODEX_NEXT_PROMPT.md`: local handoff prompt, untracked. Commit only if the repository intentionally tracks Codex handoff prompts.
-- `CODEX_RECOVERY.md`: modified recovery note. Commit only with explicit documentation intent.
+- `docs/CODEX_NEXT_PROMPT.md`: local handoff prompt, untracked. Commit only if the repository intentionally tracks Codex handoff prompts.
+- `docs/CODEX_RECOVERY.md`: modified recovery note. Commit only with explicit documentation intent.
 - `artifacts/**`: generated evidence captures and build/test outputs. Do not commit unless the project has decided to track selected UI evidence images.
 - `OpenVisionLab/Library/OpenVisionLab.ImageCanvas/**`: protected performance area. Do not stage with UX/docs.
 

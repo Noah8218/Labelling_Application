@@ -176,7 +176,12 @@ OK/NG를 다루고, PatchCore는 이미지 판정과 함께 히트맵·위치 �
 
 ### 8.2 Smart Mask 자동 윤곽
 
-![실제 Windows 실행 화면의 Smart Mask 작업 흐름](images/github/labeling-studio-smart-mask-workflow.gif)
+![실제 Windows EXE에서 결함 박스 입력부터 자동 외곽선 후보 검토와 저장까지 이어지는 Smart Mask 흐름](images/github/labeling-smart-mask-zero-drift-20260805.gif)
+
+위 GIF는 최신 Windows EXE를 직접 조작해 녹화한 실제 작업 화면입니다. 박스를
+그리면 MobileSAM 후보 생성이 자동으로 시작되고, 후보 검토 패널이 열려도 뷰어의
+이미지 위치와 배율은 유지됩니다. GIF는 약 20.8초의 실제 핵심 구간을 3.2배로
+재생해 불필요한 대기를 줄였으며 합성 캔버스나 재구성된 라벨을 사용하지 않습니다.
 
 1. 세그멘테이션 Recipe의 `라벨링 옵션`에서 `자동 윤곽`을 켭니다.
 2. 결함을 감싸는 사각형을 그립니다.

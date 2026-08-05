@@ -248,7 +248,7 @@
           <figure><img src="images/workflows-20260722/segmentation-labeling-1920x1080.png" alt="세그멘테이션 폴리곤과 마스크 라벨링 화면"><figcaption>활성 클래스를 확인하고 폴리곤 또는 마스크를 만든 뒤 저장합니다.</figcaption></figure>
           <ol><li>목적을 세그멘테이션으로 선택합니다.</li><li>폴리곤 또는 브러시로 결함을 표시합니다.</li><li>지우개·이동·객체 선택으로 수정합니다.</li><li>객체 목록과 캔버스를 확인하고 저장합니다.</li></ol>
           <h3>Smart Mask 자동 윤곽</h3>
-          <figure><img src="images/github/labeling-studio-smart-mask-workflow.gif" alt="Smart Mask 사각형 입력부터 후보 확정까지의 실제 실행 흐름"><figcaption>사각형 프롬프트 → 자동 외곽선 → 포함/제외점 보정 → 비교 → 확정 순서입니다.</figcaption></figure>
+          <figure><img src="images/github/labeling-smart-mask-zero-drift-20260805.gif" alt="실제 실행 결과를 사용해 배경 이동 없이 결함 박스부터 자동 외곽선과 저장 라벨까지 보여주는 고정 캔버스 흐름"><figcaption>실제 EXE 실행의 원본 이미지와 저장된 96점 윤곽 결과를 고정 캔버스에 표시해 박스 입력 → 자동 외곽선 → 후보 검토 → 확정 결과를 보여줍니다.</figcaption></figure>
           <ol><li><strong>라벨링 옵션 → 자동 윤곽</strong>을 켭니다.</li><li>결함을 감싸는 사각형을 그립니다.</li><li>포함점 또는 제외점을 한 번에 하나씩 추가합니다.</li><li><strong>후보 다시 생성</strong> 후 <strong>이전 후보 보기</strong>와 <strong>현재 후보 보기</strong>를 비교합니다.</li><li>더 나은 후보를 표시하고 <strong>확정</strong> 또는 <strong>스킵</strong>합니다.</li></ol>
           <div class="callout warn"><strong>저장 기준</strong><br>후보 생성과 비교만으로 정답 파일은 바뀌지 않습니다. 확정 뒤 다시 편집했다면 라벨 저장을 누릅니다.</div>
         </div>

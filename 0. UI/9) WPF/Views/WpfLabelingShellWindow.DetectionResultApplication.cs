@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 using DrawingRectangle = System.Drawing.Rectangle;
 using DrawingSize = System.Drawing.Size;
 
@@ -46,35 +45,15 @@ namespace MvcVisionSystem
 
             if (!candidateReviewState.HasPendingCandidates)
             {
-                CenterCanvasAfterInferenceResult();
                 AppendLog("AI 후보가 없습니다.");
                 return;
             }
 
-            CenterCanvasAfterInferenceResult();
             AppendLog($"AI 후보 로드: {loadedCount}개");
         }
         private void AddCandidateReviewHistory(string message)
         {
             CandidateReviewViewModel?.AddReviewHistory(message);
-        }
-
-        private void CenterCanvasAfterInferenceResult()
-        {
-            if (MainCanvasViewModel?.ImageViewer == null)
-            {
-                return;
-            }
-
-            MainCanvasViewModel.ImageViewer.ZoomToFit();
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                MainCanvasViewModel?.ImageViewer?.ZoomToFit();
-            }), DispatcherPriority.Render);
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                MainCanvasViewModel?.ImageViewer?.ZoomToFit();
-            }), DispatcherPriority.ApplicationIdle);
         }
 
         private void RedrawReviewRois()

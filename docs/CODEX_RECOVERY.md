@@ -1,6 +1,6 @@
 # Historical Recovery Checkpoint (superseded 2026-07-22)
 
-This file is retained to explain older recovery decisions. It is not the current priority list. Rebuild live repository state with `git status --short` and `git log --oneline -5`, then read the current documents in this order: `AGENTS.md` -> `docs/NEXT_THREAD_HANDOFF.md` -> `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md` -> `CODEX_NEXT_PROMPT.md`.
+This file is retained to explain older recovery decisions. It is not the current priority list. Rebuild live repository state with `git status --short` and `git log --oneline -5`, then read the current documents in this order: `AGENTS.md` -> `docs/NEXT_THREAD_HANDOFF.md` -> `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md` -> `docs/CODEX_NEXT_PROMPT.md`.
 
 - Last verified pushed baseline at this checkpoint is `6a4ab11`. Never infer current commit or worktree state from this historical file; check Git directly.
 - External native YOLO segmentation intake is committed locally: native `data.yaml` images/polygons are read without source mutation, converted into a recipe-owned canonical raster-mask export for U-Net, and reused by Model Center common-mask comparison. Native YOLO training always receives an app-owned runtime copy so Ultralytics cache files cannot alter the selected source.
@@ -13,7 +13,7 @@ This file is retained to explain older recovery decisions. It is not the current
 
 # CODEX_RECOVERY.md
 
-> Historical recovery snapshot from 2026-06-29. Do not select current priorities from this file. Use `docs/NEXT_THREAD_HANDOFF.md`, `CODEX_NEXT_PROMPT.md`, `docs/WORK_TRACKING.md`, and `docs/STABLE_VERIFIED_AREAS.md` as the current sources of truth. The 2026-07-20 circular-disk data/model evidence is recorded in `docs/CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
+> Historical recovery snapshot from 2026-06-29. Do not select current priorities from this file. Use `docs/NEXT_THREAD_HANDOFF.md`, `docs/CODEX_NEXT_PROMPT.md`, `docs/WORK_TRACKING.md`, and `docs/STABLE_VERIFIED_AREAS.md` as the current sources of truth. The 2026-07-20 circular-disk data/model evidence is recorded in `docs/CIRCULAR_DISK_SYNTHETIC_1000_EVIDENCE_20260720.md`.
 
 작성일: 2026-06-29 (Asia/Seoul)
 
@@ -266,7 +266,7 @@ Viewer/OpenGL 성능:
 ```text
 C:\Git\Labelling_Application 작업을 이어서 진행해주세요.
 
-먼저 CODEX_RECOVERY.md를 읽고 현재 상태를 파악해주세요. 이 대화는 매우 긴 이전 작업의 후속입니다.
+먼저 docs/CODEX_RECOVERY.md를 읽고 현재 상태를 파악해주세요. 이 대화는 매우 긴 이전 작업의 후속입니다.
 
 중요 원칙:
 - git status --short를 먼저 확인하고, 사용자가 만든 변경 또는 이전 Codex 변경을 임의로 revert하지 마세요.

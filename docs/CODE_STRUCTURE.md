@@ -1,6 +1,6 @@
 # Code Structure
 
-이 문서는 `OpenVisionLab Labeling Studio` 코드베이스의 상위 수준 구조를 빠르게 파악하기 위한 안내서입니다. 세부 구현 이력은 `docs/WPF_VIEW_MIGRATION.md`, 작업 복구 맥락은 `CODEX_RECOVERY.md`, 실행/빌드/테스트 명령은 `README.md`를 함께 봅니다.
+이 문서는 `OpenVisionLab Labeling Studio` 코드베이스의 상위 수준 구조를 빠르게 파악하기 위한 안내서입니다. 세부 구현 이력은 `docs/WPF_VIEW_MIGRATION.md`, 작업 복구 맥락은 `docs/CODEX_RECOVERY.md`, 실행/빌드/테스트 명령은 `README.md`를 함께 봅니다.
 
 ## 목적
 
@@ -88,6 +88,20 @@ navigation source로 사용합니다.
 | `scripts` | 빌드/게시/첫 실행/YOLO smoke 자동화 스크립트. |
 | `config` | runtime path 예제 설정. 개인 설정은 local json으로 분리합니다. |
 | `artifacts` | Git에서 제외되는 빌드·테스트·UI·릴리스·검증 산출물. 삭제 전에 `REPOSITORY_ARTIFACT_INVENTORY_AND_RETENTION_POLICY_20260731.md`의 보존 분류와 승인 gate를 따릅니다. |
+
+## 저장소 루트 배치 원칙
+
+저장소 루트에는 Git·빌드·실행·법적 고지·공개 진입점에 직접 필요한 파일만 둡니다.
+
+- Git: `.gitattributes`, `.gitignore`
+- 빌드 진입점: 솔루션, 프로젝트, `Program.cs`, `Directory.Build.props`, `global.json`
+- 실행 설정과 자산: `log4net.config`, `lens.ico`
+- 공개·운영 계약: `README.md`, `AGENTS.md`, `LICENSE`, `NOTICE`, `THIRD-PARTY-NOTICES.txt`, `RELEASE_NOTES.md`
+- 내부 인수인계와 복구 기록: `docs/CODEX_NEXT_PROMPT.md`, `docs/CODEX_RECOVERY.md`
+
+새 루트 파일을 추가하기 전에는 다음을 확인합니다: Git·빌드·실행·법적 고지·공개
+진입점이 그 파일을 루트에서 직접 요구하는가? 아니라면 기존 `docs`, `scripts`,
+`config` 또는 해당 기능 소유 폴더에 둡니다.
 
 생성물 구조를 검토할 때는
 `scripts/Get-RepositoryArtifactInventory.ps1`을 사용합니다. 이 스크립트는

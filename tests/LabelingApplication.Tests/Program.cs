@@ -25486,7 +25486,7 @@ internal static partial class Program
         string crashRecoveryCompletionPath = Path.Combine(root, "docs", "BOUNDED_CRASH_RECOVERY_P1B_20260730.md");
         string repositoryInstructionsPath = Path.Combine(root, "AGENTS.md");
         string handoffPath = Path.Combine(root, "docs", "NEXT_THREAD_HANDOFF.md");
-        string nextPromptPath = Path.Combine(root, "CODEX_NEXT_PROMPT.md");
+        string nextPromptPath = Path.Combine(root, "docs", "CODEX_NEXT_PROMPT.md");
         string userCenteredDirectionPath = Path.Combine(root, "docs", "LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md");
         string releaseNotesPath = Path.Combine(root, "RELEASE_NOTES.md");
         string ciWorkflowPath = Path.Combine(root, ".github", "workflows", "ci.yml");
@@ -27828,6 +27828,9 @@ internal static partial class Program
         XElement selectedText = FindElement("TextBlock", "DetectionOverlaySelectedText");
         XElement detailText = FindElement("TextBlock", "DetectionOverlayDetailText");
         XElement mainCanvas = FindElement("RoiImageCanvasView", "MainCanvasView");
+        XElement smartMaskPromptBar = FindElement("Border", "CanvasSmartMaskPromptBar");
+        XElement smartMaskOverlayLayer = FindElement("Canvas", "CanvasSmartMaskOverlayLayer");
+        XElement annotationToolBarItems = FindElement("WrapPanel", "CanvasAnnotationToolBarItems");
 
         AssertNamedXamlBinding(canvasXaml, xName, "DetectionResultOverlay", "Visibility", "DetectionOverlayVisibility");
         AssertNamedXamlBinding(canvasXaml, xName, "DetectionOverlaySummaryText", "Text", "DetectionOverlaySummaryText");
@@ -27847,6 +27850,7 @@ internal static partial class Program
         AssertNamedXamlBinding(canvasXaml, xName, "CanvasOverlaySkipSelectedCandidateButton", "IsEnabled", "IsSkipSelectedEnabled");
         AssertEqual("{StaticResource DetectionOverlayPanelStyle}", (string)overlay.Attribute("Style"));
         AssertEqual("{StaticResource DetectionOverlaySelectedBorderStyle}", (string)selectedBorder.Attribute("Style"));
+        AssertEqual("Collapsed", (string)selectedBorder.Attribute("Visibility"));
         AssertEqual("{DynamicResource DetectionOverlayTitleTextBrush}", (string)titleText.Attribute("Foreground"));
         AssertEqual("{StaticResource DetectionOverlaySummaryTextStyle}", (string)summaryText.Attribute("Style"));
         AssertEqual("{DynamicResource DetectionOverlaySelectedTextBrush}", (string)selectedText.Attribute("Foreground"));
@@ -27857,26 +27861,51 @@ internal static partial class Program
         AssertTrue(canvasSource.Contains("DetectionOverlayDuplicateAccentBrush", StringComparison.Ordinal), "WPF detection result overlay should expose duplicate candidate styling");
         AssertTrue(canvasSource.Contains("DetectionOverlayReviewAccentBrush", StringComparison.Ordinal), "WPF detection result overlay should expose review-needed candidate styling");
         AssertTrue(canvasSource.Contains("DetectionOverlayActionButtonStyle", StringComparison.Ordinal), "WPF detection result overlay should expose candidate action buttons on the canvas card");
+        AssertTrue(canvasSource.Contains("x:Name=\"DetectionOverlayActionButtonChrome\"", StringComparison.Ordinal)
+            && canvasSource.Contains("Value=\"{DynamicResource ToolbarButtonHoverBrush}\"", StringComparison.Ordinal)
+            && canvasSource.Contains("<Trigger Property=\"IsPressed\" Value=\"True\">", StringComparison.Ordinal)
+            && canvasSource.Contains("<Trigger Property=\"IsKeyboardFocusWithin\" Value=\"True\">", StringComparison.Ordinal)
+            && canvasSource.Contains("Value=\"{DynamicResource PrimaryTextBrush}\"", StringComparison.Ordinal)
+            && canvasSource.Contains("Value=\"{DynamicResource DisabledTextBrush}\"", StringComparison.Ordinal),
+            "WPF detection result actions should keep dark themed hover, pressed, focus, and disabled states");
         AssertTrue(canvasSource.Contains("<Border x:Name=\"DetectionResultOverlay\"", StringComparison.Ordinal)
-            && canvasSource.Contains("Grid.Row=\"5\"", StringComparison.Ordinal),
-            "WPF detection result card should use a separate auto row above the WindowsFormsHost canvas so it is visible in the real EXE");
-        AssertTrue(canvasSource.Contains("<Grid Grid.Row=\"7\">", StringComparison.Ordinal), "WPF main canvas should stay in the star-sized row below the Smart Mask, result-card, and shortcut-help rows");
+            && canvasSource.Contains("Grid.Row=\"2\"", StringComparison.Ordinal)
+            && canvasSource.Contains("Height=\"27\"", StringComparison.Ordinal)
+            && canvasSource.Contains("HorizontalAlignment=\"Center\"", StringComparison.Ordinal),
+            "WPF detection result summary should share the existing fixed-height layer strip instead of resizing the WindowsFormsHost canvas");
+        AssertTrue(canvasSource.Contains("<Grid Grid.Row=\"7\">", StringComparison.Ordinal), "WPF main canvas should stay in the star-sized viewer row and remain independent of detection result visibility");
         AssertEqual("1", (string)mainCanvas.Attribute("Grid.Column"));
-        AssertTrue(!canvasSource.Contains("Panel.ZIndex=\"10\"", StringComparison.Ordinal), "WPF detection result card should not rely on WPF-over-WinFormsHost z-ordering");
+        AssertEqual("2", (string)overlay.Attribute("Grid.Row"));
+        AssertEqual("27", (string)overlay.Attribute("Height"));
+        AssertTrue(!canvasSource.Contains("Grid.Row=\"5\"", StringComparison.Ordinal), "WPF detection result visibility should not consume a separate auto row above the viewer");
+        AssertEqual("1", (string)smartMaskOverlayLayer.Attribute("Grid.Row"));
+        AssertEqual("3", (string)smartMaskOverlayLayer.Attribute("Grid.RowSpan"));
+        AssertTrue(ReferenceEquals(smartMaskPromptBar.Parent, smartMaskOverlayLayer),
+            "WPF Smart Mask session guidance should be measured by a non-sizing overlay layer");
+        AssertEqual("{Binding ActualWidth, ElementName=CanvasSmartMaskOverlayLayer}", (string)smartMaskPromptBar.Attribute("Width"));
+        AssertEqual("102", (string)smartMaskPromptBar.Attribute("MaxHeight"));
+        AssertEqual("8,1", (string)smartMaskPromptBar.Attribute("Padding"));
+        AssertEqual("{DynamicResource PanelBrush}", (string)smartMaskPromptBar.Attribute("Background"));
+        AssertEqual("{DynamicResource AccentBrush}", (string)smartMaskPromptBar.Attribute("BorderBrush"));
+        AssertEqual("29", (string)annotationToolBarItems.Attribute("ItemHeight"));
+        AssertTrue(!canvasSource.Contains("<Border x:Name=\"CanvasSmartMaskPromptBar\"\r\n                    Grid.Row=", StringComparison.Ordinal),
+            "WPF Smart Mask session guidance should not participate directly in grid row measurement");
         AssertTrue(canvasCodeBehind.Contains("DetectionOverlayTitleText.SetBinding", StringComparison.Ordinal)
             && canvasCodeBehind.Contains(nameof(WpfCanvasPanelViewModel.DetectionOverlayTitleText), StringComparison.Ordinal),
             "WPF detection result title should bind to the canvas ViewModel even though the legacy XAML title text is mojibake");
-        AssertTrue(canvasSource.Contains("MaxWidth=\"560\"", StringComparison.Ordinal), "WPF detection result overlay should cap width instead of covering the full canvas");
-        AssertTrue(canvasSource.Contains("MaxHeight=\"92\"", StringComparison.Ordinal), "WPF detection result overlay should stay short enough to preserve image inspection space");
-        AssertTrue(canvasSource.Contains("HorizontalAlignment=\"Left\"", StringComparison.Ordinal), "WPF detection result overlay should not stretch across the canvas");
+        AssertTrue(canvasSource.Contains("MaxWidth=\"420\"", StringComparison.Ordinal), "WPF detection result summary should cap width inside the existing layer strip");
+        AssertTrue(canvasSource.Contains("MaxHeight=\"27\"", StringComparison.Ordinal), "WPF detection result summary should not increase the layer-strip height");
         AssertTrue(canvasSource.Contains("ToolTip=\"{Binding DetectionOverlayDetailText}\"", StringComparison.Ordinal), "WPF detection result overlay should keep the long candidate list available without drawing it over the image");
         AssertTrue(canvasSource.Contains("ClipToBounds=\"True\"", StringComparison.Ordinal), "WPF detection result overlay should not spill over the canvas when details are long");
-        AssertTrue(canvasSource.Contains("x:Name=\"DetectionOverlayActionPanel\"", StringComparison.Ordinal)
-            && canvasSource.Contains("DockPanel.Dock=\"Right\"", StringComparison.Ordinal),
-            "WPF detection result overlay actions should stay in the compact HUD command area");
-        AssertTrue(canvasSource.Contains("Visibility=\"Collapsed\"", StringComparison.Ordinal), "WPF detection result overlay should not render the long detail list over the image");
-        AssertTrue(!canvasSource.Contains("<canvas:RoiImageCanvasView x:Name=\"MainCanvasView\" Grid.Row=\"5\"", StringComparison.Ordinal), "WPF main canvas should not share the result-card row");
+        AssertTrue(canvasSource.Contains("x:Name=\"DetectionOverlaySelectedBorder\"", StringComparison.Ordinal)
+            && canvasSource.Contains("Visibility=\"Collapsed\"", StringComparison.Ordinal),
+            "WPF detection result details and decisions should remain in the candidate review panel instead of expanding the canvas strip");
         AssertTrue(!canvasSource.Contains("HorizontalAlignment=\"Stretch\"", StringComparison.Ordinal), "WPF detection result overlay should not stretch across the image inspection area");
+
+        string candidateReviewSource = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfCandidateReviewPanel.xaml"));
+        AssertTrue(candidateReviewSource.Contains("AutomationProperties.AutomationId=\"ConfirmSelectedCandidateButton\"", StringComparison.Ordinal)
+            && candidateReviewSource.Contains("x:Name=\"SkipSelectedCandidateButton\"", StringComparison.Ordinal),
+            "WPF candidate review panel should remain the visible owner of candidate decisions after the canvas summary is compacted");
 
         string shellXaml = File.ReadAllText(Path.Combine(root, "0. UI", "9) WPF", "Views", "WpfLabelingShellWindow.xaml"));
         string shellSource = ReadWpfLabelingShellWindowSources();
@@ -31457,14 +31486,35 @@ internal static partial class Program
                 AssertTrue(window.CanvasPanelViewModel.CanvasLabelLayerText.Contains("\uC228\uAE40", StringComparison.Ordinal), "inference-only mode should clearly hide manual labels");
                 AssertTrue(window.MainCanvasViewModel.DetectionOverlays[0].Label.Contains("AI 1 OK", StringComparison.Ordinal), "canvas detection overlay should use OpenGL-safe ASCII label text");
                 AssertTrue(window.MainCanvasViewModel.DetectionOverlays[0].IsSelected, "Selected candidate should be highlighted on the detection overlay");
-                string shellSource = ReadWpfLabelingShellWindowSources();
+                string detectionResultApplicationSource = File.ReadAllText(Path.Combine(
+                    FindRepositoryRoot(),
+                    "0. UI",
+                    "9) WPF",
+                    "Views",
+                    "WpfLabelingShellWindow.DetectionResultApplication.cs"));
+                string batchDetectionCanvasSource = File.ReadAllText(Path.Combine(
+                    FindRepositoryRoot(),
+                    "0. UI",
+                    "9) WPF",
+                    "Views",
+                    "WpfLabelingShellWindow.BatchDetectionCanvas.cs"));
+                string workspaceLayoutSource = File.ReadAllText(Path.Combine(
+                    FindRepositoryRoot(),
+                    "0. UI",
+                    "9) WPF",
+                    "Views",
+                    "WpfLabelingShellWindow.WorkspaceLayout.cs"));
         string maskServiceSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfMaskAnnotationService.cs"));
         string reviewStatusSource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Yolo", "YoloImageReviewStatusService.cs"));
         string annotationHistorySource = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "0. UI", "9) WPF", "Services", "Annotation", "WpfAnnotationHistoryService.cs"));
-                AssertTrue(shellSource.Contains("MainCanvasViewModel.ImageViewer.ZoomToFit();", StringComparison.Ordinal), "WPF inference should center the image after applying detection candidates");
-                AssertTrue(shellSource.Contains("CenterCanvasAfterInferenceResult", StringComparison.Ordinal), "WPF inference should centralize the post-result centering logic");
-                AssertTrue(shellSource.Contains("DispatcherPriority.Render", StringComparison.Ordinal), "WPF inference centering should run after the result overlay renders");
-                AssertTrue(shellSource.Contains("DispatcherPriority.ApplicationIdle", StringComparison.Ordinal), "WPF inference centering should settle after layout idle");
+                AssertTrue(!detectionResultApplicationSource.Contains("ZoomToFit", StringComparison.Ordinal)
+                    && !detectionResultApplicationSource.Contains("CenterCanvasAfterInferenceResult", StringComparison.Ordinal)
+                    && !batchDetectionCanvasSource.Contains("CenterCanvasAfterInferenceResult", StringComparison.Ordinal),
+                    "WPF inference result application should not force repeated fit operations or override the operator's current view");
+                AssertTrue(workspaceLayoutSource.Contains("MainCanvasView_SizeChanged", StringComparison.Ordinal)
+                    && workspaceLayoutSource.Contains("DispatcherPriority.ContextIdle", StringComparison.Ordinal)
+                    && workspaceLayoutSource.Contains("MainCanvasViewModel.ImageViewer.ZoomToFit();", StringComparison.Ordinal),
+                    "WPF workspace layout should remain the single owner of one settled fit after an actual canvas size change");
                 var resultOverlay = (System.Windows.Controls.Border)window.FindName("DetectionResultOverlay");
                 var summary = (System.Windows.Controls.TextBlock)window.FindName("DetectionOverlaySummaryText");
                 var selected = (System.Windows.Controls.TextBlock)window.FindName("DetectionOverlaySelectedText");

@@ -1075,6 +1075,7 @@
                     <UniformGrid Columns="3" Margin="0,5,0,0">
                         <ui:Button x:Name="ConfirmSelectedCandidateButton"
                                    Style="{StaticResource CandidateReviewButtonStyle}"
+                                   AutomationProperties.AutomationId="ConfirmSelectedCandidateButton"
                                    AutomationProperties.Name="&#xC120;&#xD0DD; &#xD655;&#xC815;"
                                    ToolTip="{Binding ConfirmSelectedToolTip}"
                                    IsEnabled="{Binding IsConfirmSelectedEnabled}"

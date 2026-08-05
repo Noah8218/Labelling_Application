@@ -15,7 +15,7 @@ Required start order:
 3. Read docs/CURRENT_PRODUCT_STATUS.md. It is the single current source of truth for product identity, maturity, active priority, and prerequisites.
 4. Read docs/NEXT_THREAD_HANDOFF.md as navigation and historical context.
 5. Read docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md for the detailed historical product scope and commercial comparison.
-6. Read this CODEX_NEXT_PROMPT.md, docs/WORK_TRACKING.md, and docs/STABLE_VERIFIED_AREAS.md for durable evidence.
+6. Read this docs/CODEX_NEXT_PROMPT.md, docs/WORK_TRACKING.md, and docs/STABLE_VERIFIED_AREAS.md for durable evidence.
 7. Inspect the live branch, status, and diff before selecting work. Git state is authoritative over documentation.
 8. Before editing or running follow-up commands, state:
    - immediate priority;
@@ -456,7 +456,7 @@ Latest labeling checkpoint:
   `kos14/Part7.jpg`; saved result remained one polygon, 96 points, and 7,931
   mask pixels.
 - The approved public GIF remains
-  `docs/tutorial/images/github/labeling-studio-smart-mask-workflow.gif`; the
+  `docs/tutorial/images/github/labeling-smart-mask-zero-drift-20260805.gif`; the
   longer correction-options run is regression evidence only.
 - Read `docs/SMART_MASK_CONTEXTUAL_CORRECTION_UX_20260728.md`.
 - Real correction effectiveness is complete:

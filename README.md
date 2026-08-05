@@ -2,9 +2,9 @@
 
 산업용 이미지 데이터셋을 만들고, 라벨링하고, 여러 모델로 학습·검증·비교하는 Windows 데스크톱 작업대입니다.
 
-![자동 윤곽을 한 번 켠 뒤 결함 박스만 그려 후보 생성·확정·다음 이미지로 이어지는 현재 Smart Mask 흐름](docs/tutorial/images/github/labeling-studio-smart-mask-workflow.gif)
+![실제 Windows EXE에서 결함 박스 입력, MobileSAM 자동 외곽선 후보 검토, 라벨 확정과 저장으로 이어지는 Smart Mask 흐름](docs/tutorial/images/github/labeling-smart-mask-zero-drift-20260805.gif)
 
-> 실제 Windows EXE에서 세그멘테이션 Recipe의 `자동 윤곽`을 한 번 켜고 결함 박스를 그리면 MobileSAM 후보가 별도 생성 클릭 없이 나타납니다. 패널이 바뀌어도 뷰어는 자동 맞춤되며, 작업자가 확인한 결과만 저장됩니다. [정지 이미지 보기](docs/tutorial/images/github/labeling-studio-smart-mask-workflow-poster.png)
+> 최신 Windows EXE를 직접 조작해 녹화한 약 6.5초 화면입니다. 실제 패널 전환과 후보 검토 중에도 뷰어의 이미지 위치와 배율이 유지되며, 결함 박스 입력부터 MobileSAM 후보 확인, 명시적 확정과 저장까지 보여 줍니다. [실제 EXE 정지 이미지 보기](docs/tutorial/images/github/labeling-smart-mask-stable-20260805-poster.png)
 
 ![객체탐지 라벨링 화면](docs/tutorial/images/workflows-20260722/object-detection-labeling-1920x1080.png)
 

@@ -274,8 +274,8 @@ Proposed public files after approval:
 
 ```text
 docs/tutorial/images/github/
-  labeling-studio-smart-mask-workflow.gif
-  labeling-studio-smart-mask-workflow-poster.png
+  labeling-smart-mask-zero-drift-20260805.gif
+  labeling-smart-mask-stable-20260805-poster.png
 ```
 
 Proposed README placement:
@@ -347,6 +347,168 @@ first uncut actual-EXE operator video.
 Recommended model: `gpt-5.6-sol`
 
 Reasoning effort: `high`
+
+## 2026-08-05 hover, pacing, and visual-continuity correction
+
+Status: Complete
+
+The first current-UI refresh was reopened twice after direct GIF review. The
+first review found a bright framework hover state and slow pacing. The second
+review proved that the 5.9-second crop still switched between separately
+rasterized viewer layouts: its transition frame moved by up to three pixels,
+the candidate state remained two pixels lower, and the image boundary changed
+by one pixel. The earlier claim that this edit kept the viewer fixed is
+withdrawn and superseded by the evidence below.
+
+### Correction
+
+- `DetectionOverlayActionButtonStyle` now owns an explicit dark control
+  template for normal, hover, pressed, keyboard-focus, and disabled states;
+- commands, candidate state, confirmation, saving, image selection, and viewer
+  auto-fit behavior are unchanged;
+- the rejected edit's crossfade between differently scaled WPF viewer frames
+  was removed instead of being tuned again;
+- the public GIF now renders the actual run's source image once and changes
+  only the rough-box, exact saved 96-point candidate, cursor, and saved-label
+  overlays on that immutable background;
+- the final overlay fades to the byte-identical first background, so repeated
+  playback has no viewer reset;
+- the README explicitly calls this a fixed-canvas explanatory rendering based
+  on the actual EXE source/result. The unchanged poster remains the full actual
+  UI evidence;
+- the README and tutorial use a fresh media filename to avoid stale GitHub
+  image caching.
+
+### Current evidence
+
+- latest actual-EXE run: `20260805-smart-contour-hover-fix-r2`;
+- active monitor: `\\.\DISPLAY2`, bounds `-1920,365,1920,1080`;
+- raw recording: H.264 1920x1080, 40.267 seconds, 1,204 frames, SHA-256
+  `6eaa10ddfe3ff21019386597c25713bd08e0a40401f9705f4863bccb45016c67`;
+- saved result: one polygon, 96 points, 6,614 pixels, IoU `0.5801`, precision
+  `0.6155`, recall `0.9097`;
+- rejected 5.9-second GIF baseline: transition frame 27 best-aligned at
+  `(-3px,+3px)`, candidate frame 29 at `(0px,+2px)`, with three distinct
+  image-boundary states;
+- corrected public GIF: 1024x576, 5.400 seconds, 54 logical 100ms steps stored
+  as 24 duration-coalesced GIF frames, 1,731,404 bytes, SHA-256
+  `86ba4ea56d26195f0feac7f0eec555850cac2b1d382c32b4eb1675549bba2ae1`;
+- corrected frame registration: one image-boundary state `(362,661)`, every
+  clean-background frame best-aligned at `(0px,0px)`, maximum clean ROI error
+  `0.0`, no changed pixel outside the bounded overlay envelope, and a
+  byte-identical first/last decoded frame;
+- poster: 1280x720, SHA-256
+  `4da08fe8fa40fe73eb7ae8943e7da8e1e8da544fac5bb67ff48583268d26dbc2`.
+
+### Completion record
+
+Status: Complete
+
+Scope: canvas candidate-action hover correction, latest actual-EXE rerecording,
+rejection of the still-moving crop, zero-drift fixed-canvas README GIF,
+truthful public wording, and visual before/after review.
+
+Acceptance criteria:
+
+- candidate confirmation remains readable during pointer hover: pass;
+- actual automatic-contour confirm/save workflow remains functional: pass;
+- public GIF is materially faster than the superseded 20-second and rejected
+  5.9/8-second edits: pass (`5.400` seconds);
+- layout-width changes cannot move or resample the displayed background:
+  pass, one immutable background is used for every frame;
+- background registration and loop boundary: pass, `(0px,0px)`, clean ROI
+  error `0.0`, and first/last decoded-frame difference `0`;
+- intermediate full-black frames and a hard last-to-first reset are absent:
+  pass, checked over more than two loops in the tutorial at a rendered width of
+  894px;
+- fresh public media paths are linked without stale references: pass.
+
+Verification: isolated test build with zero warnings/errors;
+`--wpf-canvas-detection-overlay`; current Debug application build with zero
+warnings/errors; 1366x768 candidate-workbench responsive layout;
+`--exe-operator-video-smoke --verify-auto-contour-mode` on the leftmost
+monitor; raw/GIF ffprobe; SHA-256; rejected/corrected pixel-registration
+comparison; transition and loop-boundary contact sheets; repeated in-browser
+playback at 894px; final GIF and poster visual review.
+
+Evidence: `0. UI\9) WPF\Views\WpfCanvasPanel.xaml`,
+`tests\LabelingApplication.Tests\Program.cs`, the current README media, and the
+ignored D-drive run/review folders `20260805-smart-contour-hover-fix-r2` and
+`readme-gif-zero-drift-20260805`.
+
+Boundary / next dependency: this proves the local current-build Smart Mask
+demo path and its dark hover presentation. It does not establish field
+segmentation accuracy or complete the separate GPU-capable clean-target P0-C
+gate.
+
+## 2026-08-05 operational viewer stability and real-EXE GIF correction
+
+Status: Complete
+
+The earlier fixed-canvas explanatory rendering hid the product defect instead
+of fixing it. This correction supersedes that presentation-only workaround.
+
+### Product correction
+
+- inference-result application no longer calls `ZoomToFit` immediately and
+  again at Render/ApplicationIdle; `MainCanvasView.SizeChanged` remains the
+  single owner of one coalesced fit after a real viewport-size change;
+- the detection summary shares the existing fixed-height layer strip instead
+  of adding an Auto row above the viewer;
+- Smart Mask guidance is hosted by a non-sizing overlay Canvas;
+- annotation-toolbar items use one 29px line height, so a wrapped row cannot
+  gain five pixels when actions become visible;
+- visible candidate confirmation remains in Candidate Review, with a stable
+  automation identifier for the actual-EXE workflow.
+
+### Current evidence
+
+- latest run: `20260805-viewer-stability-after-r7` on leftmost
+  `\\.\DISPLAY2`, bounds `-1920,365,1920,1080`;
+- actual EXE flow: rough box -> automatic MobileSAM candidate -> explicit
+  confirmation -> save, one 96-point polygon and 6,629 mask pixels;
+- six raw-video checkpoints from request-before through save-after all use
+  image bounds `877,383,232,589`;
+- all 65 decoded public-GIF frames use scaled image bounds
+  `468,204,123,314`;
+- public GIF: real EXE pixels, 1024x576, 10fps, 6.500 seconds, 65 frames,
+  523,339 bytes, SHA-256
+  `f3f5e69b9f9f9cf5624e33a95b5a9a6332c2203aa0cf790f190130eaf57c39b4`;
+- poster: real EXE candidate-review frame, 1280x720, 360,844 bytes, SHA-256
+  `de6437f0f4e21cd9b59217232182a29cfaae577b6fc6aeb834a62659c4c170fa`.
+
+### Completion record
+
+Status: Complete
+
+Scope: operational WPF viewer stability during inference/Smart Mask state
+changes, actual-EXE before/after review, and replacement of the synthetic
+README media with a faster actual-EXE excerpt.
+
+Acceptance criteria:
+
+- no forced post-inference Fit sequence: pass;
+- result/guidance visibility does not resize the viewer: pass;
+- image position and scale remain identical across request, generation,
+  review, confirm, and save: pass;
+- candidate confirmation and explicit save remain functional: pass;
+- public GIF is derived directly from the passing EXE recording: pass;
+- existing protected behavior remains intact: pass, default `267/267` suite.
+
+Verification: zero-warning/error isolated and current-solution builds;
+`--wpf-canvas-detection-overlay`; `--wpf-detection-display-mode`;
+`--wpf-batch-detection-result`; actual-EXE
+`--exe-operator-video-smoke --verify-auto-contour-mode`; raw/GIF frame-bound
+measurement; GIF/poster/contact-sheet visual review; `--priority-workflow-docs`;
+documentation IA; single-runner default protected suite.
+
+Evidence: the WPF sources and tests named above, current README media, and the
+D-drive run folders `20260805-viewer-stability-before-r1` and
+`20260805-viewer-stability-after-r7`.
+
+Boundary / next dependency: this proves current-workstation operational
+stability and demo truth, not field segmentation accuracy. The separate P0-C
+GPU-capable clean-Windows target remains externally blocked.
 
 ## 2026-08-05 current-UI README GIF refresh
 

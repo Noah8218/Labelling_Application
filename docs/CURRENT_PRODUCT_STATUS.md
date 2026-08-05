@@ -1,6 +1,6 @@
 # Current Product Status
 
-Last updated: 2026-08-03 KST
+Last updated: 2026-08-05 KST
 
 This document is the single current source of truth for product identity,
 verified maturity, the active development priority, and the boundary between
@@ -19,7 +19,7 @@ Use repository information in this order:
 5. Dated contracts, audits, and completion records: detailed evidence for an
    individual slice.
 
-`README.md`, `docs/NEXT_THREAD_HANDOFF.md`, and `CODEX_NEXT_PROMPT.md` are
+`README.md`, `docs/NEXT_THREAD_HANDOFF.md`, and `docs/CODEX_NEXT_PROMPT.md` are
 navigation and handoff surfaces. They must point to this document rather than
 own a different current priority. Live Git status, branch, and commit history
 always override a recorded hash.
@@ -50,11 +50,12 @@ product direction changes explicitly.
 - Baseline Git commit for the current clean-source transfer candidate:
   `59e37d8 test: place P0-C smoke on the leftmost monitor`.
 - Current protected regression evidence: the solo default internal suite
-  passed `267/267` again on 2026-08-03 after the Environment Setup Center,
-  restored-workstation D-drive rebind, current tutorial-image contract
-  alignment, P1-I anomaly error worklist, and P1-J anomaly evaluation exact-
-  content leakage preflight. Exit code was 0 and the current P1-J run
-  completed in 362.3 seconds.
+  passed `267/267` again on 2026-08-05 after the operational viewer-stability
+  correction and actual-EXE GIF refresh. Exit code was 0 and the single-runner
+  rerun completed in 251.2 seconds. The 2026-08-03 Environment Setup Center,
+  restored-workstation D-drive rebind, tutorial-image contract, P1-I anomaly
+  error worklist, and P1-J exact-content leakage results remain earlier
+  protected evidence.
   The earlier
   `266/266` PatchCore heatmap/CI-gate, `265/265` bounded PatchCore pilot, and
   `264/264` P1-B results remain
@@ -71,6 +72,7 @@ operability.
 | Detection, segmentation, and anomaly labeling workflows | Complete for the focused workstation scope | Preserve explicit save/confirm and current geometry contracts |
 | Recipe, class, queue, training, inference, and model-evidence flow | Complete for verified local workflows | Field accuracy and throughput require independent production evidence |
 | Smart Mask auto-first labeling and correction | Complete | No production-boundary accuracy claim |
+| Viewer stability during inference and Smart Mask review | Complete for the current workstation workflow | Result and guidance surfaces do not resize the viewer; inference does not force repeated Fit operations; one coalesced Fit remains allowed only after an actual viewport-size change |
 | Dataset Health split/class/problem filtering | Complete and read-only | The anomaly-evaluation run gate now blocks exact content leakage; general duplicate, near-duplicate, and domain-shift analysis are not completed Dataset Health contracts |
 | Object Review metadata and same-image groups | Complete | No automatic save, shared movement, cross-image tracking, or collaboration |
 | Commercial release baseline audit | Complete | Local publishability is verified; commercial release readiness is not |
@@ -104,6 +106,8 @@ regression:
 - Object Review `occluded`, Recipe tags, same-image groups, and contextual
   group controls;
 - canvas auto-fit after layout changes;
+- stable viewer geometry while Smart Mask guidance, inference results, and
+  Candidate Review state change;
 - actual-viewer graphics capability diagnostics and fail-closed image-load
   guidance;
 - the existing viewer zoom/pan/drag, ROI, brush/eraser, history, layer, and
@@ -541,6 +545,6 @@ Status: Complete
 Scope: Consolidated the current product identity, maturity, protected completed areas, authority order, and commercial-productization roadmap into one current source of truth.
 Acceptance criteria: One authority document exists; navigation documents point to it; the immediate audit is bounded and evidence-based; locally implementable work is separated from external prerequisites; completed editor slices are protected.
 Verification: --priority-workflow-docs and git diff --check for this documentation change.
-Evidence: docs/CURRENT_PRODUCT_STATUS.md plus the aligned README.md, AGENTS.md, docs/NEXT_THREAD_HANDOFF.md, CODEX_NEXT_PROMPT.md, WORK_TRACKING.md, and STABLE_VERIFIED_AREAS.md.
+Evidence: docs/CURRENT_PRODUCT_STATUS.md plus the aligned README.md, AGENTS.md, docs/NEXT_THREAD_HANDOFF.md, docs/CODEX_NEXT_PROMPT.md, WORK_TRACKING.md, and STABLE_VERIFIED_AREAS.md.
 Boundary / next dependency: P0-B1, P0-B2, P1-A portable project archive, P1-B bounded crash recovery, the current-source actual-viewer graphics preflight, local 0.1.1 engineering evidence, and the clean-source 0.1.2 transfer bundle are complete. P0-C package-safe clean-machine evidence is partial; the standard Hyper-V display failed the SharpGL gate. Direct access to the selected GPU-capable clean Windows target is required before the next packaged labeling attempt. Installer/signing and production validation remain separate.
 ```

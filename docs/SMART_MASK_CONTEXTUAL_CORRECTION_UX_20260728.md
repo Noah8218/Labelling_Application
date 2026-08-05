@@ -118,7 +118,7 @@ PASS
 ## 6. Public media boundary
 
 The approved public GIF remains
-`docs\tutorial\images\github\labeling-studio-smart-mask-workflow.gif`.
+`docs\tutorial\images\github\labeling-smart-mask-zero-drift-20260805.gif`.
 It already communicates the preferred auto-first path and should not be
 replaced by a longer options-demonstration recording. The new actual-EXE run is
 regression evidence, not a new promotional deliverable.

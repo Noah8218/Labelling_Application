@@ -289,7 +289,7 @@ Still out of scope:
 1. Run git status --short before any other project command.
 2. Read AGENTS.md.
 3. Read this file.
-4. Read CODEX_NEXT_PROMPT.md, docs/WORK_TRACKING.md, docs/STABLE_VERIFIED_AREAS.md, and docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md.
+4. Read docs/CODEX_NEXT_PROMPT.md, docs/WORK_TRACKING.md, docs/STABLE_VERIFIED_AREAS.md, and docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md.
 5. Inspect the live branch, status, and diff directly. Git state is more authoritative than this handoff.
 6. Before editing, state the immediate priority, remaining product priority, assumptions, and verification plan.
 
@@ -1112,7 +1112,7 @@ When current statements disagree, use this source order:
 1. `AGENTS.md` for repository operating rules and completion gates.
 2. `docs/NEXT_THREAD_HANDOFF.md` for the latest verified project state.
 3. `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md` for current product scope, maturity, and commercial comparison.
-4. `CODEX_NEXT_PROMPT.md` for the next bounded action.
+4. `docs/CODEX_NEXT_PROMPT.md` for the next bounded action.
 5. `docs/WORK_TRACKING.md` and `docs/STABLE_VERIFIED_AREAS.md` for evidence history and protected behavior.
 
 Read the final diff before changing these records. Historical entries remain evidence journals; update only the current checkpoint and a contract whose source or acceptance criteria changed.
@@ -1488,7 +1488,7 @@ Status: `Complete`.
 
 - The active authority order is `AGENTS.md`, this handoff,
   `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md`, then
-  `CODEX_NEXT_PROMPT.md`. Older dated priority lists are historical evidence.
+  `docs/CODEX_NEXT_PROMPT.md`. Older dated priority lists are historical evidence.
 - The current built EXE passed object-detection box labeling, segmentation
   brush/eraser labeling, and anomaly close/restart/first-inference persistence
   with 1920x1080 captures under

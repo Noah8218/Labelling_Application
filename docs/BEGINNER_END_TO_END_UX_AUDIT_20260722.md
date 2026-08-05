@@ -18,7 +18,7 @@ enterprise-platform claim.
 2. `docs/NEXT_THREAD_HANDOFF.md`: current project handoff.
 3. `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md`: current scope, maturity, and
    commercial comparison.
-4. `CODEX_NEXT_PROMPT.md`: bounded next action after the three documents above.
+4. `docs/CODEX_NEXT_PROMPT.md`: bounded next action after the three documents above.
 
 The product identity is a local Windows industrial labeling, training,
 inference, review, and model-evidence workstation. A recipe owns canonical

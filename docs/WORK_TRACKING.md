@@ -1011,7 +1011,7 @@ Reasoning effort: not applicable until the prerequisite exists.
 - Verification: documentation-focused `--priority-workflow-docs` and
   `git diff --check`.
 - Evidence: `docs/NEXT_THREAD_HANDOFF.md`,
-  `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md`, `CODEX_NEXT_PROMPT.md`, and
+  `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md`, `docs/CODEX_NEXT_PROMPT.md`, and
   `docs/STABLE_VERIFIED_AREAS.md`.
 - Boundary / next dependency: no code, UI, model, dataset, runtime, or adoption
   state changed. Independent field-quality work remains blocked until approved
@@ -7381,7 +7381,7 @@ Reasoning effort: not applicable until the prerequisite exists.
   - `dotnet .\tests\LabelingApplication.Tests\bin\Debug\net8.0-windows\LabelingApplication.Tests.dll --wpf-detection-display-mode` passed.
   - `dotnet .\tests\LabelingApplication.Tests\bin\Debug\net8.0-windows\LabelingApplication.Tests.dll --wpf-visual-smoke --review-tab candidates --width 1100 --height 720 --output tests\artifacts\ui\wpf-canvas-ascii-detection-badge.png` passed and the canvas badges rendered as `#1 OK 95.9%` / `#2 NG` without mojibake.
 - Full `LabelingApplication.Tests` was not clean because it stopped later at `OpenGL mouse pan avoids per-event pixel readback: ROI canvas display cap status should use a compact operator-readable label`. This is outside the canvas display-mode change and was not modified.
-- `git diff --check` for the files changed by this display-mode task reported only LF-to-CRLF warnings. Repository-wide `git diff --check` is still blocked by an existing `CODEX_RECOVERY.md:330: new blank line at EOF` issue.
+- `git diff --check` for the files changed by this display-mode task reported only LF-to-CRLF warnings. Repository-wide `git diff --check` is still blocked by an existing `docs/CODEX_RECOVERY.md:330: new blank line at EOF` issue.
 
 ## 2026-06-29 reused image folder dataset isolation
 
@@ -9042,7 +9042,7 @@ Reasoning effort: not applicable until the prerequisite exists.
 - Verified:
   - `git status --short` was checked first.
   - Worktree status summary was recorded as 146 modified files, 38 untracked paths, and 1 deleted path.
-  - `CODEX_NEXT_PROMPT.md` and `CODEX_RECOVERY.md` were read for current handoff context.
+  - `docs/CODEX_NEXT_PROMPT.md` and `docs/CODEX_RECOVERY.md` were read for current handoff context.
   - `git diff --check -- docs/WORK_TRACKING.md docs/STABLE_VERIFIED_AREAS.md` passed with only LF-to-CRLF warnings.
   - Custom trailing-whitespace check passed for `docs/COMMIT_SCOPE_20260702.md` and `docs/WORK_TRACKING.md`.
 - Next planned work: decide with the user whether to stage Scope A alone, Scope B alone, or continue UX/MVVM audit without committing yet.
@@ -11271,7 +11271,7 @@ Reasoning effort: not applicable until the prerequisite exists.
 - 수정 내용:
   - `README.md`의 `포트폴리오에서 보여주고 싶은 부분` 섹션명을 `프로젝트의 핵심 흐름`으로 바꿨습니다.
   - `--priority-workflow-docs` 공개 문서 가드에 `포트폴리오`, `내가`, `저만` 금지 기준을 추가했습니다. `나만`은 `하나만` 같은 정상 안내 문구를 잘못 잡을 수 있어 제외했습니다.
-  - `CODEX_NEXT_PROMPT.md`에 공개 README/튜토리얼 작성 시 개인 대화 맥락, 저자만 아는 사정, 로컬 PC 경로를 쓰지 말라는 지침을 추가했습니다.
+  - `docs/CODEX_NEXT_PROMPT.md`에 공개 README/튜토리얼 작성 시 개인 대화 맥락, 저자만 아는 사정, 로컬 PC 경로를 쓰지 말라는 지침을 추가했습니다.
 - 구조:
   - 공개 문서 문구와 문서 테스트만 수정했습니다.
   - 앱 UI, ViewModel/Service, Viewer/OpenGL/ROI/brush/eraser 경로는 변경하지 않았습니다.
@@ -11612,7 +11612,7 @@ Reasoning effort: not applicable until the prerequisite exists.
   - 이미지 참조 수 확인: README 1개, tutorial README 15개, tutorial HTML 14개 주석 이미지 참조.
   - standalone 확인: 14개 `src="data:image/png;base64"` 포함, `src="images/` 참조 0개.
   - `dotnet .\tests\LabelingApplication.Tests\artifacts\isolated-out\LabelingApplication.Tests.dll --priority-workflow-docs` 통과.
-  - `git diff --check -- README.md docs\tutorial\README.md docs\tutorial\labeling-workbench-tutorial.html docs\tutorial\labeling-workbench-tutorial-standalone.html docs\tutorial\images docs\WORK_TRACKING.md docs\STABLE_VERIFIED_AREAS.md CODEX_NEXT_PROMPT.md` 통과. 줄끝 변환 경고만 있었고 공백 오류는 없었습니다.
+  - `git diff --check -- README.md docs\tutorial\README.md docs\tutorial\labeling-workbench-tutorial.html docs\tutorial\labeling-workbench-tutorial-standalone.html docs\tutorial\images docs\WORK_TRACKING.md docs\STABLE_VERIFIED_AREAS.md docs\CODEX_NEXT_PROMPT.md` 통과. 줄끝 변환 경고만 있었고 공백 오류는 없었습니다.
 - 캡처:
   - `docs\tutorial\images\annotated\01-overview-1920-annotated.png`
   - `docs\tutorial\images\annotated\03-labeling-workbench-1920-annotated.png`
@@ -11638,7 +11638,7 @@ Reasoning effort: not applicable until the prerequisite exists.
   - README에서 `커밋`, `git status`, `WORK_TRACKING`, `STABLE_VERIFIED`, `CODEX`, `내부`, `작업 이력`, `검증 로그`, `View code-behind`, `MVVM`, `focused`, `포트폴리오`, `제가`, `내가`, `저만`, `당신`, `소통` 검색 결과 없음.
   - README에서 `D:\`, `C:\`, `Test01`, `TEST_`, `Debug\DATA`, `artifacts\run`, `LabelingData` 검색 결과 없음.
 - 다음 작업:
-  - README를 추가로 수정할 때는 먼저 렌더링된 첫 화면 기준으로 사용자용 문서인지 확인하고, 내부 협업 기준은 `CODEX_NEXT_PROMPT.md`, `docs\WORK_TRACKING.md`, `docs\STABLE_VERIFIED_AREAS.md`에만 남깁니다.
+  - README를 추가로 수정할 때는 먼저 렌더링된 첫 화면 기준으로 사용자용 문서인지 확인하고, 내부 협업 기준은 `docs\CODEX_NEXT_PROMPT.md`, `docs\WORK_TRACKING.md`, `docs\STABLE_VERIFIED_AREAS.md`에만 남깁니다.
 
 ## 2026-07-03 license attribution hardening
 
@@ -11842,7 +11842,7 @@ Reasoning effort: not applicable until the prerequisite exists.
   - Do not run `git push` unless the user explicitly asks for `push`.
   - A `commit` request means local commit only. Push requires a separate explicit request.
 - Documentation:
-  - Added the rule to `CODEX_NEXT_PROMPT.md` both in the visible header and inside the reusable next-prompt block.
+  - Added the rule to `docs/CODEX_NEXT_PROMPT.md` both in the visible header and inside the reusable next-prompt block.
 - Verification:
   - This is a workflow/documentation guard. No UI screenshot is required.
 
@@ -11898,12 +11898,12 @@ Reasoning effort: not applicable until the prerequisite exists.
 - Changes:
   - Added root `AGENTS.md` with repository working agreements: command-defined completion, no guessing, reasoning effort by task size, think-before-coding, simplicity-first, surgical changes, goal-driven execution, no push without explicit request, MVVM boundaries, and protected hot paths.
   - Added `docs/NEXT_THREAD_HANDOFF.md` with the last completed local commit, current dirty WIP files, WIP intent, required verification commands, and next-chat guardrails.
-  - Rewrote `CODEX_NEXT_PROMPT.md` as a clean copy-paste prompt for the next chat and removed the previously mojibake-heavy body.
+  - Rewrote `docs/CODEX_NEXT_PROMPT.md` as a clean copy-paste prompt for the next chat and removed the previously mojibake-heavy body.
 - Verification:
   - Documentation was written after the interrupted build. Full build/tests were not rerun because the user asked to stop development.
   - The WIP is explicitly marked incomplete until the next chat runs the listed build/focused tests and `git diff --check`.
 - Next:
-  - Next chat should begin with `git status --short`, then read `AGENTS.md`, `docs/NEXT_THREAD_HANDOFF.md`, and `CODEX_NEXT_PROMPT.md`.
+  - Next chat should begin with `git status --short`, then read `AGENTS.md`, `docs/NEXT_THREAD_HANDOFF.md`, and `docs/CODEX_NEXT_PROMPT.md`.
   - Continue or clean up the interrupted WIP before claiming any new completion.
 
 ## 2026-07-03 Ultralytics package operation presentation split
@@ -14642,7 +14642,7 @@ Reasoning effort: not applicable until the prerequisite exists.
   - Current-head CI was not rechecked in this documentation pass.
 - Documentation changes:
   - `docs/NEXT_THREAD_HANDOFF.md` became the concise handoff for that checkpoint: start sequence, product direction, protected areas, then-current dirty-worktree map, model-evidence boundaries, risks, priorities, and focused verification menu.
-  - `CODEX_NEXT_PROMPT.md` is now a compact execution prompt that directs the next chat to the handoff and current diff before it chooses work.
+  - `docs/CODEX_NEXT_PROMPT.md` is now a compact execution prompt that directs the next chat to the handoff and current diff before it chooses work.
 - Confirmed current-session evidence:
   - The image-queue 10K asynchronous catalog/detail slice is directly verified: catalog command return `13.8ms`; 10K synthetic local detail scan `63.8s` with input dispatcher `65.8ms` while active and a single 10K filtered-view evaluation. The build, queue regressions, documentation gate, and `git diff --check` passed before this consolidation.
 - Current product boundary:
@@ -15280,7 +15280,7 @@ built EXE. Fix only defects reproduced by that audit.
 Acceptance criteria and evidence:
 
 - `AGENTS.md` -> `docs/NEXT_THREAD_HANDOFF.md` ->
-  `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md` -> `CODEX_NEXT_PROMPT.md` is
+  `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md` -> `docs/CODEX_NEXT_PROMPT.md` is
   recorded as the active authority order: passed.
 - Stale protocol, U-Net deferral, old-commit, and historical-next-work wording
   is removed from active direction/recovery guidance or explicitly marked
@@ -15569,7 +15569,7 @@ Acceptance criteria and evidence:
 Verification: `--priority-workflow-docs` and `git diff --check`.
 
 Evidence: `docs/NEXT_THREAD_HANDOFF.md` section 26,
-`CODEX_NEXT_PROMPT.md` current checkpoint, and the 2026-07-23 latest-evidence
+`docs/CODEX_NEXT_PROMPT.md` current checkpoint, and the 2026-07-23 latest-evidence
 entry in `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md`.
 
 Boundary / next dependency: no new product implementation is justified by this
@@ -18044,7 +18044,7 @@ Evidence:
 - `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`
 - `docs\LABELING_STUDIO_COMPLETENESS_AUDIT.md`
 - `docs\NEXT_THREAD_HANDOFF.md`
-- `CODEX_NEXT_PROMPT.md`
+- `docs/CODEX_NEXT_PROMPT.md`
 - `docs\CODE_STRUCTURE.md`
 
 Boundary / next dependency: 이 완료 상태는 영상 비교와 개발 계약 문서의
@@ -18099,7 +18099,7 @@ Evidence:
 - `artifacts\commercial-video-review-20260727\labeling-detail`
 - `docs\LABELING_STUDIO_COMPLETENESS_AUDIT.md`
 - `docs\NEXT_THREAD_HANDOFF.md`
-- `CODEX_NEXT_PROMPT.md`
+- `docs/CODEX_NEXT_PROMPT.md`
 - `docs\CODE_STRUCTURE.md`
 
 Boundary / next dependency: 이 기록 시점에는 P0-A/P0-B가 구현되지
@@ -19314,7 +19314,7 @@ Verification:
 Evidence:
 
 - `docs\NEXT_THREAD_HANDOFF.md`;
-- `CODEX_NEXT_PROMPT.md`;
+- `docs/CODEX_NEXT_PROMPT.md`;
 - `docs\LABELING_STUDIO_COMMERCIAL_VIDEO_REVIEW_20260727.md`;
 - `docs\LABELING_EDITOR_COMMERCIAL_GAP_AND_ROADMAP_20260727.md`;
 - `docs\LABELING_STUDIO_COMPLETENESS_AUDIT.md`;
@@ -19526,7 +19526,7 @@ Evidence:
 
 - `docs/CURRENT_PRODUCT_STATUS.md`;
 - aligned `README.md`, `AGENTS.md`, `docs/NEXT_THREAD_HANDOFF.md`,
-  `CODEX_NEXT_PROMPT.md`, and
+  `docs/CODEX_NEXT_PROMPT.md`, and
   `docs/LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md`.
 
 Boundary / next dependency:
@@ -20923,3 +20923,118 @@ Boundary / next dependency:
 - P2 remains blocked until approved field data, acceptance thresholds,
   intended runtime/weights, target hardware, and localization ground truth
   when needed are available.
+
+## 2026-08-05 README Smart Mask GIF zero-drift correction
+
+Status: Complete
+
+Scope:
+
+- reproduced the residual viewer movement in the rejected 5.9-second GIF;
+- removed the crossfade between separately rasterized viewer layouts;
+- generated one fixed-canvas 5.4-second GIF from the actual run's source image
+  and exact saved 96-point segment geometry;
+- changed only the rough-box, candidate, cursor, and saved-label overlays;
+- updated public README/tutorial references and truthful explanatory wording;
+- removed the rejected GIF from the public folder after verifying its
+  byte-identical D-drive backup.
+
+Acceptance criteria:
+
+- residual movement measured rather than judged from a contact sheet -> pass,
+  transition frame 27 aligned at `(-3px,+3px)` and candidate frame 29 at
+  `(0px,+2px)`;
+- corrected image bounds remain constant -> pass, one decoded bound
+  `(362,661)`;
+- corrected background registration remains constant -> pass, every decoded
+  clean ROI aligned at `(0px,0px)` with maximum error `0.0`;
+- pixels outside the declared overlay envelope remain unchanged -> pass,
+  maximum channel delta `0`;
+- loop boundary remains unchanged -> pass, first/last decoded-frame difference
+  `0`;
+- rendered playback remains visually stable -> pass, more than two loops at
+  894px browser width;
+- public links and documentation gates remain valid -> pass.
+
+Verification:
+
+- Pillow/Numpy decoded-frame registration and bounded pixel-difference report;
+- FFprobe -> GIF 1024x576, 5.400 seconds, 24 duration-coalesced frames,
+  1,731,404 bytes;
+- SHA-256
+  `86ba4ea56d26195f0feac7f0eec555850cac2b1d382c32b4eb1675549bba2ae1`;
+- in-app browser playback and five current-page screenshots;
+- documentation information architecture -> 113/113 classified, zero broken
+  local links;
+- `--priority-workflow-docs` -> pass;
+- stale public-GIF reference search -> zero;
+- `git diff --check` -> pass.
+
+Evidence:
+
+- `docs/tutorial/images/github/labeling-smart-mask-zero-drift-20260805.gif`;
+- `docs/ACTUAL_EXE_VIDEO_AND_GITHUB_GIF_PLAN_20260728.md`;
+- `D:\OpenVisionLab-TestData\Labelling_Application\artifacts\readme-gif-zero-drift-20260805\after\pixel-drift-report.json`;
+- the adjacent `before`, `after`, and `browser` evidence folders.
+
+Boundary / next dependency:
+
+- the GIF is a fixed-canvas explanatory rendering from actual source/result
+  evidence, not an uncut EXE recording. The retained full-UI poster and raw
+  actual-EXE recording remain the direct UI evidence;
+- this correction proves presentation stability, not production segmentation
+  accuracy or the separate P0-C GPU-capable clean-target gate.
+
+## 2026-08-05 operational viewer stability and actual-EXE GIF replacement
+
+Status: Complete
+
+Scope:
+
+- removed the repeated post-inference Fit sequence from result application;
+- kept result summary and Smart Mask guidance out of viewer row measurement;
+- normalized annotation-toolbar wrap height;
+- proved stable image geometry in the actual EXE;
+- replaced the synthetic fixed-canvas public media with a 3.2x actual-EXE
+  excerpt and actual-EXE poster.
+
+Acceptance criteria:
+
+- actual EXE image bounds remain unchanged before request, while generating,
+  at candidate-ready, during confirm, and after save -> pass,
+  `877,383,232,589` at all six checkpoints;
+- every decoded GIF frame uses one image bound -> pass, 65/65 at
+  `468,204,123,314`;
+- Smart Mask confirm/save remains explicit and functional -> pass, one
+  96-point polygon and 6,629 mask pixels;
+- current README media comes directly from the passing EXE recording -> pass;
+- protected regression -> pass, solo `267/267` default suite, exit code 0.
+
+Verification:
+
+- isolated build and current solution build -> zero warnings/errors;
+- `--wpf-canvas-detection-overlay`, `--wpf-detection-display-mode`, and
+  `--wpf-batch-detection-result` -> pass;
+- actual-EXE `--exe-operator-video-smoke --verify-auto-contour-mode` on
+  leftmost `\\.\DISPLAY2` -> pass;
+- `--priority-workflow-docs` and documentation IA -> pass, 113/113 classified,
+  zero broken local links;
+- initial concurrent-runner temp collision was isolated, its stale runner was
+  stopped, the failed YOLO session passed alone, and the subsequent solo
+  default suite passed in 251.2 seconds.
+
+Evidence:
+
+- `0. UI\9) WPF\Views\WpfCanvasPanel.xaml`;
+- `0. UI\9) WPF\Views\WpfCandidateReviewPanel.xaml`;
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.DetectionResultApplication.cs`;
+- `0. UI\9) WPF\Views\WpfLabelingShellWindow.BatchDetectionCanvas.cs`;
+- `tests\LabelingApplication.Tests\Program.cs`;
+- current README GIF/poster and the D-drive runs
+  `20260805-viewer-stability-before-r1` / `after-r7`.
+
+Boundary / next dependency:
+
+- no field segmentation-accuracy claim is made;
+- P0-C still requires direct access to the selected GPU-capable clean Windows
+  target.

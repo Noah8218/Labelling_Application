@@ -29,6 +29,7 @@ WORK_TRACKING.md -> 개별 날짜 문서` 순서가 우선합니다. 날짜가 �
 ## 1. Current authority and repository navigation
 
 - `CURRENT` [Code Structure](CODE_STRUCTURE.md)
+- `CURRENT` [Codex Next Prompt](CODEX_NEXT_PROMPT.md)
 - `CURRENT` [Current Product Status](CURRENT_PRODUCT_STATUS.md)
 - `CURRENT` [Labeling Program Direction](LABELING_PROGRAM_DIRECTION.md)
 - `CURRENT` [Labeling Studio User-Centered Development Direction](LABELING_STUDIO_USER_CENTERED_DEVELOPMENT_DIRECTION_20260729.md)
@@ -145,6 +146,7 @@ WORK_TRACKING.md -> 개별 날짜 문서` 순서가 우선합니다. 날짜가 �
 ## 6. Historical plans, audits, and migration records
 
 - `HISTORY` [Actual EXE Video And GitHub GIF Plan](ACTUAL_EXE_VIDEO_AND_GITHUB_GIF_PLAN_20260728.md)
+- `HISTORY` [Codex Recovery Snapshot](CODEX_RECOVERY.md)
 - `HISTORY` [Commit Scope 2026-07-02](COMMIT_SCOPE_20260702.md)
 - `HISTORY` [Refactoring Commit Scope 2026-07-26](COMMIT_SCOPE_20260726_REFACTORING.md)
 - `HISTORY` [Current Worktree Integration Verification](CURRENT_WORKTREE_INTEGRATION_VERIFICATION_20260729.md)

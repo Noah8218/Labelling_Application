@@ -213,7 +213,7 @@ docs: record sustainable refactoring ownership
 Files:
 
 - `AGENTS.md`
-- `CODEX_NEXT_PROMPT.md`
+- `docs/CODEX_NEXT_PROMPT.md`
 - `docs/CODE_STRUCTURE.md`
 - `docs/COMMIT_SCOPE_20260702.md`
 - `docs/COMMIT_SCOPE_20260726_REFACTORING.md`
@@ -237,7 +237,7 @@ Suggested staging:
 ```powershell
 git add -- `
   AGENTS.md `
-  CODEX_NEXT_PROMPT.md `
+  docs/CODEX_NEXT_PROMPT.md `
   docs/CODE_STRUCTURE.md `
   docs/COMMIT_SCOPE_20260702.md `
   docs/COMMIT_SCOPE_20260726_REFACTORING.md `

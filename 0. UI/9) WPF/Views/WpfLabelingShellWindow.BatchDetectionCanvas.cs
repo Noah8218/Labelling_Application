@@ -135,7 +135,6 @@ namespace MvcVisionSystem
             AddCandidateReviewHistory(detectionResultPresentationService.BuildCandidateLoadHistory(loadedCount, succeeded, GetCandidateConfidenceFilter()));
             ShowCandidateReviewWorkflowView();
 
-            CenterCanvasAfterInferenceResult();
         }
     }
 }

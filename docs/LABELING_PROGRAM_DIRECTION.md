@@ -50,7 +50,7 @@ This section overrides older migration plans and dated priority notes later in t
 1. `AGENTS.md` for repository operating rules and completion gates.
 2. `docs/NEXT_THREAD_HANDOFF.md` for the latest verified project state.
 3. `docs/LABELING_STUDIO_COMPLETENESS_AUDIT.md` for current product scope, maturity, and commercial comparison.
-4. `CODEX_NEXT_PROMPT.md` for the next bounded work item.
+4. `docs/CODEX_NEXT_PROMPT.md` for the next bounded work item.
 
 The product is a local Windows industrial labeling, training, inference, review, and model-evidence workstation. One recipe owns canonical images, classes, annotations, splits, and provenance; verified adapters prepare those same labels for YOLOv5, YOLOv8, YOLO11, U-Net, and related task-specific runtimes. Human review owns final labels and model adoption.
 
