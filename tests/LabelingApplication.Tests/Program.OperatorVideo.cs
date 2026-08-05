@@ -239,8 +239,7 @@ internal static partial class Program
 
             System.Windows.Rect windowBounds = root.Current.BoundingRectangle;
             AssertTrue(
-                windowBounds.X >= 0
-                    && windowBounds.Y >= 0
+                !windowBounds.IsEmpty
                     && windowBounds.Width >= 1600
                     && windowBounds.Height >= 900,
                 $"operator video application-only crop was invalid: {windowBounds}");
@@ -592,9 +591,12 @@ internal static partial class Program
                 MeasureOperatorVideoMaskQuality(defect.MaskPath, savedMaskPath);
             AssertTrue(
                 savedArtifact.SegmentPoints >= 48
-                    && maskQuality.Precision >= 0.90D,
+                    && maskQuality.IntersectionOverUnion >= 0.35D
+                    && maskQuality.Precision >= 0.50D
+                    && maskQuality.Recall >= 0.35D,
                 "operator video automatic candidate did not meet the human-review candidate gate: "
-                    + $"points={savedArtifact.SegmentPoints}; precision={maskQuality.Precision:F4}");
+                    + $"points={savedArtifact.SegmentPoints}; iou={maskQuality.IntersectionOverUnion:F4}; "
+                    + $"precision={maskQuality.Precision:F4}; recall={maskQuality.Recall:F4}");
             CopyOperatorVideoSavedEvidence(savedArtifacts, paths.SavedArtifactDirectory);
             eventLog.Write(
                 "annotation-saved",

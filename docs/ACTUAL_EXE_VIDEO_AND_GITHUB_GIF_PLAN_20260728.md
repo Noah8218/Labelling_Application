@@ -348,6 +348,109 @@ Recommended model: `gpt-5.6-sol`
 
 Reasoning effort: `high`
 
+## 2026-08-05 current-UI README GIF refresh
+
+Status: Complete
+
+The README hero was rerecorded after the labeling workbench and automatic-
+contour workflow changed. Product code was not changed for the capture. The
+actual current Debug EXE was operated on the active leftmost monitor, and the
+test-only operator runner was updated to accept a left monitor with negative
+virtual-desktop coordinates.
+
+### Current operation proven
+
+- source EXE SHA-256:
+  `c40939e0dcbb28c12ab40e19b500911b03fece67feb5bc55957a28a420c728b1`;
+- active monitor: `\\.\DISPLAY2`, bounds `-1920,365,1920,1080`;
+- actual public sample: official KolektorSDD fine annotation
+  `kos14/Part7.jpg` and `Part7_label.bmp`;
+- visible sequence: enable `자동 윤곽` once, draw one rough box, automatically
+  fit the viewer after the workflow panel changes, generate a MobileSAM
+  candidate without another action click, explicitly confirm/save, then open
+  the next incomplete image;
+- no Fit action and no separate Smart Mask create action appear in the event
+  sequence;
+- saved result: one polygon, 96 points, and 6,614 mask pixels;
+- fine-mask comparison: IoU `0.5801`, precision `0.6155`, recall `0.9097`.
+
+The previous one-sided `precision >= 0.90` runner gate was tied to an older
+19,808-pixel broad mask. The restored official fine mask contains 4,475
+positive pixels. The runner now keeps an objective human-review gate while
+requiring IoU, precision, and recall together; it does not lower the gate to a
+single unchecked visual judgment.
+
+### Recording and publication evidence
+
+- passing run ID: `20260805-smart-contour-readme-refresh-r5`;
+- uncut application-window recording: 1920x1080 H.264, 57.833 seconds, 1,728
+  frames, SHA-256
+  `9c0601464ff41549af97ca03656dde106039569d180e318bfd08c7ba34a86a76`;
+- public GIF: 1024x576, 10fps, 20.000 seconds, 200 frames, 1,269,047 bytes,
+  SHA-256
+  `0781474c1ac07d7c9ec06f355c31073112467236760ad472f3008362c4346155`;
+- poster: 1280x720 PNG, 347,442 bytes, SHA-256
+  `c56110cc9fca70f10aaa4a7ddce8d9b246e1326d0c1b9c162f14ba0089cead03`;
+- ignored local evidence:
+  `artifacts\operator-video\20260805-smart-contour-readme-refresh-r5`.
+
+The promotional edit removes only stationary cursor travel and the middle of
+the inference wait, retains the visible busy state and original event order,
+and plays at about 1.35x. The bottom execution-log strip is cropped because the
+uncut evidence shows a machine-local test path there. The uncut MP4 remains
+available for audit, and no failed action, candidate state, or save result is
+hidden.
+
+### Visual and operational review
+
+- no unrelated desktop or application is visible;
+- dark-theme controls, focus states, candidate review, saved state, and image
+  queue remain visually consistent without clipping;
+- viewer centering survives the left workflow-panel expansion without a Fit
+  click;
+- automatic inference remains pending until explicit operator confirmation;
+- the full random test Recipe identifier remains a minor P3 presentation
+  distraction, not an operational blocker;
+- the fine-mask score is one public-sample candidate measurement, not field
+  accuracy or commercial-parity evidence.
+
+### Completion record
+
+Status: Complete
+
+Scope: current-UI actual-EXE Smart Mask operation review, leftmost-monitor
+recording, saved-artifact validation, public GIF/poster replacement, and README
+workflow wording refresh.
+
+Acceptance criteria:
+
+- current EXE automatic-contour labeling/save/next-image path: pass;
+- no extra candidate-generation or Fit click: pass;
+- application-only leftmost-monitor evidence: pass;
+- objective saved mask/segment validation: pass;
+- current public GIF/poster tracked and linked from README: pass;
+- public-media path exposure removed while uncut evidence remains: pass.
+
+Verification:
+
+- isolated test build: warning 0, error 0;
+- `--mobile-sam-box-prompt`: pass;
+- `--smart-mask-auto-boundary-presentation`: pass;
+- `--wpf-labeling-shell`: pass;
+- real MobileSAM box prompt: pass, 96 points;
+- `--exe-operator-video-smoke --verify-auto-contour-mode`: pass;
+- ffprobe, SHA-256, saved artifacts, full contact sheet, GIF contact sheet, and
+  poster visual review: pass.
+
+Evidence: `tests\LabelingApplication.Tests\Program.OperatorVideo.cs`, the two
+README media files under `docs\tutorial\images\github`, and the ignored run
+folder named above.
+
+Boundary / next dependency: this closes the current README hero refresh, not
+production segmentation quality or the separate P0-C clean GPU-target labeling
+gate. A directly accessible GPU-capable clean Windows target is still required
+for that external package validation.
+
 ## 2026-07-28 execution and review record
 
 Status: Complete

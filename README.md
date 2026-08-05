@@ -2,9 +2,9 @@
 
 산업용 이미지 데이터셋을 만들고, 라벨링하고, 여러 모델로 학습·검증·비교하는 Windows 데스크톱 작업대입니다.
 
-![실제 Windows EXE에서 결함 박스를 자동 세그멘테이션 후보로 변환하고 확인·저장하는 Smart Mask 흐름](docs/tutorial/images/github/labeling-studio-smart-mask-workflow.gif)
+![자동 윤곽을 한 번 켠 뒤 결함 박스만 그려 후보 생성·확정·다음 이미지로 이어지는 현재 Smart Mask 흐름](docs/tutorial/images/github/labeling-studio-smart-mask-workflow.gif)
 
-> 실제 Windows EXE에서 결함 주위에 박스를 그리면 MobileSAM이 채워진 마스크와 자동 경계를 만들고, 작업자가 확인한 결과만 라벨로 저장합니다. [정지 이미지 보기](docs/tutorial/images/github/labeling-studio-smart-mask-workflow-poster.png)
+> 실제 Windows EXE에서 세그멘테이션 Recipe의 `자동 윤곽`을 한 번 켜고 결함 박스를 그리면 MobileSAM 후보가 별도 생성 클릭 없이 나타납니다. 패널이 바뀌어도 뷰어는 자동 맞춤되며, 작업자가 확인한 결과만 저장됩니다. [정지 이미지 보기](docs/tutorial/images/github/labeling-studio-smart-mask-workflow-poster.png)
 
 ![객체탐지 라벨링 화면](docs/tutorial/images/workflows-20260722/object-detection-labeling-1920x1080.png)
 
@@ -48,7 +48,8 @@ OpenVisionLab Labeling Studio는 라벨만 그리는 도구가 아닙니다. 한
 
 반복해서 자동 경계를 만들려면 세그멘테이션 Recipe의 `라벨링 옵션`에서
 `자동 윤곽`을 한 번 켭니다. 이후 결함을 사각형으로 감쌀 때마다
-MobileSAM 후보가 바로 생성됩니다. 후보가 부족하면 `보정 옵션`에서
+MobileSAM 후보가 별도 생성 버튼 없이 바로 나타나며, 작업 패널이
+펼쳐져도 뷰어 맞춤은 자동으로 갱신됩니다. 후보가 부족하면 `보정 옵션`에서
 포함점 또는 제외점을 한 번에 하나씩 추가하고 `후보 다시 생성`을 누른
 뒤 `이전 후보 보기`와 `현재 후보 보기`로 비교합니다. 후보 생성과
 후보 전환만으로는 파일이 바뀌지 않습니다. 표시 중인 후보가 맞으면
