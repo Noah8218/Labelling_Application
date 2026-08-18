@@ -738,14 +738,14 @@ internal static partial class Program
 
         System.Windows.Automation.AutomationElement wizard = WaitForProcessWindowByName(
             process,
-            "\uB370\uC774\uD130\uC14B \uC0DD\uC131",
+            "새 Recipe 설정",
             TimeSpan.FromSeconds(8));
         AssertTrue(
             SelectListItemByText(wizard, "\uC138\uADF8\uBA58\uD14C\uC774\uC158"),
             "operator video could not select segmentation in the dataset wizard");
         wizard = WaitForProcessWindowByName(
             process,
-            "\uB370\uC774\uD130\uC14B \uC0DD\uC131",
+            "새 Recipe 설정",
             TimeSpan.FromSeconds(8));
         WaitForAutomationText(wizard, "\uBAA9\uC801: \uC138\uADF8\uBA58\uD14C\uC774\uC158", TimeSpan.FromSeconds(3));
         AssertTrue(
@@ -753,7 +753,7 @@ internal static partial class Program
             "operator video could not select the industrial defect-mask preset");
         wizard = WaitForProcessWindowByName(
             process,
-            "\uB370\uC774\uD130\uC14B \uC0DD\uC131",
+            "새 Recipe 설정",
             TimeSpan.FromSeconds(8));
         AssertTrue(
             WaitUntil(

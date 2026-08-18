@@ -1,6 +1,6 @@
 # Current Product Status
 
-Last updated: 2026-08-05 KST
+Last updated: 2026-08-19 KST
 
 This document is the single current source of truth for product identity,
 verified maturity, the active development priority, and the boundary between
@@ -50,9 +50,21 @@ product direction changes explicitly.
 - Baseline Git commit for the current clean-source transfer candidate:
   `59e37d8 test: place P0-C smoke on the leftmost monitor`.
 - Current protected regression evidence: the solo default internal suite
-  passed `267/267` again on 2026-08-05 after the OpenVisionLab Vision SDK 3.0.0
-  migration. Exit code was 0 and the single-runner run completed in 329.7
-  seconds. The earlier same-day operational viewer-stability correction and
+  passed again with exit code 0 on 2026-08-19 after the segmentation Recipe
+  accessibility, first-use setup, model-state, and compact-name UX correction.
+  The final build had zero warnings and zero errors, nine focused WPF gates
+  passed, and two actual-EXE segmentation flows completed through training,
+  model application, and inference. A third run stopped during an automated
+  Brush reselection; the user accepted this bounded validation and runs four
+  and five were not started. This does not weaken or expand the protected
+  `267/267` contract.
+  The solo default internal suite
+  passed `267/267` again on 2026-08-06 after the Recipe apply stability
+  correction. Exit code was 0 and the single-runner run completed in 310.4
+  seconds. The same-Recipe 100x, overlapping latest-request, prepared-state,
+  cancellation, round-trip, and actual-EXE Recipe apply gates also passed.
+  The 2026-08-05 OpenVisionLab Vision SDK 3.0.0 migration passed the same
+  `267/267` baseline in 329.7 seconds. The earlier operational viewer-stability correction and
   actual-EXE GIF refresh passed the same `267/267` baseline in 251.2 seconds.
   The 2026-08-03 Environment Setup Center,
   restored-workstation D-drive rebind, tutorial-image contract, P1-I anomaly
@@ -72,7 +84,8 @@ operability.
 | Area | Status | Current boundary |
 | --- | --- | --- |
 | Detection, segmentation, and anomaly labeling workflows | Complete for the focused workstation scope | Preserve explicit save/confirm and current geometry contracts |
-| Recipe, class, queue, training, inference, and model-evidence flow | Complete for verified local workflows | Field accuracy and throughput require independent production evidence |
+| Segmentation Recipe and model-setup UX | Complete for the approved workstation slice | Tool accessibility and selected state, one-surface initial setup, applied-versus-editing model state, and compact full-value names are covered; five post-change segmentation completions and repeated Brush focus reliability are not claimed |
+| Recipe, class, queue, training, inference, and model-evidence flow | Complete for verified local workflows | Same-Recipe reapply is safe; user-triggered Recipe load is asynchronous and latest-request-wins; field accuracy and throughput require independent production evidence |
 | Smart Mask auto-first labeling and correction | Complete | No production-boundary accuracy claim |
 | Viewer stability during inference and Smart Mask review | Complete for the current workstation workflow | Result and guidance surfaces do not resize the viewer; inference does not force repeated Fit operations; one coalesced Fit remains allowed only after an actual viewport-size change |
 | Dataset Health split/class/problem filtering | Complete and read-only | The anomaly-evaluation run gate now blocks exact content leakage; general duplicate, near-duplicate, and domain-shift analysis are not completed Dataset Health contracts |
@@ -115,12 +128,17 @@ regression:
   guidance;
 - the existing viewer zoom/pan/drag, ROI, brush/eraser, history, layer, and
   annotation persistence contracts.
+- segmentation tool automation identity/name/help, visible current-tool state,
+  explicit Recipe creation/application, and applied-versus-editing model
+  separation.
 - explicit PatchCore heatmap review without automatic open, save, confirm,
   candidate hide, active-layer change, or model adoption.
 - hidden theme selection and dark-only shell rendering, including legacy light
   requests resolving safely to dark.
 - one bounded no-argument complete regression invocation in CI before release
   publishing.
+- same-Recipe reapply, asynchronous user-triggered Recipe loading, serialized
+  latest-request commit, prepared dataset commit, and close cancellation.
 - read-only `--environment-self-test --json` dispatch before startup logging,
   mutex acquisition, or WPF creation, with no durable product-data writes.
 - read-only Environment Setup Center refresh, explicit model-runtime settings

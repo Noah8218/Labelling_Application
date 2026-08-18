@@ -132,6 +132,10 @@ namespace MvcVisionSystem
 
         public string Text { get; }
 
+        public string AutomationId => $"CanvasAnnotationTool{Tool}";
+
+        public string AccessibleName => Text;
+
         public PackIconMaterialKind IconKind { get; }
 
         public string ToolTip

@@ -21,10 +21,16 @@ namespace MvcVisionSystem
 
         public string ClassNamesText => WizardClassNamesBox.Text ?? string.Empty;
 
+        public string ImageRootPathText => WizardImageRootPathBox.Text ?? string.Empty;
+
+        public string WeightsPathText => WizardWeightsPathBox.Text ?? string.Empty;
+
         public void CommitTextBindings()
         {
             WizardRecipeNameBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
             WizardOutputRootPathBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            WizardImageRootPathBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            WizardWeightsPathBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
             // ClassNamesText already updates on PropertyChanged. Do not force
             // UpdateSource here: multiline TextBox automation can expose a
             // newer visible value while TextBox.Text is still catching up.

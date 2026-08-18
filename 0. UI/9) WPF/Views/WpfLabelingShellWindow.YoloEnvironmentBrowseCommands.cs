@@ -346,16 +346,10 @@ namespace MvcVisionSystem
 
         private async void ExecuteResetYoloSettingsCommand()
         {
-            EnsureProjectSettings();
-            global.Data.ProjectSettings.PythonModel = new PythonModelSettings();
-            global.Data.ProjectSettings.PythonModel.EnsureDefaults();
-            pendingTrainingBaselineWeightsPath = string.Empty;
-            hasPendingTrainingWeightsRecipeSave = false;
-            PopulateYoloEditorFields();
-            RefreshYoloStatus();
-            RefreshModelCenterDashboard();
+            YoloModelSettingsViewModel?.LoadDraftDefaults();
             await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
-            AppendLog("YOLO 모델 설정을 기본값으로 되돌렸습니다.");
+            SetYoloCommandStatus("기본값을 편집란에 불러왔습니다. Recipe에 저장 및 적용하기 전에는 현재 검사 모델이 바뀌지 않습니다.", isBusy: false);
+            AppendLog("YOLO 모델 기본값을 편집란에 불러왔습니다. 현재 적용 설정은 유지됩니다.");
         }
     }
 }

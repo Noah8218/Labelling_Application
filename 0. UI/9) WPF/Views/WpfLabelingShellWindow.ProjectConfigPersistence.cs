@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace MvcVisionSystem
 {
@@ -32,48 +33,62 @@ namespace MvcVisionSystem
             }
         }
 
-        private void ApplyProjectRecipeFromPanel()
+        private async Task<bool> ApplyProjectRecipeFromPanelAsync()
         {
             CancelFourPointBoxDraft(updateStatus: false);
             string recipeName = ProjectConfigViewModel?.RecipeName?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(recipeName))
             {
                 SetProjectConfigStatus("적용할 recipe 이름을 입력하세요.");
-                return;
+                return false;
             }
 
             if (!WpfProjectRecipeService.IsValidRecipeName(recipeName))
             {
                 SetProjectConfigStatus("Recipe 이름에 사용할 수 없는 문자가 있습니다.");
-                return;
+                return false;
             }
 
             try
             {
-                string previousRecipeName = projectRecipeSessionService.Apply(global.Recipe, recipeName);
-                RememberLastOpenedDatasetRecipe(recipeName);
-                EnsureProjectSettings();
-                ApplyProjectDatasetPurposeToWorkflow();
-                // Recipe changes reload every dependent panel so stale labels, weights, and class lists do not survive the switch.
-                PopulateProjectConfigPanelFields();
-                PopulateYoloEditorFields();
-                PopulateTrainingEditorFields();
-                PopulateClassList();
-                RestoreObjectMetadataTagsFromProject();
-                RefreshCandidateList();
-                RefreshObjectList();
-                RefreshTrainingReadinessPanel(refreshYaml: false);
-                SetDatasetStatus($"데이터셋: recipe {recipeName}");
-                SetProjectConfigStatus(string.Equals(previousRecipeName, recipeName, StringComparison.OrdinalIgnoreCase)
-                    ? $"Recipe 재적용: {recipeName}"
-                    : $"Recipe 적용: {recipeName}");
-                AppendLog($"Recipe 적용: {recipeName}");
+                string previousRecipeName = await projectRecipeSessionService.ApplyAsync(
+                    global,
+                    recipeName,
+                    projectRecipeSessionCts.Token);
+                CompleteProjectRecipeApply(previousRecipeName, recipeName);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
             }
             catch (Exception ex)
             {
                 SetProjectConfigStatus($"Recipe 적용 실패: {ex.Message}");
                 AppendLog($"Recipe 적용 실패: {ex.Message}");
+                return false;
             }
+        }
+
+        private void CompleteProjectRecipeApply(string previousRecipeName, string recipeName)
+        {
+            RememberLastOpenedDatasetRecipe(recipeName);
+            EnsureProjectSettings();
+            ApplyProjectDatasetPurposeToWorkflow();
+            // Recipe changes reload every dependent panel so stale labels, weights, and class lists do not survive the switch.
+            PopulateProjectConfigPanelFields();
+            PopulateYoloEditorFields();
+            PopulateTrainingEditorFields();
+            PopulateClassList();
+            RestoreObjectMetadataTagsFromProject();
+            RefreshCandidateList();
+            RefreshObjectList();
+            RefreshTrainingReadinessPanel(refreshYaml: false);
+            SetDatasetStatus($"데이터셋: recipe {recipeName}");
+            SetProjectConfigStatus(string.Equals(previousRecipeName, recipeName, StringComparison.OrdinalIgnoreCase)
+                ? $"Recipe 재적용: {recipeName}"
+                : $"Recipe 적용: {recipeName}");
+            AppendLog($"Recipe 적용: {recipeName}");
         }
     }
 }

@@ -109,6 +109,8 @@ namespace MvcVisionSystem
 
         public string FileName { get; private set; } = string.Empty;
 
+        public string DisplayFileName => FormatCompactFileName(FileName);
+
         public string FolderName { get; private set; } = string.Empty;
 
         public string FileSize { get; private set; } = string.Empty;
@@ -285,6 +287,20 @@ namespace MvcVisionSystem
             }
 
             return string.Join(normalizedSeparator, parts);
+        }
+
+        public static string FormatCompactFileName(string fileName, int maximumLength = 34)
+        {
+            string normalized = (fileName ?? string.Empty).Trim();
+            if (normalized.Length <= maximumLength || maximumLength < 12)
+            {
+                return normalized;
+            }
+
+            string extension = Path.GetExtension(normalized);
+            int tailLength = Math.Min(Math.Max(extension.Length + 8, 12), maximumLength / 2);
+            int headLength = maximumLength - tailLength - 1;
+            return normalized.Substring(0, headLength) + "…" + normalized.Substring(normalized.Length - tailLength);
         }
 
         private static string NormalizeStatusText(string value, string fallback)

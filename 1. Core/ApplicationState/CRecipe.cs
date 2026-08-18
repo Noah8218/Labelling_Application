@@ -3,7 +3,6 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Serialization;
-using System.Threading.Tasks;
 
 namespace MvcVisionSystem
 {
@@ -45,34 +44,15 @@ namespace MvcVisionSystem
             get { return m_strName; }
             set
             {
-                Task LoadToolsTask = null;
-                if (m_strName != value)
+                SetRecipeIdentity(value);
+                if (m_strName == "")
                 {
-                    m_strNamePrev = m_strName;
-                    m_strName = value;
-
-                    try
-                    {
-                        ModelName = Name.Substring(0, Name.Length - 3);
-                        ModelNo = Name.Substring(Name.Length - 3);
-                    }
-                    catch { }
-
-                    Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, RECIPE_DIRECTORY, m_strName, "VISION"));
-
-                    LoadToolsTask = Task.Run(() =>
-                    {
-                        LoadTools();
-                    });
+                    return;
                 }
 
-                if (m_strName != "")
-                {
-                    Task.WaitAll(LoadToolsTask);
-                    InitDirectory(m_strName);
-
-                    if (EventChagedRecipe != null) { EventChagedRecipe(null, null); }                  
-                }               
+                Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, RECIPE_DIRECTORY, m_strName, "VISION"));
+                LoadTools();
+                CompleteRecipeTransition();
             }
         }
 
@@ -80,6 +60,35 @@ namespace MvcVisionSystem
 
         public string ModelNo { get; set; } = "";
         public string ModelName { get; set; } = "";
+
+        internal void CommitLoadedRecipe(string recipeName)
+        {
+            SetRecipeIdentity(recipeName);
+            if (m_strName != "")
+            {
+                CompleteRecipeTransition();
+            }
+        }
+
+        private void SetRecipeIdentity(string recipeName)
+        {
+            string normalizedName = recipeName ?? string.Empty;
+            m_strNamePrev = m_strName;
+            m_strName = normalizedName;
+
+            try
+            {
+                ModelName = Name.Substring(0, Name.Length - 3);
+                ModelNo = Name.Substring(Name.Length - 3);
+            }
+            catch { }
+        }
+
+        private void CompleteRecipeTransition()
+        {
+            InitDirectory(m_strName);
+            EventChagedRecipe?.Invoke(null, null);
+        }
 
         public bool LoadTools()
         {

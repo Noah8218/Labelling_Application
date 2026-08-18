@@ -758,10 +758,10 @@ internal static class WpfShellStructureTests
         AssertTrue(shellSource.Contains("RefreshModelCenterDashboard", StringComparison.Ordinal), "WPF shell should refresh the training/model dashboard from model comparison state");
         AssertTrue(shellSource.Contains("ExecuteOpenDatasetRootFolderCommand", StringComparison.Ordinal), "WPF shell should route the main-header dataset folder button through a command method");
         AssertTrue(shellSource.Contains("RefreshShellDatasetContext", StringComparison.Ordinal), "WPF shell should refresh the main-header dataset context after dataset state changes");
-        string changeDatasetSource = FindMethodSourceBlock(shellSource, "private void ExecuteChangeDatasetCommand()");
+        string changeDatasetSource = FindMethodSourceBlock(shellSource, "private async void ExecuteChangeDatasetCommand()");
         AssertTrue(changeDatasetSource.Contains("WpfDatasetSelectionWindow", StringComparison.Ordinal), "dataset change should open the existing-dataset selector first");
         AssertTrue(changeDatasetSource.Contains("createNewRequested", StringComparison.Ordinal), "dataset creation should be a separate branch after an explicit selector request");
-        AssertTrue(changeDatasetSource.Contains("ApplySelectedDatasetRecipe", StringComparison.Ordinal), "dataset change should apply the selected existing dataset");
+        AssertTrue(changeDatasetSource.Contains("ApplySelectedDatasetRecipeAsync", StringComparison.Ordinal), "dataset change should apply the selected existing dataset asynchronously");
         AssertTrue(!changeDatasetSource.Contains("new WpfDatasetSetupWizardWindow", StringComparison.Ordinal), "dataset change should not open the creation wizard directly");
         AssertTrue(keyInputArgsSource.Contains("OriginalSource", StringComparison.Ordinal), "key input DTO should preserve original source for shell text-edit shortcut suppression");
         AssertTrue(shellSource.Contains("DataContext = viewModels", StringComparison.Ordinal), "WPF shell should expose ShellViewModel explicitly to XAML bindings");

@@ -158,7 +158,7 @@ internal static class ExeYoloV8AnomalyRestartSmokeTests
                     anomalyAbnormalClasses: "abnormal",
                     anomalyMinimumConfidence: anomalyMinimumConfidence,
                     modelEngine: modelEngine);
-                LoadConfiguredImageRootThroughExe(firstProcess, inputRoot, screenshotDirectory);
+                LoadConfiguredImageRootThroughExe(firstProcess, firstHandle, inputRoot, screenshotDirectory);
             }
 
             CData savedData = ReadRecipeData(visionPath);

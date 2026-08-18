@@ -131,7 +131,8 @@ namespace MvcVisionSystem
                 ExecuteResetYoloSettingsCommand,
                 ExecuteRuntimeProfileActionCommand,
                 ExecuteInstallUltralyticsPackageCommand,
-                ExecuteUninstallUltralyticsPackageCommand);
+                ExecuteUninstallUltralyticsPackageCommand,
+                PopulateYoloEditorFields);
         }
 
         private void RegisterYoloModelSettingsPanelNames()

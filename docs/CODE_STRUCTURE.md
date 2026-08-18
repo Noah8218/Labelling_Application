@@ -233,6 +233,14 @@ WPF service는 UI shell에서 뽑아낸 테스트 가능한 정책/계산/상태
 
 새 UI 요구사항이 생기면 먼저 Presenter/Selection/State service로 분리할 수 있는지 봅니다. Shell partial에는 “어느 service를 언제 호출할지” 정도만 남기는 것이 목표입니다.
 
+`Services/Project/WpfProjectRecipeSessionService.cs`는 Recipe 설정 저장과
+적용 transition의 단일 소유자입니다. 사용자 적용은 직렬화된 비동기 로드와
+request generation 검사를 거쳐 최신 요청만 `CGlobal.Data`와 Recipe identity를
+커밋합니다. 새 데이터셋처럼 이미 저장된 상태는 같은 서비스의 prepared commit을
+사용합니다. `WpfLabelingShellWindow.ProjectConfigPersistence.cs`와
+`DatasetSetupCommands.cs`는 입력 검증, 사용자 상태, 패널/큐 갱신만 조정하며
+`CRecipe.Name`을 직접 대입하지 않습니다.
+
 ## OpenGL Viewer 경계
 
 고성능 viewer 경계는 `OpenVisionLab/Library/OpenVisionLab.ImageCanvas`입니다.

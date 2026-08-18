@@ -4058,3 +4058,88 @@ Completion evidence:
 
 Boundary: field mask quality and the external P0-C GPU-capable clean-target
 gate remain outside this stability contract.
+
+## Recipe apply stability (2026-08-06)
+
+Status: stable for current-workstation Recipe and dataset switching.
+
+- Same-name Recipe reapply must not create or wait on a null task.
+- User-triggered Project Recipe apply and existing-dataset selection load
+  config asynchronously; startup restore may remain synchronous before the
+  window is visible.
+- `WpfProjectRecipeSessionService` serializes loads and only the latest request
+  generation may commit `CGlobal.Data` plus Recipe identity.
+- A prepared new-dataset result commits through the same owner without a
+  second config load and invalidates older pending loads.
+- Cancellation and window close must not commit stale Recipe state.
+- Preserve explicit label save, candidate confirmation, model adoption, and
+  active-layer boundaries.
+
+Covered by the zero-warning/error isolated build, the focused 100x/repeated,
+overlap/prepared/cancellation/round-trip Recipe contract, dataset/shell/archive
+checks, the leftmost-monitor actual EXE Recipe smoke, and the solo `267/267`
+protected suite in 310.4 seconds.
+
+Completion evidence: `docs/RECIPE_APPLY_STABILITY_20260806.md`.
+
+Boundary: ordinary settings-save versus dataset-content hash separation,
+corrupt-XML/read-only-installation UX, and the external P0-C clean GPU target
+remain separate work.
+
+## Python worker identity across test-storage junctions (2026-08-06)
+
+Status: stable for configured model paths that cross an existing Windows
+directory junction.
+
+- Worker identity compares the configured and reported engine plus normalized
+  weight path as before.
+- Existing directory and file links are resolved component by component before
+  path comparison, so a repository-logical `artifacts` path and its canonical
+  physical D-drive target identify the same worker.
+- A different weight beneath the same junction remains a mismatch and the
+  listener still drops stale or wrong-engine workers.
+- Missing paths retain lexical normalization; this change does not create,
+  move, copy, or rewrite weights.
+
+Covered by the zero-warning/error isolated build,
+`--python-model-status-protocol`, five leftmost-monitor actual-EXE YOLOv8
+detection/restart/inference captures using physically D-backed artifacts, and
+the protected no-argument suite with exit code 0.
+
+Local portfolio evidence is stored physically under
+`D:\OpenVisionLab-TestData\Labelling_Application\artifacts\portfolio\20260806-current-exe`.
+It is intentionally excluded from public documentation because it contains
+machine-local paths and synthetic demonstration data.
+
+Boundary: this proves local path identity and current-workstation runtime
+wiring. It does not add production-camera accuracy or complete the external
+P0-C clean GPU-target gate.
+
+## Segmentation Recipe accessibility and model-state UX (2026-08-19)
+
+Status: stable for the approved current-workstation UI slice.
+
+- Icon-only canvas annotation tools expose a stable automation ID, accessible
+  name, help text, selected state, and keyboard-focus border.
+- The current segmentation tool remains visible as text and icon while the
+  annotation workspace is active.
+- New Recipe setup keeps purpose, starting data, source images, initial model,
+  optional weights, anomaly mapping, Recipe/storage, and classes in one
+  explicit create/apply surface.
+- The model settings panel must not present an editing draft as the applied
+  inspection model. Cancel restores applied values; loading defaults changes
+  the draft only; save/apply remains explicit.
+- Compact image/model names retain their full values in tooltip and
+  accessibility surfaces.
+
+Covered by a zero-warning/error build, nine focused WPF gates, the protected
+no-argument suite with exit code 0, two complete actual-EXE segmentation
+training/application/inference runs, and a third retained partial run.
+
+Completion evidence:
+`docs/SEGMENTATION_RECIPE_UX_ACCESSIBILITY_20260819.md`.
+
+Boundary: five complete post-change Recipe runs are not claimed. The third
+automation run failed to reselect Brush during split labeling, and the user
+accepted the available validation without runs four and five. This remains a
+bounded focus/automation observation unless reproduced as an operator defect.

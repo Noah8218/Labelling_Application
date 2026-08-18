@@ -638,12 +638,35 @@ namespace MvcVisionSystem._3._Communication.TCP
 
             try
             {
-                return Path.GetFullPath(value).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                return ResolveExistingLinks(Path.GetFullPath(value))
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             }
             catch
             {
                 return value.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             }
+        }
+
+        private static string ResolveExistingLinks(string fullPath)
+        {
+            string root = Path.GetPathRoot(fullPath) ?? string.Empty;
+            string current = root;
+            string remainder = fullPath.Substring(root.Length);
+            foreach (string segment in remainder.Split(
+                new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
+                StringSplitOptions.RemoveEmptyEntries))
+            {
+                string candidate = Path.Combine(current, segment);
+                FileSystemInfo info = Directory.Exists(candidate)
+                    ? new DirectoryInfo(candidate)
+                    : File.Exists(candidate)
+                        ? new FileInfo(candidate)
+                        : null;
+                FileSystemInfo target = info?.ResolveLinkTarget(returnFinalTarget: true);
+                current = target?.FullName ?? candidate;
+            }
+
+            return current;
         }
     }
 }

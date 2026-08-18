@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using MvcVisionSystem.Yolo;
 
 namespace MvcVisionSystem
@@ -43,6 +44,9 @@ namespace MvcVisionSystem
                             wizardViewModel.ClassNamesText = wizard.ClassNamesText;
                         }
 
+                        wizardViewModel.ImageRootPath = wizard.ImageRootPathText;
+                        wizardViewModel.WeightsPath = wizard.WeightsPathText;
+
                         object selectedWizardPurpose = wizard.SelectedDatasetPurpose ?? commandPurpose;
                         if (wizardViewModel.TryBuildRequest(selectedWizardPurpose, out WpfDatasetSetupRequest request, out string error))
                         {
@@ -54,7 +58,9 @@ namespace MvcVisionSystem
                         wizardViewModel.StatusText = error;
                     },
                     () => wizard.DialogResult = false,
-                    () => ExecuteBrowseDatasetSetupOutputRootCommand(wizardViewModel));
+                    () => ExecuteBrowseDatasetSetupOutputRootCommand(wizardViewModel),
+                    () => ExecuteBrowseDatasetSetupImageRootCommand(wizardViewModel),
+                    () => ExecuteBrowseDatasetSetupWeightsCommand(wizardViewModel));
 
                 if (wizard.ShowDialog() == true && acceptedRequest != null)
                 {
@@ -70,7 +76,7 @@ namespace MvcVisionSystem
             }
         }
 
-        private void ExecuteChangeDatasetCommand()
+        private async void ExecuteChangeDatasetCommand()
         {
             // Dataset change is intentionally a selector-first flow. Opening the
             // creation wizard directly made "change dataset" feel like "create dataset".
@@ -118,10 +124,10 @@ namespace MvcVisionSystem
                 return;
             }
 
-            ApplySelectedDatasetRecipe(selectedRecipeName);
+            await ApplySelectedDatasetRecipeAsync(selectedRecipeName);
         }
 
-        private void ApplySelectedDatasetRecipe(string recipeName)
+        private async Task ApplySelectedDatasetRecipeAsync(string recipeName)
         {
             if (string.IsNullOrWhiteSpace(recipeName))
             {
@@ -130,8 +136,16 @@ namespace MvcVisionSystem
 
             ProjectConfigViewModel.RecipeName = recipeName.Trim();
             ProjectConfigViewModel.SelectedRecipeName = recipeName.Trim();
-            ApplyProjectRecipeFromPanel();
+            if (!await ApplyProjectRecipeFromPanelAsync())
+            {
+                return;
+            }
 
+            CompleteSelectedDatasetRecipeSwitch();
+        }
+
+        private void CompleteSelectedDatasetRecipeSwitch()
+        {
             string imageRootPath = ResolveActiveDatasetImageRoot();
             if (Directory.Exists(imageRootPath))
             {
@@ -284,11 +298,9 @@ namespace MvcVisionSystem
 
             ProjectConfigViewModel.RecipeName = result.RecipeName;
 
-            // CRecipe.Name raises the existing recipe-change lifecycle. The
-            // service saved the fully prepared CData first, so the lifecycle can
-            // load that contract without the view constructing files or labels.
-            global.Data = result.Data;
-            global.Recipe.Name = result.RecipeName;
+            // Persistence is complete before this command. Commit the prepared
+            // state through the same session owner without loading it a second time.
+            projectRecipeSessionService.ApplyPrepared(global, result.RecipeName, result.Data);
             ApplyPersistedDatasetPurposeToCurrentProject(request.Purpose);
             RememberLastOpenedDatasetRecipe(result.RecipeName);
 
@@ -325,7 +337,21 @@ namespace MvcVisionSystem
                 return false;
             }
 
-            ApplySelectedDatasetRecipe(recipeName);
+            ProjectConfigViewModel.RecipeName = recipeName;
+            ProjectConfigViewModel.SelectedRecipeName = recipeName;
+            try
+            {
+                string previousRecipeName = projectRecipeSessionService.Apply(global, recipeName);
+                CompleteProjectRecipeApply(previousRecipeName, recipeName);
+                CompleteSelectedDatasetRecipeSwitch();
+            }
+            catch (Exception ex)
+            {
+                SetProjectConfigStatus($"Recipe 적용 실패: {ex.Message}");
+                AppendLog($"Recipe 적용 실패: {ex.Message}");
+                return false;
+            }
+
             AppendLog($"\uC774\uC804 \uB370\uC774\uD130\uC14B \uBCF5\uC6D0: {recipeName}");
             return true;
         }
@@ -347,6 +373,28 @@ namespace MvcVisionSystem
             if (TryPickFolder("\uB370\uC774\uD130\uC14B \uC800\uC7A5 \uD3F4\uB354 \uC120\uD0DD", viewModel.OutputRootPath, out string selectedPath))
             {
                 viewModel.OutputRootPath = selectedPath;
+            }
+        }
+
+        private void ExecuteBrowseDatasetSetupImageRootCommand(WpfDatasetSetupWizardViewModel viewModel)
+        {
+            if (viewModel != null
+                && TryPickFolder("원본 이미지 폴더 선택", viewModel.ImageRootPath, out string selectedPath))
+            {
+                viewModel.ImageRootPath = selectedPath;
+            }
+        }
+
+        private void ExecuteBrowseDatasetSetupWeightsCommand(WpfDatasetSetupWizardViewModel viewModel)
+        {
+            if (viewModel != null
+                && TryPickFile(
+                    "초기 검사 모델 파일 선택",
+                    "모델 파일 (*.pt;*.pth;*.onnx)|*.pt;*.pth;*.onnx|All files (*.*)|*.*",
+                    viewModel.WeightsPath,
+                    out string selectedPath))
+            {
+                viewModel.WeightsPath = selectedPath;
             }
         }
 

@@ -845,7 +845,13 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding FileName}" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding DisplayFileName}"
+                                                       ToolTip="{Binding FileName}"
+                                                       AutomationProperties.Name="{Binding FileName}"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                       FontSize="12"
+                                                       TextTrimming="CharacterEllipsis" />
                                             <Border Grid.Column="1" Style="{StaticResource QueueStatusBadgeStyle}">
                                                 <TextBlock Text="{Binding QueueBadgeText}" Foreground="{Binding QueueIconBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" TextAlignment="Center" />
                                             </Border>

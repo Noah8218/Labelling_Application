@@ -1,6 +1,7 @@
 using MvcVisionSystem;
 using MvcVisionSystem._1._Core;
 using MvcVisionSystem.Yolo;
+using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -56,6 +57,7 @@ internal static class ExeYoloV8DetectRestartSmokeTests
             string externalDataYamlPath = GetArgumentValue(args, "--external-data-yaml", string.Empty);
             bool allowEmptyCandidates = args.Any(arg => string.Equals(arg, "--allow-empty-candidates", StringComparison.OrdinalIgnoreCase));
             bool verifySafeClose = args.Any(arg => string.Equals(arg, "--verify-safe-close", StringComparison.OrdinalIgnoreCase));
+            bool usePreconfiguredRecipe = args.Any(arg => string.Equals(arg, "--preconfigured-recipe", StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrWhiteSpace(externalDataYamlPath))
             {
                 externalDataYamlPath = Path.GetFullPath(externalDataYamlPath);
@@ -99,18 +101,48 @@ internal static class ExeYoloV8DetectRestartSmokeTests
             Directory.CreateDirectory(inputRoot);
             File.Copy(sourceImagePath, smokeImagePath, overwrite: true);
 
+            if (usePreconfiguredRecipe)
+            {
+                PrepareDetectionRestartRecipe(
+                    recipeName,
+                    recipeDirectory,
+                    lastOpenedRecipePath,
+                    outputRoot,
+                    inputRoot,
+                    modelEngine,
+                    yoloRoot,
+                    pythonPath,
+                    clientScriptPath,
+                    weightsPath);
+            }
+
             firstProcess = StartYoloV8RuntimeSmokeExe(exePath, out IntPtr firstHandle);
             CaptureWorkflowStep(RefreshAutomationRoot(firstProcess, firstHandle), screenshotDirectory, "01_before_recipe_setup");
-            CreateDatasetRecipeThroughExe(
-                firstProcess,
-                firstHandle,
-                recipeName,
-                outputRoot,
-                recipeDirectory,
-                screenshotDirectory,
-                "\uAC1D\uCCB4 \uD0D0\uC9C0",
-                LabelingDatasetPurpose.ObjectDetection,
-                "OK, NG");
+            if (usePreconfiguredRecipe)
+            {
+                AssertTrue(
+                    WaitUntil(
+                        () => ImageRootAppearsLoaded(
+                            RefreshAutomationRoot(firstProcess, firstHandle, bringToFront: false),
+                            inputRoot,
+                            Path.GetFileNameWithoutExtension(smokeImagePath)),
+                        TimeSpan.FromSeconds(20)),
+                    "preconfigured YOLOv8 Detect recipe did not load its image queue");
+                CaptureWorkflowStep(RefreshAutomationRoot(firstProcess, firstHandle), screenshotDirectory, "01_preconfigured_recipe_loaded");
+            }
+            else
+            {
+                CreateDatasetRecipeThroughExe(
+                    firstProcess,
+                    firstHandle,
+                    recipeName,
+                    outputRoot,
+                    recipeDirectory,
+                    screenshotDirectory,
+                    "\uAC1D\uCCB4 \uD0D0\uC9C0",
+                    LabelingDatasetPurpose.ObjectDetection,
+                    "OK, NG");
+            }
 
             string visionPath = Path.Combine(recipeDirectory, "VISION.xml");
             AssertTrue(WaitUntil(() => File.Exists(visionPath), TimeSpan.FromSeconds(8)), "YOLOv8 Detect recipe VISION.xml was not created");
@@ -129,19 +161,22 @@ internal static class ExeYoloV8DetectRestartSmokeTests
                 "\uAC1D\uCCB4 \uD0D0\uC9C0",
                 "newly created object-detection recipe did not show object detection as the active dataset purpose");
 
-            ConfigureYoloV8RuntimeThroughExe(
-                firstProcess,
-                firstHandle,
-                inputRoot,
-                yoloRoot,
-                pythonPath,
-                clientScriptPath,
-                weightsPath,
-                screenshotDirectory,
-                confidence: "0.25",
-                timeoutSeconds: "180",
-                inferenceImageSize: "320",
-                modelEngine: modelEngine);
+            if (!usePreconfiguredRecipe)
+            {
+                ConfigureYoloV8RuntimeThroughExe(
+                    firstProcess,
+                    firstHandle,
+                    inputRoot,
+                    yoloRoot,
+                    pythonPath,
+                    clientScriptPath,
+                    weightsPath,
+                    screenshotDirectory,
+                    confidence: "0.25",
+                    timeoutSeconds: "180",
+                    inferenceImageSize: "320",
+                    modelEngine: modelEngine);
+            }
 
             if (!string.IsNullOrWhiteSpace(externalDataYamlPath))
             {
@@ -151,12 +186,15 @@ internal static class ExeYoloV8DetectRestartSmokeTests
                     externalDataYamlPath,
                     screenshotDirectory);
             }
-            LoadConfiguredImageRootThroughExe(firstProcess, inputRoot, screenshotDirectory);
+            if (!usePreconfiguredRecipe)
+            {
+                LoadConfiguredImageRootThroughExe(firstProcess, firstHandle, inputRoot, screenshotDirectory);
+            }
 
             AssertTrue(WaitUntil(() => File.Exists(visionPath), TimeSpan.FromSeconds(8)), "YOLOv8 Detect recipe VISION.xml was not saved");
             File.Copy(visionPath, Path.Combine(artifactRoot, "saved-before-restart-VISION.xml"), overwrite: true);
             CData savedData = ReadRecipeData(visionPath);
-            AssertYoloV8DetectRecipeSettings(savedData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine);
+            AssertYoloV8DetectRecipeSettings(savedData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine, requireRegistry: !usePreconfiguredRecipe);
             AssertExternalYoloDatasetSettings(savedData, externalDataYamlPath);
             string savedVisionHash = TestSupport.ComputeFileSha256(visionPath);
             CaptureWorkflowStep(RefreshAutomationRoot(firstProcess, firstHandle), screenshotDirectory, "02_saved_yolov8_detect_profile");
@@ -184,7 +222,7 @@ internal static class ExeYoloV8DetectRestartSmokeTests
                 "restart marker did not preserve the YOLOv8 Detect smoke recipe");
             File.Copy(visionPath, Path.Combine(artifactRoot, "reopened-before-inference-VISION.xml"), overwrite: true);
             CData reopenedData = ReadRecipeData(visionPath);
-            AssertYoloV8DetectRecipeSettings(reopenedData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine);
+            AssertYoloV8DetectRecipeSettings(reopenedData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine, requireRegistry: !usePreconfiguredRecipe);
             AssertExternalYoloDatasetSettings(reopenedData, externalDataYamlPath);
             string reopenedVisionHash = TestSupport.ComputeFileSha256(visionPath);
             PythonModelRuntimeState persistedRuntimeState = PythonModelSettingsValidator.GetRuntimeState(
@@ -195,7 +233,10 @@ internal static class ExeYoloV8DetectRestartSmokeTests
                     + persistedRuntimeState.SummaryText + " / "
                     + persistedRuntimeState.DetailText + " / "
                     + persistedRuntimeState.NextActionText);
-            VerifyYoloV8SettingsVisibleAfterRestart(restartedProcess, restartedHandle, weightsPath, modelEngine);
+            if (!usePreconfiguredRecipe)
+            {
+                VerifyYoloV8SettingsVisibleAfterRestart(restartedProcess, restartedHandle, weightsPath, modelEngine);
+            }
             var settingsRoot = RefreshAutomationRoot(restartedProcess, restartedHandle, bringToFront: false);
             string settingsRuntimeStatus = string.Join(
                 " / ",
@@ -258,6 +299,11 @@ internal static class ExeYoloV8DetectRestartSmokeTests
                     TimeSpan.FromMinutes(4)),
                 "first YOLOv8 Detect inference did not finish after restart");
             AssertTrue(!IsExeTrainedInferenceFailure(inferenceStatus), "first YOLOv8 Detect inference failed after restart: " + inferenceStatus);
+            CaptureWorkflowStep(
+                RefreshAutomationRoot(restartedProcess, restartedHandle),
+                screenshotDirectory,
+                "04_first_inference_after_restart",
+                settleMilliseconds: 5_500);
             AssertTrue(inferenceStatus.Contains(engineDisplayName, StringComparison.OrdinalIgnoreCase), "inference status did not identify " + engineDisplayName + ": " + inferenceStatus);
             string weightsDirectory = Path.GetDirectoryName(weightsPath) ?? string.Empty;
             string expectedWeightsRunName = Path.GetFileName(weightsDirectory);
@@ -276,10 +322,9 @@ internal static class ExeYoloV8DetectRestartSmokeTests
                 AssertTrue(!inferenceStatus.Contains("\uD6C4\uBCF4 0", StringComparison.Ordinal), "YOLOv8 Detect smoke returned no UI-threshold candidates: " + inferenceStatus);
             }
 
-            CaptureWorkflowStep(RefreshAutomationRoot(restartedProcess, restartedHandle), screenshotDirectory, "04_first_inference_after_restart");
             File.Copy(visionPath, Path.Combine(artifactRoot, "reopened-after-inference-VISION.xml"), overwrite: true);
             CData inferredData = ReadRecipeData(visionPath);
-            AssertYoloV8DetectRecipeSettings(inferredData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine);
+            AssertYoloV8DetectRecipeSettings(inferredData, yoloRoot, pythonPath, clientScriptPath, weightsPath, inputRoot, modelEngine, requireRegistry: !usePreconfiguredRecipe);
             string inferredVisionHash = TestSupport.ComputeFileSha256(visionPath);
             if (verifySafeClose)
             {
@@ -547,7 +592,8 @@ internal static class ExeYoloV8DetectRestartSmokeTests
         string clientScriptPath,
         string weightsPath,
         string imageRoot,
-        string expectedEngine = PythonModelSettings.EngineYoloV8)
+        string expectedEngine = PythonModelSettings.EngineYoloV8,
+        bool requireRegistry = true)
     {
         AssertEqual(LabelingDatasetPurpose.ObjectDetection, data.ProjectSettings.DatasetPurpose);
         PythonModelSettings settings = data.ProjectSettings.PythonModel;
@@ -561,6 +607,11 @@ internal static class ExeYoloV8DetectRestartSmokeTests
         AssertTrue(Math.Abs(settings.MinimumDetectionConfidence - 0.25F) < 0.0001F, "saved YOLOv8 confidence should be 0.25");
         AssertTrue(settings.AutoStartClient, "saved YOLOv8 runtime should auto-start after restart");
 
+        if (!requireRegistry)
+        {
+            return;
+        }
+
         ModelRegistrySettings registry = data.ProjectSettings.ModelRegistry;
         AssertTrue(
             registry.Profiles.Exists(profile => string.Equals(profile.ModelEngine, expectedEngine, StringComparison.Ordinal)
@@ -570,6 +621,48 @@ internal static class ExeYoloV8DetectRestartSmokeTests
         AssertTrue(currentModel != null, "saved YOLOv8 Detect settings should register the current inspection model");
         AssertPathEqual(weightsPath, currentModel.WeightsPath, "saved YOLOv8 Detect registry weights mismatch");
         AssertEqual(0, registry.TrainingRuns.Count);
+    }
+
+    private static void PrepareDetectionRestartRecipe(
+        string recipeName,
+        string recipeDirectory,
+        string lastOpenedRecipePath,
+        string outputRoot,
+        string imageRoot,
+        string modelEngine,
+        string yoloRoot,
+        string pythonPath,
+        string clientScriptPath,
+        string weightsPath)
+    {
+        var data = new CData();
+        data.ConfigureOutputRoot(outputRoot);
+        data.ProjectSettings.DatasetPurpose = LabelingDatasetPurpose.ObjectDetection;
+        data.ClassNamedList.Add(new CClassItem { Text = "contamination_spot" });
+        data.ClassNamedList.Add(new CClassItem { Text = "scratch_crack" });
+        data.ClassNamedList.Add(new CClassItem { Text = "edge_chip" });
+        data.ClassNamedList.Add(new CClassItem { Text = "foreign_particle" });
+        data.ClassNamedList.Add(new CClassItem { Text = "ring_deformation" });
+        PythonModelSettings settings = data.ProjectSettings.PythonModel;
+        settings.ModelEngine = modelEngine;
+        settings.ProjectRootPath = yoloRoot;
+        settings.PythonExecutablePath = pythonPath;
+        settings.ClientScriptPath = clientScriptPath;
+        settings.WeightsPath = weightsPath;
+        settings.ImageRootPath = imageRoot;
+        settings.AutoStartClient = true;
+        settings.MinimumDetectionConfidence = 0.25F;
+        settings.DetectionTimeoutSeconds = 180;
+        settings.InferenceImageSize = 320;
+        data.SaveYoloDataYaml();
+
+        Directory.CreateDirectory(recipeDirectory);
+        SerializeHelper.ToXmlFile(Path.Combine(recipeDirectory, "VISION.xml"), data);
+        File.WriteAllText(
+            Path.Combine(recipeDirectory, LabelingDatasetManifestService.FileName),
+            JsonConvert.SerializeObject(LabelingDatasetManifestService.Build(data, recipeName), Formatting.Indented),
+            new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+        File.WriteAllText(lastOpenedRecipePath, recipeName, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     }
 
 }

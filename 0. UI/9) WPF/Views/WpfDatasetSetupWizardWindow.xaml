@@ -4,7 +4,7 @@
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:local="clr-namespace:MvcVisionSystem"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC0DD;&#xC131;"
+        Title="새 Recipe 설정"
         Width="900"
         Height="820"
         MinWidth="820"
@@ -115,7 +115,7 @@
         </Grid.RowDefinitions>
 
         <local:WpfWindowTitleBar Grid.Row="0"
-                                 TitleText="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC0DD;&#xC131;"
+                                 TitleText="새 Recipe 설정"
                                  SubtitleText="OpenVisionLab Labeling Studio"
                                  IconKind="FolderPlusOutline" />
 
@@ -244,6 +244,126 @@
                                        FontSize="11"
                                        TextWrapping="Wrap"
                                        Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="DatasetInitialRuntimeSection"
+                            AutomationProperties.AutomationId="DatasetInitialRuntimeSection"
+                            Background="{StaticResource PanelBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12"
+                            Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="원본 이미지와 최초 검사 모델" Style="{StaticResource WizardLabelStyle}" />
+                            <TextBlock Text="Recipe 생성 후 별도 화면을 오가지 않도록 이미지 폴더와 모델을 여기서 함께 정합니다. 모델 파일은 선택 사항입니다."
+                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       FontFamily="Segoe UI"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,8" />
+                            <TextBlock Text="원본 이미지 폴더" Style="{StaticResource WizardLabelStyle}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="WizardImageRootPathBox"
+                                         Style="{StaticResource WizardInputStyle}"
+                                         AutomationProperties.AutomationId="WizardImageRootPathBox"
+                                         AutomationProperties.Name="원본 이미지 폴더"
+                                         Text="{Binding ImageRootPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="{Binding ImageRootPath}" />
+                                <Button x:Name="WizardBrowseImageRootButton"
+                                        Grid.Column="1"
+                                        Style="{StaticResource WizardButtonStyle}"
+                                        AutomationProperties.AutomationId="WizardBrowseImageRootButton"
+                                        AutomationProperties.Name="원본 이미지 폴더 찾기"
+                                        Command="{Binding BrowseImageRootCommand}"
+                                        Margin="8,0,0,0"
+                                        MinWidth="68">
+                                    <StackPanel Orientation="Horizontal">
+                                        <iconPacks:PackIconMaterial Kind="FolderImage" Width="14" Height="14" Margin="0,0,5,0" />
+                                        <TextBlock Text="찾기" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <TextBlock Text="모델 프로필" Style="{StaticResource WizardLabelStyle}" Margin="0,10,0,5" />
+                            <ListBox x:Name="WizardModelEngineListBox"
+                                     Style="{StaticResource WizardListBoxStyle}"
+                                     ItemContainerStyle="{StaticResource WizardListItemStyle}"
+                                     ItemsSource="{Binding ModelEngineOptions}"
+                                     SelectedItem="{Binding SelectedModelEngine, Mode=TwoWay}"
+                                     AutomationProperties.AutomationId="WizardModelEngineListBox"
+                                     AutomationProperties.Name="최초 모델 프로필">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                            </ListBox>
+
+                            <TextBlock Text="검사 모델 파일 (선택)" Style="{StaticResource WizardLabelStyle}" Margin="0,4,0,5" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="WizardWeightsPathBox"
+                                         Style="{StaticResource WizardInputStyle}"
+                                         AutomationProperties.AutomationId="WizardWeightsPathBox"
+                                         AutomationProperties.Name="최초 검사 모델 파일"
+                                         Text="{Binding WeightsPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         ToolTip="{Binding WeightsPath}" />
+                                <Button x:Name="WizardBrowseWeightsButton"
+                                        Grid.Column="1"
+                                        Style="{StaticResource WizardButtonStyle}"
+                                        AutomationProperties.AutomationId="WizardBrowseWeightsButton"
+                                        AutomationProperties.Name="최초 검사 모델 파일 찾기"
+                                        Command="{Binding BrowseWeightsCommand}"
+                                        Margin="8,0,0,0"
+                                        MinWidth="68">
+                                    <StackPanel Orientation="Horizontal">
+                                        <iconPacks:PackIconMaterial Kind="FileOutline" Width="14" Height="14" Margin="0,0,5,0" />
+                                        <TextBlock Text="찾기" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            <TextBlock Text="{Binding ModelSetupHelpText}"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       FontFamily="Segoe UI"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,6,0,0" />
+
+                            <Grid Visibility="{Binding AnomalySettingsVisibility}" Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.ColumnSpan="2" Text="이상탐지 클래스 매핑" Style="{StaticResource WizardLabelStyle}" />
+                                <TextBlock Grid.Row="1" Text="정상 클래스" Style="{StaticResource WizardLabelStyle}" Margin="0,7,8,0" />
+                                <TextBox x:Name="WizardAnomalyNormalClassesBox"
+                                         Grid.Row="1"
+                                         Grid.Column="1"
+                                         Style="{StaticResource WizardInputStyle}"
+                                         AutomationProperties.Name="이상탐지 정상 클래스"
+                                         Text="{Binding AnomalyNormalClassNamesText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="2" Text="이상 클래스" Style="{StaticResource WizardLabelStyle}" Margin="0,7,8,0" />
+                                <TextBox x:Name="WizardAnomalyAbnormalClassesBox"
+                                         Grid.Row="2"
+                                         Grid.Column="1"
+                                         Style="{StaticResource WizardInputStyle}"
+                                         AutomationProperties.Name="이상탐지 이상 클래스"
+                                         Text="{Binding AnomalyAbnormalClassNamesText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
                         </StackPanel>
                     </Border>
 
@@ -399,10 +519,10 @@
                     <Button x:Name="WizardCreateButton"
                             Style="{StaticResource WizardPrimaryButtonStyle}"
                             AutomationProperties.AutomationId="WizardCreateButton"
-                            AutomationProperties.Name="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC0DD;&#xC131;"
+                            AutomationProperties.Name="Recipe 생성 및 적용"
                             Command="{Binding CreateCommand}"
                             CommandParameter="{Binding SelectedItem, ElementName=WizardDatasetPurposeListBox}"
-                            Content="&#xC0DD;&#xC131;" />
+                            Content="Recipe 생성 및 적용" />
                 </StackPanel>
             </Grid>
         </Grid>

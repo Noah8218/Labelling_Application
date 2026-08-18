@@ -310,8 +310,9 @@
         <Style x:Key="CanvasAnnotationToolItemStyle" TargetType="ListBoxItem">
             <Setter Property="Width" Value="38" />
             <Setter Property="Height" Value="38" />
-            <Setter Property="AutomationProperties.Name" Value="{Binding Text}" />
-            <Setter Property="AutomationProperties.HelpText" Value="{Binding ToolTip}" />
+            <Setter Property="AutomationProperties.AutomationId" Value="{Binding Content.AutomationId, RelativeSource={RelativeSource Self}}" />
+            <Setter Property="AutomationProperties.Name" Value="{Binding Content.AccessibleName, RelativeSource={RelativeSource Self}}" />
+            <Setter Property="AutomationProperties.HelpText" Value="{Binding Content.ToolTip, RelativeSource={RelativeSource Self}}" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0,0,0,4" />
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -340,6 +341,10 @@
                                 <Setter TargetName="ItemChrome" Property="Background" Value="{DynamicResource AccentBrush}" />
                                 <Setter TargetName="ItemChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                                 <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="ItemChrome" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="ItemChrome" Property="BorderThickness" Value="2" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="ItemChrome" Property="Opacity" Value="0.45" />
@@ -1287,6 +1292,9 @@
                             </StackPanel>
                         </Border>
                         <Border x:Name="CanvasSelectedToolChip"
+                                AutomationProperties.AutomationId="CanvasSelectedToolChip"
+                                AutomationProperties.Name="{Binding SelectedAnnotationTool.AccessibleName, StringFormat=현재 도구: {0}}"
+                                AutomationProperties.HelpText="{Binding SelectedAnnotationTool.ToolTip}"
                                 Background="{DynamicResource PanelBrush}"
                                 BorderBrush="{DynamicResource ToolbarButtonBorderBrush}"
                                 BorderThickness="1"
@@ -1294,10 +1302,10 @@
                                 Padding="7,3"
                                 Margin="8,0,4,0"
                                 VerticalAlignment="Center"
-                                Visibility="Collapsed"
+                                Visibility="{Binding AnnotationWorkspaceVisibility}"
                                 ToolTip="{Binding SelectedAnnotationTool.ToolTip}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="선택"
+                                <TextBlock Text="현재 도구"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            FontFamily="Segoe UI"
                                            FontSize="10"

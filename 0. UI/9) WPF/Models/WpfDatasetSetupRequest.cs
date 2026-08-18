@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MvcVisionSystem.Yolo;
 
 namespace MvcVisionSystem
 {
@@ -20,5 +21,15 @@ namespace MvcVisionSystem
         public WpfDatasetSamplePresetKind SamplePresetKind { get; set; } = WpfDatasetSamplePresetKind.Empty;
 
         public string SampleSourcePath { get; set; } = string.Empty;
+
+        public string ImageRootPath { get; set; } = string.Empty;
+
+        public string ModelEngine { get; set; } = PythonModelSettings.EngineYoloV8;
+
+        public string WeightsPath { get; set; } = string.Empty;
+
+        public IReadOnlyList<string> AnomalyNormalClassNames { get; set; } = Array.Empty<string>();
+
+        public IReadOnlyList<string> AnomalyAbnormalClassNames { get; set; } = Array.Empty<string>();
     }
 }

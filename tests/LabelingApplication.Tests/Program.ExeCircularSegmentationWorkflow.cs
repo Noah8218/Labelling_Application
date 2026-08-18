@@ -174,8 +174,8 @@ internal static class ExeCircularSegmentationWorkflowTests
             root = RefreshAutomationRoot(process, handle);
             CaptureWorkflowStep(root, screenshotDirectory, "04_yolov8_settings_ready");
 
-            LoadConfiguredImageRootThroughExe(process, imageRoot, screenshotDirectory);
-            root = RefreshAutomationRoot(process);
+            LoadConfiguredImageRootThroughExe(process, handle, imageRoot, screenshotDirectory);
+            root = RefreshAutomationRoot(process, handle);
             CaptureWorkflowStep(root, screenshotDirectory, "05_image_queue_loaded");
 
             IReadOnlyList<string> selectedImages = SelectCircularSegmentationLabelImages(imageRoot, labelCount);
@@ -258,7 +258,7 @@ internal static class ExeCircularSegmentationWorkflowTests
         System.Windows.Automation.AutomationElement wizardRoot = OpenDatasetSetupWizardThroughExe(process, stableHandle);
         AssertTrue(wizardRoot != null, "dataset wizard did not open for circular segmentation workflow");
         _ = SelectListItemByText(wizardRoot, "\uC138\uADF8\uBA58\uD14C\uC774\uC158") || SelectListItemByText(wizardRoot, "Segmentation");
-        wizardRoot = WaitForProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131", TimeSpan.FromSeconds(8));
+        wizardRoot = WaitForProcessWindowByName(process, "새 Recipe 설정", TimeSpan.FromSeconds(8));
         AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardRecipeNameBox", recipeName), "segmentation wizard recipe name was not editable");
         AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardOutputRootPathBox", outputRoot), "segmentation wizard output root was not editable");
         AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardClassNamesBox", "NG"), "segmentation wizard class names were not editable");
@@ -318,7 +318,7 @@ internal static class ExeCircularSegmentationWorkflowTests
     {
         for (int attempt = 0; attempt < 12; attempt++)
         {
-            System.Windows.Automation.AutomationElement wizard = FindProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131");
+            System.Windows.Automation.AutomationElement wizard = FindProcessWindowByName(process, "새 Recipe 설정");
             if (wizard != null)
             {
                 return wizard;
@@ -336,7 +336,7 @@ internal static class ExeCircularSegmentationWorkflowTests
                 || TryInvokeAutomationButton(root, "\uB370\uC774\uD130\uC14B \uC0DD\uC131 \uC2DC\uC791"))
             {
                 if (WaitUntil(
-                        () => (wizard = FindProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131")) != null,
+                        () => (wizard = FindProcessWindowByName(process, "새 Recipe 설정")) != null,
                         TimeSpan.FromSeconds(3)))
                 {
                     return wizard;
@@ -361,7 +361,7 @@ internal static class ExeCircularSegmentationWorkflowTests
                     || TryInvokeAutomationButtonByAutomationId(selection, "CreateFirstDatasetButton"))
                 {
                     if (WaitUntil(
-                            () => (wizard = FindProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131")) != null,
+                            () => (wizard = FindProcessWindowByName(process, "새 Recipe 설정")) != null,
                             TimeSpan.FromSeconds(4)))
                     {
                         return wizard;
@@ -388,7 +388,7 @@ internal static class ExeCircularSegmentationWorkflowTests
             if (TryInvokeAutomationButtonByAutomationId(root, "DatasetSetupStartButton"))
             {
                 if (WaitUntil(
-                        () => (wizard = FindProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131")) != null,
+                        () => (wizard = FindProcessWindowByName(process, "새 Recipe 설정")) != null,
                         TimeSpan.FromSeconds(3)))
                 {
                     return wizard;
@@ -398,7 +398,7 @@ internal static class ExeCircularSegmentationWorkflowTests
             Thread.Sleep(350);
         }
 
-        return FindProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131");
+        return FindProcessWindowByName(process, "새 Recipe 설정");
     }
 
     private static bool CloseRecipeManagerWindowIfOpen(Process process, IntPtr mainHandle)
@@ -550,9 +550,9 @@ internal static class ExeCircularSegmentationWorkflowTests
         Thread.Sleep(1200);
     }
 
-    internal static void LoadConfiguredImageRootThroughExe(Process process, string imageRoot, string screenshotDirectory)
+    internal static void LoadConfiguredImageRootThroughExe(Process process, IntPtr stableHandle, string imageRoot, string screenshotDirectory)
     {
-        var root = RefreshAutomationRoot(process);
+        var root = RefreshAutomationRoot(process, stableHandle);
         string expectedImageMarker = FindImageQueueMarker(imageRoot);
         if (FindAutomationElementByAutomationId(root, "LoadConfiguredImageRootButton") == null)
         {
@@ -562,11 +562,11 @@ internal static class ExeCircularSegmentationWorkflowTests
             AssertTrue(
                 WaitUntil(
                     () => FindAutomationElementByAutomationId(
-                        RefreshAutomationRoot(process, bringToFront: false),
+                        RefreshAutomationRoot(process, stableHandle, bringToFront: false),
                         "LoadConfiguredImageRootButton") != null,
                     TimeSpan.FromSeconds(8)),
                 "configured image-root load button did not appear in the dataset stage");
-            root = RefreshAutomationRoot(process);
+            root = RefreshAutomationRoot(process, stableHandle);
         }
 
         bool invoked = TryInvokeAutomationButtonByAutomationId(root, "LoadConfiguredImageRootButton");
@@ -586,19 +586,19 @@ internal static class ExeCircularSegmentationWorkflowTests
         bool loaded = WaitUntil(
                 () =>
                 {
-                    var latestRoot = RefreshAutomationRoot(process, bringToFront: false);
+                    var latestRoot = RefreshAutomationRoot(process, stableHandle, bringToFront: false);
                     return ImageRootAppearsLoaded(latestRoot, imageRoot, expectedImageMarker);
                 },
                 TimeSpan.FromSeconds(12));
         if (!loaded)
         {
-            CaptureWorkflowStep(RefreshAutomationRoot(process), screenshotDirectory, "05a_configured_image_root_load_failed");
+            CaptureWorkflowStep(RefreshAutomationRoot(process, stableHandle), screenshotDirectory, "05a_configured_image_root_load_failed");
         }
 
         AssertTrue(
             loaded,
             "configured image root did not load into the EXE image queue");
-        CaptureWorkflowStep(RefreshAutomationRoot(process), screenshotDirectory, "05a_configured_image_root_loaded");
+        CaptureWorkflowStep(RefreshAutomationRoot(process, stableHandle), screenshotDirectory, "05a_configured_image_root_loaded");
     }
 
     private static void LoadImageRootThroughFolderDialogExe(Process process, IntPtr stableHandle, string imageRoot, string screenshotDirectory)
@@ -788,6 +788,7 @@ internal static class ExeCircularSegmentationWorkflowTests
         string firstSavedScreenshot = screenshotPrefix == "06" ? "06a_first_label_saved" : screenshotPrefix + "_first_label_saved";
         string lastSavedScreenshot = screenshotPrefix == "06" ? "06b_last_label_saved" : screenshotPrefix + "_last_label_saved";
         int index = 0;
+        AssertTrue(OpenLabelingWorkbenchThroughExe(process), "labeling workbench stage was not selectable before opening the image queue");
         foreach (string imagePath in selectedImages)
         {
             index++;
@@ -1017,6 +1018,17 @@ internal static class ExeCircularSegmentationWorkflowTests
         DateTime previousBestWriteUtc = File.Exists(trainedWeightsPath)
             ? File.GetLastWriteTimeUtc(trainedWeightsPath)
             : DateTime.MinValue;
+        string normalizedOutputRoot = outputRoot.Replace("\\", "/", StringComparison.Ordinal);
+        string normalizedPhysicalOutputRoot = normalizedOutputRoot;
+        string configuredStorageRoot = Environment.GetEnvironmentVariable(TestStorageRootEnvironmentVariable);
+        string repositoryArtifactsRoot = Path.Combine(FindRepositoryRoot(), "artifacts");
+        string artifactsRelativePath = Path.GetRelativePath(repositoryArtifactsRoot, outputRoot);
+        if (!string.IsNullOrWhiteSpace(configuredStorageRoot)
+            && !artifactsRelativePath.StartsWith("..", StringComparison.Ordinal))
+        {
+            normalizedPhysicalOutputRoot = Path.Combine(configuredStorageRoot, "artifacts", artifactsRelativePath)
+                .Replace("\\", "/", StringComparison.Ordinal);
+        }
 
         var root = RefreshAutomationRoot(process);
         AssertTrue(
@@ -1095,7 +1107,8 @@ internal static class ExeCircularSegmentationWorkflowTests
                     return currentWriteUtc > previousBestWriteUtc
                         && File.Exists(resultsPath)
                         && File.Exists(argsPath)
-                        && normalizedArgsText.IndexOf(outputRoot.Replace("\\", "/"), StringComparison.OrdinalIgnoreCase) >= 0
+                        && (normalizedArgsText.IndexOf(normalizedOutputRoot, StringComparison.OrdinalIgnoreCase) >= 0
+                            || normalizedArgsText.IndexOf(normalizedPhysicalOutputRoot, StringComparison.OrdinalIgnoreCase) >= 0)
                         && IsTrainingCompletionVisibleInExe(process);
                 },
                 TimeSpan.FromMinutes(5)),
@@ -1247,9 +1260,13 @@ internal static class ExeCircularSegmentationWorkflowTests
     {
         for (int attempt = 0; attempt < 8; attempt++)
         {
-            System.Windows.Automation.AutomationElement root = RefreshAutomationRoot(process);
-            if (ContainsAutomationText(root, "\uD604\uC7AC \uC774\uBBF8\uC9C0 \uD6C4\uBCF4 \uAC80\uD1A0")
-                || ContainsAutomationText(root, "\uD559\uC2B5 \uBAA8\uB378 \uAC80\uC99D"))
+              System.Windows.Automation.AutomationElement root = RefreshAutomationRoot(process);
+              if (string.Equals(
+                      GetAutomationValueByAutomationId(root, "RightWorkflowViewTitleText"),
+                      "AI \uD6C4\uBCF4 \uAC80\uD1A0",
+                      StringComparison.Ordinal)
+                  || ContainsAutomationText(root, "\uD604\uC7AC \uC774\uBBF8\uC9C0 \uD6C4\uBCF4 \uAC80\uD1A0")
+                  || ContainsAutomationText(root, "\uD559\uC2B5 \uBAA8\uB378 \uAC80\uC99D"))
             {
                 return true;
             }
@@ -1266,9 +1283,16 @@ internal static class ExeCircularSegmentationWorkflowTests
         return false;
     }
 
-    internal static void CaptureWorkflowStep(System.Windows.Automation.AutomationElement root, string screenshotDirectory, string stepName)
+    internal static void CaptureWorkflowStep(
+        System.Windows.Automation.AutomationElement root,
+        string screenshotDirectory,
+        string stepName,
+        int settleMilliseconds = 600)
     {
         Directory.CreateDirectory(screenshotDirectory);
+        System.Windows.Rect bounds = root.Current.BoundingRectangle;
+        SetCursorPos((int)bounds.Left + 8, (int)bounds.Bottom - 8);
+        Thread.Sleep(settleMilliseconds);
         CaptureAutomationRoot(root, Path.Combine(screenshotDirectory, stepName + ".png"));
     }
 

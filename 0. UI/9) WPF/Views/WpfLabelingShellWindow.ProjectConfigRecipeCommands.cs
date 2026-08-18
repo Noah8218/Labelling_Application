@@ -47,9 +47,9 @@ namespace MvcVisionSystem
             SaveProjectConfigFromPanel();
         }
 
-        private void ExecuteApplyProjectRecipeCommand()
+        private async void ExecuteApplyProjectRecipeCommand()
         {
-            ApplyProjectRecipeFromPanel();
+            await ApplyProjectRecipeFromPanelAsync();
         }
 
         private void ProjectRecipeListBox_SelectionChanged(object sender, object selectedItem)

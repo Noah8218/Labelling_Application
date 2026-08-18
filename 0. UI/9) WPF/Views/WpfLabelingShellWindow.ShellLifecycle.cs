@@ -214,6 +214,8 @@ namespace MvcVisionSystem
             imageDecodePreloadService.CancelAndWait(TimeSpan.FromSeconds(2));
             CancelImageQueueCatalogLoad(waitForCompletion: true);
             CancelImageQueueDetailRefresh(waitForCompletion: true);
+            projectRecipeSessionCts.Cancel();
+            projectRecipeSessionCts.Dispose();
             smartMaskCancellation?.Cancel();
             smartMaskCancellation?.Dispose();
             smartMaskCancellation = null;

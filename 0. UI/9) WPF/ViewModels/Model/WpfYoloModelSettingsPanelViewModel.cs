@@ -29,6 +29,10 @@ namespace MvcVisionSystem
         private string anomalyMinimumConfidenceText = "0";
         private bool autoStartClient;
         private bool applyingModelEngineDefaults;
+        private bool loadingAppliedSettings;
+        private bool isSettingsDirty;
+        private string appliedEditorSignature = string.Empty;
+        private PythonModelSettings appliedModelSettings = new PythonModelSettings();
         private bool isBrowsePythonEnabled = true;
         private bool isBrowseProjectRootEnabled = true;
         private bool isBrowseClientScriptEnabled = true;
@@ -43,6 +47,7 @@ namespace MvcVisionSystem
         private ICommand browseImageRootCommand = new RelayCommand(NoOpCommand);
         private ICommand saveSettingsCommand = new RelayCommand(NoOpCommand);
         private ICommand resetSettingsCommand = new RelayCommand(NoOpCommand);
+        private ICommand cancelChangesCommand = new RelayCommand(NoOpCommand);
         private ICommand runtimeProfileActionCommand = new RelayCommand<string>(NoOpTextCommand);
         private Action<string> runtimeProfileAction = NoOpTextCommand;
         private bool isRuntimeProfileActionEnabled = true;
@@ -128,6 +133,12 @@ namespace MvcVisionSystem
             private set => SetProperty(ref resetSettingsCommand, value);
         }
 
+        public ICommand CancelChangesCommand
+        {
+            get => cancelChangesCommand;
+            private set => SetProperty(ref cancelChangesCommand, value);
+        }
+
         public ICommand RuntimeProfileActionCommand
         {
             get => runtimeProfileActionCommand;
@@ -167,12 +178,14 @@ namespace MvcVisionSystem
             {
                 if (SetProperty(ref selectedModelEngine, PythonModelSettings.NormalizeModelEngine(value)))
                 {
-                    if (!applyingModelEngineDefaults
+                    if (!loadingAppliedSettings
+                        && !applyingModelEngineDefaults
                         && string.Equals(selectedModelEngine, PythonModelSettings.EngineUnet, StringComparison.Ordinal))
                     {
                         ApplyUnetRuntimeDefaults();
                     }
-                    else if (!applyingModelEngineDefaults
+                    else if (!loadingAppliedSettings
+                        && !applyingModelEngineDefaults
                         && string.Equals(selectedModelEngine, PythonModelSettings.EnginePatchCore, StringComparison.Ordinal))
                     {
                         ApplyPatchCoreRuntimeDefaults();
@@ -314,38 +327,68 @@ namespace MvcVisionSystem
             private set => SetProperty(ref isRuntimeUninstallPackageEnabled, value);
         }
 
-        public string SettingsSummaryTitleText => "\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378 \uD504\uB85C\uD544";
+        public string SettingsSummaryTitleText => "현재 적용 검사 모델 프로필";
 
         public string SettingsSummaryModelText
             => string.Format(
                 CultureInfo.CurrentCulture,
-                "\uBAA8\uB378 \uD504\uB85C\uD544: {0} / \uAC80\uC0AC \uBAA8\uB378: {1}",
-                FormatModelProfileName(SelectedModelEngine),
-                FormatPathLeaf(WeightsPath, "\uBBF8\uC124\uC815"));
+                "모델 프로필: {0} / 검사 모델: {1}",
+                FormatModelProfileName(appliedModelSettings.ModelEngine),
+                FormatPathLeaf(appliedModelSettings.WeightsPath, "미설정"));
 
         public string SettingsSummaryRuntimeText
             => string.Format(
                 CultureInfo.CurrentCulture,
                 "\uC2E0\uB8B0\uB3C4 {0} / \uC774\uBBF8\uC9C0 {1} / \uCD5C\uB300 \uD6C4\uBCF4 {2} / \uC2DC\uAC04 {3}\uCD08",
-                string.IsNullOrWhiteSpace(MinimumConfidenceText) ? "-" : MinimumConfidenceText,
-                string.IsNullOrWhiteSpace(InferenceImageSizeText) ? "-" : InferenceImageSizeText,
-                string.IsNullOrWhiteSpace(MaximumCandidatesText) ? "-" : MaximumCandidatesText,
-                string.IsNullOrWhiteSpace(TimeoutSecondsText) ? "-" : TimeoutSecondsText);
+                appliedModelSettings.MinimumDetectionConfidence.ToString("0.##", CultureInfo.InvariantCulture),
+                appliedModelSettings.InferenceImageSize.ToString(CultureInfo.InvariantCulture),
+                appliedModelSettings.MaximumDetectionCandidates.ToString(CultureInfo.InvariantCulture),
+                appliedModelSettings.DetectionTimeoutSeconds.ToString(CultureInfo.InvariantCulture));
 
         public string SettingsSummaryRuntimeStatusText
-            => string.IsNullOrWhiteSpace(RuntimeExecutionSummaryText)
-                ? "\uC2E4\uD589\uAE30 \uC0C1\uD0DC: \uD655\uC778 \uD544\uC694"
-                : RuntimeExecutionSummaryText;
+            => PythonModelRuntimeExecutionSummaryService.Build(
+                appliedModelSettings,
+                workerSupportedModels,
+                workerTrainingModels,
+                workerDetectionModels).SummaryText;
 
         public string SettingsSummaryPathText
             => string.Format(
                 CultureInfo.CurrentCulture,
                 "\uC774\uBBF8\uC9C0: {0} / Python: {1}",
-                FormatPathLeaf(ImageRootPath, "\uBBF8\uC124\uC815"),
-                FormatPathLeaf(PythonExecutablePath, "\uBBF8\uC124\uC815"));
+                FormatPathLeaf(appliedModelSettings.ImageRootPath, "미설정"),
+                FormatPathLeaf(appliedModelSettings.PythonExecutablePath, "미설정"));
 
         public string SettingsSummaryActionText
-            => "\uC774 \uD654\uBA74\uC740 \uAC80\uC0AC\uC5D0 \uC4F8 \uBAA8\uB378 \uD504\uB85C\uD544\uACFC \uBAA8\uB378 \uD30C\uC77C\uC744 \uC800\uC7A5\uD569\uB2C8\uB2E4. \uC5EC\uB7EC \uBAA8\uB378\uC744 \uBE44\uAD50\uD560 \uB54C\uB294 \uD559\uC2B5 \uACB0\uACFC \uD6C4\uBCF4\uB97C \uAC80\uC99D\uD55C \uB4A4 \uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5\uD558\uC138\uC694.";
+            => "아래 편집 값은 아직 검사에 사용되지 않습니다. 확인 후 ‘Recipe에 저장 및 적용’을 눌러야 현재 적용 모델이 바뀝니다.";
+
+        public string EditingSummaryTitleText => "편집 중";
+
+        public string EditingSummaryText
+            => string.Format(
+                CultureInfo.CurrentCulture,
+                "{0} / {1}",
+                FormatModelProfileName(SelectedModelEngine),
+                FormatPathLeaf(WeightsPath, "모델 파일 미설정"));
+
+        public string EditStateText
+            => IsSettingsDirty
+                ? "적용 전 변경 사항이 있습니다. 검사에는 위의 현재 적용 모델이 계속 사용됩니다."
+                : "현재 적용 값과 같습니다.";
+
+        public string AppliedWeightsPath => appliedModelSettings.WeightsPath ?? string.Empty;
+
+        public bool IsSettingsDirty
+        {
+            get => isSettingsDirty;
+            private set
+            {
+                if (SetProperty(ref isSettingsDirty, value))
+                {
+                    OnPropertyChanged(nameof(EditStateText));
+                }
+            }
+        }
 
         public string AnomalyMappingHeaderText => "\uC774\uC0C1 \uD0D0\uC9C0 \uD310\uC815 \uB9E4\uD551";
 
@@ -475,7 +518,13 @@ namespace MvcVisionSystem
         public bool AutoStartClient
         {
             get => autoStartClient;
-            set => SetProperty(ref autoStartClient, value);
+            set
+            {
+                if (SetProperty(ref autoStartClient, value))
+                {
+                    NotifySettingsSummaryChanged();
+                }
+            }
         }
 
         public string AnomalyNormalClassNamesText
@@ -572,7 +621,8 @@ namespace MvcVisionSystem
             Action resetSettings,
             Action<string> runtimeProfileAction = null,
             Action runtimeInstallPackageAction = null,
-            Action runtimeUninstallPackageAction = null)
+            Action runtimeUninstallPackageAction = null,
+            Action cancelChanges = null)
         {
             // Path-picker commands are injected to keep file dialogs in the shell, not in view code-behind.
             BrowsePythonCommand = new RelayCommand(browsePython ?? NoOpCommand);
@@ -582,6 +632,7 @@ namespace MvcVisionSystem
             BrowseImageRootCommand = new RelayCommand(browseImageRoot ?? NoOpCommand);
             SaveSettingsCommand = new RelayCommand(saveSettings ?? NoOpCommand);
             ResetSettingsCommand = new RelayCommand(resetSettings ?? NoOpCommand);
+            CancelChangesCommand = new RelayCommand(cancelChanges ?? NoOpCommand);
             this.runtimeProfileAction = runtimeProfileAction ?? NoOpTextCommand;
             RuntimeProfileActionCommand = new RelayCommand<string>(ExecuteRuntimeProfileAction);
             this.runtimeInstallPackageAction = runtimeInstallPackageAction ?? NoOpCommand;
@@ -597,18 +648,20 @@ namespace MvcVisionSystem
                 return;
             }
 
-            PythonExecutablePath = PythonModelSettingsValidator.ResolvePythonExecutable(settings);
-            SelectedModelEngine = settings.ModelEngine;
-            ProjectRootPath = settings.ProjectRootPath ?? string.Empty;
-            ClientScriptPath = settings.ClientScriptPath ?? string.Empty;
-            WeightsPath = settings.WeightsPath ?? string.Empty;
-            ImageRootPath = settings.ImageRootPath ?? string.Empty;
-            MinimumConfidenceText = settings.MinimumDetectionConfidence.ToString("0.##", CultureInfo.InvariantCulture);
-            MaximumCandidatesText = settings.MaximumDetectionCandidates.ToString(CultureInfo.InvariantCulture);
-            InferenceImageSizeText = settings.InferenceImageSize.ToString(CultureInfo.InvariantCulture);
-            TimeoutSecondsText = settings.DetectionTimeoutSeconds.ToString(CultureInfo.InvariantCulture);
-            AutoStartClient = settings.AutoStartClient;
-            RefreshRuntimeProfiles();
+            loadingAppliedSettings = true;
+            try
+            {
+                LoadModelEditorFields(settings);
+                appliedModelSettings = CloneSettings(settings);
+                appliedEditorSignature = BuildEditorSignature();
+            }
+            finally
+            {
+                loadingAppliedSettings = false;
+            }
+
+            NotifyAppliedSettingsChanged();
+            RefreshDirtyState();
         }
 
         public void LoadFrom(PythonModelSettings settings, AnomalyClassificationSettings anomalySettings)
@@ -624,6 +677,26 @@ namespace MvcVisionSystem
             AnomalyNormalClassNamesText = FormatClassNames(settings.NormalClassNames);
             AnomalyAbnormalClassNamesText = FormatClassNames(settings.AbnormalClassNames);
             AnomalyMinimumConfidenceText = settings.MinimumConfidence.ToString("0.##", CultureInfo.InvariantCulture);
+            appliedEditorSignature = BuildEditorSignature();
+            RefreshDirtyState();
+        }
+
+        public void LoadDraftDefaults()
+        {
+            var defaults = new PythonModelSettings();
+            defaults.EnsureDefaults();
+            loadingAppliedSettings = true;
+            try
+            {
+                LoadModelEditorFields(defaults);
+            }
+            finally
+            {
+                loadingAppliedSettings = false;
+            }
+
+            RefreshRuntimeProfiles();
+            RefreshDirtyState();
         }
 
         public void ApplyTo(PythonModelSettings settings)
@@ -827,11 +900,86 @@ namespace MvcVisionSystem
             OnPropertyChanged(nameof(SettingsSummaryRuntimeStatusText));
             OnPropertyChanged(nameof(SettingsSummaryPathText));
             RefreshRuntimeProfiles();
+            RefreshDirtyState();
         }
 
         private void NotifyAnomalyMappingChanged()
         {
             OnPropertyChanged(nameof(AnomalyMappingSummaryText));
+            RefreshDirtyState();
+        }
+
+        private void LoadModelEditorFields(PythonModelSettings settings)
+        {
+            PythonExecutablePath = PythonModelSettingsValidator.ResolvePythonExecutable(settings);
+            SelectedModelEngine = settings.ModelEngine;
+            ProjectRootPath = settings.ProjectRootPath ?? string.Empty;
+            ClientScriptPath = settings.ClientScriptPath ?? string.Empty;
+            WeightsPath = settings.WeightsPath ?? string.Empty;
+            ImageRootPath = settings.ImageRootPath ?? string.Empty;
+            MinimumConfidenceText = settings.MinimumDetectionConfidence.ToString("0.##", CultureInfo.InvariantCulture);
+            MaximumCandidatesText = settings.MaximumDetectionCandidates.ToString(CultureInfo.InvariantCulture);
+            InferenceImageSizeText = settings.InferenceImageSize.ToString(CultureInfo.InvariantCulture);
+            TimeoutSecondsText = settings.DetectionTimeoutSeconds.ToString(CultureInfo.InvariantCulture);
+            AutoStartClient = settings.AutoStartClient;
+            RefreshRuntimeProfiles();
+        }
+
+        private void RefreshDirtyState()
+        {
+            if (!loadingAppliedSettings)
+            {
+                IsSettingsDirty = !string.Equals(appliedEditorSignature, BuildEditorSignature(), StringComparison.Ordinal);
+                OnPropertyChanged(nameof(EditingSummaryText));
+            }
+        }
+
+        private string BuildEditorSignature()
+            => string.Join("\u001f", new[]
+            {
+                (PythonExecutablePath ?? string.Empty).Trim(),
+                PythonModelSettings.NormalizeModelEngine(SelectedModelEngine),
+                (ProjectRootPath ?? string.Empty).Trim(),
+                (ClientScriptPath ?? string.Empty).Trim(),
+                (WeightsPath ?? string.Empty).Trim(),
+                (ImageRootPath ?? string.Empty).Trim(),
+                (MinimumConfidenceText ?? string.Empty).Trim(),
+                (MaximumCandidatesText ?? string.Empty).Trim(),
+                (InferenceImageSizeText ?? string.Empty).Trim(),
+                (TimeoutSecondsText ?? string.Empty).Trim(),
+                AutoStartClient ? "1" : "0",
+                (AnomalyNormalClassNamesText ?? string.Empty).Trim(),
+                (AnomalyAbnormalClassNamesText ?? string.Empty).Trim(),
+                (AnomalyMinimumConfidenceText ?? string.Empty).Trim()
+            });
+
+        private void NotifyAppliedSettingsChanged()
+        {
+            OnPropertyChanged(nameof(SettingsSummaryModelText));
+            OnPropertyChanged(nameof(SettingsSummaryRuntimeText));
+            OnPropertyChanged(nameof(SettingsSummaryRuntimeStatusText));
+            OnPropertyChanged(nameof(SettingsSummaryPathText));
+            OnPropertyChanged(nameof(AppliedWeightsPath));
+        }
+
+        private static PythonModelSettings CloneSettings(PythonModelSettings source)
+        {
+            var clone = new PythonModelSettings
+            {
+                PythonExecutablePath = source.PythonExecutablePath ?? string.Empty,
+                ModelEngine = source.ModelEngine,
+                ProjectRootPath = source.ProjectRootPath ?? string.Empty,
+                ClientScriptPath = source.ClientScriptPath ?? string.Empty,
+                WeightsPath = source.WeightsPath ?? string.Empty,
+                ImageRootPath = source.ImageRootPath ?? string.Empty,
+                MinimumDetectionConfidence = source.MinimumDetectionConfidence,
+                MaximumDetectionCandidates = source.MaximumDetectionCandidates,
+                InferenceImageSize = source.InferenceImageSize,
+                DetectionTimeoutSeconds = source.DetectionTimeoutSeconds,
+                AutoStartClient = source.AutoStartClient
+            };
+            clone.EnsureDefaults();
+            return clone;
         }
 
         private void RefreshRuntimeProfiles()

@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
+using System.Windows;
 
 namespace MvcVisionSystem
 {
@@ -19,6 +20,11 @@ namespace MvcVisionSystem
         private string recipeName = string.Empty;
         private string outputRootPath = string.Empty;
         private string classNamesText = "Defect";
+        private string imageRootPath = string.Empty;
+        private string selectedModelEngine = PythonModelSettings.EngineYoloV8;
+        private string weightsPath = string.Empty;
+        private string anomalyNormalClassNamesText = "normal";
+        private string anomalyAbnormalClassNamesText = "abnormal";
         private string classSummaryText = string.Empty;
         private string storageHelpText = string.Empty;
         private string imageSourcePreviewText = string.Empty;
@@ -29,6 +35,8 @@ namespace MvcVisionSystem
         private ICommand createCommand = new RelayCommand<object>(NoOpSelectionCommand);
         private ICommand cancelCommand = new RelayCommand(NoOpCommand);
         private ICommand browseOutputRootCommand = new RelayCommand(NoOpCommand);
+        private ICommand browseImageRootCommand = new RelayCommand(NoOpCommand);
+        private ICommand browseWeightsCommand = new RelayCommand(NoOpCommand);
         private Func<LabelingDatasetPurpose, string> automaticRecipeNameResolver;
         private Func<string, string> automaticOutputRootResolver;
         private string automaticRecipeName = string.Empty;
@@ -49,7 +57,7 @@ namespace MvcVisionSystem
 
         public string ViewName => nameof(WpfDatasetSetupWizardWindow);
 
-        public string SetupSummaryText => "\uC0C8 \uB370\uC774\uD130\uC14B\uC740 \uC0C8 \uC800\uC7A5 \uD3F4\uB354\uB97C \uB9CC\uB4E4\uACE0, \uC6D0\uBCF8 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB294 \uBCC4\uB3C4\uB85C \uC5F0\uACB0\uD569\uB2C8\uB2E4.";
+        public string SetupSummaryText => "목적, 저장 위치, 원본 이미지, 클래스, 최초 검사 모델을 한 화면에서 확인한 뒤 새 Recipe를 생성합니다.";
 
         public string SetupSourceRuleTitleText => "\uC800\uC7A5 \uD3F4\uB354\uC640 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB294 \uC5ED\uD560\uC774 \uB2E4\uB985\uB2C8\uB2E4";
 
@@ -71,6 +79,7 @@ namespace MvcVisionSystem
                     SynchronizeUntouchedAutomaticPaths();
                     RefreshSamplePresets();
                     RefreshPreview();
+                    OnPropertyChanged(nameof(AnomalySettingsVisibility));
                 }
             }
         }
@@ -134,6 +143,67 @@ namespace MvcVisionSystem
             }
         }
 
+        public string ImageRootPath
+        {
+            get => imageRootPath;
+            set
+            {
+                if (SetProperty(ref imageRootPath, value ?? string.Empty))
+                {
+                    RefreshPreview();
+                }
+            }
+        }
+
+        public ObservableCollection<string> ModelEngineOptions { get; } = new ObservableCollection<string>(PythonModelSettings.GetSupportedModelEngines());
+
+        public string SelectedModelEngine
+        {
+            get => selectedModelEngine;
+            set
+            {
+                if (SetProperty(ref selectedModelEngine, PythonModelSettings.NormalizeModelEngine(value)))
+                {
+                    RefreshPreview();
+                }
+            }
+        }
+
+        public string WeightsPath
+        {
+            get => weightsPath;
+            set
+            {
+                if (SetProperty(ref weightsPath, value ?? string.Empty))
+                {
+                    RefreshPreview();
+                }
+            }
+        }
+
+        public string AnomalyNormalClassNamesText
+        {
+            get => anomalyNormalClassNamesText;
+            set => SetProperty(ref anomalyNormalClassNamesText, value ?? string.Empty);
+        }
+
+        public string AnomalyAbnormalClassNamesText
+        {
+            get => anomalyAbnormalClassNamesText;
+            set => SetProperty(ref anomalyAbnormalClassNamesText, value ?? string.Empty);
+        }
+
+        public Visibility AnomalySettingsVisibility
+            => WpfLearningWorkflowPanelViewModel.ToDatasetPurpose(SelectedDatasetPurposeMode?.Mode ?? WpfLearningMode.ObjectDetection)
+                == LabelingDatasetPurpose.AnomalyDetection
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
+        public string ModelSetupHelpText
+            => string.IsNullOrWhiteSpace(WeightsPath)
+                ? "모델 파일은 선택 사항입니다. 비워 두면 수동 라벨링으로 시작하고 나중에 학습 모델을 적용할 수 있습니다."
+                : "선택한 모델 파일은 Recipe 생성과 함께 현재 검사 모델로 저장됩니다.";
+
         public string PreviewText
         {
             get => previewText;
@@ -188,12 +258,31 @@ namespace MvcVisionSystem
             private set => SetProperty(ref browseOutputRootCommand, value);
         }
 
-        public void ConfigureCommands(Action<object> create, Action cancel, Action browseOutputRoot)
+        public ICommand BrowseImageRootCommand
+        {
+            get => browseImageRootCommand;
+            private set => SetProperty(ref browseImageRootCommand, value);
+        }
+
+        public ICommand BrowseWeightsCommand
+        {
+            get => browseWeightsCommand;
+            private set => SetProperty(ref browseWeightsCommand, value);
+        }
+
+        public void ConfigureCommands(
+            Action<object> create,
+            Action cancel,
+            Action browseOutputRoot,
+            Action browseImageRoot = null,
+            Action browseWeights = null)
         {
             // The dialog owns no persistence. Commands are supplied by the shell composition root.
             CreateCommand = new RelayCommand<object>(create ?? NoOpSelectionCommand);
             CancelCommand = new RelayCommand(cancel ?? NoOpCommand);
             BrowseOutputRootCommand = new RelayCommand(browseOutputRoot ?? NoOpCommand);
+            BrowseImageRootCommand = new RelayCommand(browseImageRoot ?? NoOpCommand);
+            BrowseWeightsCommand = new RelayCommand(browseWeights ?? NoOpCommand);
         }
 
         public void ConfigureAutomaticPathSync(
@@ -218,6 +307,11 @@ namespace MvcVisionSystem
             RecipeName = recipeName ?? string.Empty;
             OutputRootPath = outputRootPath ?? string.Empty;
             ClassNamesText = string.Join(Environment.NewLine, NormalizeClassNames(classNames).DefaultIfEmpty("Defect"));
+            ImageRootPath = string.Empty;
+            SelectedModelEngine = PythonModelSettings.EngineYoloV8;
+            WeightsPath = string.Empty;
+            AnomalyNormalClassNamesText = "normal";
+            AnomalyAbnormalClassNamesText = "abnormal";
             StatusText = "\uC0DD\uC131 \uC804\uC5D0 \uC0C8 \uC800\uC7A5 \uD3F4\uB354, \uC2DC\uC791 \uC774\uBBF8\uC9C0, \uD074\uB798\uC2A4\uB97C \uD655\uC778\uD558\uC138\uC694.";
             RefreshPreview();
         }
@@ -251,6 +345,20 @@ namespace MvcVisionSystem
                 return false;
             }
 
+            string normalizedImageRoot = (ImageRootPath ?? string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(normalizedImageRoot) && !Directory.Exists(normalizedImageRoot))
+            {
+                error = "원본 이미지 폴더를 찾을 수 없습니다.";
+                return false;
+            }
+
+            string normalizedWeightsPath = (WeightsPath ?? string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(normalizedWeightsPath) && !File.Exists(normalizedWeightsPath))
+            {
+                error = "검사 모델 파일을 찾을 수 없습니다.";
+                return false;
+            }
+
             WpfLearningModeItem selectedPurposeItem = selectedPurpose as WpfLearningModeItem
                 ?? SelectedDatasetPurposeMode;
             request = new WpfDatasetSetupRequest
@@ -258,7 +366,12 @@ namespace MvcVisionSystem
                 Purpose = WpfLearningWorkflowPanelViewModel.ToDatasetPurpose(selectedPurposeItem?.Mode ?? WpfLearningMode.ObjectDetection),
                 RecipeName = normalizedRecipeName,
                 OutputRootPath = normalizedOutputRoot,
-                ClassNames = classNames
+                ClassNames = classNames,
+                ImageRootPath = normalizedImageRoot,
+                ModelEngine = PythonModelSettings.NormalizeModelEngine(SelectedModelEngine),
+                WeightsPath = normalizedWeightsPath,
+                AnomalyNormalClassNames = ParseClassNames(AnomalyNormalClassNamesText),
+                AnomalyAbnormalClassNames = ParseClassNames(AnomalyAbnormalClassNamesText)
             };
             WpfDatasetSamplePresetItem samplePreset = SelectedSamplePreset
                 ?? WpfDatasetSamplePresetService.CreateEmptyPreset(request.Purpose);
@@ -307,23 +420,30 @@ namespace MvcVisionSystem
             StorageHelpText = string.IsNullOrWhiteSpace(OutputRootPath)
                 ? "\uC0C8 \uC800\uC7A5 \uD3F4\uB354\uB97C \uC120\uD0DD\uD558\uC138\uC694. \uC774 \uD3F4\uB354\uAC00 \uB77C\uBCA8, Recipe, \uD559\uC2B5 \uD30C\uC77C\uC744 \uBCF4\uAD00\uD558\uB294 \uB370\uC774\uD130\uC14B \uAE30\uC900\uC785\uB2C8\uB2E4."
                 : $"\uC774 \uC800\uC7A5 \uD3F4\uB354\uAC00 \uB77C\uBCA8/Recipe/\uD559\uC2B5 \uD30C\uC77C\uC758 \uAE30\uC900\uC785\uB2C8\uB2E4. \uC0DD\uC131 \uD6C4 \uB77C\uBCA8\uC740 \uC774 \uACBD\uB85C\uC5D0 \uBD84\uB9AC\uB429\uB2C8\uB2E4: {OutputRootPath.Trim()}";
-            ImageSourcePreviewText = BuildImageSourcePreviewText(SelectedSamplePreset);
+            ImageSourcePreviewText = BuildImageSourcePreviewText(SelectedSamplePreset, ImageRootPath);
+            OnPropertyChanged(nameof(ModelSetupHelpText));
             IsolationHelpText = "\uC800\uC7A5 \uD3F4\uB354\uAC00 \uB370\uC774\uD130\uC14B\uC744 \uAD6C\uBD84\uD569\uB2C8\uB2E4. \uAC19\uC740 \uC6D0\uBCF8 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB97C \uC368\uB3C4 \uC0C8 \uC800\uC7A5 \uD3F4\uB354\uBA74 \uB77C\uBCA8\uACFC \uD559\uC2B5 \uACB0\uACFC\uAC00 \uBD84\uB9AC\uB429\uB2C8\uB2E4.";
             PreviewText = string.Format(
                 CultureInfo.InvariantCulture,
-                "\uBAA9\uC801: {0} / \uC2DC\uC791 \uB370\uC774\uD130: {1} / Recipe: {2} / \uC800\uC7A5 \uD3F4\uB354: {3} / \uD074\uB798\uC2A4: {4}",
+                "목적: {0} / 시작 데이터: {1} / Recipe: {2} / 저장 폴더: {3} / 클래스: {4} / 모델: {5}",
                 FormatPurposeText(purpose),
                 sampleSummary,
                 string.IsNullOrWhiteSpace(RecipeName) ? "-" : RecipeName.Trim(),
                 string.IsNullOrWhiteSpace(outputName) ? OutputRootPath : outputName,
-                classSummary);
+                classSummary,
+                PythonModelSettings.NormalizeModelEngine(SelectedModelEngine));
         }
 
-        private static string BuildImageSourcePreviewText(WpfDatasetSamplePresetItem samplePreset)
+        private static string BuildImageSourcePreviewText(WpfDatasetSamplePresetItem samplePreset, string imageRootPath)
         {
+            if (!string.IsNullOrWhiteSpace(imageRootPath))
+            {
+                return $"원본 이미지 폴더: {imageRootPath.Trim()}";
+            }
+
             if (samplePreset == null || samplePreset.Kind == WpfDatasetSamplePresetKind.Empty)
             {
-                return "\uC6D0\uBCF8 \uC774\uBBF8\uC9C0 \uD3F4\uB354: \uC0DD\uC131 \uD6C4 \uC0C1\uB2E8\uC758 \uC774\uBBF8\uC9C0 \uD3F4\uB354 \uBC84\uD2BC\uC73C\uB85C \uC5F0\uACB0\uD569\uB2C8\uB2E4.";
+                return "원본 이미지 폴더: 비워 두면 Recipe 내부 train/images 폴더로 시작합니다.";
             }
 
             string sourcePath = string.IsNullOrWhiteSpace(samplePreset.ImageSourcePath)

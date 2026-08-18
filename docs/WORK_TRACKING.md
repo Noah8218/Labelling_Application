@@ -1,6 +1,6 @@
 # Work Tracking
 
-Last updated: 2026-08-05
+Last updated: 2026-08-19
 
 ## 2026-07-31 Engineering Release 0.1.1 Graphics Preflight
 
@@ -21113,3 +21113,140 @@ Boundary / next dependency:
 - `0.1.3` remains dirty-source engineering evidence; `0.1.4` is the
   clean-source SDK-migration package evidence;
 - P0-C still requires access to the selected GPU-capable clean Windows target.
+
+## 2026-08-06 Recipe apply stability
+
+Status: Complete
+
+Scope:
+
+- removed the same-name `CRecipe.Name` null-task wait defect;
+- moved user-triggered Recipe config load to the existing project session
+  service's serialized async transition;
+- added latest-request-only global state commit, prepared dataset commit, and
+  window-close cancellation;
+- kept UI follow-up in the existing ProjectConfig/DatasetSetup adapters.
+
+Acceptance criteria:
+
+- same Recipe 100 consecutive applies -> pass;
+- overlapping requests leave the last requested Recipe/Data active -> pass;
+- prepared latest dataset is not overwritten by an older load -> pass;
+- pre-canceled apply changes no global Recipe/Data state -> pass;
+- settings save and reapply restores the saved class state -> pass;
+- actual EXE Recipe apply and project panel remain functional -> pass.
+
+Verification:
+
+- `Build-LabelingApplicationTests.ps1 -OutputName recipe-apply-final` -> 0
+  warnings/errors;
+- `--wpf-project-config-panel`, dataset setup UI/request, labeling shell, and
+  project archive focused checks -> pass;
+- `--exe-dataset-version-smoke` on leftmost `\\.\DISPLAY2` -> pass;
+- solo default suite -> all 267 registered checks pass, exit code 0, 310.4s;
+- UI before/after and monitor JSON under
+  `artifacts/ui/recipe-apply-stability-20260806`.
+
+Evidence: `docs/RECIPE_APPLY_STABILITY_20260806.md`.
+
+Boundary / next dependency:
+
+- save/hash separation, corrupt/read-only Recipe recovery, and Python worker
+  stop are not included;
+- external P0-C remains blocked on direct GPU-capable clean-target access.
+
+## 2026-08-06 D-backed worker identity and circular-disk portfolio captures
+
+Status: Complete
+
+Scope:
+
+- normalized existing Windows junction components before Python worker weight
+  identity comparison;
+- preserved stale-weight and wrong-engine rejection;
+- stabilized the actual-EXE detection capture route with a stable native
+  window handle, a preconfigured Recipe option, and neutral final capture
+  cursor placement;
+- captured five synthetic circular-disk defect classes through the current EXE
+  and the existing 30-epoch YOLOv8n detection model.
+
+Acceptance criteria:
+
+- logical repository `artifacts` path equals its physical D target for the
+  same weight -> pass;
+- a different weight under the same junction remains rejected -> pass;
+- current EXE reopens the Recipe and completes one-candidate inference for
+  contamination spot, edge chip, foreign particle, ring deformation, and
+  scratch/crack -> pass;
+- all selected captures are 1920x1080, tooltip-free, and use the model's five
+  actual defect classes -> pass.
+
+Verification:
+
+- `Build-LabelingApplicationTests.ps1 -OutputName path-identity-fix-7` -> 0
+  warnings, 0 errors;
+- `--python-model-status-protocol` -> pass;
+- five `--exe-yolov8-detect-restart-smoke --preconfigured-recipe` runs on
+  leftmost `\\.\DISPLAY2` -> pass, candidate count 1 each;
+- protected no-argument suite -> exit code 0 in 368.1 seconds;
+- visual review and SHA-256 verification of all five selected PNG files ->
+  pass.
+
+Evidence:
+
+- local review:
+  `artifacts\portfolio\20260806-current-exe\CIRCULAR_DISK_YOLOV8_PORTFOLIO_REVIEW.md`;
+- selected local captures:
+  `artifacts\portfolio\20260806-current-exe\selected-public\circular-disk-yolov8-detection`.
+
+Boundary / next dependency:
+
+- the 1,000-image circular-disk package is procedurally generated from one
+  source image and is suitable for workflow demonstration, not field-quality
+  claims;
+- external P0-C remains blocked on direct access to the selected GPU-capable
+  clean Windows target.
+
+## 2026-08-19 Segmentation Recipe UX, accessibility, and model-state clarity
+
+Status: Complete
+
+Scope:
+
+- gave icon-only segmentation tools stable automation identity, accessible
+  names/help, keyboard focus, and a visible current-tool state;
+- consolidated the initial Recipe purpose/data/image/model/weights/anomaly/
+  storage/class choices into one explicit setup surface;
+- separated the applied inspection model from the editing draft and kept
+  reset/cancel/save boundaries explicit;
+- compacted long queue/model names while preserving full-value disclosure.
+
+Acceptance criteria:
+
+- accessibility and current-tool state contract -> pass;
+- one-surface Recipe request and persistence contract -> pass;
+- applied-versus-editing model contract -> pass;
+- compact-name/full-value contract -> pass;
+- Wide/Compact layout and full protected regression -> pass;
+- bounded actual-EXE revalidation accepted by the user -> two complete runs,
+  one partial run, no runs four/five.
+
+Verification:
+
+- `Build-LabelingApplicationTests.ps1 -OutputName ux-priorities-final2-20260819`
+  -> 0 warnings, 0 errors;
+- nine focused WPF gates -> pass;
+- protected no-argument suite -> exit code 0;
+- actual EXE on dynamic leftmost `\\.\DISPLAY2` -> two full
+  label/train/apply/infer passes; third run stopped at Brush reselection;
+- visual before/after review -> no new dark-theme leak, clipped primary
+  action, or unreadable entered text found in the retained captures.
+
+Evidence: `docs/SEGMENTATION_RECIPE_UX_ACCESSIBILITY_20260819.md`.
+
+Boundary / next dependency:
+
+- five completed post-change segmentation runs are not claimed;
+- the third-run Brush reselection observation is not a confirmed product
+  defect and was not pursued after the user accepted the validation amount;
+- external P0-C still requires direct GPU-capable clean-target access.

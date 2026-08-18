@@ -91,6 +91,14 @@ namespace MvcVisionSystem
             var data = new CData();
             data.ProjectSettings.EnsureDefaults();
             data.ProjectSettings.DatasetPurpose = request.Purpose;
+            data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.NormalizeModelEngine(request.ModelEngine);
+            data.ProjectSettings.PythonModel.WeightsPath = request.WeightsPath?.Trim() ?? string.Empty;
+            if (request.Purpose == LabelingDatasetPurpose.AnomalyDetection)
+            {
+                data.ProjectSettings.AnomalyClassification.NormalClassNames = new System.Collections.Generic.List<string>(request.AnomalyNormalClassNames ?? Array.Empty<string>());
+                data.ProjectSettings.AnomalyClassification.AbnormalClassNames = new System.Collections.Generic.List<string>(request.AnomalyAbnormalClassNames ?? Array.Empty<string>());
+                data.ProjectSettings.AnomalyClassification.EnsureDefaults();
+            }
             string selectedClassName = dataService.ApplyOutputRootAndClasses(data, outputRootPath, request.ClassNames);
             if (!WpfDatasetSamplePresetService.TryApplySample(request, data, out WpfDatasetSamplePresetApplyResult sampleResult, out string sampleError))
             {
@@ -99,9 +107,11 @@ namespace MvcVisionSystem
                 return result;
             }
 
-            string imageRootPath = sampleResult?.Applied == true && Directory.Exists(sampleResult.ImageRootPath)
-                ? sampleResult.ImageRootPath
-                : data.TrainImagesPath;
+            string imageRootPath = Directory.Exists(request.ImageRootPath)
+                ? request.ImageRootPath.Trim()
+                : sampleResult?.Applied == true && Directory.Exists(sampleResult.ImageRootPath)
+                    ? sampleResult.ImageRootPath
+                    : data.TrainImagesPath;
             data.ProjectSettings.PythonModel.ImageRootPath = imageRootPath;
             data.SaveYoloDataYaml();
             data.SaveConfig(recipeName);

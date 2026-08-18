@@ -112,6 +112,7 @@
                     <TextBlock x:Name="YoloModelSettingsSummaryModelText"
                                AutomationProperties.AutomationId="YoloModelSettingsSummaryModelText"
                                Text="{Binding SettingsSummaryModelText}"
+                               ToolTip="{Binding AppliedWeightsPath}"
                                Foreground="{DynamicResource PrimaryTextBrush}"
                                FontFamily="Segoe UI"
                                FontSize="10.5"
@@ -156,11 +157,19 @@
                 </StackPanel>
             </Border>
 
+            <Expander x:Name="YoloRuntimeDiagnosticsExpander"
+                      AutomationProperties.AutomationId="YoloRuntimeDiagnosticsExpander"
+                      AutomationProperties.Name="실행 환경 및 모델 어댑터 상세"
+                      Header="실행 환경 및 모델 어댑터 상세"
+                      Foreground="{DynamicResource PrimaryTextBrush}"
+                      IsExpanded="False"
+                      Margin="0,0,0,8">
+                <StackPanel Margin="0,7,0,0">
             <Expander x:Name="ModelAdapterCatalogExpander"
                       AutomationProperties.AutomationId="ModelAdapterCatalogExpander"
                       Header="&#xBAA8;&#xB378; &#xC5B4;&#xB311;&#xD130; &#xCE74;&#xD0C8;&#xB85C;&#xADF8;"
                       Foreground="{DynamicResource PrimaryTextBrush}"
-                      IsExpanded="True"
+                      IsExpanded="False"
                       Margin="0,0,0,8">
                 <StackPanel Margin="0,7,0,0">
                     <TextBlock x:Name="ModelAdapterCatalogBoundaryText"
@@ -710,6 +719,8 @@
                     </Border>
                 </StackPanel>
             </Border>
+                </StackPanel>
+            </Expander>
 
             <Border x:Name="YoloInspectionModelQuickPanel"
                     AutomationProperties.AutomationId="YoloInspectionModelQuickPanel"
@@ -728,18 +739,51 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="&#xAC80;&#xC0AC; &#xBAA8;&#xB378;"
+                    <TextBlock x:Name="YoloEditingSummaryTitleText"
+                               Grid.ColumnSpan="3"
+                               AutomationProperties.AutomationId="YoloEditingSummaryTitleText"
+                               Text="{Binding EditingSummaryTitleText}"
+                               Foreground="{DynamicResource PrimaryTextBrush}"
+                               FontFamily="Segoe UI"
+                               FontSize="11"
+                               FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="1"
+                               Text="&#xBAA8;&#xB378; &#xD504;&#xB85C;&#xD544;"
+                               Style="{StaticResource YoloModelLabelStyle}"
+                               Margin="0,6,8,0" />
+                    <ComboBox x:Name="YoloModelEngineQuickBox"
+                              Grid.Row="1"
+                              Grid.Column="1"
+                              Grid.ColumnSpan="2"
+                              AutomationProperties.AutomationId="YoloModelEngineQuickBox"
+                              AutomationProperties.Name="편집 중 모델 프로필"
+                              Height="26"
+                              ItemsSource="{Binding ModelEngineOptions}"
+                              SelectedItem="{Binding SelectedModelEngine, Mode=TwoWay}"
+                              Background="{DynamicResource InputBrush}"
+                              Foreground="{DynamicResource PrimaryTextBrush}"
+                              BorderBrush="{DynamicResource InputBorderBrush}"
+                              FontFamily="Segoe UI"
+                              FontSize="11"
+                              Padding="6,2"
+                              Margin="0,6,0,0" />
+                    <TextBlock Grid.Row="2"
+                               Text="&#xAC80;&#xC0AC; &#xBAA8;&#xB378;"
                                Style="{StaticResource YoloModelLabelStyle}"
                                Margin="0,0,8,0" />
                     <TextBox x:Name="YoloWeightsPathBox"
+                             Grid.Row="2"
                              Grid.Column="1"
                              Style="{StaticResource YoloModelTextBoxStyle}"
                              Text="{Binding WeightsPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="{Binding WeightsPath}"
                              Margin="0" />
                     <ui:Button x:Name="BrowseYoloWeightsButton"
+                               Grid.Row="2"
                                Grid.Column="2"
                                Style="{StaticResource YoloModelBrowseButtonStyle}"
                                IsEnabled="{Binding IsBrowseWeightsEnabled}"
@@ -748,11 +792,15 @@
                                Margin="5,0,0,0">
                         <iconPacks:PackIconMaterial Style="{StaticResource YoloModelIconStyle}" Kind="DotsHorizontal" />
                     </ui:Button>
-                    <TextBlock Grid.Row="1"
+                    <TextBlock x:Name="YoloEditingStateText"
+                               AutomationProperties.AutomationId="YoloEditingStateText"
+                               AutomationProperties.Name="{Binding EditStateText}"
+                               Grid.Row="3"
                                Grid.Column="1"
                                Grid.ColumnSpan="2"
-                               Text="&#xD559;&#xC2B5; &#xACB0;&#xACFC; &#xD6C4;&#xBCF4;&#xB098; &#xAC80;&#xC0AC;&#xC5D0; &#xC0AC;&#xC6A9;&#xD560; &#xBAA8;&#xB378; &#xD30C;&#xC77C;&#xC744; &#xC120;&#xD0DD;&#xD569;&#xB2C8;&#xB2E4;."
-                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               Text="{Binding EditStateText}"
+                               ToolTip="{Binding WeightsPath}"
+                               Foreground="{DynamicResource AccentBrush}"
                                FontFamily="Segoe UI"
                                FontSize="10"
                                TextWrapping="Wrap"
@@ -839,16 +887,26 @@
                 <ui:Button x:Name="SaveYoloSettingsButton"
                            Style="{StaticResource YoloModelCommandButtonStyle}"
                            IsEnabled="{Binding IsSaveSettingsEnabled}"
-                           MinWidth="80"
-                           Content="&#xC800;&#xC7A5;"
-                           ToolTip="&#xD604;&#xC7AC; &#xAC80;&#xC0AC; &#xBAA8;&#xB378;&#xACFC; &#xCD94;&#xB860; &#xC124;&#xC815; &#xC800;&#xC7A5;"
+                           AutomationProperties.Name="Recipe에 저장 및 적용"
+                           MinWidth="132"
+                           Content="Recipe에 저장 및 적용"
+                           ToolTip="편집 중인 모델 프로필과 검사 모델을 이 Recipe에 저장하고 다음 검사부터 적용"
                            Command="{Binding SaveSettingsCommand}" />
+                <ui:Button x:Name="CancelYoloSettingsChangesButton"
+                           Style="{StaticResource YoloModelCommandButtonStyle}"
+                           IsEnabled="{Binding IsSettingsDirty}"
+                           AutomationProperties.AutomationId="CancelYoloSettingsChangesButton"
+                           AutomationProperties.Name="편집 취소"
+                           MinWidth="82"
+                           Content="편집 취소"
+                           ToolTip="저장하지 않은 변경을 버리고 현재 Recipe 적용 값 다시 불러오기"
+                           Command="{Binding CancelChangesCommand}" />
                 <ui:Button x:Name="ResetYoloSettingsButton"
                            Style="{StaticResource YoloModelCommandButtonStyle}"
                            IsEnabled="{Binding IsResetSettingsEnabled}"
                            MinWidth="82"
-                           Content="&#xAE30;&#xBCF8;&#xAC12;"
-                           ToolTip="&#xAE30;&#xBCF8; &#xBAA8;&#xB378;&#xACFC; &#xCD94;&#xB860; &#xC124;&#xC815; &#xBCF5;&#xC6D0;"
+                           Content="기본값으로 편집"
+                           ToolTip="기본값을 편집란에 불러오기. 저장 및 적용하기 전까지 현재 검사 설정은 유지"
                            Command="{Binding ResetSettingsCommand}" />
             </WrapPanel>
 

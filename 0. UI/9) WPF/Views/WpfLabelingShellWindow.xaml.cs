@@ -165,6 +165,7 @@ namespace MvcVisionSystem
         private readonly WpfDatasetSetupExecutionService datasetSetupExecutionService = new WpfDatasetSetupExecutionService();
         private readonly WpfDatasetSetupPresentationService datasetSetupPresentationService = new WpfDatasetSetupPresentationService();
         private readonly WpfProjectRecipeSessionService projectRecipeSessionService = new WpfProjectRecipeSessionService();
+        private readonly CancellationTokenSource projectRecipeSessionCts = new CancellationTokenSource();
         private readonly WpfTrainingWeightsService trainingWeightsService = new WpfTrainingWeightsService();
         private readonly WpfModelComparisonReviewService modelComparisonReviewService = new WpfModelComparisonReviewService();
         private readonly WpfModelComparisonRunService modelComparisonRunService = new WpfModelComparisonRunService();

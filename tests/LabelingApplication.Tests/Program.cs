@@ -101,7 +101,7 @@ internal static partial class Program
     private static extern bool GetWindowRect(IntPtr hWnd, out NativeRect rect);
 
     [DllImport("user32.dll")]
-    private static extern bool SetCursorPos(int x, int y);
+    internal static extern bool SetCursorPos(int x, int y);
 
     [DllImport("user32.dll")]
     private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
@@ -215,10 +215,12 @@ internal static partial class Program
 
     internal static void LoadConfiguredImageRootThroughExe(
         Process process,
+        IntPtr stableHandle,
         string imageRoot,
         string screenshotDirectory)
         => ExeCircularSegmentationWorkflowTests.LoadConfiguredImageRootThroughExe(
             process,
+            stableHandle,
             imageRoot,
             screenshotDirectory);
 
@@ -242,8 +244,9 @@ internal static partial class Program
     internal static void CaptureWorkflowStep(
         System.Windows.Automation.AutomationElement root,
         string screenshotDirectory,
-        string stepName)
-        => ExeCircularSegmentationWorkflowTests.CaptureWorkflowStep(root, screenshotDirectory, stepName);
+        string stepName,
+        int settleMilliseconds = 600)
+        => ExeCircularSegmentationWorkflowTests.CaptureWorkflowStep(root, screenshotDirectory, stepName, settleMilliseconds);
 
     internal static bool TryBringYoloSettingsElementIntoView(
         Process process,
@@ -5335,10 +5338,10 @@ internal static partial class Program
                     || TryInvokeAutomationButton(root, "\uB370\uC774\uD130\uC14B \uC0DD\uC131 \uC2DC\uC791"),
                 "dataset setup start button was not invokable in the real EXE");
 
-            var wizardRoot = WaitForProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131", TimeSpan.FromSeconds(8));
+            var wizardRoot = WaitForProcessWindowByName(process, "새 Recipe 설정", TimeSpan.FromSeconds(8));
             WaitForAutomationText(wizardRoot, "\uBAA9\uC801: \uAC1D\uCCB4 \uD0D0\uC9C0", TimeSpan.FromSeconds(3));
             AssertTrue(SelectListItemByText(wizardRoot, "COCO128 \uAC1D\uCCB4\uD0D0\uC9C0 \uC0D8\uD50C"), "COCO128 sample preset was not selectable in the real EXE dataset wizard");
-            wizardRoot = WaitForProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131", TimeSpan.FromSeconds(8));
+            wizardRoot = WaitForProcessWindowByName(process, "새 Recipe 설정", TimeSpan.FromSeconds(8));
             WaitForAutomationText(wizardRoot, "COCO128", TimeSpan.FromSeconds(3));
             AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardRecipeNameBox", recipeName), "dataset wizard recipe name was not editable");
             AssertTrue(TrySetAutomationValueByAutomationId(wizardRoot, "WizardOutputRootPathBox", outputRoot), "dataset wizard output root was not editable");
@@ -5665,10 +5668,10 @@ internal static partial class Program
                     || TryInvokeAutomationButton(root, "\uB370\uC774\uD130\uC14B \uC0DD\uC131 \uC2DC\uC791"),
                 "dataset setup start button was not invokable for industrial setup");
 
-            var wizardRoot = WaitForProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131", TimeSpan.FromSeconds(8));
+            var wizardRoot = WaitForProcessWindowByName(process, "새 Recipe 설정", TimeSpan.FromSeconds(8));
             WaitForAutomationText(wizardRoot, "\uBAA9\uC801: \uAC1D\uCCB4 \uD0D0\uC9C0", TimeSpan.FromSeconds(3));
             AssertTrue(SelectListItemContainingText(wizardRoot, "Kolektor"), "Kolektor industrial object preset was not selectable in the real EXE dataset wizard");
-            wizardRoot = WaitForProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131", TimeSpan.FromSeconds(8));
+            wizardRoot = WaitForProcessWindowByName(process, "새 Recipe 설정", TimeSpan.FromSeconds(8));
             AssertTrue(
                 WaitUntil(
                     () => ContainsAutomationText(wizardRoot, "Kolektor") && ContainsAutomationText(wizardRoot, "Defect"),
@@ -10156,15 +10159,33 @@ internal static partial class Program
         System.Windows.Automation.AutomationElement root,
         string toolText)
     {
+        string automationId = toolText switch
+        {
+            "선택" => "CanvasAnnotationToolSelect",
+            "박스" => "CanvasAnnotationToolRectangle",
+            "원/타원" => "CanvasAnnotationToolEllipse",
+            "폴리곤" => "CanvasAnnotationToolPolygon",
+            "브러시" => "CanvasAnnotationToolBrush",
+            "지우개" => "CanvasAnnotationToolEraser",
+            "이동" => "CanvasAnnotationToolPanZoom",
+            "되돌리기" => "CanvasAnnotationToolUndo",
+            "다시 적용" => "CanvasAnnotationToolRedo",
+            "삭제" => "CanvasAnnotationToolDelete",
+            _ => string.Empty
+        };
+        System.Windows.Automation.AutomationElement identifiedItem = string.IsNullOrWhiteSpace(automationId)
+            ? null
+            : FindAutomationElementByAutomationId(root, automationId);
+        if (identifiedItem != null)
+        {
+            return identifiedItem;
+        }
+
         foreach (System.Windows.Automation.AutomationElement element in EnumerateAutomationDescendants(root))
         {
-            System.Windows.Rect bounds;
             try
             {
-                bounds = element.Current.BoundingRectangle;
-                if (element.Current.ControlType != System.Windows.Automation.ControlType.ListItem
-                    || bounds.Width > 90
-                    || bounds.Height > 45)
+                if (element.Current.ControlType != System.Windows.Automation.ControlType.ListItem)
                 {
                     continue;
                 }
@@ -12150,7 +12171,7 @@ internal static partial class Program
         AssertTrue(
             ClickDatasetPurposeByText(wizardRoot, purposeDisplayText),
             expectedPurpose + " purpose was not clickable in the dataset wizard");
-        wizardRoot = WaitForProcessWindowByName(process, "\uB370\uC774\uD130\uC14B \uC0DD\uC131", TimeSpan.FromSeconds(8));
+        wizardRoot = WaitForProcessWindowByName(process, "새 Recipe 설정", TimeSpan.FromSeconds(8));
         AssertTrue(
             WaitUntil(
                 () => ContainsAutomationText(wizardRoot, "\uBAA9\uC801: " + purposeDisplayText)
@@ -12221,6 +12242,21 @@ internal static partial class Program
                 TimeSpan.FromSeconds(10)),
             "dataset recipe VISION.xml did not reach final " + expectedPurpose + " purpose");
         AssertTrue(File.Exists(manifestPath), "dataset recipe manifest was not created");
+
+        System.Windows.Automation.AutomationElement duplicateWizard = FindProcessWindowByName(
+            process,
+            "새 Recipe 설정");
+        if (duplicateWizard != null)
+        {
+            AssertTrue(
+                TryInvokeAutomationButtonByAutomationId(duplicateWizard, "WizardCancelButton"),
+                "duplicate dataset wizard was not cancelable after the created dataset reached durable storage");
+            AssertTrue(
+                WaitUntil(
+                    () => FindProcessWindowByName(process, "새 Recipe 설정") == null,
+                    TimeSpan.FromSeconds(3)),
+                "duplicate dataset wizard remained open after cancellation");
+        }
     }
 
     internal static CData ReadRecipeData(string visionPath)
@@ -19690,6 +19726,20 @@ internal static partial class Program
         AssertTrue(PythonModelIdentity.Matches(expectedModel, model.Message.ModelEngine, model.Message.ModelWeightsPath), "worker identity should match the configured engine and normalized weights path");
         AssertTrue(!PythonModelIdentity.Matches(expectedModel, model.Message.ModelEngine, "C:/Git/yolov8/runs/old/best.pt"), "worker identity should reject stale weights");
         AssertTrue(!PythonModelIdentity.Matches(expectedModel, PythonModelSettings.EngineYolo11, model.Message.ModelWeightsPath), "worker identity should reject the wrong engine");
+        var artifactsDirectory = new DirectoryInfo(Path.Combine(FindRepositoryRoot(), "artifacts"));
+        FileSystemInfo artifactsTarget = artifactsDirectory.ResolveLinkTarget(returnFinalTarget: true);
+        if (artifactsTarget != null)
+        {
+            string logicalWeightsPath = Path.Combine(artifactsDirectory.FullName, "tests", "python-model-identity", "best.pt");
+            string physicalWeightsPath = Path.Combine(artifactsTarget.FullName, "tests", "python-model-identity", "best.pt");
+            var junctionModel = new PythonModelSettings
+            {
+                ModelEngine = PythonModelSettings.EngineYoloV8,
+                WeightsPath = logicalWeightsPath
+            };
+            AssertTrue(PythonModelIdentity.Matches(junctionModel, PythonModelSettings.EngineYoloV8, physicalWeightsPath), "worker identity should treat logical junction and physical target paths as the same weights file");
+            AssertTrue(!PythonModelIdentity.Matches(junctionModel, PythonModelSettings.EngineYoloV8, Path.Combine(artifactsTarget.FullName, "tests", "python-model-identity", "stale.pt")), "worker identity should still reject a different physical weights path through the same junction");
+        }
         using (var communication = new CCommunicationLearning(startListen: false))
         {
             AssertTrue(InvokePrivateResult<bool>(communication, "TryHandleModelStatus", modelJson), "communication should handle model identity status");
@@ -23148,16 +23198,18 @@ internal static partial class Program
         AssertNamedXamlBinding(xaml, xName, "CanvasActiveLabelClassCard", "Visibility", "AnnotationWorkspaceVisibility");
         AssertNamedXamlValue(xaml, xName, "CanvasActiveLabelClassDetailText", "Visibility", "Collapsed");
         AssertNamedXamlValue(xaml, xName, "CanvasActiveLabelClassActionText", "Visibility", "Collapsed");
-        AssertNamedXamlValue(xaml, xName, "CanvasSelectedToolChip", "Visibility", "Collapsed");
+        AssertNamedXamlBinding(xaml, xName, "CanvasSelectedToolChip", "Visibility", "AnnotationWorkspaceVisibility");
+        AssertNamedXamlBinding(xaml, xName, "CanvasSelectedToolChip", "AutomationProperties.HelpText", "SelectedAnnotationTool.ToolTip");
         AssertNamedXamlElement(xaml, xName, "Border", "CanvasAnnotationToolBar");
         AssertNamedXamlElement(xaml, xName, "WrapPanel", "CanvasAnnotationToolBarItems");
         AssertNamedXamlElement(xaml, xName, "Border", "CanvasAnnotationToolRail");
         AssertNamedXamlElement(xaml, xName, "ListBox", "CanvasAnnotationToolListBox");
         var xamlText = xaml.ToString(SaveOptions.DisableFormatting);
         AssertTrue(
-            xamlText.Contains("<Setter Property=\"AutomationProperties.Name\" Value=\"{Binding Text}\"", StringComparison.Ordinal)
-                && xamlText.Contains("<Setter Property=\"AutomationProperties.HelpText\" Value=\"{Binding ToolTip}\"", StringComparison.Ordinal),
-            "icon-only canvas annotation tool containers should expose accessible names and help text");
+            xamlText.Contains("<Setter Property=\"AutomationProperties.AutomationId\" Value=\"{Binding Content.AutomationId, RelativeSource={RelativeSource Self}}\"", StringComparison.Ordinal)
+                && xamlText.Contains("<Setter Property=\"AutomationProperties.Name\" Value=\"{Binding Content.AccessibleName, RelativeSource={RelativeSource Self}}\"", StringComparison.Ordinal)
+                && xamlText.Contains("<Setter Property=\"AutomationProperties.HelpText\" Value=\"{Binding Content.ToolTip, RelativeSource={RelativeSource Self}}\"", StringComparison.Ordinal),
+            "icon-only canvas annotation tool containers should expose stable automation IDs, accessible names, and help text");
         AssertNamedXamlElement(xaml, xName, "Border", "CanvasBrushSizeControl");
         AssertNamedXamlElement(xaml, xName, "Button", "CanvasDecreaseBrushSizeButton");
         AssertNamedXamlElement(xaml, xName, "TextBlock", "CanvasBrushSizeText");
@@ -24683,6 +24735,9 @@ internal static partial class Program
         AssertNamedXamlElement(xaml, xName, "TextBox", "WizardRecipeNameBox");
         AssertNamedXamlElement(xaml, xName, "TextBox", "WizardOutputRootPathBox");
         AssertNamedXamlElement(xaml, xName, "TextBox", "WizardClassNamesBox");
+        AssertNamedXamlElement(xaml, xName, "TextBox", "WizardImageRootPathBox");
+        AssertNamedXamlElement(xaml, xName, "ListBox", "WizardModelEngineListBox");
+        AssertNamedXamlElement(xaml, xName, "TextBox", "WizardWeightsPathBox");
         AssertNamedXamlElement(xaml, xName, "Border", "DatasetSetupSourceRuleSection");
         AssertNamedXamlElement(xaml, xName, "TextBlock", "WizardSummaryText");
         AssertNamedXamlElement(xaml, xName, "TextBlock", "WizardSourceRuleTitleText");
@@ -24695,6 +24750,8 @@ internal static partial class Program
         AssertNamedXamlElement(xaml, xName, "TextBlock", "WizardPreviewText");
         AssertNamedXamlElement(xaml, xName, "TextBlock", "WizardStatusText");
         AssertNamedXamlElement(xaml, xName, "Button", "WizardBrowseOutputRootButton");
+        AssertNamedXamlElement(xaml, xName, "Button", "WizardBrowseImageRootButton");
+        AssertNamedXamlElement(xaml, xName, "Button", "WizardBrowseWeightsButton");
         AssertNamedXamlElement(xaml, xName, "Button", "WizardCancelButton");
         AssertNamedXamlElement(xaml, xName, "Button", "WizardCreateButton");
         AssertNamedXamlBinding(xaml, xName, "WizardDatasetPurposeListBox", "ItemsSource", "DatasetPurposeModes");
@@ -24706,6 +24763,9 @@ internal static partial class Program
         AssertNamedXamlBinding(xaml, xName, "WizardRecipeNameBox", "Text", "RecipeName");
         AssertNamedXamlBinding(xaml, xName, "WizardOutputRootPathBox", "Text", "OutputRootPath");
         AssertNamedXamlBinding(xaml, xName, "WizardClassNamesBox", "Text", "ClassNamesText");
+        AssertNamedXamlBinding(xaml, xName, "WizardImageRootPathBox", "Text", "ImageRootPath");
+        AssertNamedXamlBinding(xaml, xName, "WizardModelEngineListBox", "SelectedItem", "SelectedModelEngine");
+        AssertNamedXamlBinding(xaml, xName, "WizardWeightsPathBox", "Text", "WeightsPath");
         AssertNamedXamlBinding(xaml, xName, "WizardClassSummaryText", "Text", "ClassSummaryText");
         AssertNamedXamlBinding(xaml, xName, "WizardStorageHelpText", "Text", "StorageHelpText");
         AssertNamedXamlBinding(xaml, xName, "WizardImageSourceText", "Text", "ImageSourcePreviewText");
@@ -24713,6 +24773,8 @@ internal static partial class Program
         AssertNamedXamlBinding(xaml, xName, "WizardPreviewText", "Text", "PreviewText");
         AssertNamedXamlBinding(xaml, xName, "WizardStatusText", "Text", "StatusText");
         AssertNamedXamlBinding(xaml, xName, "WizardBrowseOutputRootButton", "Command", "BrowseOutputRootCommand");
+        AssertNamedXamlBinding(xaml, xName, "WizardBrowseImageRootButton", "Command", "BrowseImageRootCommand");
+        AssertNamedXamlBinding(xaml, xName, "WizardBrowseWeightsButton", "Command", "BrowseWeightsCommand");
         AssertNamedXamlBinding(xaml, xName, "WizardCancelButton", "Command", "CancelCommand");
         AssertNamedXamlBinding(xaml, xName, "WizardCreateButton", "Command", "CreateCommand");
         AssertNamedXamlBinding(xaml, xName, "WizardCreateButton", "CommandParameter", "SelectedItem");
@@ -24765,6 +24827,10 @@ internal static partial class Program
             "dataset setup apply should not persist YAML inline");
         AssertTrue(!applyDatasetSetupSource.Contains("SaveConfig", StringComparison.Ordinal),
             "dataset setup apply should not persist recipe config inline");
+        AssertTrue(applyDatasetSetupSource.Contains("projectRecipeSessionService.ApplyPrepared", StringComparison.Ordinal),
+            "dataset setup should commit its already persisted data through the Recipe session owner");
+        AssertTrue(!applyDatasetSetupSource.Contains("global.Recipe.Name =", StringComparison.Ordinal),
+            "dataset setup should not reload prepared data through CRecipe.Name");
         string clearQueueAfterDatasetSwitchSource = FindMethodSourceBlock(shellSource, "private void ClearImageQueueAfterDatasetSwitch(string imageRootPath)");
         AssertTrue(clearQueueAfterDatasetSwitchSource.Contains("datasetSetupPresentationService.BuildMissingImageRootStatus", StringComparison.Ordinal),
             "dataset switch should build missing-image-folder status through the presentation service");
@@ -24991,6 +25057,8 @@ internal static partial class Program
         AssertTrue(viewModel.SetupSourceRuleChecklistText.Contains("\uC0C8\uB85C \uC2DC\uC791", StringComparison.Ordinal), "wizard should give a short checklist for new dataset decisions");
         AssertTrue(viewModel.StorageHelpText.Contains("\uB77C\uBCA8", StringComparison.Ordinal), "wizard should explain where labels and recipe files are stored");
         AssertTrue(viewModel.ImageSourcePreviewText.Contains("\uC6D0\uBCF8 \uC774\uBBF8\uC9C0", StringComparison.Ordinal), "wizard should show the source image folder role");
+        AssertEqual(PythonModelSettings.EngineYoloV8, viewModel.SelectedModelEngine);
+        AssertTrue(viewModel.ModelSetupHelpText.Contains("선택 사항", StringComparison.Ordinal), "wizard should explain that an initial model file is optional");
         AssertTrue(viewModel.IsolationHelpText.Contains("\uBD84\uB9AC", StringComparison.Ordinal), "wizard should explain that storage folder isolation prevents label mixing");
 
         const string generatedSegmentationName = "Dataset_Segmentation_20260722_120000";
@@ -25064,6 +25132,7 @@ internal static partial class Program
         AssertEqual("WizardRecipe", request.RecipeName);
         AssertEqual(LabelingDatasetPurpose.Segmentation, request.Purpose);
         AssertEqual(3, request.ClassNames.Count);
+        AssertEqual(PythonModelSettings.EngineYoloV8, request.ModelEngine);
         AssertTrue(request.ClassNames.Contains("NG"), "wizard request should create three classes from Defect, OK, NG input");
 
         viewModel.OutputRootPath = "";
@@ -25219,6 +25288,10 @@ internal static partial class Program
             wizardViewModel.RecipeName = recipeName;
             wizardViewModel.OutputRootPath = outputRoot;
             wizardViewModel.ClassNamesText = "Defect\r\nScratch";
+            string initialWeightsPath = Path.Combine(existingOutputRoot, "segmentation-initial.pt");
+            File.WriteAllText(initialWeightsPath, string.Empty);
+            wizardViewModel.SelectedModelEngine = PythonModelSettings.EngineUnet;
+            wizardViewModel.WeightsPath = initialWeightsPath;
             AssertTrue(wizardViewModel.TryBuildRequest(out WpfDatasetSetupRequest request, out string error), error);
             AssertTrue(InvokePrivateResult<bool>(window, "ApplyDatasetSetupRequest", request), "dataset setup request should be applied");
             PumpWpfDispatcher(TimeSpan.FromMilliseconds(250));
@@ -25229,6 +25302,8 @@ internal static partial class Program
             AssertTrue(Directory.Exists(Path.Combine(outputRoot, "data", "train", "images")), "dataset setup should create train image folder");
             AssertTrue(File.Exists(Path.Combine(outputRoot, "data.yaml")), "dataset setup should create data.yaml");
             AssertEqual(LabelingDatasetPurpose.Segmentation, CGlobal.Inst.Data.ProjectSettings.DatasetPurpose);
+            AssertEqual(PythonModelSettings.EngineUnet, CGlobal.Inst.Data.ProjectSettings.PythonModel.ModelEngine);
+            AssertPathEqual(initialWeightsPath, CGlobal.Inst.Data.ProjectSettings.PythonModel.WeightsPath, "wizard-selected initial model should be persisted with the Recipe");
             AssertPathEqual(CGlobal.Inst.Data.TrainImagesPath, CGlobal.Inst.Data.ProjectSettings.PythonModel.ImageRootPath, "new blank dataset should use its own empty image root");
             AssertTrue(!string.Equals("stale-segmentation-best.pt", CGlobal.Inst.Data.ProjectSettings.PythonModel.WeightsPath, StringComparison.Ordinal), "new dataset should not inherit the previous recipe weight");
             AssertTrue(string.IsNullOrWhiteSpace(CGlobal.Inst.Data.ProjectSettings.ModelRegistry.CurrentInspectionModelId), "new dataset should not inherit the previous inspection model");
@@ -26497,6 +26572,10 @@ internal static partial class Program
         AssertNamedXamlBinding(xaml, xName, "BrowseYoloImageRootButton", "Command", "BrowseImageRootCommand");
         AssertNamedXamlBinding(xaml, xName, "SaveYoloSettingsButton", "Command", "SaveSettingsCommand");
         AssertNamedXamlBinding(xaml, xName, "ResetYoloSettingsButton", "Command", "ResetSettingsCommand");
+        AssertNamedXamlBinding(xaml, xName, "CancelYoloSettingsChangesButton", "Command", "CancelChangesCommand");
+        AssertNamedXamlBinding(xaml, xName, "YoloEditingSummaryTitleText", "Text", "EditingSummaryTitleText");
+        AssertNamedXamlBinding(xaml, xName, "YoloEditingStateText", "Text", "EditStateText");
+        AssertNamedXamlBinding(xaml, xName, "YoloModelEngineQuickBox", "SelectedItem", "SelectedModelEngine");
         AssertNamedXamlBinding(xaml, xName, "YoloModelSettingsSummaryTitleText", "Text", "SettingsSummaryTitleText");
         AssertNamedXamlBinding(xaml, xName, "YoloModelSettingsSummaryModelText", "Text", "SettingsSummaryModelText");
         AssertNamedXamlBinding(xaml, xName, "YoloModelSettingsSummaryRuntimeStatusText", "Text", "SettingsSummaryRuntimeStatusText");
@@ -26505,6 +26584,8 @@ internal static partial class Program
         AssertNamedXamlBinding(xaml, xName, "YoloModelSettingsSummaryPathText", "Text", "SettingsSummaryPathText");
         AssertNamedXamlBinding(xaml, xName, "YoloModelSettingsSummaryActionText", "Text", "SettingsSummaryActionText");
         AssertNamedXamlElement(xaml, xName, "Expander", "ModelAdapterCatalogExpander");
+        AssertNamedXamlValue(xaml, xName, "YoloRuntimeDiagnosticsExpander", "IsExpanded", "False");
+        AssertNamedXamlValue(xaml, xName, "ModelAdapterCatalogExpander", "IsExpanded", "False");
         AssertNamedXamlBinding(xaml, xName, "ModelAdapterCatalogBoundaryText", "Text", "ModelAdapterCatalogBoundaryText");
         AssertNamedXamlBinding(xaml, xName, "ModelAdapterCatalogItems", "ItemsSource", "ModelAdapterCatalogItems");
         AssertNamedXamlBinding(xaml, xName, "YoloRuntimeProfileHeaderText", "Text", "RuntimeProfileHeaderText");
@@ -26592,16 +26673,17 @@ internal static partial class Program
         AssertTrue(yoloModelSettingsSource.IndexOf("YoloWeightsPathBox", StringComparison.Ordinal) < yoloModelSettingsSource.IndexOf("YoloAdvancedModelSettingsExpander", StringComparison.Ordinal), "WPF YOLO inspection-model picker should not be hidden inside advanced execution settings");
         AssertTrue(yoloModelSettingsSource.IndexOf("YoloAdvancedModelSettingsExpander", StringComparison.Ordinal) < yoloModelSettingsSource.IndexOf("YoloPythonPathBox", StringComparison.Ordinal), "WPF YOLO Python path should remain behind advanced execution settings");
 
-        var yoloSettingsViewModel = new WpfYoloModelSettingsPanelViewModel
+        var yoloSettingsViewModel = new WpfYoloModelSettingsPanelViewModel();
+        yoloSettingsViewModel.LoadFrom(new PythonModelSettings
         {
             WeightsPath = @"C:\models\best.pt",
             ImageRootPath = @"D:\LabelingData\Test01\Images",
             PythonExecutablePath = @"C:\Git\yolov5\.venv\Scripts\python.exe",
-            MinimumConfidenceText = "0.25",
-            InferenceImageSizeText = "320",
-            MaximumCandidatesText = "20",
-            TimeoutSecondsText = "30"
-        };
+            MinimumDetectionConfidence = 0.25F,
+            InferenceImageSize = 320,
+            MaximumDetectionCandidates = 20,
+            DetectionTimeoutSeconds = 30
+        });
         AssertTrue(yoloSettingsViewModel.SettingsSummaryTitleText.Contains("\uBAA8\uB378 \uD504\uB85C\uD544", StringComparison.Ordinal), "model settings summary title should expose the current model profile");
         AssertTrue(yoloSettingsViewModel.SettingsSummaryModelText.Contains("\uBAA8\uB378 \uD504\uB85C\uD544", StringComparison.Ordinal), "model settings summary should show the selected model profile");
         AssertTrue(yoloSettingsViewModel.SettingsSummaryModelText.Contains("best.pt", StringComparison.Ordinal), "model settings summary should show the selected inspection model filename");
@@ -26609,7 +26691,11 @@ internal static partial class Program
         AssertTrue(yoloSettingsViewModel.SettingsSummaryRuntimeText.Contains("320", StringComparison.Ordinal), "YOLO model settings summary should show inference image size");
         AssertTrue(!string.IsNullOrWhiteSpace(yoloSettingsViewModel.SettingsSummaryRuntimeStatusText), "YOLO model settings summary should expose the selected runtime readiness before the full profile list");
         AssertTrue(yoloSettingsViewModel.SettingsSummaryPathText.Contains("Images", StringComparison.Ordinal), "YOLO model settings summary should show the image folder leaf instead of only hidden full paths");
-        AssertTrue(yoloSettingsViewModel.SettingsSummaryActionText.Contains("\uBAA8\uB378 \uD504\uB85C\uD544", StringComparison.Ordinal), "model settings action text should explain that the profile and model file are saved together");
+        AssertTrue(yoloSettingsViewModel.SettingsSummaryActionText.Contains("저장 및 적용", StringComparison.Ordinal), "model settings action text should explain the explicit apply boundary");
+        yoloSettingsViewModel.WeightsPath = @"C:\models\candidate.pt";
+        AssertTrue(yoloSettingsViewModel.IsSettingsDirty, "editing a model path should expose unapplied changes");
+        AssertTrue(yoloSettingsViewModel.SettingsSummaryModelText.Contains("best.pt", StringComparison.Ordinal), "current-applied summary should remain stable while a candidate is edited");
+        AssertTrue(yoloSettingsViewModel.EditingSummaryText.Contains("candidate.pt", StringComparison.Ordinal), "editing summary should expose the candidate model separately");
         AssertTrue(yoloSettingsViewModel.AdvancedSettingsHeaderText.Contains("\uBAA8\uB378 \uC2E4\uD589 \uD658\uACBD", StringComparison.Ordinal), "advanced model settings header should identify runtime environment details");
         AssertEqual(6, yoloSettingsViewModel.RuntimeProfileItems.Count);
         AssertTrue(yoloSettingsViewModel.RuntimeProfileItems.Any(item => item.Engine == PythonModelSettings.EngineYolo11 && item.RuntimeFamilyText.Contains("Ultralytics", StringComparison.Ordinal)), "YOLO model settings should show YOLO11 as an Ultralytics runtime profile");
@@ -27669,13 +27755,15 @@ internal static partial class Program
             AssertTrue(shellSource.Contains("WpfProjectRecipeService.IsValidRecipeName", StringComparison.Ordinal), "WPF project config should validate recipe file-system characters through the service");
             AssertTrue(sessionServiceSource.Contains("CRecipe.InitDirectory", StringComparison.Ordinal), "project recipe session service should own recipe-directory initialization");
             AssertTrue(sessionServiceSource.Contains("data.SaveConfig", StringComparison.Ordinal), "project recipe session service should own recipe config persistence");
-            AssertTrue(sessionServiceSource.Contains("recipe.Name = recipeName", StringComparison.Ordinal), "project recipe session service should apply the active CRecipe");
+            AssertTrue(sessionServiceSource.Contains("ApplyAsync", StringComparison.Ordinal), "project recipe session service should expose a non-blocking Recipe transition");
+            AssertTrue(sessionServiceSource.Contains("SemaphoreSlim", StringComparison.Ordinal), "project recipe session service should serialize competing Recipe loads");
+            AssertTrue(sessionServiceSource.Contains("CommitLoadedRecipe", StringComparison.Ordinal), "project recipe session service should commit loaded data without reloading through CRecipe.Name");
             string saveProjectConfigSource = FindMethodSourceBlock(persistenceSource, "private bool SaveProjectConfigFromPanel()");
-            string applyProjectRecipeSource = FindMethodSourceBlock(persistenceSource, "private void ApplyProjectRecipeFromPanel()");
+            string applyProjectRecipeSource = FindMethodSourceBlock(persistenceSource, "private async Task<bool> ApplyProjectRecipeFromPanelAsync()");
             AssertTrue(saveProjectConfigSource.Contains("projectRecipeSessionService.Save(global.Data, recipeName)", StringComparison.Ordinal), "project config save should delegate Core persistence to the session service");
             AssertTrue(!saveProjectConfigSource.Contains("CRecipe.InitDirectory", StringComparison.Ordinal), "project config View adapter should not initialize recipe folders directly");
             AssertTrue(!saveProjectConfigSource.Contains("global.Data.SaveConfig", StringComparison.Ordinal), "project config View adapter should not save CData directly");
-            AssertTrue(applyProjectRecipeSource.Contains("projectRecipeSessionService.Apply(global.Recipe, recipeName)", StringComparison.Ordinal), "project config apply should delegate the CRecipe transition to the session service");
+            AssertTrue(applyProjectRecipeSource.Contains("projectRecipeSessionService.ApplyAsync", StringComparison.Ordinal), "project config apply should delegate the asynchronous transition to the session service");
             AssertTrue(!applyProjectRecipeSource.Contains("global.Recipe.Name =", StringComparison.Ordinal), "project config View adapter should not assign CRecipe.Name directly");
             AssertTrue(shellSource.Contains("Recipe", StringComparison.Ordinal), "WPF project config should not claim XML save completion when no recipe exists");
         }
@@ -27687,27 +27775,119 @@ internal static partial class Program
 
     private static void TestWpfProjectRecipeSessionService()
     {
-        string recipeName = "codex_project_recipe_session_" + Guid.NewGuid().ToString("N");
-        string recipeDirectory = Path.Combine(AppContext.BaseDirectory, "RECIPE", recipeName);
-        string outputRoot = Path.Combine(Path.GetTempPath(), "OpenVisionLab.LabelingStudio.Tests", recipeName);
+        string suffix = Guid.NewGuid().ToString("N");
+        string firstRecipeName = "codex_project_recipe_first_" + suffix;
+        string secondRecipeName = "codex_project_recipe_second_" + suffix;
+        string firstRecipeDirectory = Path.Combine(AppContext.BaseDirectory, "RECIPE", firstRecipeName);
+        string secondRecipeDirectory = Path.Combine(AppContext.BaseDirectory, "RECIPE", secondRecipeName);
+        string outputRoot = Path.Combine(Path.GetTempPath(), "OpenVisionLab.LabelingStudio.Tests", suffix);
         CData previousData = CGlobal.Inst.Data;
         string previousRecipeName = CGlobal.Inst.Recipe.Name;
 
         try
         {
-            var data = new CData();
-            data.ConfigureOutputRoot(outputRoot);
-            data.ClassNamedList.Add(new CClassItem { Text = "Part", DrawColor = Color.Gray });
+            var firstData = new CData();
+            firstData.ConfigureOutputRoot(Path.Combine(outputRoot, "first"));
+            firstData.ClassNamedList.Add(new CClassItem { Text = "First", DrawColor = Color.Gray });
+            var secondData = new CData();
+            secondData.ConfigureOutputRoot(Path.Combine(outputRoot, "second"));
+            secondData.ClassNamedList.Add(new CClassItem { Text = "Second", DrawColor = Color.Red });
             var sessionService = new WpfProjectRecipeSessionService();
 
-            string configPath = sessionService.Save(data, recipeName);
+            string configPath = sessionService.Save(firstData, firstRecipeName);
+            sessionService.Save(secondData, secondRecipeName);
             AssertTrue(File.Exists(configPath), "project recipe session service should persist VISION.xml");
-            AssertTrue(File.Exists(LabelingDatasetManifestService.GetManifestPath(recipeName)), "project recipe session service should persist dataset manifest");
+            AssertTrue(File.Exists(LabelingDatasetManifestService.GetManifestPath(firstRecipeName)), "project recipe session service should persist dataset manifest");
 
-            string returnedPreviousRecipeName = sessionService.Apply(CGlobal.Inst.Recipe, recipeName);
+            string returnedPreviousRecipeName = Task.Run(() => sessionService
+                .ApplyAsync(CGlobal.Inst, firstRecipeName))
+                .GetAwaiter()
+                .GetResult();
             AssertEqual(previousRecipeName, returnedPreviousRecipeName);
-            AssertEqual(recipeName, CGlobal.Inst.Recipe.Name);
-            AssertEqual("Part", CGlobal.Inst.Data.ClassNamedList.Single().Text);
+            AssertEqual(firstRecipeName, CGlobal.Inst.Recipe.Name);
+            AssertEqual("First", CGlobal.Inst.Data.ClassNamedList.Single().Text);
+
+            for (int index = 0; index < 100; index++)
+            {
+                string repeatedPrevious = Task.Run(() => sessionService
+                    .ApplyAsync(CGlobal.Inst, firstRecipeName))
+                    .GetAwaiter()
+                    .GetResult();
+                AssertEqual(firstRecipeName, repeatedPrevious);
+            }
+            AssertEqual(firstRecipeName, CGlobal.Inst.Recipe.Name);
+            AssertEqual("First", CGlobal.Inst.Data.ClassNamedList.Single().Text);
+
+            Task.Run(async () =>
+            {
+                Task<string> firstRequest = sessionService.ApplyAsync(CGlobal.Inst, firstRecipeName);
+                Task<string> latestRequest = sessionService.ApplyAsync(CGlobal.Inst, secondRecipeName);
+                try
+                {
+                    _ = await firstRequest;
+                }
+                catch (OperationCanceledException)
+                {
+                    // A request that loses the generation race must not commit stale state.
+                }
+                _ = await latestRequest;
+            }).GetAwaiter().GetResult();
+            AssertEqual(secondRecipeName, CGlobal.Inst.Recipe.Name);
+            AssertEqual("Second", CGlobal.Inst.Data.ClassNamedList.Single().Text);
+
+            var preparedData = new CData();
+            preparedData.ConfigureOutputRoot(Path.Combine(outputRoot, "prepared"));
+            preparedData.ClassNamedList.Add(new CClassItem { Text = "Prepared", DrawColor = Color.Blue });
+            Task.Run(async () =>
+            {
+                Task<string> supersededRequest = sessionService.ApplyAsync(CGlobal.Inst, firstRecipeName);
+                _ = sessionService.ApplyPrepared(CGlobal.Inst, secondRecipeName, preparedData);
+                try
+                {
+                    _ = await supersededRequest;
+                }
+                catch (OperationCanceledException)
+                {
+                    // The prepared latest state invalidates an older disk load.
+                }
+            }).GetAwaiter().GetResult();
+            AssertEqual(secondRecipeName, CGlobal.Inst.Recipe.Name);
+            AssertTrue(ReferenceEquals(preparedData, CGlobal.Inst.Data), "prepared latest Recipe data should not be replaced by a stale load");
+
+            CData dataBeforeCancellation = CGlobal.Inst.Data;
+            string recipeBeforeCancellation = CGlobal.Inst.Recipe.Name;
+            using (var cancellation = new CancellationTokenSource())
+            {
+                cancellation.Cancel();
+                bool canceled = false;
+                try
+                {
+                    _ = Task.Run(() => sessionService
+                        .ApplyAsync(CGlobal.Inst, firstRecipeName, cancellation.Token))
+                        .GetAwaiter()
+                        .GetResult();
+                }
+                catch (OperationCanceledException)
+                {
+                    canceled = true;
+                }
+                AssertTrue(canceled, "a pre-canceled Recipe apply should report cancellation");
+            }
+            AssertTrue(ReferenceEquals(dataBeforeCancellation, CGlobal.Inst.Data), "a canceled Recipe apply should not replace global data");
+            AssertEqual(recipeBeforeCancellation, CGlobal.Inst.Recipe.Name);
+
+            CGlobal.Inst.Data.ClassNamedList.Single().Text = "RoundTrip";
+            sessionService.Save(CGlobal.Inst.Data, secondRecipeName);
+            CGlobal.Inst.Data.ClassNamedList.Single().Text = "Unsaved";
+            _ = Task.Run(() => sessionService.ApplyAsync(CGlobal.Inst, secondRecipeName)).GetAwaiter().GetResult();
+            AssertEqual("RoundTrip", CGlobal.Inst.Data.ClassNamedList.Single().Text);
+
+            string recipeSource = File.ReadAllText(Path.Combine(
+                FindRepositoryRoot(),
+                "1. Core",
+                "ApplicationState",
+                "CRecipe.cs"));
+            AssertTrue(!recipeSource.Contains("Task.WaitAll", StringComparison.Ordinal), "CRecipe same-name reapply must not wait on a null task");
         }
         finally
         {
@@ -27717,9 +27897,14 @@ internal static partial class Program
             }
 
             CGlobal.Inst.Data = previousData;
-            if (Directory.Exists(recipeDirectory))
+            if (Directory.Exists(firstRecipeDirectory))
             {
-                Directory.Delete(recipeDirectory, recursive: true);
+                Directory.Delete(firstRecipeDirectory, recursive: true);
+            }
+
+            if (Directory.Exists(secondRecipeDirectory))
+            {
+                Directory.Delete(secondRecipeDirectory, recursive: true);
             }
 
             if (Directory.Exists(outputRoot))
@@ -32076,6 +32261,10 @@ internal static partial class Program
             AssertTrue(item.QueueRowAccessibleName.Contains("저장:", StringComparison.Ordinal)
                 && item.QueueRowAccessibleName.Contains("검사:", StringComparison.Ordinal),
                 "WPF queue row automation name should expose the row status even when visible columns are truncated");
+            const string longFileName = "inspection-line-a-camera-20260818-000123-defect-source.png";
+            string compactFileName = WpfImageQueueItem.FormatCompactFileName(longFileName);
+            AssertTrue(compactFileName.Length <= 34 && compactFileName.Contains("…", StringComparison.Ordinal), "long queue filenames should be compacted for the visible cell");
+            AssertTrue(compactFileName.EndsWith("source.png", StringComparison.Ordinal), "compacted queue filenames should preserve the identifying tail and extension");
             bool queueRowToolTipNotified = false;
             item.PropertyChanged += (_, e) =>
             {
