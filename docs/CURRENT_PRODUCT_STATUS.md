@@ -1,6 +1,6 @@
 # Current Product Status
 
-Last updated: 2026-08-19 KST
+Last updated: 2026-08-21 KST
 
 This document is the single current source of truth for product identity,
 verified maturity, the active development priority, and the boundary between
@@ -105,7 +105,7 @@ operability.
 | PatchCore anomaly pilot, heatmap review, same-split comparison, error worklist, and exact-content leakage preflight | Complete for the bounded local workflow | Normal-only learning, image decision, raw score/threshold, review-only localization, matching-fingerprint comparison, bounded image-level outcome review, and pre-worker split/class exact-leakage blocking are implemented; field quality and location accuracy require approved external evidence |
 | Workstation theme policy | Complete | The theme selector is hidden and legacy/internal light-theme requests resolve to the supported dark palette; do not reopen multi-theme work without an explicit product-direction change |
 | Headless product CLI | Complete for the first read-only environment command | `--environment-self-test --json` emits structured status and bounded exit codes without WPF or durable writes; batch inference/training/archive/label operations are not CLI contracts |
-| CI build/docs/full-regression/release-artifact gates | Complete for the repository workflow contract | The complete suite runs once with a 15-minute timeout; hosted GitHub success requires a pushed run |
+| CI build/docs/full-regression/release-artifact gates | Complete for the repository workflow contract | The complete suite runs once with a 15-minute timeout; all triggers build and verify the package, while Artifact upload is limited to `main`/manual runs with one-day retention; hosted GitHub success requires a pushed run |
 | Independent production accuracy, long-run stability, and takt time | Blocked by external evidence | Requires approved, provenance-confirmed field data and intended hardware/runtime |
 
 ## 5. Protected Completed Areas

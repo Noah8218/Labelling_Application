@@ -20,7 +20,11 @@ hosted GitHub Actions run has passed before the change is committed and pushed.
 - concurrency: one invocation in the CI job;
 - timeout: 15 minutes;
 - order: build and documentation checks, complete regression, release publish,
-  package verification, artifact upload;
+  package verification, then artifact upload for `main` pushes and manual
+  dispatches only;
+- Artifact retention: pull-request validation deliberately skips the package
+  upload; `main`/manual package artifacts expire after one day. Package build
+  and hash-contract verification still run for every trigger.
 - CI environment storage: use the hosted runner's isolated available storage;
   the workstation-only D-drive routing rule does not block CI.
 

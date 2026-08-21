@@ -25787,6 +25787,8 @@ internal static partial class Program
         AssertTrue(ciWorkflow.Contains("timeout-minutes: 15", StringComparison.Ordinal), "CI complete regression should have a bounded timeout");
         AssertTrue(ciWorkflow.Contains("--release-package-contract", StringComparison.Ordinal), "CI workflow should run the release package contract");
         AssertTrue(ciWorkflow.Contains("actions/upload-artifact@v4", StringComparison.Ordinal), "CI workflow should upload the verified release package");
+        AssertTrue(ciWorkflow.Contains("if: github.event_name != 'pull_request'", StringComparison.Ordinal), "CI should not retain release package artifacts for pull request validation");
+        AssertTrue(ciWorkflow.Contains("retention-days: 1", StringComparison.Ordinal), "CI release package artifacts should have one-day retention");
         AssertTrue(appProject.Contains("dll\\OpenVisionLab.Core.dll", StringComparison.Ordinal), "app project should reference OpenVisionLab.Core by checked-in SDK DLL");
         AssertTrue(appProject.Contains("dll\\OpenVisionLab.Vision2D.dll", StringComparison.Ordinal), "app project should reference OpenVisionLab.Vision2D by checked-in SDK DLL");
         AssertTrue(!appProject.Contains("OpenCvSharp.Blob", StringComparison.Ordinal), "app project should not reference the unused SDK Blob dependency");
