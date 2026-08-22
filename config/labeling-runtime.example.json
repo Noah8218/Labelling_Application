@@ -1,0 +1,22 @@
+{
+  "labelingApp": {
+    "debugExecutable": "artifacts/run/Debug/OpenVisionLab.LabelingStudio.exe",
+    "publishExecutable": "artifacts/publish/Release/win-x64/0.1.0/OpenVisionLab.LabelingStudio.exe"
+  },
+  "python": {
+    "pythonExecutable": "${repoParent}/yolov5/.venv/Scripts/python.exe",
+    "projectRoot": "${repoParent}/yolov5",
+    "launcherExe": "${repoParent}/yolov5/dist/YoloTcpClientLauncher/YoloTcpClientLauncher.exe",
+    "launcherScript": "${repoParent}/yolov5/launchers/start-yolo-tcp-client.ps1",
+    "uiScript": "${repoParent}/yolov5/launchers/start-python-ui.ps1",
+    "clientScript": "${repoParent}/yolov5/labelling_tcp_client.py",
+    "weights": "${repoParent}/yolov5/best.pt",
+    "imageRoot": "${repoParent}/yolov5/data/train/images",
+    "host": "127.0.0.1",
+    "port": 5000,
+    "confidence": "0.25",
+    "imageSize": 320,
+    "maxCandidates": 20,
+    "device": "cpu"
+  }
+}

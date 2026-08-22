@@ -1,0 +1,269 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- WPF is the primary app surface. WinForms stays enabled only while legacy screens are migrated. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <!-- Legacy namespace retained until the XAML partial-class migration is split out from product naming. -->
+    <RootNamespace>MvcVisionSystem</RootNamespace>
+    <AssemblyName>OpenVisionLab.LabelingStudio</AssemblyName>
+    <ApplicationIcon>lens.ico</ApplicationIcon>
+    <Platforms>AnyCPU;x86;x64</Platforms>
+    <OpenVisionLabSourceRoot Condition="'$(OpenVisionLabSourceRoot)' == ''">$(MSBuildProjectDirectory)\OpenVisionLab</OpenVisionLabSourceRoot>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ArtifactsRoot>$(MSBuildProjectDirectory)\artifacts</ArtifactsRoot>
+    <OutputPath>$(ArtifactsRoot)\run\$(Configuration)\</OutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>TRACE;DEBUG;TEST;OPENCV</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE;TEST;OPENCV</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'x86'">
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="OpenVisionLab\**\*.cs" />
+    <EmbeddedResource Remove="OpenVisionLab\**\*.resx" />
+    <Page Remove="OpenVisionLab\**\*.xaml" />
+    <None Remove="OpenVisionLab\**\*" />
+    <Compile Remove="tests\**\*.cs" />
+    <EmbeddedResource Remove="tests\**\*.resx" />
+    <None Remove="tests\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CircularProgressBar">
+      <HintPath>dll\CircularProgressBar.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenVisionLab.Core">
+      <HintPath>dll\OpenVisionLab.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenVisionLab.Vision2D">
+      <HintPath>dll\OpenVisionLab.Vision2D.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenVisionLab.Logging" Condition="!Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging\OpenVisionLab.Logging.csproj')">
+      <HintPath>dll\OpenVisionLab.Logging.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenVisionLab.Logging.Controls" Condition="!Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging.Controls\OpenVisionLab.Logging.Controls.csproj')">
+      <HintPath>dll\OpenVisionLab.Logging.Controls.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenVisionLab.ImageSpace.Core" Condition="!Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageSpace.Core\OpenVisionLab.ImageSpace.Core.csproj')">
+      <HintPath>dll\OpenVisionLab.ImageSpace.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenVisionLab.ImageCanvas" Condition="!Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageCanvas\OpenVisionLab.ImageCanvas.csproj')">
+      <HintPath>dll\OpenVisionLab.ImageCanvas.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenVisionLab.DrawObject" Condition="!Exists('$(OpenVisionLabSourceRoot)\Library\DrawObject\RectangleDrawObject.cs')">
+      <HintPath>dll\OpenVisionLab.DrawObject.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SharpGL" Condition="Exists('$(OpenVisionLabSourceRoot)\dll\SharpGL\SharpGL.dll')">
+      <HintPath>$(OpenVisionLabSourceRoot)\dll\SharpGL\SharpGL.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SharpGL" Condition="!Exists('$(OpenVisionLabSourceRoot)\dll\SharpGL\SharpGL.dll') And Exists('dll\SharpGL.dll')">
+      <HintPath>dll\SharpGL.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SharpGL.WinForms" Condition="Exists('$(OpenVisionLabSourceRoot)\dll\SharpGL\SharpGL.WinForms.dll')">
+      <HintPath>$(OpenVisionLabSourceRoot)\dll\SharpGL\SharpGL.WinForms.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SharpGL.WinForms" Condition="!Exists('$(OpenVisionLabSourceRoot)\dll\SharpGL\SharpGL.WinForms.dll') And Exists('dll\SharpGL.WinForms.dll')">
+      <HintPath>dll\SharpGL.WinForms.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="WinFormAnimation">
+      <HintPath>dll\WinFormAnimation.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="3.3.1" />
+    <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="6.2.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="OpenCvSharp4" Version="$(OpenCvSharpVersion)" />
+    <PackageReference Include="OpenCvSharp4.Extensions" Version="$(OpenCvSharpVersion)" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="$(OpenCvSharpVersion)" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.8" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.27" />
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
+    <PackageReference Include="YamlDotNet" Version="13.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Mvvm\OpenVisionLab.Mvvm.csproj"
+                      Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Mvvm\OpenVisionLab.Mvvm.csproj')" />
+    <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging\OpenVisionLab.Logging.csproj"
+                      Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging\OpenVisionLab.Logging.csproj')" />
+    <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging.Controls\OpenVisionLab.Logging.Controls.csproj"
+                      Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging.Controls\OpenVisionLab.Logging.Controls.csproj')" />
+    <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Wpf.MessageDialogs\OpenVisionLab.Wpf.MessageDialogs.csproj"
+                      Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Wpf.MessageDialogs\OpenVisionLab.Wpf.MessageDialogs.csproj')" />
+    <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageSpace.Core\OpenVisionLab.ImageSpace.Core.csproj"
+                      Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageSpace.Core\OpenVisionLab.ImageSpace.Core.csproj')" />
+    <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageCanvas\OpenVisionLab.ImageCanvas.csproj"
+                      AdditionalProperties="ImageCanvasCopyEmguNativeRuntime=false;ImageCanvasCopyOpenCvVideoRuntime=false"
+                      Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageCanvas\OpenVisionLab.ImageCanvas.csproj')" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(OpenVisionLabSourceRoot)\Library\DrawObject\RectangleDrawObject.cs')">
+    <Compile Include="$(OpenVisionLabSourceRoot)\Library\DrawObject\DrawObjectBase.cs">
+      <Link>OpenVisionLab.DrawObject\DrawObjectBase.cs</Link>
+    </Compile>
+    <Compile Include="$(OpenVisionLabSourceRoot)\Library\DrawObject\DrawObjectEnums.cs">
+      <Link>OpenVisionLab.DrawObject\DrawObjectEnums.cs</Link>
+    </Compile>
+    <Compile Include="$(OpenVisionLabSourceRoot)\Library\DrawObject\RectangleDrawObject.cs">
+      <Link>OpenVisionLab.DrawObject\RectangleDrawObject.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Library\CViewer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="LICENSE">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="NOTICE">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="THIRD-PARTY-NOTICES.txt">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="Runtime\Python\openvisionlab_ultralytics_worker.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="Runtime\Python\openvisionlab_unet_worker.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="Runtime\Python\openvisionlab_patchcore_worker.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="Runtime\Python\openvisionlab_segmentation_prediction_export.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="Runtime\Python\openvisionlab_mobile_sam_box_prompt.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="CopyApplicationLogConfigToOutput" AfterTargets="CopyFilesToOutputDirectory">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\log4net.config"
+          DestinationFiles="$(OutDir)log4net.config"
+          SkipUnchangedFiles="false" />
+  </Target>
+
+  <Target Name="CopyCheckedInVisionSdkLibrariesToOutput" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <CheckedInVisionSdkLibrary Include="$(MSBuildProjectDirectory)\dll\OpenVisionLab.Core.dll" />
+      <CheckedInVisionSdkLibrary Include="$(MSBuildProjectDirectory)\dll\OpenVisionLab.Vision2D.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CheckedInVisionSdkLibrary)"
+          DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="false" />
+  </Target>
+
+  <Target Name="CopyOpenCvSharpPackageLibrariesToOutput" AfterTargets="Build">
+    <ItemGroup>
+      <OpenCvSharpPackageLibrary Include="$(NuGetPackageRoot)opencvsharp4.runtime.win\$(OpenCvSharpVersion)\runtimes\win-x64\native\OpenCvSharpExtern.dll"
+                                 Condition="Exists('$(NuGetPackageRoot)opencvsharp4.runtime.win\$(OpenCvSharpVersion)\runtimes\win-x64\native\OpenCvSharpExtern.dll')" />
+      <OpenCvSharpPackageLibrary Include="$(NuGetPackageRoot)opencvsharp4.runtime.win\$(OpenCvSharpVersion)\runtimes\win-x64\native\opencv_videoio_ffmpeg455_64.dll"
+                                 Condition="Exists('$(NuGetPackageRoot)opencvsharp4.runtime.win\$(OpenCvSharpVersion)\runtimes\win-x64\native\opencv_videoio_ffmpeg455_64.dll')" />
+      <OpenCvSharpPackageLibrary Include="$(MSBuildProjectDirectory)\packages\OpenCvSharp4.runtime.win.$(OpenCvSharpVersion)\runtimes\win-x64\native\OpenCvSharpExtern.dll"
+                                 Condition="Exists('$(MSBuildProjectDirectory)\packages\OpenCvSharp4.runtime.win.$(OpenCvSharpVersion)\runtimes\win-x64\native\OpenCvSharpExtern.dll')" />
+      <OpenCvSharpPackageLibrary Include="$(MSBuildProjectDirectory)\packages\OpenCvSharp4.runtime.win.$(OpenCvSharpVersion)\runtimes\win-x64\native\opencv_videoio_ffmpeg455_64.dll"
+                                 Condition="Exists('$(MSBuildProjectDirectory)\packages\OpenCvSharp4.runtime.win.$(OpenCvSharpVersion)\runtimes\win-x64\native\opencv_videoio_ffmpeg455_64.dll')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(OpenCvSharpPackageLibrary)"
+          DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="false" />
+  </Target>
+
+  <Target Name="CopyLegacyOpenCvRuntimeDependenciesToOutput" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <LegacyOpenCvRuntimeDependency Include="$(NuGetPackageRoot)system.memory\4.5.5\lib\netstandard2.0\System.Memory.dll"
+                                      Condition="Exists('$(NuGetPackageRoot)system.memory\4.5.5\lib\netstandard2.0\System.Memory.dll')" />
+      <LegacyOpenCvRuntimeDependency Include="$(NuGetPackageRoot)system.buffers\4.5.1\lib\netstandard2.0\System.Buffers.dll"
+                                      Condition="Exists('$(NuGetPackageRoot)system.buffers\4.5.1\lib\netstandard2.0\System.Buffers.dll')" />
+      <LegacyOpenCvRuntimeDependency Include="$(NuGetPackageRoot)system.numerics.vectors\4.5.0\lib\netstandard2.0\System.Numerics.Vectors.dll"
+                                      Condition="Exists('$(NuGetPackageRoot)system.numerics.vectors\4.5.0\lib\netstandard2.0\System.Numerics.Vectors.dll')" />
+      <LegacyOpenCvRuntimeDependency Include="$(NuGetPackageRoot)system.runtime.compilerservices.unsafe\6.0.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll"
+                                      Condition="Exists('$(NuGetPackageRoot)system.runtime.compilerservices.unsafe\6.0.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll')" />
+      <LegacyOpenCvRuntimeDependency Include="$(NuGetPackageRoot)system.threading.tasks.extensions\4.5.4\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll"
+                                      Condition="Exists('$(NuGetPackageRoot)system.threading.tasks.extensions\4.5.4\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll')" />
+      <LegacyOpenCvRuntimeDependency Include="$(MSBuildProjectDirectory)\packages\System.Memory.4.5.5\lib\netstandard2.0\System.Memory.dll"
+                                      Condition="Exists('$(MSBuildProjectDirectory)\packages\System.Memory.4.5.5\lib\netstandard2.0\System.Memory.dll')" />
+      <LegacyOpenCvRuntimeDependency Include="$(MSBuildProjectDirectory)\packages\System.Buffers.4.5.1\lib\netstandard2.0\System.Buffers.dll"
+                                      Condition="Exists('$(MSBuildProjectDirectory)\packages\System.Buffers.4.5.1\lib\netstandard2.0\System.Buffers.dll')" />
+      <LegacyOpenCvRuntimeDependency Include="$(MSBuildProjectDirectory)\packages\System.Numerics.Vectors.4.5.0\lib\netstandard2.0\System.Numerics.Vectors.dll"
+                                      Condition="Exists('$(MSBuildProjectDirectory)\packages\System.Numerics.Vectors.4.5.0\lib\netstandard2.0\System.Numerics.Vectors.dll')" />
+      <LegacyOpenCvRuntimeDependency Include="$(MSBuildProjectDirectory)\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll"
+                                      Condition="Exists('$(MSBuildProjectDirectory)\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll')" />
+      <LegacyOpenCvRuntimeDependency Include="$(MSBuildProjectDirectory)\packages\System.Threading.Tasks.Extensions.4.5.4\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll"
+                                      Condition="Exists('$(MSBuildProjectDirectory)\packages\System.Threading.Tasks.Extensions.4.5.4\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LegacyOpenCvRuntimeDependency)"
+          DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="false" />
+  </Target>
+
+  <Target Name="RemoveOpenVisionLabLogConfigFromPublish" BeforeTargets="_HandleFileConflictsForPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="$([System.IO.Path]::GetFullPath('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging\log4net.config'))" />
+      <ResolvedFileToPublish Remove="$([System.IO.Path]::GetFullPath('$(OpenVisionLabSourceRoot)\dll\OpenCVSharp\OpenCvSharpExtern.dll'))" />
+      <ResolvedFileToPublish Remove="$([System.IO.Path]::GetFullPath('$(OpenVisionLabSourceRoot)\dll\EmguCV\cvextern.dll'))" />
+      <ResolvedFileToPublish Remove="$([System.IO.Path]::GetFullPath('$(OpenVisionLabSourceRoot)\dll\OpenCVSharp\opencv_ffmpeg400_64.dll'))" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CopyApplicationLogConfigToPublish" AfterTargets="Publish" Condition="'$(PublishDir)' != ''">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\log4net.config"
+          DestinationFiles="$(PublishDir)log4net.config"
+          SkipUnchangedFiles="false" />
+  </Target>
+</Project>

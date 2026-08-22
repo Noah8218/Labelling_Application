@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and smoke
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.421
+
+      - name: Check required README sections
+        shell: pwsh
+        run: |
+          $readme = Get-Content README.md -Raw -Encoding UTF8
+          $required = @(
+            '## 1분 요약',
+            '## 설치',
+            '## 실행',
+            '## 샘플 데이터',
+            '## Build Command',
+            '## Smoke Command',
+            '## CI',
+            '## Release Notes',
+            '## Roadmap',
+            '## Known Limitations'
+          )
+          foreach ($section in $required) {
+            if (-not $readme.Contains($section)) {
+              throw "README is missing required section: $section"
+            }
+          }
+          if (-not (Test-Path RELEASE_NOTES.md)) {
+            throw "RELEASE_NOTES.md is missing"
+          }
+
+      - name: Build product
+        shell: pwsh
+        run: dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Release
+
+      - name: Publish versioned self-contained release
+        shell: pwsh
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release
+
+      - name: Verify release package payload
+        shell: pwsh
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release -ReleaseVersion 0.1.0 -VerifyOnly
+
+      - name: Upload versioned win-x64 release
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: openvisionlab-labeling-studio-0.1.0-win-x64
+          path: artifacts/publish/Release/win-x64/0.1.0
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Whitespace check
+        shell: pwsh
+        run: git diff --check
