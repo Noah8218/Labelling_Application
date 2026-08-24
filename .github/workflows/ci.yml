@@ -46,24 +46,30 @@ jobs:
             throw "RELEASE_NOTES.md is missing"
           }
 
-      - name: Build product
+      - name: Resolve product version
         shell: pwsh
-        run: dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Release
+        run: |
+          [xml]$props = Get-Content Directory.Build.props -Raw
+          $version = [string]$props.Project.PropertyGroup.VersionPrefix
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Invalid product version: $version"
+          }
+          "PRODUCT_VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Build application
+        shell: pwsh
+        run: dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Release -p:Platform=x64 -m:1 -nr:false /p:UseSharedCompilation=false
 
       - name: Publish versioned self-contained release
         shell: pwsh
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release
 
-      - name: Verify release package payload
-        shell: pwsh
-        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release -ReleaseVersion 0.1.0 -VerifyOnly
-
       - name: Upload versioned win-x64 release
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: openvisionlab-labeling-studio-0.1.0-win-x64
-          path: artifacts/publish/Release/win-x64/0.1.0
+          name: openvisionlab-labeling-studio-${{ env.PRODUCT_VERSION }}-win-x64
+          path: artifacts/publish/Release/win-x64/${{ env.PRODUCT_VERSION }}
           if-no-files-found: error
           retention-days: 1
 

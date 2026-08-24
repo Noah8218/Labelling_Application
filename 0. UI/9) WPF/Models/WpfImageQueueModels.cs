@@ -1,5 +1,6 @@
 using MahApps.Metro.IconPacks;
 using MvcVisionSystem.Yolo;
+using OpenVisionLab;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -143,6 +144,10 @@ namespace MvcVisionSystem
             set => SetField(ref detectStatus, value ?? string.Empty);
         }
 
+        public string LocalizedLabelStatus => LocalizeStatus(labelStatus, "WpfImageQueue.Row.SavePrefix");
+
+        public string LocalizedDetectStatus => LocalizeStatus(detectStatus, "WpfImageQueue.Row.InspectPrefix");
+
         public string Dimensions
         {
             get => dimensions;
@@ -159,6 +164,10 @@ namespace MvcVisionSystem
 
         public string QueueRowAccessibleName => BuildQueueRowText(" / ");
 
+        public string LocalizedQueueRowToolTip => BuildLocalizedQueueRowText(Environment.NewLine);
+
+        public string LocalizedQueueRowAccessibleName => BuildLocalizedQueueRowText(" / ");
+
         public string QueueStatusSummary
         {
             get => queueStatusSummary;
@@ -170,6 +179,10 @@ namespace MvcVisionSystem
             get => queueBadgeText;
             set => SetField(ref queueBadgeText, value ?? string.Empty);
         }
+
+        public string LocalizedQueueBadgeText => LocalizeBadgeText(queueBadgeText);
+
+        public string LocalizedQueueStatusSummary => LocalizeSummary(queueStatusSummary);
 
         public PackIconMaterialKind QueueIconKind
         {
@@ -225,6 +238,16 @@ namespace MvcVisionSystem
             set => SetField(ref anomalyReviewState, value);
         }
 
+        internal void RefreshLocalizedPresentation()
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedLabelStatus)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedDetectStatus)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedQueueBadgeText)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedQueueStatusSummary)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedQueueRowToolTip)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedQueueRowAccessibleName)));
+        }
+
         public static WpfImageQueueItem CreateShell(string imagePath)
         {
             return CreateShell(WpfImageQueueCatalogEntry.Create(imagePath));
@@ -255,10 +278,170 @@ namespace MvcVisionSystem
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QueueRowToolTip)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(QueueRowAccessibleName)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedLabelStatus)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedDetectStatus)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedQueueStatusSummary)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedQueueRowToolTip)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedQueueRowAccessibleName)));
+            }
+
+            if (string.Equals(propertyName, nameof(QueueBadgeText), StringComparison.Ordinal))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LocalizedQueueBadgeText)));
             }
 
             return true;
         }
+
+        private string BuildLocalizedQueueRowText(string separator)
+        {
+            string normalizedSeparator = string.IsNullOrEmpty(separator) ? " / " : separator;
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(FileName))
+            {
+                parts.Add(string.Format(CultureInfo.InvariantCulture, "{0}: {1}", T("WpfImageQueue.Row.FilePrefix"), FileName.Trim()));
+            }
+
+            parts.Add(string.Format(CultureInfo.InvariantCulture, "{0}: {1}", T("WpfImageQueue.Row.SavePrefix"), LocalizedLabelStatus));
+            parts.Add(string.Format(CultureInfo.InvariantCulture, "{0}: {1}", T("WpfImageQueue.Row.InspectPrefix"), LocalizedDetectStatus));
+            if (!string.IsNullOrWhiteSpace(Dimensions))
+            {
+                parts.Add(string.Format(CultureInfo.InvariantCulture, "{0}: {1}", T("WpfImageQueue.Row.SizePrefix"), Dimensions.Trim()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(LocalizedQueueStatusSummary))
+            {
+                parts.Add(string.Format(CultureInfo.InvariantCulture, "{0}: {1}", T("WpfImageQueue.Row.StatusPrefix"), LocalizedQueueStatusSummary));
+            }
+
+            if (!string.IsNullOrWhiteSpace(Detail))
+            {
+                parts.Add(string.Format(CultureInfo.InvariantCulture, "{0}: {1}", T("WpfImageQueue.Row.DetailPrefix"), LocalizeSummary(Detail)));
+            }
+
+            return string.Join(normalizedSeparator, parts);
+        }
+
+        private static string LocalizeStatus(string value, string prefixKey)
+        {
+            string normalized = string.IsNullOrWhiteSpace(value) ? string.Empty : NormalizeInlineText(value);
+            if (OpenVisionLanguageService.CurrentLanguage == OpenVisionLanguage.Korean)
+            {
+                if (!string.IsNullOrWhiteSpace(normalized))
+                {
+                    return normalized;
+                }
+
+                return string.Equals(prefixKey, "WpfImageQueue.Row.SavePrefix", StringComparison.Ordinal)
+                    ? "없음"
+                    : "대기";
+            }
+
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return string.Equals(prefixKey, "WpfImageQueue.Row.SavePrefix", StringComparison.Ordinal)
+                    ? "None"
+                    : "Waiting";
+            }
+
+            return TranslateKnownStatus(normalized);
+        }
+
+        private static string LocalizeBadgeText(string value)
+        {
+            string normalized = string.IsNullOrWhiteSpace(value) ? string.Empty : NormalizeInlineText(value);
+            if (OpenVisionLanguageService.CurrentLanguage == OpenVisionLanguage.Korean)
+            {
+                return normalized;
+            }
+
+            return TranslateKnownStatus(normalized);
+        }
+
+        private static string LocalizeSummary(string value)
+        {
+            string normalized = NormalizeInlineText(value);
+            if (OpenVisionLanguageService.CurrentLanguage == OpenVisionLanguage.Korean
+                || string.IsNullOrWhiteSpace(normalized))
+            {
+                return normalized;
+            }
+
+            string localized = normalized
+                .Replace("상태 확인 중", "Checking status", StringComparison.Ordinal)
+                .Replace("수정 필요: 라벨", "Needs fix: labels", StringComparison.Ordinal)
+                .Replace("검수 완료: 라벨", "Reviewed: labels", StringComparison.Ordinal)
+                .Replace("저장 완료: 라벨", "Saved: labels", StringComparison.Ordinal)
+                .Replace("객체 없음 완료: 라벨", "No object: labels", StringComparison.Ordinal)
+                .Replace("후보 숨김 완료: 라벨", "Candidate hidden: labels", StringComparison.Ordinal)
+                .Replace("저장 라벨", "Saved labels", StringComparison.Ordinal)
+                .Replace("AI 후보", "AI candidates", StringComparison.Ordinal)
+                .Replace("검사 실패", "Inspection failed", StringComparison.Ordinal)
+                .Replace("검사중", "Inspecting", StringComparison.Ordinal)
+                .Replace("저장 필요", "Save required", StringComparison.Ordinal)
+                .Replace("수정 필요", "Needs fix", StringComparison.Ordinal)
+                .Replace("검수 완료", "Reviewed", StringComparison.Ordinal)
+                .Replace("객체 없음", "No object", StringComparison.Ordinal)
+                .Replace("후보 숨김", "Candidate hidden", StringComparison.Ordinal)
+                .Replace("완료", "Complete", StringComparison.Ordinal)
+                .Replace("대기", "Waiting", StringComparison.Ordinal)
+                .Replace("없음", "None", StringComparison.Ordinal)
+                .Replace("확인 필요", "Review needed", StringComparison.Ordinal);
+            return localized;
+        }
+
+        private static string TranslateKnownStatus(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            if (value.StartsWith("AI 후보 ", StringComparison.Ordinal))
+            {
+                return "AI candidates " + value.Substring("AI 후보 ".Length);
+            }
+
+            if (value.StartsWith("실패 x", StringComparison.Ordinal))
+            {
+                return "Failed x" + value.Substring("실패 x".Length);
+            }
+
+            if (value.StartsWith("실패 ", StringComparison.Ordinal))
+            {
+                return "Failed " + value.Substring("실패 ".Length);
+            }
+
+            if (value.EndsWith("개", StringComparison.Ordinal)
+                && value.Length > 1
+                && value.Substring(0, value.Length - 1).All(char.IsDigit))
+            {
+                return value.Substring(0, value.Length - 1) + " items";
+            }
+
+            return value switch
+            {
+                "확인중" => "Checking",
+                "대기" => "Waiting",
+                "없음" => "None",
+                "객체 없음" => "No object",
+                "객체없음" => "No object",
+                "저장 필요" => "Save required",
+                "검사중" => "Inspecting",
+                "실패" => "Failed",
+                "저장됨" => "Saved",
+                "후보 숨김" => "Candidate hidden",
+                "수정 필요" => "Needs fix",
+                "검수 완료" => "Reviewed",
+                "미판정" => "Unreviewed",
+                "완료" => "Complete",
+                "확인 필요" => "Review needed",
+                "작업" => "Work",
+                _ => value
+            };
+        }
+
+        private static string T(string key) => OpenVisionLanguageService.T(key);
 
         private string BuildQueueRowText(string separator)
         {
@@ -374,11 +557,17 @@ namespace MvcVisionSystem
         }
     }
 
-    public sealed class WpfImageQueueFilterOption
+    public sealed class WpfImageQueueFilterOption : INotifyPropertyChanged
     {
         public WpfImageQueueFilter Filter { get; set; }
 
-        public string Text { get; set; } = string.Empty;
+        public string TextKey { get; set; } = string.Empty;
+
+        public string Text => string.IsNullOrWhiteSpace(TextKey)
+            ? string.Empty
+            : OpenVisionLanguageService.T(TextKey);
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public static IReadOnlyList<WpfImageQueueFilterOption> CreateDefaults()
         {
@@ -387,25 +576,35 @@ namespace MvcVisionSystem
                 .Select(filter => new WpfImageQueueFilterOption
                 {
                     Filter = filter,
-                    Text = GetDisplayName(filter)
+                    TextKey = GetTextKey(filter)
                 })
                 .ToList();
         }
 
-        public static string GetDisplayName(WpfImageQueueFilter filter)
+        internal void RefreshLocalizedPresentation()
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Text)));
+        }
+
+        private static string GetTextKey(WpfImageQueueFilter filter)
         {
             return filter switch
             {
-                WpfImageQueueFilter.Unlabeled => "확인 필요",
-                WpfImageQueueFilter.NeedsFix => "수정 필요",
-                WpfImageQueueFilter.Requested => "검사중",
-                WpfImageQueueFilter.Candidate => "AI 후보",
-                WpfImageQueueFilter.Confirmed => "저장됨",
-                WpfImageQueueFilter.Skipped => "숨김",
-                WpfImageQueueFilter.NoCandidate => "객체없음",
-                WpfImageQueueFilter.Failed => "실패",
-                _ => "전체"
+                WpfImageQueueFilter.Unlabeled => "WpfImageQueue.FilterOption.Unfinished",
+                WpfImageQueueFilter.NeedsFix => "WpfImageQueue.FilterOption.NeedsFix",
+                WpfImageQueueFilter.Requested => "WpfImageQueue.FilterOption.Requested",
+                WpfImageQueueFilter.Candidate => "WpfImageQueue.FilterOption.Candidate",
+                WpfImageQueueFilter.Confirmed => "WpfImageQueue.FilterOption.Confirmed",
+                WpfImageQueueFilter.Skipped => "WpfImageQueue.FilterOption.Skipped",
+                WpfImageQueueFilter.NoCandidate => "WpfImageQueue.FilterOption.NoCandidate",
+                WpfImageQueueFilter.Failed => "WpfImageQueue.FilterOption.Failed",
+                _ => "WpfImageQueue.FilterOption.All"
             };
+        }
+
+        public static string GetDisplayName(WpfImageQueueFilter filter)
+        {
+            return OpenVisionLanguageService.T(GetTextKey(filter));
         }
     }
 

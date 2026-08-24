@@ -69,7 +69,9 @@ namespace MvcVisionSystem.Yolo
             ? AnomalyReadiness?.UnreviewedImageCount ?? 0
             : Purpose == LabelingDatasetPurpose.Segmentation
                 ? (YoloReadiness?.TrainingFiles?.Errors ?? Array.Empty<string>()).Count(IsSegmentationQualityIssue)
-            : (QualityAudit?.TotalMissingLabelCount ?? 0) + (QualityAudit?.TotalInvalidLabelLineCount ?? 0);
+            : (QualityAudit?.TotalMissingLabelCount ?? 0)
+                + (QualityAudit?.TotalInvalidLabelLineCount ?? 0)
+                + (YoloReadiness?.TrainingFiles?.Errors ?? Array.Empty<string>()).Count(IsDatasetIntegrityIssue);
 
         public YoloDatasetHealthQualityStatus QualityStatus => Purpose switch
         {
@@ -94,7 +96,8 @@ namespace MvcVisionSystem.Yolo
         internal static bool IsSegmentationQualityIssue(string issue)
         {
             string normalized = issue ?? string.Empty;
-            return IsSegmentationMissingAnnotationIssue(normalized)
+            return IsDatasetIntegrityIssue(normalized)
+                || IsSegmentationMissingAnnotationIssue(normalized)
                 || normalized.Contains("segment JSON is invalid", StringComparison.OrdinalIgnoreCase)
                 || normalized.Contains("segment polygon has fewer than three points", StringComparison.OrdinalIgnoreCase)
                 || normalized.Contains("segment polygon has invalid class index", StringComparison.OrdinalIgnoreCase)
@@ -108,6 +111,9 @@ namespace MvcVisionSystem.Yolo
                 "segmentation annotation or empty background label is missing",
                 StringComparison.OrdinalIgnoreCase);
         }
+
+        internal static bool IsDatasetIntegrityIssue(string issue)
+            => (issue ?? string.Empty).Contains("dataset integrity:", StringComparison.OrdinalIgnoreCase);
     }
 
     public sealed class YoloDatasetHealthSplitSummary

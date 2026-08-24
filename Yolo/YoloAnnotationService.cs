@@ -33,6 +33,20 @@ namespace MvcVisionSystem.Yolo
                 return;
             }
 
+            EnsureImageIdentity(imageName, image, data, sourceImagePath);
+
+            AnnotationFilePersistence.ExecuteTransaction(
+                () => SaveAnnotationsCore(imageName, image, roiByClass, classes, data, sourceImagePath));
+        }
+
+        private static void SaveAnnotationsCore(
+            string imageName,
+            Image image,
+            IReadOnlyDictionary<string, List<CRectangleObject>> roiByClass,
+            IReadOnlyList<CClassItem> classes,
+            CData data,
+            string sourceImagePath)
+        {
             data.NormalizeOutputPaths();
             data.EnsureYoloOutputDirectories();
 
@@ -65,7 +79,9 @@ namespace MvcVisionSystem.Yolo
 
                 DeleteSiblingImageCopies(imageDirectory, fileStem, imageExtension);
                 SaveImageCopy(image, imagePath);
-                File.WriteAllLines(labelPath, lines);
+                AnnotationFilePersistence.WriteAtomically(
+                    labelPath,
+                    temporaryPath => File.WriteAllLines(temporaryPath, lines));
             }
 
             data.SaveYoloDataYaml();
@@ -78,14 +94,17 @@ namespace MvcVisionSystem.Yolo
                 return;
             }
 
-            data.NormalizeOutputPaths();
-            string fileStem = Path.GetFileNameWithoutExtension(imageName);
-            foreach (string mode in DatasetModes)
+            AnnotationFilePersistence.ExecuteTransaction(() =>
             {
-                string imageDirectory = Path.Combine(data.OutputRootPath, "data", mode, "images");
-                string labelPath = Path.Combine(data.OutputRootPath, "data", mode, "labels", $"{fileStem}.txt");
-                DeleteDatasetFiles(imageDirectory, fileStem, labelPath);
-            }
+                data.NormalizeOutputPaths();
+                string fileStem = Path.GetFileNameWithoutExtension(imageName);
+                foreach (string mode in DatasetModes)
+                {
+                    string imageDirectory = Path.Combine(data.OutputRootPath, "data", mode, "images");
+                    string labelPath = Path.Combine(data.OutputRootPath, "data", mode, "labels", $"{fileStem}.txt");
+                    DeleteDatasetFiles(imageDirectory, fileStem, labelPath);
+                }
+            });
         }
 
         public static List<string> BuildAnnotationLines(
@@ -130,6 +149,7 @@ namespace MvcVisionSystem.Yolo
             {
                 if (File.Exists(labelPath))
                 {
+                    EnsureAnnotationImageIdentity(imagePath, labelPath);
                     return LoadAnnotationRectangles(labelPath, classes, imageSize);
                 }
             }
@@ -378,6 +398,181 @@ namespace MvcVisionSystem.Yolo
                 .ToList();
         }
 
+        internal static void EnsureImageIdentity(
+            string imageName,
+            Image image,
+            CData data,
+            string sourceImagePath = "")
+        {
+            if (string.IsNullOrWhiteSpace(imageName) || image == null || data == null)
+            {
+                return;
+            }
+
+            data.NormalizeOutputPaths();
+            string fileStem = Path.GetFileNameWithoutExtension(imageName);
+            if (string.IsNullOrWhiteSpace(fileStem) || string.IsNullOrWhiteSpace(data.OutputRootPath))
+            {
+                return;
+            }
+
+            string resolvedSourcePath = string.IsNullOrWhiteSpace(sourceImagePath)
+                ? data.LastSelectImagePath
+                : sourceImagePath;
+            List<string> storedImagePaths = DatasetModes
+                .SelectMany(mode => EnumerateImageFilesForStem(
+                    Path.Combine(data.OutputRootPath, "data", mode, "images"),
+                    fileStem))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            EnsureStoredImagesMatch(fileStem, image, resolvedSourcePath, storedImagePaths);
+        }
+
+        internal static void EnsureAnnotationImageIdentity(string sourceImagePath, string annotationPath)
+        {
+            if (string.IsNullOrWhiteSpace(sourceImagePath) || string.IsNullOrWhiteSpace(annotationPath))
+            {
+                return;
+            }
+
+            string fileStem = Path.GetFileNameWithoutExtension(annotationPath);
+            DirectoryInfo annotationDirectory = Directory.GetParent(annotationPath);
+            if (string.IsNullOrWhiteSpace(fileStem)
+                || annotationDirectory?.Parent == null
+                || (!string.Equals(annotationDirectory.Name, "labels", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(annotationDirectory.Name, "segments", StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            string imageDirectory = Path.Combine(annotationDirectory.Parent.FullName, "images");
+            List<string> storedImagePaths = EnumerateImageFilesForStem(imageDirectory, fileStem).ToList();
+            if (storedImagePaths.Count == 0)
+            {
+                // Keep legacy label-only datasets readable; app-managed saves always include an image copy.
+                return;
+            }
+
+            if (storedImagePaths.All(path => PathsEqual(path, sourceImagePath)))
+            {
+                return;
+            }
+
+            using Image sourceImage = Image.FromFile(sourceImagePath);
+            EnsureStoredImagesMatch(fileStem, sourceImage, sourceImagePath, storedImagePaths);
+        }
+
+        private static void EnsureStoredImagesMatch(
+            string fileStem,
+            Image sourceImage,
+            string sourceImagePath,
+            IReadOnlyList<string> storedImagePaths)
+        {
+            if (storedImagePaths == null || storedImagePaths.Count == 0)
+            {
+                return;
+            }
+
+            // Opening the dataset's own canonical image is an unambiguous identity match.
+            // Any stale same-stem extension siblings are removed by the normal save path.
+            if (storedImagePaths.Any(path => PathsEqual(path, sourceImagePath)))
+            {
+                return;
+            }
+
+            var encodedByExtension = new Dictionary<string, IReadOnlyList<byte[]>>(StringComparer.OrdinalIgnoreCase);
+            foreach (string storedImagePath in storedImagePaths)
+            {
+                string extension = NormalizeImageExtension(Path.GetExtension(storedImagePath));
+                if (!encodedByExtension.TryGetValue(extension, out IReadOnlyList<byte[]> encodedSources))
+                {
+                    encodedSources = EncodeImageCandidates(sourceImage, storedImagePath);
+                    encodedByExtension[extension] = encodedSources;
+                }
+
+                if (encodedSources.Any(encodedSource => FileMatchesBytes(storedImagePath, encodedSource)))
+                {
+                    continue;
+                }
+
+                string sourceDescription = string.IsNullOrWhiteSpace(sourceImagePath)
+                    ? "the current image"
+                    : Path.GetFullPath(sourceImagePath);
+                throw new YoloImageIdentityCollisionException(
+                    $"Image name collision for '{fileStem}': stored dataset image '{storedImagePath}' "
+                    + $"does not match '{sourceDescription}'. Rename one source image before saving; existing annotations were not changed.");
+            }
+        }
+
+        private static IReadOnlyList<byte[]> EncodeImageCandidates(Image sourceImage, string imagePath)
+        {
+            byte[] originalFormat = EncodeImage(sourceImage, imagePath);
+            using var bitmap = new Bitmap(sourceImage);
+            using Bitmap wpfWorkspaceFormat = bitmap.Clone(
+                new Rectangle(0, 0, bitmap.Width, bitmap.Height),
+                PixelFormat.Format24bppRgb);
+            byte[] normalizedFormat = EncodeImage(wpfWorkspaceFormat, imagePath);
+            return originalFormat.SequenceEqual(normalizedFormat)
+                ? new[] { originalFormat }
+                : new[] { originalFormat, normalizedFormat };
+        }
+
+        private static byte[] EncodeImage(Image image, string imagePath)
+        {
+            using Bitmap bitmap = CreateBitmapCopy(image);
+            using var stream = new MemoryStream();
+            bitmap.Save(stream, ResolveImageFormat(imagePath));
+            return stream.ToArray();
+        }
+
+        private static bool FileMatchesBytes(string path, byte[] expectedBytes)
+        {
+            if (new FileInfo(path).Length != expectedBytes.Length)
+            {
+                return false;
+            }
+
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            int offset = 0;
+            while (offset < expectedBytes.Length)
+            {
+                int read = stream.Read(expectedBytes, offset, expectedBytes.Length - offset);
+                if (read == 0)
+                {
+                    return false;
+                }
+
+                offset += read;
+            }
+
+            return true;
+        }
+
+        private static bool PathsEqual(string firstPath, string secondPath)
+        {
+            if (string.IsNullOrWhiteSpace(firstPath) || string.IsNullOrWhiteSpace(secondPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                return string.Equals(
+                    Path.GetFullPath(firstPath),
+                    Path.GetFullPath(secondPath),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+            catch (NotSupportedException)
+            {
+                return false;
+            }
+        }
+
         private static string ResolveSourceImageExtension(string fileStem, CData data, string sourceImagePath)
         {
             string sourcePath = string.IsNullOrWhiteSpace(sourceImagePath)
@@ -419,7 +614,7 @@ namespace MvcVisionSystem.Yolo
             {
                 if (!string.Equals(Path.GetExtension(imagePath), normalizedKeepExtension, StringComparison.OrdinalIgnoreCase))
                 {
-                    File.Delete(imagePath);
+                    AnnotationFilePersistence.Delete(imagePath);
                 }
             }
         }
@@ -448,10 +643,21 @@ namespace MvcVisionSystem.Yolo
                 return;
             }
 
-            using (Bitmap bitmap = new Bitmap(image))
+            using Bitmap bitmap = CreateBitmapCopy(image);
+            AnnotationFilePersistence.WriteAtomically(
+                imagePath,
+                temporaryPath => bitmap.Save(temporaryPath, ResolveImageFormat(imagePath)));
+        }
+
+        private static Bitmap CreateBitmapCopy(Image image)
+        {
+            var bitmap = new Bitmap(image);
+            if (image.HorizontalResolution > 0F && image.VerticalResolution > 0F)
             {
-                bitmap.Save(imagePath, ResolveImageFormat(imagePath));
+                bitmap.SetResolution(image.HorizontalResolution, image.VerticalResolution);
             }
+
+            return bitmap;
         }
 
         private static ImageFormat ResolveImageFormat(string imagePath)
@@ -480,7 +686,7 @@ namespace MvcVisionSystem.Yolo
         {
             if (File.Exists(labelPath))
             {
-                File.Delete(labelPath);
+                AnnotationFilePersistence.Delete(labelPath);
             }
 
             // YOLO labels are stem-based, so the same image stem must belong to
@@ -488,8 +694,16 @@ namespace MvcVisionSystem.Yolo
             // duplicate train/valid samples and confusing app reopen behavior.
             foreach (string imagePath in EnumerateImageFilesForStem(imageDirectory, fileStem))
             {
-                File.Delete(imagePath);
+                AnnotationFilePersistence.Delete(imagePath);
             }
+        }
+    }
+
+    internal sealed class YoloImageIdentityCollisionException : InvalidOperationException
+    {
+        public YoloImageIdentityCollisionException(string message)
+            : base(message)
+        {
         }
     }
 }

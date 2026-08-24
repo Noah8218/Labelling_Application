@@ -1,4 +1,5 @@
 using MvcVisionSystem._1._Core;
+using OpenVisionLab;
 using OpenVisionLab.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -76,6 +77,7 @@ namespace MvcVisionSystem
             this.openModelSettingsAction = openModelSettingsAction;
             RefreshCommand = new RelayCommand(Refresh, () => !IsBusy);
             OpenModelSettingsCommand = new RelayCommand(OpenModelSettings, () => !IsBusy && this.openModelSettingsAction != null);
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
             Refresh();
         }
 
@@ -140,14 +142,10 @@ namespace MvcVisionSystem
         }
 
         public string InstallGuideText
-            => "1. Python이 없으면 Python 3.11 x64를 설치하고 전용 venv의 Scripts\\python.exe를 연결합니다.\n"
-                + "2. 모델 실행기 설정에서 YOLOv8/YOLO11, U-Net 또는 PatchCore 프로필을 선택합니다.\n"
-                + "3. 표시된 대상 venv와 설치 명령을 확인한 뒤 설치 버튼을 직접 누릅니다.\n"
-                + "4. 다시 점검한 뒤 학습 또는 현재 검사를 명시적으로 실행합니다.";
+            => T("WpfEnvironment.InstallGuide");
 
         public string SafetyBoundaryText
-            => "이 화면을 열거나 새로고침해도 설치·제거·학습·추론·모델 적용·설정 저장은 실행되지 않습니다. "
-                + "GPU 드라이버와 CUDA는 하드웨어·버전·재부팅 영향이 있어 자동 설치하지 않습니다.";
+            => T("WpfEnvironment.SafetyBoundary");
 
         public void Refresh()
         {
@@ -169,23 +167,25 @@ namespace MvcVisionSystem
                 AddEngineSpecificUtilityItems(settings);
                 AddOptionalUtilityItems();
 
-                SelectedRuntimeText = "선택된 모델 실행기: " + FormatEngine(settings.ModelEngine);
+                SelectedRuntimeText = Format("WpfEnvironment.SelectedRuntime", FormatEngine(settings.ModelEngine));
                 ReadyCount = Items.Count(item => item.IsReady);
                 AttentionCount = Items.Count(item => !item.IsReady && item.IsRequired);
                 OptionalCount = Items.Count(item => !item.IsRequired);
                 OverallStatusText = AttentionCount > 0
-                    ? $"설정이 필요한 필수 항목 {AttentionCount}개"
+                    ? Format("WpfEnvironment.Overall.Required", AttentionCount)
                     : Items.Any(item => !item.IsReady)
-                        ? "필수 환경 준비됨 · 선택 항목 확인 가능"
-                        : "환경 준비 완료";
+                        ? T("WpfEnvironment.Overall.Optional")
+                        : T("WpfEnvironment.Overall.Ready");
                 OverallDetailText = AttentionCount > 0
-                    ? "아래의 다음 조치를 순서대로 확인하세요. 점검 중 설치나 모델 실행은 시작하지 않았습니다."
-                    : "현재 필수 항목은 준비되어 있습니다. 필요한 모델 기능만 선택해 설정할 수 있습니다.";
-                LastCheckedText = "마지막 확인: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    ? T("WpfEnvironment.Overall.Detail.Required")
+                    : T("WpfEnvironment.Overall.Detail.Ready");
+                LastCheckedText = Format(
+                    "WpfEnvironment.LastChecked",
+                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             }
             catch (Exception ex)
             {
-                OverallStatusText = "환경 목록 생성 실패";
+                OverallStatusText = T("WpfEnvironment.Overall.Failed");
                 OverallDetailText = ex.GetType().Name + ": " + ex.Message;
             }
             finally
@@ -206,12 +206,12 @@ namespace MvcVisionSystem
                 bool ready = string.Equals(check.Status, "pass", StringComparison.Ordinal);
                 bool warning = string.Equals(check.Status, "warning", StringComparison.Ordinal);
                 Items.Add(new WpfEnvironmentSetupCenterItem(
-                    "앱 기본 환경",
+                    T("WpfEnvironment.Category.Application"),
                     FormatApplicationCheckName(check.Name),
-                    warning ? "권장" : "필수",
-                    ready ? "준비됨" : warning ? "확인 필요" : "조치 필요",
-                    check.Detail,
-                    ready ? "추가 조치 없음" : FormatApplicationNextAction(check.Name),
+                    warning ? T("WpfEnvironment.Requirement.Recommended") : T("WpfEnvironment.Requirement.Required"),
+                    ready ? T("WpfEnvironment.Status.Ready") : warning ? T("WpfEnvironment.Status.ReviewNeeded") : T("WpfEnvironment.Status.ActionNeeded"),
+                    LocalizeApplicationDetail(check.Name, check.Detail),
+                    ready ? T("WpfEnvironment.NextAction.None") : FormatApplicationNextAction(check.Name),
                     ready,
                     warning,
                     isRequired: !warning));
@@ -223,12 +223,12 @@ namespace MvcVisionSystem
             foreach (PythonModelRuntimeSelfTestItem item in report?.Items ?? Array.Empty<PythonModelRuntimeSelfTestItem>())
             {
                 Items.Add(new WpfEnvironmentSetupCenterItem(
-                    "모델 실행 유틸리티",
-                    item.LabelText,
-                    item.IsWarning ? "기능 사용 시" : "필수",
-                    item.IsPassed ? "준비됨" : item.IsWarning ? "확인 필요" : "설정 필요",
-                    item.DetailText,
-                    item.IsPassed ? "추가 조치 없음" : FormatRuntimeNextAction(item.LabelText),
+                    T("WpfEnvironment.Category.ModelRuntime"),
+                    FormatRuntimeLabel(item.LabelText),
+                    item.IsWarning ? T("WpfEnvironment.Requirement.WhenFeatureUsed") : T("WpfEnvironment.Requirement.Required"),
+                    item.IsPassed ? T("WpfEnvironment.Status.Ready") : item.IsWarning ? T("WpfEnvironment.Status.ReviewNeeded") : T("WpfEnvironment.Status.SetupNeeded"),
+                    LocalizeRuntimeDetail(item.LabelText, item.DetailText),
+                    item.IsPassed ? T("WpfEnvironment.NextAction.None") : FormatRuntimeNextAction(item.LabelText),
                     item.IsPassed,
                     item.IsWarning,
                     isRequired: !item.IsWarning));
@@ -238,12 +238,12 @@ namespace MvcVisionSystem
         private void AddOptionalUtilityItems()
         {
             Items.Add(new WpfEnvironmentSetupCenterItem(
-                "선택 유틸리티",
-                "GPU 가속 드라이버 / CUDA",
-                "선택",
-                "필요할 때 확인",
-                "CPU 실행은 가능하며 GPU 학습·추론을 사용할 때만 호환 드라이버와 PyTorch CUDA 조합이 필요합니다.",
-                "GPU 사용이 필요하면 모델 실행기 설정과 그래픽 진단 결과를 확인한 뒤 제조사 드라이버를 별도로 설치하세요.",
+                T("WpfEnvironment.Category.Optional"),
+                T("WpfEnvironment.Name.GpuCuda"),
+                T("WpfEnvironment.Requirement.Optional"),
+                T("WpfEnvironment.Status.OptionalCheck"),
+                T("WpfEnvironment.Detail.GpuCuda"),
+                T("WpfEnvironment.NextAction.GpuCuda"),
                 isReady: false,
                 isWarning: true,
                 isRequired: false));
@@ -279,16 +279,16 @@ namespace MvcVisionSystem
 
             bool ready = missing.Count == 0;
             Items.Add(new WpfEnvironmentSetupCenterItem(
-                "모델 실행 유틸리티",
-                "YOLOv5 실행 파일 묶음",
-                "필수",
-                ready ? "준비됨" : "복구 필요",
+                T("WpfEnvironment.Category.ModelRuntime"),
+                T("WpfEnvironment.Name.YoloV5Files"),
+                T("WpfEnvironment.Requirement.Required"),
+                ready ? T("WpfEnvironment.Status.Ready") : T("WpfEnvironment.Status.RecoveryNeeded"),
                 ready
-                    ? "hubconf.py, train.py, detect.py, models/common.py 확인"
-                    : "누락: " + string.Join(", ", missing),
+                    ? T("WpfEnvironment.Detail.YoloV5FilesReady")
+                    : Format("WpfEnvironment.Detail.YoloV5FilesMissing", string.Join(", ", missing)),
                 ready
-                    ? "추가 조치 없음"
-                    : "완전한 YOLOv5 저장소를 복구하거나 다른 준비된 모델 프로필을 선택하세요.",
+                    ? T("WpfEnvironment.NextAction.None")
+                    : T("WpfEnvironment.NextAction.YoloV5Files"),
                 ready,
                 isWarning: false,
                 isRequired: true));
@@ -297,35 +297,47 @@ namespace MvcVisionSystem
         private static string FormatApplicationCheckName(string name)
             => name switch
             {
-                "productIdentity" => "제품 버전",
-                "productBinary" => "제품 필수 파일",
-                "applicationExecutable" => "실행 파일",
-                "releaseManifest" => "배포 파일 무결성",
-                "diagnosticsPath" => "진단 저장 경로",
-                "supportBundlePath" => "지원 자료 저장 경로",
-                "logIsolation" => "로그 경로 분리",
-                WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName => "이미지 뷰어 그래픽",
-                _ => name ?? string.Empty
+                "productIdentity" => T("WpfEnvironment.Name.ProductVersion"),
+                "productBinary" => T("WpfEnvironment.Name.ProductFiles"),
+                "applicationExecutable" => T("WpfEnvironment.Name.Executable"),
+                "releaseManifest" => T("WpfEnvironment.Name.ReleaseIntegrity"),
+                "diagnosticsPath" => T("WpfEnvironment.Name.DiagnosticsPath"),
+                "supportBundlePath" => T("WpfEnvironment.Name.SupportBundlePath"),
+                "logIsolation" => T("WpfEnvironment.Name.LogIsolation"),
+                WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName => T("WpfEnvironment.Name.ViewerGraphics"),
+                _ => LocalizeEnvironmentText(name)
             };
 
         private static string FormatApplicationNextAction(string name)
             => name switch
             {
-                "productBinary" or "applicationExecutable" => "검증된 설치/휴대형 패키지로 제품 파일을 복구하세요.",
-                "releaseManifest" => "배포 폴더의 release-manifest.json과 원본 패키지를 다시 확인하세요.",
-                "diagnosticsPath" or "supportBundlePath" or "logIsolation" => "사용자 저장 경로의 권한과 남은 디스크 공간을 확인하세요.",
-                WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName => "그래픽 드라이버와 지원 GPU 환경을 확인한 뒤 앱에서 다시 점검하세요.",
-                _ => "지원 자료를 만든 뒤 설치 파일과 환경을 다시 확인하세요."
+                "productBinary" or "applicationExecutable" => T("WpfEnvironment.NextAction.ProductFiles"),
+                "releaseManifest" => T("WpfEnvironment.NextAction.ReleaseManifest"),
+                "diagnosticsPath" or "supportBundlePath" or "logIsolation" => T("WpfEnvironment.NextAction.UserPaths"),
+                WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName => T("WpfEnvironment.NextAction.ViewerGraphics"),
+                _ => T("WpfEnvironment.NextAction.Generic")
             };
 
         private static string FormatRuntimeNextAction(string label)
             => label switch
             {
-                "Python" => "Python 3.11 x64 설치 후 전용 venv의 Scripts\\python.exe를 모델 실행기 설정에서 연결하세요.",
-                "Ultralytics" or "PyTorch U-Net" or "PyTorch PatchCore" => "모델 실행기 설정에서 대상 venv와 명령을 확인한 뒤 설치 버튼을 직접 누르세요.",
-                "검사 모델" => "학습 결과를 검사 모델로 저장하거나 사용할 .pt/.onnx 파일을 선택하세요.",
-                "이미지" => "검사할 이미지 폴더를 선택하세요. 라벨링만 할 때는 나중에 설정할 수 있습니다.",
-                _ => "모델 실행기 설정에서 경로와 선택 프로필을 확인하세요."
+                "Python" => T("WpfEnvironment.NextAction.Python"),
+                "Ultralytics" or "PyTorch U-Net" or "PyTorch PatchCore" => T("WpfEnvironment.NextAction.RuntimePackage"),
+                "검사 모델" or "Inspection model" => T("WpfEnvironment.NextAction.InspectionModel"),
+                "이미지" or "Image" => T("WpfEnvironment.NextAction.Image"),
+                _ => T("WpfEnvironment.NextAction.RuntimeGeneric")
+            };
+
+        private static string FormatRuntimeLabel(string label)
+            => label switch
+            {
+                "프로젝트" or "Project" => T("WpfEnvironment.Name.Project"),
+                "모델 루트" or "Model root" => T("WpfEnvironment.Name.ModelRoot"),
+                "실행 스크립트" or "Execution script" => T("WpfEnvironment.Name.ExecutionScript"),
+                "검사 모델" or "Inspection model" => T("WpfEnvironment.Name.InspectionModel"),
+                "이미지" or "Image" => T("WpfEnvironment.Name.Images"),
+                "실행 연결" or "Execution connection" => T("WpfEnvironment.Name.ExecutionConnection"),
+                _ => LocalizeEnvironmentText(label)
             };
 
         private static string FormatEngine(string engine)
@@ -337,7 +349,204 @@ namespace MvcVisionSystem
                 PythonModelSettings.EngineUnet => "U-Net",
                 PythonModelSettings.EnginePatchCore => "PatchCore",
                 PythonModelSettings.EngineOnnx => "ONNX",
-                _ => "미설정"
+                _ => T("WpfEnvironment.Engine.Unconfigured")
+            };
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            Refresh();
+            OnPropertyChanged(nameof(InstallGuideText));
+            OnPropertyChanged(nameof(SafetyBoundaryText));
+        }
+
+        private static string T(string key)
+            => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] arguments)
+            => string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                T(key),
+                arguments ?? Array.Empty<object>());
+
+        private static string LocalizeEnvironmentText(string value)
+            => WpfLocalizationTextRuntimeService.Translate(value ?? string.Empty);
+
+        private static string LocalizeApplicationDetail(string name, string detail)
+        {
+            string value = detail ?? string.Empty;
+            if (OpenVisionLanguageService.CurrentLanguage == OpenVisionLanguage.Korean)
+            {
+                return value;
+            }
+
+            string translated = LocalizeEnvironmentText(value);
+            if (!string.Equals(translated, value, StringComparison.Ordinal))
+            {
+                return translated;
+            }
+
+            if (string.Equals(name, "releaseManifest", StringComparison.Ordinal))
+            {
+                const string matchPrefix = "배포 manifest 제품/버전 일치 (";
+                const string mismatchPrefix = "배포 manifest 불일치 (";
+                const string readFailurePrefix = "배포 manifest 읽기 실패: ";
+                if (value.StartsWith(matchPrefix, StringComparison.Ordinal)
+                    && value.EndsWith(")", StringComparison.Ordinal))
+                {
+                    return "Release manifest product/version match ("
+                        + value.Substring(matchPrefix.Length, value.Length - matchPrefix.Length - 1)
+                        + ")";
+                }
+
+                if (value.StartsWith(mismatchPrefix, StringComparison.Ordinal))
+                {
+                    return "Release manifest mismatch ("
+                        + value.Substring(mismatchPrefix.Length);
+                }
+
+                if (value.StartsWith(readFailurePrefix, StringComparison.Ordinal))
+                {
+                    return "Release manifest read failed: "
+                        + value.Substring(readFailurePrefix.Length);
+                }
+            }
+
+            if (string.Equals(name, WpfRuntimeDiagnosticsService.ViewerGraphicsCheckName, StringComparison.Ordinal))
+            {
+                const string notAvailablePrefix = "이미지 뷰어 사용 불가";
+                const string availablePrefix = "이미지 뷰어 사용 가능";
+                const string failurePrefix = "이미지 뷰어 그래픽 점검 실패 · ";
+                const string missingFunctionsMarker = " · 지원되지 않는 필수 기능: ";
+                const string requiredFunctionsMarker = " · 필수 framebuffer 함수";
+                const string retrySuffix = " · 지원되는 GPU 드라이버가 설치된 로컬 PC/VM 콘솔에서 다시 실행하세요.";
+
+                if (value.StartsWith(notAvailablePrefix, StringComparison.Ordinal))
+                {
+                    string remainder = value.Substring(notAvailablePrefix.Length);
+                    int markerIndex = remainder.IndexOf(missingFunctionsMarker, StringComparison.Ordinal);
+                    if (markerIndex >= 0)
+                    {
+                        string identity = remainder.Substring(0, markerIndex);
+                        string functions = remainder.Substring(markerIndex + missingFunctionsMarker.Length);
+                        if (functions.EndsWith(retrySuffix, StringComparison.Ordinal))
+                        {
+                            functions = functions.Substring(0, functions.Length - retrySuffix.Length);
+                        }
+
+                        return "Image viewer unavailable"
+                            + identity
+                            + " · Unsupported required functions: "
+                            + functions
+                            + " · Run again on a local PC/VM console with a supported GPU driver.";
+                    }
+                }
+
+                if (value.StartsWith(availablePrefix, StringComparison.Ordinal))
+                {
+                    string remainder = value.Substring(availablePrefix.Length);
+                    int markerIndex = remainder.IndexOf(requiredFunctionsMarker, StringComparison.Ordinal);
+                    if (markerIndex >= 0)
+                    {
+                        string identity = remainder.Substring(0, markerIndex);
+                        string count = remainder.Substring(markerIndex + requiredFunctionsMarker.Length);
+                        const string countSuffix = "개 확인";
+                        if (count.EndsWith(countSuffix, StringComparison.Ordinal))
+                        {
+                            count = count.Substring(0, count.Length - countSuffix.Length);
+                        }
+
+                        return "Image viewer available"
+                            + identity
+                            + " · Required framebuffer functions "
+                            + count
+                            + " verified";
+                    }
+                }
+
+                if (value.StartsWith(failurePrefix, StringComparison.Ordinal))
+                {
+                    return "Image viewer graphics check failed · "
+                        + value.Substring(failurePrefix.Length)
+                        + " · Run again on a local PC/VM console with a supported GPU driver.";
+                }
+            }
+
+            return value;
+        }
+
+        private static string LocalizeRuntimeDetail(string label, string detail)
+        {
+            string value = detail ?? string.Empty;
+            if (OpenVisionLanguageService.CurrentLanguage == OpenVisionLanguage.Korean)
+            {
+                return value;
+            }
+
+            string translated = LocalizeEnvironmentText(value);
+            if (!string.Equals(translated, value, StringComparison.Ordinal))
+            {
+                return translated;
+            }
+
+            const string missingPathPrefix = "경로 미설정 / ";
+            const string missingFilePrefix = "찾을 수 없음: ";
+            if (value.StartsWith(missingPathPrefix, StringComparison.Ordinal))
+            {
+                return Format(
+                    "WpfEnvironment.Detail.RuntimePathMissing",
+                    GetRuntimePathGuidance(label));
+            }
+
+            if (value.StartsWith(missingFilePrefix, StringComparison.Ordinal))
+            {
+                int separatorIndex = value.IndexOf(" / ", missingFilePrefix.Length, StringComparison.Ordinal);
+                string path = separatorIndex >= 0
+                    ? value.Substring(missingFilePrefix.Length, separatorIndex - missingFilePrefix.Length)
+                    : value.Substring(missingFilePrefix.Length);
+                return Format("WpfEnvironment.Detail.RuntimePathNotFound", path);
+            }
+
+            if (value.StartsWith("ultralytics 패키지 없음: ", StringComparison.Ordinal))
+            {
+                int separatorIndex = value.IndexOf(" / ", StringComparison.Ordinal);
+                string path = separatorIndex >= 0
+                    ? value.Substring("ultralytics 패키지 없음: ".Length, separatorIndex - "ultralytics 패키지 없음: ".Length)
+                    : value.Substring("ultralytics 패키지 없음: ".Length);
+                return Format("WpfEnvironment.Detail.UltralyticsPackageMissing", path);
+            }
+
+            if (value.StartsWith("torch, torchvision, numpy 또는 Pillow가 없습니다: ", StringComparison.Ordinal))
+            {
+                return Format(
+                    "WpfEnvironment.Detail.PyTorchPackageMissing",
+                    value.Substring("torch, torchvision, numpy 또는 Pillow가 없습니다: ".Length));
+            }
+
+            if (string.Equals(label, "실행 연결", StringComparison.Ordinal)
+                && value.StartsWith("PatchCore 학습과 검사는 ", StringComparison.Ordinal))
+            {
+                return T("WpfEnvironment.Detail.RuntimeExecutionBlocked");
+            }
+
+            if (string.Equals(label, "실행 연결", StringComparison.Ordinal)
+                && value.StartsWith("YOLOv5 TCP worker로 학습과 현재 검사를 실행합니다.", StringComparison.Ordinal))
+            {
+                return T("WpfEnvironment.Detail.YoloV5ExecutionReady");
+            }
+
+            return value;
+        }
+
+        private static string GetRuntimePathGuidance(string label)
+            => label switch
+            {
+                "프로젝트" => "Connect the YOLO project folder in Model Runtime Settings.",
+                "모델 루트" => "Connect the YOLOv5 folder or review the model root path.",
+                "실행 스크립트" => "Connect the script path used to run the model worker.",
+                "검사 모델" => "Select a .pt/.onnx inspection model or save a training result as the inspection model.",
+                "이미지" => "Select the image folder to inspect. Labeling can continue, but inspection requires an image folder.",
+                "Python" => "Connect the Python executable or the venv Scripts folder.",
+                _ => "Review the path in Model Runtime Settings."
             };
     }
 }

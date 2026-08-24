@@ -20,6 +20,7 @@ namespace MvcVisionSystem
         public TextBox SearchBox => ImageQueueSearchBox;
         public DataGrid QueueGrid => ImageQueueGrid;
         public TextBlock BatchStatusTextBlock => BatchStatusText;
+        public TextBlock PanelTitleTextBlock => ImageQueuePanelTitleText;
         public ProgressBar BatchProgress => BatchProgressBar;
         public TextBlock CurrentFolderPathTextBlock => CurrentImageFolderPathText;
         public WpfUiButton OpenCurrentFolderButton => OpenCurrentImageFolderButton;

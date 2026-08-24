@@ -4,6 +4,8 @@ namespace MvcVisionSystem
 {
     public sealed class WpfLabelingShellViewModels
     {
+        public WpfLocalizationViewModel LanguageViewModel { get; } = WpfLocalizationViewModel.Instance;
+
         public WpfLabelingShellViewModel ShellViewModel { get; } = new WpfLabelingShellViewModel();
 
         public WpfLearningWorkflowPanelViewModel LearningWorkflowViewModel { get; } = new WpfLearningWorkflowPanelViewModel();

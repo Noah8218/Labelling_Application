@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.2.0 — 2026-08-24
+
+- Versioned Public promotion candidate for the bounded WPF presentation
+  release wave. The existing main-view `한국어` / `English` selector now
+  refreshes the audited nested and representative auxiliary presentation
+  surfaces without changing command, selection, or workflow state.
+- The exercised 125% layouts keep the canvas tool rail reachable and expose
+  the existing Object Review group selection, save, navigation, and reopen
+  behavior through the COCO128 workflow.
+- The candidate retains the protected `272/272` regression baseline and the
+  existing portable self-contained release contract. Full application
+  localization, exhaustive dynamic-value translation, and 100%, 150%, 175%,
+  and 200% DPI coverage remain outside this candidate's verified claim.
+
 ## Unreleased
 
 - The active `Lib.Common.dll` / `Lib.OpenCV.dll` integration has been replaced
@@ -7,7 +21,24 @@
   `OpenVisionLab.Vision2D`). Template matching now uses the SDK-owned property
   and execution-result contracts, UI Bitmap/Mat conversion uses the aligned
   OpenCvSharp extension package, and the old or unused binaries are no longer
-  redistributed. The complete `267/267` protected regression remains green.
+  redistributed. The complete `272/272` protected regression remains green.
+- Annotation saves now fail closed across the complete image transaction.
+  Existing images, detection labels, segmentation masks/JSON, Object Review
+  metadata, split ownership, and changed dataset YAML are restored together
+  when a later write fails. A different source image with the same filename
+  stem and corrupt segmentation data are rejected before replacement.
+- Dataset interchange imports now convert into an isolated staging area and
+  modify the active dataset only after every item succeeds. Failed or skipped
+  imports leave the previous files and class list intact. Current COCO,
+  Pascal VOC, Label Studio, and CVAT detection/segmentation round trips retain
+  the exercised pixel geometry, image dimensions, and non-square DPI metadata.
+- Dataset readiness and Dataset Health now reject unreadable images,
+  same-split filename-stem collisions, orphan annotation artifacts, and
+  segmentation image/mask dimension mismatches without modifying source data.
+- Large raster-mask Undo/Redo stores only the changed region, and canonical
+  mask save writes bounded foreground runs instead of one pixel at a time.
+  Existing save/reopen, class-index, polygon/cutout, and transaction behavior
+  remains unchanged.
 - Saved Recipe and dataset state can now be exported as one validated portable
   project archive and imported into new, non-overwriting targets. Export is
   blocked while annotations, mask commits, AI candidates, or named work remain
@@ -37,10 +68,14 @@
   remains clean. Untouched startup queues no longer create an empty
   `DATA/review-status.json` beside the executable; existing dataset review
   caches remain explicitly clearable.
-- Release engineering now pins .NET SDK `8.0.421` and product version `0.1.0`,
-  emits a deterministic versioned self-contained `win-x64` folder, ships
+- Release engineering retains .NET SDK `8.0.421` and the canonical product
+  version owner in `Directory.Build.props`, emits a deterministic versioned
+  self-contained `win-x64` folder, ships
   project and third-party notices, verifies every payload SHA-256
   fail-closed, and publishes the verified folder as a CI artifact.
+- The current distribution unit is a portable ZIP containing the verified
+  self-contained folder. It is not an installer or a code-signed package;
+  extract it to a new folder and verify the bundled manifest before launch.
 
 - Object Review now supports persistent per-object `가림` and Recipe-defined
   tags for saved manual boxes and segmentation objects, with row badges,

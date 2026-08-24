@@ -1,29 +1,39 @@
-using OpenVisionLab.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
+using OpenVisionLab;
+using OpenVisionLab.Mvvm;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfBatchExistingLabelPolicyOption
+    public sealed class WpfBatchExistingLabelPolicyOption : WpfObservableViewModel
     {
         public WpfBatchExistingLabelPolicyOption(
             WpfBatchExistingLabelPolicy policy,
-            string displayText,
-            string detailText)
+            string displayKey,
+            string detailKey)
         {
             Policy = policy;
-            DisplayText = displayText ?? string.Empty;
-            DetailText = detailText ?? string.Empty;
+            this.displayKey = displayKey ?? string.Empty;
+            this.detailKey = detailKey ?? string.Empty;
         }
+
+        private readonly string displayKey;
+        private readonly string detailKey;
 
         public WpfBatchExistingLabelPolicy Policy { get; }
 
-        public string DisplayText { get; }
+        public string DisplayText => OpenVisionLanguageService.T(displayKey);
 
-        public string DetailText { get; }
+        public string DetailText => OpenVisionLanguageService.T(detailKey);
+
+        internal void RefreshLocalizedPresentation()
+        {
+            OnPropertyChanged(nameof(DisplayText));
+            OnPropertyChanged(nameof(DetailText));
+        }
     }
 
     public sealed class WpfBatchPreflightFindingItem
@@ -38,7 +48,8 @@ namespace MvcVisionSystem
 
         public bool IsBlocking { get; }
 
-        public string SeverityText => IsBlocking ? "\uCC28\uB2E8" : "\uC8FC\uC758";
+        public string SeverityText => OpenVisionLanguageService.T(
+            IsBlocking ? "WpfBatch.Finding.Severity.Blocking" : "WpfBatch.Finding.Severity.Warning");
     }
 
     public sealed class WpfBatchDetectionPreflightViewModel : WpfObservableViewModel
@@ -62,14 +73,15 @@ namespace MvcVisionSystem
             WpfBatchDetectionPreflightService preflightService = null)
         {
             this.preflightService = preflightService ?? new WpfBatchDetectionPreflightService();
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
             ExistingLabelPolicies.Add(new WpfBatchExistingLabelPolicyOption(
                 WpfBatchExistingLabelPolicy.SkipLabeled,
-                "\uAE30\uC874 \uB77C\uBCA8 \uC774\uBBF8\uC9C0 \uC81C\uC678 (\uAD8C\uC7A5)",
-                "\uC800\uC7A5\uB41C \uB77C\uBCA8\uC774 \uC788\uB294 \uC774\uBBF8\uC9C0\uB294 \uC2E4\uD589 \uB300\uC0C1\uC5D0\uC11C \uC81C\uC678\uD569\uB2C8\uB2E4."));
+                "WpfBatch.Policy.Skip.Display",
+                "WpfBatch.Policy.Skip.Detail"));
             ExistingLabelPolicies.Add(new WpfBatchExistingLabelPolicyOption(
                 WpfBatchExistingLabelPolicy.IncludeAndKeep,
-                "\uD3EC\uD568\uD558\uB418 \uAE30\uC874 \uB77C\uBCA8 \uBCF4\uC874",
-                "\uBAA8\uB4E0 \uC774\uBBF8\uC9C0\uB97C \uAC80\uC0AC\uD558\uACE0 AI \uACB0\uACFC\uB9CC \uD6C4\uBCF4\uB85C \uC313\uC2B5\uB2C8\uB2E4."));
+                "WpfBatch.Policy.Include.Display",
+                "WpfBatch.Policy.Include.Detail"));
             RecheckCommand = new RelayCommand(RunDryRun);
             StartCommand = new RelayCommand(RequestStart, () => CanStart);
             Refresh(data, items, scopeText);
@@ -166,12 +178,12 @@ namespace MvcVisionSystem
             Findings.Clear();
             foreach (string issue in currentReport.Issues)
             {
-                Findings.Add(new WpfBatchPreflightFindingItem(issue, isBlocking: true));
+                Findings.Add(new WpfBatchPreflightFindingItem(LocalizeFinding(issue), isBlocking: true));
             }
 
             foreach (string warning in currentReport.Warnings)
             {
-                Findings.Add(new WpfBatchPreflightFindingItem(warning, isBlocking: false));
+                Findings.Add(new WpfBatchPreflightFindingItem(LocalizeFinding(warning), isBlocking: false));
             }
 
             ClassMappings.Clear();
@@ -182,26 +194,94 @@ namespace MvcVisionSystem
 
             StatusText = currentReport.CanStart
                 ? currentReport.Warnings.Count > 0
-                    ? "\uC8FC\uC758\uC0AC\uD56D \uD655\uC778 \uD6C4 \uC2E4\uD589 \uAC00\uB2A5"
-                    : "\uC2E4\uD589 \uAC00\uB2A5"
-                : "\uC2E4\uD589 \uCC28\uB2E8";
-            CountText =
-                $"\uC694\uCCAD {currentReport.RequestedCount} \u00B7 \uC2E4\uD589 {currentReport.RunnableItems.Count} \u00B7 "
-                + $"\uAE30\uC874 \uB77C\uBCA8 {currentReport.ExistingLabelCount} \u00B7 \uC81C\uC678 {currentReport.SkippedExistingLabelCount}";
-            ModelText =
-                $"{currentReport.ModelEngineText} \u00B7 {currentReport.DatasetPurposeText} \u00B7 \uC2E0\uB8B0\uB3C4 {currentReport.ConfidenceText}"
-                + Environment.NewLine
-                + currentReport.WeightsPath;
+                    ? T("WpfBatch.Status.ReadyWithWarnings")
+                    : T("WpfBatch.Status.Ready")
+                : T("WpfBatch.Status.Blocked");
+            CountText = Format(
+                "WpfBatch.Count",
+                currentReport.RequestedCount,
+                currentReport.RunnableItems.Count,
+                currentReport.ExistingLabelCount,
+                currentReport.SkippedExistingLabelCount);
+            ModelText = Format(
+                "WpfBatch.Model",
+                currentReport.ModelEngineText,
+                FormatPurposeText(data?.ProjectSettings?.DatasetPurpose),
+                currentReport.ConfidenceText,
+                currentReport.WeightsPath);
             ClassContractText = ClassMappings.Count == 0
-                ? "\uD074\uB798\uC2A4 \uB9E4\uD551 \uC5C6\uC74C"
-                : $"Recipe \uD074\uB798\uC2A4 {ClassMappings.Count}\uAC1C \u00B7 worker className\uC744 \uB300\uC18C\uBB38\uC790 \uAD6C\uBD84 \uC5C6\uC774 \uB3D9\uC77C \uC774\uB984\uC73C\uB85C \uD574\uC11D";
-            DestinationPolicyText = currentReport.DestinationPolicyText;
+                ? T("WpfBatch.ClassContract.Empty")
+                : Format("WpfBatch.ClassContract.Count", ClassMappings.Count);
+            DestinationPolicyText = T("WpfBatch.DestinationPolicy");
             OnPropertyChanged(nameof(CanStart));
             if (StartCommand is RelayCommand command)
             {
                 command.RaiseCanExecuteChanged();
             }
         }
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            foreach (WpfBatchExistingLabelPolicyOption option in ExistingLabelPolicies)
+            {
+                option.RefreshLocalizedPresentation();
+            }
+
+            RunDryRun();
+            OnPropertyChanged(nameof(ScopeText));
+        }
+
+        private string LocalizeFinding(string text)
+        {
+            if (OpenVisionLanguageService.CurrentLanguage == OpenVisionLanguage.Korean
+                || string.IsNullOrWhiteSpace(text))
+            {
+                return text ?? string.Empty;
+            }
+
+            const string missingImagePrefix = "\uD30C\uC77C\uC744 \uC5F4 \uC218 \uC5C6\uB294 \uC774\uBBF8\uC9C0 ";
+            const string missingImageSuffix = "\uAC1C\uAC00 \uD3EC\uD568\uB418\uC5C8\uC2B5\uB2C8\uB2E4.";
+            if (text.StartsWith(missingImagePrefix, StringComparison.Ordinal)
+                && text.EndsWith(missingImageSuffix, StringComparison.Ordinal)
+                && int.TryParse(
+                    text.Substring(
+                        missingImagePrefix.Length,
+                        text.Length - missingImagePrefix.Length - missingImageSuffix.Length),
+                    out int missingImageCount))
+            {
+                return Format("WpfBatch.Finding.MissingImages", missingImageCount);
+            }
+
+            const string includeExistingPrefix = "\uAE30\uC874 \uB77C\uBCA8\uC774 \uC788\uB294 ";
+            const string includeExistingMiddle = "\uAC1C \uC774\uBBF8\uC9C0\uB3C4 \uAC80\uC0AC\uD569\uB2C8\uB2E4. \uAE30\uC874 \uB77C\uBCA8\uC740 \uBCF4\uC874\uB429\uB2C8\uB2E4.";
+            if (text.StartsWith(includeExistingPrefix, StringComparison.Ordinal)
+                && text.EndsWith(includeExistingMiddle, StringComparison.Ordinal)
+                && int.TryParse(
+                    text.Substring(
+                        includeExistingPrefix.Length,
+                        text.Length - includeExistingPrefix.Length - includeExistingMiddle.Length),
+                    out int existingLabelCount))
+            {
+                return Format("WpfBatch.Finding.IncludeExisting", existingLabelCount);
+            }
+
+            return WpfLocalizationTextRuntimeService.Translate(text);
+        }
+
+        private static string FormatPurposeText(LabelingDatasetPurpose? purpose)
+        {
+            return (purpose ?? LabelingDatasetPurpose.ObjectDetection) switch
+            {
+                LabelingDatasetPurpose.Segmentation => T("WpfShell.Dataset.Purpose.Segmentation"),
+                LabelingDatasetPurpose.AnomalyDetection => T("WpfShell.Dataset.Purpose.AnomalyDetection"),
+                _ => T("WpfShell.Dataset.Purpose.ObjectDetection")
+            };
+        }
+
+        private static string T(string key) => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] values)
+            => string.Format(System.Globalization.CultureInfo.InvariantCulture, T(key), values ?? Array.Empty<object>());
 
         private void RequestStart()
         {

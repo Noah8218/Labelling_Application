@@ -33,6 +33,7 @@
         </Style>
 
         <Style x:Key="YoloModelBrowseButtonStyle" TargetType="{x:Type ui:Button}">
+            <Setter Property="Template" Value="{DynamicResource WpfUiDarkButtonTemplate}" />
             <Setter Property="Width" Value="30" />
             <Setter Property="MinWidth" Value="30" />
             <Setter Property="Height" Value="26" />
@@ -44,6 +45,7 @@
         </Style>
 
         <Style x:Key="YoloModelCommandButtonStyle" TargetType="{x:Type ui:Button}">
+            <Setter Property="Template" Value="{DynamicResource WpfUiDarkButtonTemplate}" />
             <Setter Property="Height" Value="30" />
             <Setter Property="MinHeight" Value="30" />
             <Setter Property="Padding" Value="8,0" />
@@ -63,6 +65,7 @@
         </Style>
 
         <Style x:Key="YoloRuntimeProfileActionButtonStyle" TargetType="{x:Type ui:Button}">
+            <Setter Property="Template" Value="{DynamicResource WpfUiDarkButtonTemplate}" />
             <Setter Property="Height" Value="26" />
             <Setter Property="MinHeight" Value="26" />
             <Setter Property="MinWidth" Value="46" />

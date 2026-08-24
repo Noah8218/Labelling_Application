@@ -139,13 +139,17 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x6
 .\scripts\start-labeling-workbench.ps1 -AppMode Publish
 ```
 
-기본 릴리스는 `artifacts\publish\Release\win-x64\0.1.0`에 생성되는
+기본 릴리스는 `artifacts\publish\Release\win-x64\0.2.0`에 생성되는
 self-contained Windows x64 번들입니다. `release-manifest.json`과
 `publish-manifest.txt`에는 소스 커밋, 빌드 식별 정보, 전체 payload의
 SHA-256이 기록됩니다. 기존 패키지는 다음 명령으로 변경 없이 다시 검증할 수 있습니다.
 
+현재 배포 단위는 이 검증된 폴더를 그대로 담은 portable ZIP입니다. 설치
+프로그램이나 코드 서명 패키지가 아니므로 ZIP을 새 폴더에 풀고 manifest 검증 후
+`OpenVisionLab.LabelingStudio.exe`를 실행합니다.
+
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release -ReleaseVersion 0.1.0 -VerifyOnly
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release -ReleaseVersion 0.2.0 -VerifyOnly
 ```
 
 ## 샘플 데이터
@@ -173,7 +177,7 @@ dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Release
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\publish-win-x64.ps1 -Configuration Release
-& .\artifacts\publish\Release\win-x64\0.1.0\OpenVisionLab.LabelingStudio.exe `
+& .\artifacts\publish\Release\win-x64\0.2.0\OpenVisionLab.LabelingStudio.exe `
   --environment-self-test --json
 ```
 
@@ -203,7 +207,7 @@ GitHub Actions의 `.github/workflows/ci.yml`은 다음을 확인합니다.
 - README 필수 섹션
 - .NET Release 제품 빌드
 - versioned self-contained `win-x64` publish와 payload 검증
-- `openvisionlab-labeling-studio-0.1.0-win-x64` artifact 업로드
+- `openvisionlab-labeling-studio-0.2.0-win-x64` artifact 업로드
 - `git diff --check`
 
 ## 문서
@@ -221,7 +225,7 @@ GitHub Actions의 `.github/workflows/ci.yml`은 다음을 확인합니다.
 ## Roadmap
 
 1. 현재 소스의 빌드·260개 전체 회귀·framework-dependent/self-contained Release 게시·첫 실행 감사가 완료됐습니다. 로컬 게시 가능성은 확인됐지만 상용 릴리스 준비 완료를 의미하지 않습니다.
-2. SDK `8.0.421`, 제품 `0.1.0`, 결정적 self-contained 패키지, 전체 payload SHA-256, LICENSE·NOTICE·제3자 고지를 포함한 P0-B1은 완료됐습니다.
+2. SDK `8.0.421`, 제품 `0.2.0` 후보, 결정적 self-contained 패키지, 전체 payload SHA-256, LICENSE·NOTICE·제3자 고지를 포함한 P0-B1은 완료됐습니다.
 3. P0-B2의 명시적 환경 self-test, 구조화된 시작 진단, 제한된 로그 보존, 개인정보 안전 support bundle export는 완료됐습니다.
 4. 이식 가능한 프로젝트 아카이브와 한 이미지 제한형 비정상 종료 복구 저널은 구현 완료됐습니다. 승인된 깨끗한 Windows 환경과 설치/서명 결정이 제공되면 설치·업그레이드·제거를 검증합니다.
 5. 승인된 생산 데이터와 목표 하드웨어가 제공되면 정확도·장기 안정성·takt time을 별도 현장 채택 기준으로 검증합니다.

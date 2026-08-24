@@ -1,0 +1,119 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <!-- Dark-only fallbacks. A consuming window can override any semantic brush. -->
+    <SolidColorBrush x:Key="ToolbarButtonHoverBrush" Color="#333333" />
+    <SolidColorBrush x:Key="ToolbarButtonPressedBrush" Color="#1D1D1D" />
+    <SolidColorBrush x:Key="ToolbarButtonDisabledBrush" Color="#20242A" />
+    <SolidColorBrush x:Key="ToolbarButtonDisabledBorderBrush" Color="#2B3038" />
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#69707A" />
+    <SolidColorBrush x:Key="SelectedRowBrush" Color="#26384F" />
+    <SolidColorBrush x:Key="SelectedRowTextBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6" />
+
+    <ControlTemplate x:Key="WpfUiDarkButtonTemplate" TargetType="{x:Type ui:Button}">
+        <Border x:Name="ButtonChrome"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="3"
+                SnapsToDevicePixels="True">
+            <ContentPresenter Margin="{TemplateBinding Padding}"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                              RecognizesAccessKey="True" />
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource ToolbarButtonHoverBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource ToolbarButtonPressedBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderThickness" Value="2" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource ToolbarButtonDisabledBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource ToolbarButtonDisabledBorderBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}" />
+                <Setter Property="Opacity" Value="1" />
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="WpfDarkButtonTemplate" TargetType="{x:Type Button}">
+        <Border x:Name="ButtonChrome"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="3"
+                SnapsToDevicePixels="True">
+            <ContentPresenter Margin="{TemplateBinding Padding}"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                              RecognizesAccessKey="True" />
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource ToolbarButtonHoverBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource ToolbarButtonPressedBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderThickness" Value="2" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource ToolbarButtonDisabledBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource ToolbarButtonDisabledBorderBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}" />
+                <Setter Property="Opacity" Value="1" />
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="WpfDarkToggleButtonTemplate" TargetType="{x:Type ToggleButton}">
+        <Border x:Name="ButtonChrome"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="3"
+                SnapsToDevicePixels="True">
+            <ContentPresenter Margin="{TemplateBinding Padding}"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                              RecognizesAccessKey="True" />
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource ToolbarButtonHoverBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource SelectedRowTextBrush}" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource ToolbarButtonPressedBrush}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderThickness" Value="2" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="ButtonChrome" Property="Background" Value="{DynamicResource ToolbarButtonDisabledBrush}" />
+                <Setter TargetName="ButtonChrome" Property="BorderBrush" Value="{DynamicResource ToolbarButtonDisabledBorderBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}" />
+                <Setter Property="Opacity" Value="1" />
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+</ResourceDictionary>

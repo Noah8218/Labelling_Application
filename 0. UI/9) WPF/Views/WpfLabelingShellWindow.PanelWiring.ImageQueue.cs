@@ -92,6 +92,7 @@ namespace MvcVisionSystem
         private void RegisterImageQueuePanelNames()
         {
             RegisterImageQueueName(nameof(ImageQueueFilterBox), ImageQueueFilterBox);
+            RegisterImageQueueName(nameof(ImageQueuePanelTitleText), ImageQueuePanelTitleText);
             RegisterImageQueueName(nameof(ImageQueueSearchBox), ImageQueueSearchBox);
             RegisterImageQueueName(nameof(ImageQueueGrid), ImageQueueGrid);
             RegisterImageQueueName(nameof(BatchStatusText), BatchStatusText);

@@ -19,6 +19,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
+                <ResourceDictionary Source="../Themes/WpfButtonStateTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0C0D0F" />
@@ -38,6 +39,7 @@
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
             <Style x:Key="InterchangeButtonStyle" TargetType="{x:Type ui:Button}">
+                <Setter Property="Template" Value="{StaticResource WpfUiDarkButtonTemplate}" />
                 <Setter Property="Height" Value="34" />
                 <Setter Property="Padding" Value="12,4" />
                 <Setter Property="Background" Value="{DynamicResource ToolbarButtonBrush}" />

@@ -1,5 +1,6 @@
 using OpenVisionLab.Mvvm.Behaviors;
 using System.Windows;
+using OpenVisionLab;
 
 namespace MvcVisionSystem
 {
@@ -180,7 +181,7 @@ namespace MvcVisionSystem
         {
             if (activeImageSize.IsEmpty)
             {
-                return "이미지 큐에서 작업할 이미지를 열고 첫 라벨을 시작하세요.";
+                return OpenVisionLanguageService.T("WpfCanvas.Workflow.NoImageAction");
             }
 
             if (effectiveStep == WpfLearningStep.Label)

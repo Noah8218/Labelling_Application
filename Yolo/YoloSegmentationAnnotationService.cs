@@ -35,6 +35,41 @@ namespace MvcVisionSystem.Yolo
                 return;
             }
 
+            YoloAnnotationService.EnsureImageIdentity(imageName, image, data);
+            bool writesSegmentation = data.ProjectSettings?.DatasetPurpose == LabelingDatasetPurpose.Segmentation
+                || segmentsByClass?.Values.Any(items => items?.Any(item => item != null) == true) == true;
+            if (writesSegmentation)
+            {
+                EnsureExistingAnnotationsAreReadable(imageName, image.Size, classes, data);
+            }
+
+            AnnotationFilePersistence.ExecuteTransaction(
+                () => SaveSegmentationAnnotationsCore(imageName, image, segmentsByClass, classes, data));
+        }
+
+        private static void EnsureExistingAnnotationsAreReadable(
+            string imageName,
+            Size imageSize,
+            IReadOnlyList<CClassItem> classes,
+            CData data)
+        {
+            foreach (string segmentPath in GetCandidateSegmentPaths(imageName, data).Where(File.Exists))
+            {
+                LoadSegmentationObjects(
+                    segmentPath,
+                    ResolveSiblingMaskPath(segmentPath),
+                    classes,
+                    imageSize);
+            }
+        }
+
+        private static void SaveSegmentationAnnotationsCore(
+            string imageName,
+            Image image,
+            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segmentsByClass,
+            IReadOnlyList<CClassItem> classes,
+            CData data)
+        {
             data.NormalizeOutputPaths();
             data.EnsureYoloOutputDirectories();
 
@@ -79,6 +114,7 @@ namespace MvcVisionSystem.Yolo
             {
                 if (File.Exists(segmentPath))
                 {
+                    YoloAnnotationService.EnsureAnnotationImageIdentity(imagePath, segmentPath);
                     return LoadSegmentationPolygons(segmentPath, classes, imageSize);
                 }
             }
@@ -96,6 +132,7 @@ namespace MvcVisionSystem.Yolo
             {
                 if (File.Exists(segmentPath))
                 {
+                    YoloAnnotationService.EnsureAnnotationImageIdentity(imagePath, segmentPath);
                     return LoadSegmentationObjects(
                         segmentPath,
                         ResolveSiblingMaskPath(segmentPath),
@@ -112,7 +149,7 @@ namespace MvcVisionSystem.Yolo
             IReadOnlyList<CClassItem> classes,
             Size imageSize)
         {
-            return LoadSegmentationObjects(segmentPath, classes, imageSize)
+            return LoadSegmentationObjects(segmentPath, string.Empty, classes, imageSize)
                 .ToDictionary(
                     group => group.Key,
                     group => group.Value.Select(segment => new List<Point>(segment.Points)).ToList(),
@@ -123,7 +160,7 @@ namespace MvcVisionSystem.Yolo
             string segmentPath,
             IReadOnlyList<CClassItem> classes,
             Size imageSize)
-            => LoadSegmentationObjects(segmentPath, string.Empty, classes, imageSize);
+            => LoadSegmentationObjects(segmentPath, ResolveSiblingMaskPath(segmentPath), classes, imageSize);
 
         public static IReadOnlyDictionary<string, List<LabelingSegmentationObject>> LoadSegmentationObjects(
             string segmentPath,
@@ -142,28 +179,77 @@ namespace MvcVisionSystem.Yolo
             {
                 annotation = JsonConvert.DeserializeObject<SegmentationAnnotationFile>(File.ReadAllText(segmentPath));
             }
-            catch
+            catch (JsonException ex)
             {
-                return result;
+                throw InvalidSegmentationSchema(segmentPath, "JSON cannot be parsed.", ex);
             }
 
-            if (annotation?.Polygons == null)
+            if (annotation == null)
             {
-                return result;
+                throw InvalidSegmentationSchema(segmentPath, "The document root is null.");
             }
 
-            Size targetSize = imageSize.Width > 0 && imageSize.Height > 0
-                ? imageSize
-                : new Size(Math.Max(1, annotation.ImageWidth), Math.Max(1, annotation.ImageHeight));
-            TryLoadMaskClassValues(maskPath, targetSize, out byte[] maskClassValues);
+            if (annotation.Version < 1 || annotation.Version > CanonicalSchemaVersion)
+            {
+                throw InvalidSegmentationSchema(
+                    segmentPath,
+                    $"Schema version {annotation.Version} is not supported.");
+            }
+
+            if (annotation.Polygons == null)
+            {
+                throw InvalidSegmentationSchema(segmentPath, "The polygons collection is missing.");
+            }
+
+            Size targetSize;
+            if (imageSize.Width > 0 && imageSize.Height > 0)
+            {
+                targetSize = imageSize;
+            }
+            else if (annotation.ImageWidth > 0 && annotation.ImageHeight > 0)
+            {
+                targetSize = new Size(annotation.ImageWidth, annotation.ImageHeight);
+            }
+            else
+            {
+                throw InvalidSegmentationSchema(segmentPath, "Image dimensions are missing or invalid.");
+            }
+
+            bool maskLoaded = TryLoadMaskClassValues(
+                maskPath,
+                targetSize,
+                out byte[] maskClassValues,
+                out string maskFailureReason);
 
             for (int recordIndex = 0; recordIndex < annotation.Polygons.Count; recordIndex++)
             {
                 SegmentationPolygonRecord record = annotation.Polygons[recordIndex];
-                string className = ResolveClassName(record, classes);
-                if (string.IsNullOrWhiteSpace(className) || record.Points == null)
+                if (record == null)
                 {
-                    continue;
+                    throw InvalidSegmentationRecord(segmentPath, recordIndex, "The record is null.");
+                }
+
+                if (record.ClassIndex < 0 || classes?.Count > 0 && record.ClassIndex >= classes.Count)
+                {
+                    throw InvalidSegmentationRecord(segmentPath, recordIndex, "The class index is outside the active class catalog.");
+                }
+
+                string className = ResolveClassName(record, classes);
+                if (string.IsNullOrWhiteSpace(className))
+                {
+                    throw InvalidSegmentationRecord(segmentPath, recordIndex, "The class name cannot be resolved.");
+                }
+
+                if (!string.IsNullOrWhiteSpace(record.GeometryType)
+                    && !string.Equals(record.GeometryType, PolygonGeometryType, StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(record.GeometryType, RasterMaskGeometryType, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw InvalidSegmentationRecord(segmentPath, recordIndex, "The geometry type is not supported.");
+                }
+
+                if (record.Points == null || record.Points.Any(point => point == null))
+                {
+                    throw InvalidSegmentationRecord(segmentPath, recordIndex, "The points collection is missing or contains null points.");
                 }
 
                 List<Point> points = SegmentationGeometry.NormalizePolygon(
@@ -172,7 +258,27 @@ namespace MvcVisionSystem.Yolo
                     minimumDistance: 1);
                 if (points.Count < 3)
                 {
-                    continue;
+                    throw InvalidSegmentationRecord(segmentPath, recordIndex, "The geometry has fewer than three valid points.");
+                }
+
+                var cutouts = new List<List<Point>>();
+                foreach (List<SegmentationPointRecord> cutoutRecord in record.Cutouts ?? new List<List<SegmentationPointRecord>>())
+                {
+                    if (cutoutRecord == null || cutoutRecord.Any(point => point == null))
+                    {
+                        throw InvalidSegmentationRecord(segmentPath, recordIndex, "A cutout is null or contains null points.");
+                    }
+
+                    List<Point> cutout = SegmentationGeometry.NormalizePolygon(
+                        cutoutRecord.Select(point => new Point(point.X, point.Y)),
+                        targetSize,
+                        minimumDistance: 1);
+                    if (cutout.Count < 3)
+                    {
+                        throw InvalidSegmentationRecord(segmentPath, recordIndex, "A cutout has fewer than three valid points.");
+                    }
+
+                    cutouts.Add(cutout);
                 }
 
                 if (!result.ContainsKey(className))
@@ -181,6 +287,18 @@ namespace MvcVisionSystem.Yolo
                 }
 
                 CClassItem classItem = ResolveClassItem(className, classes);
+                bool isExplicitRaster = string.Equals(
+                    record.GeometryType,
+                    RasterMaskGeometryType,
+                    StringComparison.OrdinalIgnoreCase);
+                if (isExplicitRaster && !maskLoaded)
+                {
+                    throw InvalidSegmentationRecord(
+                        segmentPath,
+                        recordIndex,
+                        "The explicit raster mask is unavailable or invalid: " + maskFailureReason);
+                }
+
                 if (TryBuildRasterMaskSegment(record, points, classItem, targetSize, maskClassValues, out LabelingSegmentationObject rasterSegment))
                 {
                     ApplyCanonicalMetadata(rasterSegment, record, recordIndex);
@@ -188,21 +306,22 @@ namespace MvcVisionSystem.Yolo
                     continue;
                 }
 
+                if (isExplicitRaster)
+                {
+                    throw InvalidSegmentationRecord(
+                        segmentPath,
+                        recordIndex,
+                        "The explicit raster mask has no matching class pixels inside its declared geometry.");
+                }
+
                 var segment = new LabelingSegmentationObject(points, classItem)
                 {
                     ClassName = className
                 };
                 ApplyCanonicalMetadata(segment, record, recordIndex);
-                foreach (List<SegmentationPointRecord> cutoutRecord in record.Cutouts ?? new List<List<SegmentationPointRecord>>())
+                foreach (List<Point> cutout in cutouts)
                 {
-                    List<Point> cutout = SegmentationGeometry.NormalizePolygon(
-                        cutoutRecord?.Select(point => new Point(point.X, point.Y)),
-                        targetSize,
-                        minimumDistance: 1);
-                    if (cutout.Count >= 3)
-                    {
-                        segment.CutoutPolygons.Add(cutout);
-                    }
+                    segment.CutoutPolygons.Add(cutout);
                 }
 
                 result[className].Add(segment);
@@ -210,6 +329,20 @@ namespace MvcVisionSystem.Yolo
 
             return result;
         }
+
+        private static InvalidDataException InvalidSegmentationSchema(
+            string segmentPath,
+            string reason,
+            Exception innerException = null)
+            => new InvalidDataException(
+                $"Invalid segmentation annotation '{segmentPath}': {reason}",
+                innerException);
+
+        private static InvalidDataException InvalidSegmentationRecord(
+            string segmentPath,
+            int recordIndex,
+            string reason)
+            => InvalidSegmentationSchema(segmentPath, $"Record {recordIndex}: {reason}");
 
         // Kept internal so dry-run audits use the same legacy-mask compatibility rule as reopening and training export.
         internal static bool IsLegacyRasterMaskCandidate(SegmentationPolygonRecord record, Size imageSize)
@@ -346,7 +479,8 @@ namespace MvcVisionSystem.Yolo
             List<SegmentationGeometry.SegmentationMaskRegion> regions = RasterMaskPolygonService.BuildRegions(
                 segment.MaskData,
                 segment.MaskSize,
-                imageSize).ToList();
+                imageSize,
+                bounds).ToList();
             if (regions.Count == 0)
             {
                 List<Point> fallback = SegmentationGeometry.RectangleToPolygon(bounds, imageSize);
@@ -519,13 +653,25 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static bool TryLoadMaskClassValues(string maskPath, Size imageSize, out byte[] classValues)
+            => TryLoadMaskClassValues(maskPath, imageSize, out classValues, out _);
+
+        private static bool TryLoadMaskClassValues(
+            string maskPath,
+            Size imageSize,
+            out byte[] classValues,
+            out string failureReason)
         {
             classValues = null;
-            if (string.IsNullOrWhiteSpace(maskPath)
-                || !File.Exists(maskPath)
-                || imageSize.Width <= 0
-                || imageSize.Height <= 0)
+            failureReason = string.Empty;
+            if (string.IsNullOrWhiteSpace(maskPath) || !File.Exists(maskPath))
             {
+                failureReason = "the sibling mask file does not exist";
+                return false;
+            }
+
+            if (imageSize.Width <= 0 || imageSize.Height <= 0)
+            {
+                failureReason = "the target image dimensions are invalid";
                 return false;
             }
 
@@ -534,6 +680,7 @@ namespace MvcVisionSystem.Yolo
                 using var source = new Bitmap(maskPath);
                 if (source.Size != imageSize)
                 {
+                    failureReason = "the mask dimensions do not match the image";
                     return false;
                 }
 
@@ -553,7 +700,16 @@ namespace MvcVisionSystem.Yolo
                         int targetOffset = y * imageSize.Width;
                         for (int x = 0; x < imageSize.Width; x++)
                         {
-                            classValues[targetOffset + x] = pixels[sourceOffset + (x * 3)];
+                            int pixelOffset = sourceOffset + (x * 3);
+                            byte blue = pixels[pixelOffset];
+                            if (pixels[pixelOffset + 1] != blue || pixels[pixelOffset + 2] != blue)
+                            {
+                                classValues = null;
+                                failureReason = "the mask contains non-grayscale pixels";
+                                return false;
+                            }
+
+                            classValues[targetOffset + x] = blue;
                         }
                     }
                 }
@@ -564,20 +720,24 @@ namespace MvcVisionSystem.Yolo
 
                 return true;
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
+                failureReason = ex.Message;
                 return false;
             }
-            catch (ExternalException)
+            catch (ExternalException ex)
             {
+                failureReason = ex.Message;
                 return false;
             }
-            catch (IOException)
+            catch (IOException ex)
             {
+                failureReason = ex.Message;
                 return false;
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException ex)
             {
+                failureReason = ex.Message;
                 return false;
             }
         }
@@ -702,11 +862,6 @@ namespace MvcVisionSystem.Yolo
 
         private static void SaveMask(string maskPath, Size imageSize, IReadOnlyList<SegmentationPolygonRecord> polygons)
         {
-            if (File.Exists(maskPath))
-            {
-                File.Delete(maskPath);
-            }
-
             using (var mask = new Bitmap(imageSize.Width, imageSize.Height, PixelFormat.Format24bppRgb))
             using (Graphics graphics = Graphics.FromImage(mask))
             {
@@ -736,7 +891,9 @@ namespace MvcVisionSystem.Yolo
                     }
                 }
 
-                mask.Save(maskPath, ImageFormat.Png);
+                AnnotationFilePersistence.WriteAtomically(
+                    maskPath,
+                    temporaryPath => mask.Save(temporaryPath, ImageFormat.Png));
             }
         }
 
@@ -746,15 +903,13 @@ namespace MvcVisionSystem.Yolo
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segmentsByClass,
             IReadOnlyList<CClassItem> classes)
         {
-            if (File.Exists(maskPath))
-            {
-                File.Delete(maskPath);
-            }
-
             using (var mask = new Bitmap(imageSize.Width, imageSize.Height, PixelFormat.Format24bppRgb))
-            using (Graphics graphics = Graphics.FromImage(mask))
             {
-                graphics.Clear(Color.Black);
+                using (Graphics graphics = Graphics.FromImage(mask))
+                {
+                    graphics.Clear(Color.Black);
+                }
+
                 if (segmentsByClass != null && classes != null)
                 {
                     for (int classIndex = 0; classIndex < classes.Count; classIndex++)
@@ -768,45 +923,94 @@ namespace MvcVisionSystem.Yolo
 
                         int value = Math.Clamp(classIndex + 1, 1, 255);
                         Color classColor = Color.FromArgb(value, value, value);
-                        using var fillBrush = new SolidBrush(classColor);
-                        using var eraseBrush = new SolidBrush(Color.Black);
                         foreach (LabelingSegmentationObject segment in segments.Where(item => item != null))
                         {
                             if (segment.IsRasterMask)
                             {
-                                Rectangle bounds = segment.Bounds;
-                                for (int y = bounds.Top; y < bounds.Bottom && y < imageSize.Height; y++)
-                                {
-                                    int rowOffset = y * segment.MaskSize.Width;
-                                    for (int x = bounds.Left; x < bounds.Right && x < imageSize.Width; x++)
-                                    {
-                                        if (segment.MaskData[rowOffset + x] != 0)
-                                        {
-                                            mask.SetPixel(x, y, classColor);
-                                        }
-                                    }
-                                }
-
+                                WriteRasterMask(mask, segment, imageSize, (byte)value);
                                 continue;
                             }
 
-                            if (segment.Points?.Count >= 3)
+                            using (Graphics graphics = Graphics.FromImage(mask))
+                            using (var fillBrush = new SolidBrush(classColor))
                             {
-                                graphics.FillPolygon(fillBrush, segment.Points.ToArray());
-                            }
-
-                            foreach (List<Point> cutout in segment.CutoutPolygons ?? new List<List<Point>>())
-                            {
-                                if (cutout?.Count >= 3)
+                                if (segment.Points?.Count >= 3)
                                 {
-                                    graphics.FillPolygon(eraseBrush, cutout.ToArray());
+                                    graphics.FillPolygon(fillBrush, segment.Points.ToArray());
+                                }
+
+                                using var eraseBrush = new SolidBrush(Color.Black);
+                                foreach (List<Point> cutout in segment.CutoutPolygons ?? new List<List<Point>>())
+                                {
+                                    if (cutout?.Count >= 3)
+                                    {
+                                        graphics.FillPolygon(eraseBrush, cutout.ToArray());
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                mask.Save(maskPath, ImageFormat.Png);
+                AnnotationFilePersistence.WriteAtomically(
+                    maskPath,
+                    temporaryPath => mask.Save(temporaryPath, ImageFormat.Png));
+            }
+        }
+
+        private static void WriteRasterMask(
+            Bitmap target,
+            LabelingSegmentationObject segment,
+            Size imageSize,
+            byte classValue)
+        {
+            Rectangle bounds = Rectangle.Intersect(
+                segment.Bounds,
+                new Rectangle(Point.Empty, imageSize));
+            bounds = Rectangle.Intersect(bounds, new Rectangle(Point.Empty, segment.MaskSize));
+            if (bounds.IsEmpty)
+            {
+                return;
+            }
+
+            byte[] classPixels = new byte[bounds.Width * 3];
+            Array.Fill(classPixels, classValue);
+            Rectangle targetBounds = new Rectangle(Point.Empty, imageSize);
+            BitmapData bitmapData = target.LockBits(targetBounds, ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+            try
+            {
+                for (int y = bounds.Top; y < bounds.Bottom; y++)
+                {
+                    int sourceRowOffset = y * segment.MaskSize.Width;
+                    int targetRow = bitmapData.Stride >= 0 ? y : imageSize.Height - 1 - y;
+                    int x = bounds.Left;
+                    while (x < bounds.Right)
+                    {
+                        while (x < bounds.Right && segment.MaskData[sourceRowOffset + x] == 0)
+                        {
+                            x++;
+                        }
+
+                        int runStart = x;
+                        while (x < bounds.Right && segment.MaskData[sourceRowOffset + x] != 0)
+                        {
+                            x++;
+                        }
+
+                        int runLength = x - runStart;
+                        if (runLength > 0)
+                        {
+                            IntPtr targetAddress = IntPtr.Add(
+                                bitmapData.Scan0,
+                                (targetRow * Math.Abs(bitmapData.Stride)) + (runStart * 3));
+                            Marshal.Copy(classPixels, 0, targetAddress, runLength * 3);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                target.UnlockBits(bitmapData);
             }
         }
 
@@ -825,7 +1029,11 @@ namespace MvcVisionSystem.Yolo
                 Polygons = polygons.ToList()
             };
 
-            File.WriteAllText(segmentPath, JsonConvert.SerializeObject(annotation, Formatting.Indented));
+            AnnotationFilePersistence.WriteAtomically(
+                segmentPath,
+                temporaryPath => File.WriteAllText(
+                    temporaryPath,
+                    JsonConvert.SerializeObject(annotation, Formatting.Indented)));
         }
 
         private static string ResolveClassName(SegmentationPolygonRecord record, IReadOnlyList<CClassItem> classes)
@@ -858,12 +1066,12 @@ namespace MvcVisionSystem.Yolo
         {
             if (File.Exists(maskPath))
             {
-                File.Delete(maskPath);
+                AnnotationFilePersistence.Delete(maskPath);
             }
 
             if (File.Exists(segmentPath))
             {
-                File.Delete(segmentPath);
+                AnnotationFilePersistence.Delete(segmentPath);
             }
         }
     }

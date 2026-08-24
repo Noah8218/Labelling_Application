@@ -19,6 +19,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
+                <ResourceDictionary Source="../Themes/WpfButtonStateTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0C0D0F" />
@@ -45,6 +46,7 @@
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
             <Style x:Key="BenchmarkActionButtonStyle" TargetType="{x:Type ui:Button}">
+                <Setter Property="Template" Value="{StaticResource WpfUiDarkButtonTemplate}" />
                 <Setter Property="Height" Value="32" />
                 <Setter Property="MinWidth" Value="0" />
                 <Setter Property="Padding" Value="10,4" />
@@ -484,7 +486,7 @@
                             Grid.Row="1"
                             Background="Transparent"
                             BorderBrush="{DynamicResource BorderBrushDark}">
-                    <TabItem Header="&#xC694;&#xC57D;" Style="{StaticResource BenchmarkTabItemStyle}">
+                    <TabItem Header="{Binding SummaryTabText}" Style="{StaticResource BenchmarkTabItemStyle}">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -895,7 +897,7 @@
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="&#xC9C0;&#xD45C;" Style="{StaticResource BenchmarkTabItemStyle}">
+                    <TabItem Header="{Binding MetricsTabText}" Style="{StaticResource BenchmarkTabItemStyle}">
                         <ScrollViewer HorizontalScrollBarVisibility="Auto"
                                       VerticalScrollBarVisibility="Auto"
                                       Background="{DynamicResource PanelBrush}">
@@ -1007,7 +1009,7 @@
                         </ScrollViewer>
                     </TabItem>
 
-                    <TabItem Header="&#xD074;&#xB798;&#xC2A4;/&#xC624;&#xB958;" Style="{StaticResource BenchmarkTabItemStyle}">
+                    <TabItem Header="{Binding ClassErrorsTabText}" Style="{StaticResource BenchmarkTabItemStyle}">
                         <Grid Margin="10" Background="{DynamicResource PanelBrush}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -1222,7 +1224,7 @@
                         </Grid>
                     </TabItem>
 
-                    <TabItem Header="&#xC2E4;&#xD589; &#xC870;&#xAC74;" Style="{StaticResource BenchmarkTabItemStyle}">
+                    <TabItem Header="{Binding RunConditionsTabText}" Style="{StaticResource BenchmarkTabItemStyle}">
                         <DataGrid x:Name="ModelBenchmarkConditionGrid"
                                   ItemsSource="{Binding SelectedRuns}"
                                   AlternationCount="2"
@@ -1270,7 +1272,7 @@
                         </DataGrid>
                     </TabItem>
 
-                    <TabItem Header="&#xC784;&#xACC4;&#xAC12;" Style="{StaticResource BenchmarkTabItemStyle}">
+                    <TabItem Header="{Binding ThresholdTabText}" Style="{StaticResource BenchmarkTabItemStyle}">
                         <Grid Margin="10" Background="{DynamicResource PanelBrush}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />

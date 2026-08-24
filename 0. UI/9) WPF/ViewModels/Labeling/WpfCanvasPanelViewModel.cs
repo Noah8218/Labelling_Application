@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Input;
 using MvcVisionSystem.Yolo;
+using OpenVisionLab;
 using OpenVisionLab.Mvvm;
 using DrawingColor = System.Drawing.Color;
 using MediaBrush = System.Windows.Media.Brush;
@@ -84,7 +86,7 @@ namespace MvcVisionSystem
         private string detectionOverlayStatusKey = WpfDetectionOverlayStatus.Confirmable.ToString();
         private string currentWorkflowStepText = "샘플";
         private string currentWorkflowToolText = "선택";
-        private string currentWorkflowActionText = "이미지 큐에서 작업할 이미지를 열고 첫 라벨을 시작하세요.";
+        private string currentWorkflowActionText = OpenVisionLanguageService.T("WpfCanvas.Workflow.NoImageAction");
         private string canvasLayerModeTitleText = "\uC791\uC5C5: \uC800\uC7A5 \uB77C\uBCA8 \uD3B8\uC9D1";
         private string canvasLayerModeDetailText = "AI \uD6C4\uBCF4\uB294 \uC228\uAE40. \uC800\uC7A5\uB41C \uB77C\uBCA8\uB9CC \uC120\uD0DD/\uC218\uC815/\uC800\uC7A5\uD569\uB2C8\uB2E4.";
         private string canvasLayerModeToolTip = "\uD604\uC7AC \uCEA0\uBC84\uC2A4\uAC00 \uC800\uC7A5 \uB77C\uBCA8 \uD3B8\uC9D1\uC778\uC9C0 AI \uD6C4\uBCF4 \uAC80\uD1A0\uC778\uC9C0 \uD45C\uC2DC\uD569\uB2C8\uB2E4.";
@@ -113,6 +115,13 @@ namespace MvcVisionSystem
         private string activeLabelClassDetailText = "\uD074\uB798\uC2A4\uB97C \uC120\uD0DD\uD558\uBA74 \uB2E4\uC74C\uC5D0 \uADF8\uB9AC\uB294 \uBC15\uC2A4/\uB9C8\uC2A4\uD06C\uC5D0 \uC801\uC6A9\uB429\uB2C8\uB2E4.";
         private string activeLabelClassActionText = "\uD074\uB798\uC2A4 \uAD00\uB9AC";
         private string activeLabelClassActionToolTip = "\uC624\uB978\uCABD \uD074\uB798\uC2A4 \uD328\uB110\uC744 \uC5F4\uC5B4 \uC0C8 \uB77C\uBCA8 \uC774\uB984\uC744 \uCD94\uAC00\uD558\uAC70\uB098 \uB2E4\uC74C \uB77C\uBCA8 \uD074\uB798\uC2A4\uB97C \uBC14\uAFC9\uB2C8\uB2E4.";
+        private WpfCanvasDisplayMode layerDisplayMode = WpfCanvasDisplayMode.LabelsOnly;
+        private int layerLabelCount;
+        private int layerInferenceCandidateCount;
+        private bool layerHasUnsavedLabelChanges;
+        private string currentWorkflowStepSource = string.Empty;
+        private string currentWorkflowToolSource = string.Empty;
+        private string currentWorkflowActionSource = string.Empty;
         private bool isLabelClassSetupMissing = true;
         private int brushSize = 12;
         private string brushSizeText = "12px";
@@ -188,13 +197,18 @@ namespace MvcVisionSystem
         private Action<bool> smartMaskAutoContourChanged = _ => { };
         private Action<WpfSmartMaskPolygonDetail> smartMaskDetailChanged = _ => { };
 
+        public WpfCanvasPanelViewModel()
+        {
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
+        }
+
         public string ViewName => nameof(WpfCanvasPanel);
 
-        public string FirstLabelLoopText => "\uC21C\uC11C: \uADF8\uB9AC\uAE30 -> \uB77C\uBCA8 \uC800\uC7A5 -> \uB2E4\uC74C \uC774\uBBF8\uC9C0";
+        public string FirstLabelLoopText => T("WpfCanvas.FirstLabelLoop");
 
-        public string ShortcutSummaryText => WpfAnnotationProductivityService.ShortcutSummaryText;
+        public string ShortcutSummaryText => TranslateExact(WpfAnnotationProductivityService.ShortcutSummaryText);
 
-        public string ShortcutHelpText => WpfAnnotationProductivityService.ShortcutHelpText;
+        public string ShortcutHelpText => TranslateExact(WpfAnnotationProductivityService.ShortcutHelpText);
 
         public ObservableCollection<WpfAnnotationToolItem> AnnotationTools { get; } = new ObservableCollection<WpfAnnotationToolItem>();
 
@@ -1361,6 +1375,10 @@ namespace MvcVisionSystem
             int inferenceCandidateCount,
             bool hasUnsavedLabelChanges)
         {
+            layerDisplayMode = mode;
+            layerLabelCount = labelCount;
+            layerInferenceCandidateCount = inferenceCandidateCount;
+            layerHasUnsavedLabelChanges = hasUnsavedLabelChanges;
             int normalizedLabelCount = Math.Max(0, labelCount);
             int normalizedCandidateCount = Math.Max(0, inferenceCandidateCount);
             bool showLabels = mode != WpfCanvasDisplayMode.InferenceOnly;
@@ -1397,6 +1415,80 @@ namespace MvcVisionSystem
             }
 
             CanvasLayerModeToolTip = $"{CanvasLayerModeDetailText}\n{CanvasLabelLayerText}\n{CanvasInferenceLayerText}";
+        }
+
+        public void RefreshLocalizedPresentation()
+        {
+            OnPropertyChanged(nameof(FirstLabelLoopText));
+            OnPropertyChanged(nameof(ShortcutSummaryText));
+            OnPropertyChanged(nameof(ShortcutHelpText));
+            CurrentWorkflowStepText = TranslateExact(
+                string.IsNullOrWhiteSpace(currentWorkflowStepSource) ? "단계" : currentWorkflowStepSource);
+            CurrentWorkflowToolText = TranslateExact(
+                string.IsNullOrWhiteSpace(currentWorkflowToolSource) ? "선택" : currentWorkflowToolSource);
+            CurrentWorkflowActionText = TranslateExact(
+                string.IsNullOrWhiteSpace(currentWorkflowActionSource)
+                    ? T("WpfCanvas.Workflow.NoImageAction")
+                    : currentWorkflowActionSource);
+
+            int normalizedLabelCount = Math.Max(0, layerLabelCount);
+            int normalizedCandidateCount = Math.Max(0, layerInferenceCandidateCount);
+            string unsavedSuffix = layerHasUnsavedLabelChanges
+                ? T("WpfCanvas.Layer.UnsavedSuffix")
+                : string.Empty;
+            CanvasLabelLayerText = layerDisplayMode != WpfCanvasDisplayMode.InferenceOnly
+                ? Format("WpfCanvas.Layer.Labels.Shown", normalizedLabelCount, unsavedSuffix)
+                : Format("WpfCanvas.Layer.Labels.Hidden", normalizedLabelCount, unsavedSuffix);
+            CanvasInferenceLayerText = layerDisplayMode != WpfCanvasDisplayMode.LabelsOnly
+                ? Format("WpfCanvas.Layer.Candidates.Shown", normalizedCandidateCount)
+                : Format("WpfCanvas.Layer.Candidates.Hidden", normalizedCandidateCount);
+            CanvasLayerModeTitleText = layerDisplayMode switch
+            {
+                WpfCanvasDisplayMode.InferenceOnly => T("WpfCanvas.LayerMode.Inference.Title"),
+                WpfCanvasDisplayMode.Both => T("WpfCanvas.LayerMode.Both.Title"),
+                _ => T("WpfCanvas.LayerMode.Labels.Title")
+            };
+            CanvasLayerModeDetailText = layerDisplayMode switch
+            {
+                WpfCanvasDisplayMode.InferenceOnly => T("WpfCanvas.LayerMode.Inference.Detail"),
+                WpfCanvasDisplayMode.Both => T("WpfCanvas.LayerMode.Both.Detail"),
+                _ => T("WpfCanvas.LayerMode.Labels.Detail")
+            };
+            CanvasLayerModeToolTip = $"{CanvasLayerModeDetailText}\n{CanvasLabelLayerText}\n{CanvasInferenceLayerText}";
+            RefreshActiveLabelClassPresentation();
+            OnPropertyChanged(nameof(AnnotationSaveActionText));
+            OnPropertyChanged(nameof(AnnotationSaveToolTip));
+            OnPropertyChanged(nameof(NoObjectCompletionActionText));
+            OnPropertyChanged(nameof(NoObjectCompletionToolTip));
+            OnPropertyChanged(nameof(AnnotationSaveStatusTitleText));
+            OnPropertyChanged(nameof(AnnotationSaveStatusDetailText));
+            OnPropertyChanged(nameof(ActiveLabelClassTitleText));
+            OnPropertyChanged(nameof(ActiveLabelClassDetailText));
+            OnPropertyChanged(nameof(ActiveLabelClassActionText));
+            OnPropertyChanged(nameof(ActiveLabelClassActionToolTip));
+        }
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            RefreshLocalizedPresentation();
+        }
+
+        private static string T(string key)
+        {
+            return OpenVisionLanguageService.T(key);
+        }
+
+        private static string Format(string key, params object[] arguments)
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                T(key),
+                arguments ?? Array.Empty<object>());
+        }
+
+        private static string TranslateExact(string value)
+        {
+            return WpfLocalizationTextRuntimeService.Translate(value);
         }
 
         public void SetLabelClasses(IEnumerable<CClassItem> classItems, string selectedName = "")
@@ -1587,6 +1679,9 @@ namespace MvcVisionSystem
         {
             // Keep this small status strip as ViewModel state so the canvas view does not
             // need to reach into the guide panel or shell to explain the current workflow.
+            currentWorkflowStepSource = stepText ?? string.Empty;
+            currentWorkflowToolSource = toolText ?? string.Empty;
+            currentWorkflowActionSource = actionText ?? string.Empty;
             CurrentWorkflowStepText = string.IsNullOrWhiteSpace(stepText) ? "단계" : stepText;
             CurrentWorkflowToolText = string.IsNullOrWhiteSpace(toolText) ? "선택" : toolText;
             CurrentWorkflowActionText = string.IsNullOrWhiteSpace(actionText) ? "다음 작업을 선택하세요." : actionText;
@@ -1629,19 +1724,19 @@ namespace MvcVisionSystem
             if (string.IsNullOrWhiteSpace(className))
             {
                 IsLabelClassSetupMissing = true;
-                ActiveLabelClassTitleText = "\uD074\uB798\uC2A4 \uBA3C\uC800 \uB4F1\uB85D";
-                ActiveLabelClassDetailText = "\uC624\uB978\uCABD \uD074\uB798\uC2A4\uC5D0\uC11C OK, NG\uCC98\uB7FC \uBAA8\uB378\uC774 \uBC30\uC6B8 \uC774\uB984\uC744 \uCD94\uAC00\uD55C \uB4A4 \uBC15\uC2A4\uB97C \uADF8\uB9AC\uC138\uC694.";
-                ActiveLabelClassActionText = "\uD074\uB798\uC2A4 \uB4F1\uB85D";
-                ActiveLabelClassActionToolTip = "\uC624\uB978\uCABD \uD074\uB798\uC2A4 \uD328\uB110\uC5D0\uC11C \uB77C\uBCA8 \uC774\uB984\uACFC \uC0C9\uC0C1\uC744 \uAD00\uB9AC\uD569\uB2C8\uB2E4.";
+                ActiveLabelClassTitleText = T("WpfCanvas.ActiveClass.MissingTitle");
+                ActiveLabelClassDetailText = T("WpfCanvas.ActiveClass.MissingDetail");
+                ActiveLabelClassActionText = T("WpfCanvas.ActiveClass.MissingAction");
+                ActiveLabelClassActionToolTip = T("WpfCanvas.ActiveClass.MissingAction.ToolTip");
                 return;
             }
 
             IsLabelClassSetupMissing = false;
             string canonicalDisplayText = SelectedLabelClass.CanonicalDisplayText;
-            ActiveLabelClassTitleText = string.Format("\uB2E4\uC74C \uB77C\uBCA8: {0}", canonicalDisplayText);
-            ActiveLabelClassDetailText = string.Format("\uC0C8\uB85C \uADF8\uB9AC\uB294 \uBC15\uC2A4/\uB9C8\uC2A4\uD06C\uB294 {0} \uD074\uB798\uC2A4\uB85C \uC800\uC7A5\uB429\uB2C8\uB2E4. \uCE94\uBC84\uC2A4 1~9\uB294 \uC120\uD0DD \uB2E8\uCD95\uD0A4\uC774\uBA70 YOLO \uC778\uB371\uC2A4\uB97C \uBC14\uAFB8\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.", canonicalDisplayText);
-            ActiveLabelClassActionText = "\uD074\uB798\uC2A4 \uAD00\uB9AC";
-            ActiveLabelClassActionToolTip = "\uC624\uB978\uCABD \uD074\uB798\uC2A4 \uD328\uB110\uC744 \uC5F4\uC5B4 \uC0C8 \uB77C\uBCA8 \uC774\uB984\uC744 \uCD94\uAC00\uD558\uAC70\uB098 \uB2E4\uC74C \uB77C\uBCA8 \uD074\uB798\uC2A4\uB97C \uBC14\uAFC9\uB2C8\uB2E4.";
+            ActiveLabelClassTitleText = Format("WpfCanvas.ActiveClass.Title", canonicalDisplayText);
+            ActiveLabelClassDetailText = Format("WpfCanvas.ActiveClass.Detail", canonicalDisplayText);
+            ActiveLabelClassActionText = T("WpfCanvas.ActiveClass.Action");
+            ActiveLabelClassActionToolTip = T("WpfCanvas.ActiveClass.Action.ToolTip");
         }
 
         public void SetCommandAvailability(bool hasImage, bool hasSelectedCandidate, bool hasPendingCandidates)

@@ -1,3 +1,7 @@
+using System;
+using System.Globalization;
+using OpenVisionLab;
+
 namespace MvcVisionSystem
 {
     public sealed class WpfStatusBarPanelViewModel : WpfObservableViewModel
@@ -6,7 +10,7 @@ namespace MvcVisionSystem
         private string workflowStageText = "단계: 준비";
         private string workflowProgressText = "진행: 이미지 없음";
         private string workflowNextActionText = "다음: 이미지 선택";
-        private string pythonStatusText = "\uCD94\uB860: \uC810\uAC80 \uC804";
+        private string pythonStatusText = OpenVisionLanguageService.T("WpfShell.Status.InferenceWaiting");
         private string inspectionModelStatusText = "\uAC80\uC0AC \uBAA8\uB378: \uC5C6\uC74C";
         private string inspectionModelStatusToolTip = "\uD604\uC7AC \uCD94\uB860\uC5D0 \uC0AC\uC6A9\uD560 \uBAA8\uB378\uC744 \uD45C\uC2DC\uD569\uB2C8\uB2E4.";
         private string modelStatusText = "Model: waiting";
@@ -14,6 +18,11 @@ namespace MvcVisionSystem
         private bool isAnnotationDirty;
         private string annotationSaveStatusText = "\uB77C\uBCA8 \uB300\uAE30";
         private string annotationSaveStatusToolTip = "\uC774\uBBF8\uC9C0\uB97C \uC5F4\uBA74 \uB77C\uBCA8 \uC800\uC7A5 \uC0C1\uD0DC\uB97C \uD45C\uC2DC\uD569\uB2C8\uB2E4.";
+
+        public WpfStatusBarPanelViewModel()
+        {
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
+        }
 
         public string ViewName => nameof(WpfStatusBarPanel);
 
@@ -125,7 +134,7 @@ namespace MvcVisionSystem
 
         public void SetModelStatus(string text)
         {
-            ModelStatusText = text;
+            ModelStatusText = LocalizeModelStatus(text);
         }
 
         public void SetModelStatusAutomationText(string text)
@@ -133,6 +142,113 @@ namespace MvcVisionSystem
             // Keep machine-readable diagnostics separate from visible status text so
             // fast tool switches do not hide the commit signal used by real EXE smoke.
             ModelStatusAutomationText = text;
+        }
+
+        public void RefreshLocalizedPresentation()
+        {
+            PythonStatusText = WpfLocalizationTextRuntimeService.Translate(PythonStatusText);
+            InspectionModelStatusText = LocalizeInspectionModelStatus(InspectionModelStatusText);
+            InspectionModelStatusToolTip = WpfLocalizationTextRuntimeService.Translate(InspectionModelStatusToolTip);
+            ModelStatusText = LocalizeModelStatus(ModelStatusText);
+            AnnotationSaveStatusText = WpfLocalizationTextRuntimeService.Translate(AnnotationSaveStatusText);
+            AnnotationSaveStatusToolTip = WpfLocalizationTextRuntimeService.Translate(AnnotationSaveStatusToolTip);
+        }
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            RefreshLocalizedPresentation();
+        }
+
+        private static string LocalizeModelStatus(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return text ?? string.Empty;
+            }
+
+            string value = text.Trim();
+            if (value.StartsWith("검사 모델: ", StringComparison.Ordinal)
+                || value.StartsWith("검사 후보: ", StringComparison.Ordinal)
+                || value.StartsWith("Inspection model: ", StringComparison.Ordinal)
+                || value.StartsWith("Inspection candidate: ", StringComparison.Ordinal))
+            {
+                return LocalizeInspectionModelStatus(text);
+            }
+
+            const string koreanPrefix = "모델: ";
+            const string englishPrefix = "Model: ";
+            if (value.StartsWith(koreanPrefix, StringComparison.Ordinal))
+            {
+                return Format("WpfShell.Status.Model", value.Substring(koreanPrefix.Length));
+            }
+
+            if (value.StartsWith(englishPrefix, StringComparison.Ordinal))
+            {
+                return Format("WpfShell.Status.Model", value.Substring(englishPrefix.Length));
+            }
+
+            if (string.Equals(value, "\uB3C4\uAD6C: \uC120\uD0DD", StringComparison.Ordinal)
+                || string.Equals(value, "Tool: selected", StringComparison.Ordinal))
+            {
+                return OpenVisionLanguageService.T("WpfShell.Status.ToolSelected");
+            }
+
+            return WpfLocalizationTextRuntimeService.Translate(text);
+        }
+
+        private static string LocalizeInspectionModelStatus(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return text ?? string.Empty;
+            }
+
+            string value = text.Trim();
+            if (string.Equals(value, "검사 모델: 없음", StringComparison.Ordinal)
+                || string.Equals(value, "Inspection model: none", StringComparison.Ordinal))
+            {
+                return OpenVisionLanguageService.T("WpfShell.Status.ModelNone");
+            }
+
+            string key;
+            string prefix;
+            if (value.StartsWith("검사 후보: ", StringComparison.Ordinal))
+            {
+                key = "WpfShell.Status.InspectionCandidate";
+                prefix = "검사 후보: ";
+            }
+            else if (value.StartsWith("Inspection candidate: ", StringComparison.Ordinal))
+            {
+                key = "WpfShell.Status.InspectionCandidate";
+                prefix = "Inspection candidate: ";
+            }
+            else if (value.StartsWith("검사 모델: ", StringComparison.Ordinal))
+            {
+                key = "WpfShell.Status.InspectionModel";
+                prefix = "검사 모델: ";
+            }
+            else if (value.StartsWith("Inspection model: ", StringComparison.Ordinal))
+            {
+                key = "WpfShell.Status.InspectionModel";
+                prefix = "Inspection model: ";
+            }
+            else
+            {
+                return WpfLocalizationTextRuntimeService.Translate(text);
+            }
+
+            string[] parts = value.Substring(prefix.Length).Split(new[] { " / " }, 2, StringSplitOptions.None);
+            return parts.Length == 2
+                ? Format(key, parts[0], parts[1])
+                : WpfLocalizationTextRuntimeService.Translate(text);
+        }
+
+        private static string Format(string key, params object[] arguments)
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                OpenVisionLanguageService.T(key),
+                arguments ?? Array.Empty<object>());
         }
     }
 }

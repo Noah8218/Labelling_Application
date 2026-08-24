@@ -1,4 +1,5 @@
 using MvcVisionSystem.Yolo;
+using OpenVisionLab;
 using OpenVisionLab.Mvvm;
 using System;
 using System.Collections.ObjectModel;
@@ -8,28 +9,27 @@ using System.Windows.Input;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfDatasetInterchangeOption
+    public sealed class WpfDatasetInterchangeOption : WpfObservableViewModel
     {
         public WpfDatasetInterchangeOption(DatasetExportCapability capability)
         {
             Capability = capability;
-            DirectionText = string.Equals(capability.Direction, "import", StringComparison.OrdinalIgnoreCase)
-                ? "\uAC00\uC838\uC624\uAE30"
-                : "\uB0B4\uBCF4\uB0B4\uAE30";
-            DisplayText = $"{capability.DisplayName} \u00B7 {DirectionText}";
-            PurposeText = WpfDatasetContextPresentationService.FormatPurposeName(
-                Enum.TryParse(capability.DatasetPurpose, out LabelingDatasetPurpose purpose)
-                    ? purpose
-                    : LabelingDatasetPurpose.ObjectDetection);
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
         }
 
         public DatasetExportCapability Capability { get; }
 
-        public string DisplayText { get; }
+        public string DisplayText => $"{Capability.DisplayName} \u00B7 {DirectionText}";
 
-        public string DirectionText { get; }
+        public string DirectionText => T(
+            string.Equals(Capability.Direction, "import", StringComparison.OrdinalIgnoreCase)
+                ? "WpfDatasetInterchange.Direction.Import"
+                : "WpfDatasetInterchange.Direction.Export");
 
-        public string PurposeText { get; }
+        public string PurposeText => WpfDatasetContextPresentationService.FormatPurposeName(
+            Enum.TryParse(Capability.DatasetPurpose, out LabelingDatasetPurpose purpose)
+                ? purpose
+                : LabelingDatasetPurpose.ObjectDetection);
 
         public bool IsImport => string.Equals(Capability.Direction, "import", StringComparison.OrdinalIgnoreCase);
 
@@ -46,6 +46,16 @@ namespace MvcVisionSystem
             Capability.FormatKey,
             "pascal-voc-detection",
             StringComparison.Ordinal);
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(DisplayText));
+            OnPropertyChanged(nameof(DirectionText));
+            OnPropertyChanged(nameof(PurposeText));
+        }
+
+        private static string T(string key)
+            => OpenVisionLanguageService.T(key);
     }
 
     public sealed class WpfDatasetInterchangeIssueItem
@@ -60,7 +70,10 @@ namespace MvcVisionSystem
 
         public bool IsBlocking { get; }
 
-        public string SeverityText => IsBlocking ? "\uCC28\uB2E8" : "\uC8FC\uC758";
+        public string SeverityText => OpenVisionLanguageService.T(
+            IsBlocking
+                ? "WpfDatasetInterchange.IssueSeverity.Blocking"
+                : "WpfDatasetInterchange.IssueSeverity.Warning");
     }
 
     public sealed class WpfDatasetInterchangeViewModel : WpfObservableViewModel
@@ -140,20 +153,23 @@ namespace MvcVisionSystem
 
         public bool RequiresImageRoot => SelectedOperation?.RequiresImageRoot == true;
 
-        public string SourceLabelText => IsImport
-            ? "\uC678\uBD80 \uC5B4\uB178\uD14C\uC774\uC158"
-            : "\uD604\uC7AC \uB370\uC774\uD130\uC14B";
+        public string SourceLabelText => T(IsImport
+            ? "WpfDatasetInterchange.SourceLabel.ExternalAnnotation"
+            : "WpfDatasetInterchange.SourceLabel.CurrentDataset");
 
-        public string TargetLabelText => IsImport
-            ? "\uAC00\uC838\uC624\uAE30 \uB300\uC0C1"
-            : "\uB0B4\uBCF4\uB0B4\uAE30 \uB300\uC0C1";
+        public string TargetLabelText => T(IsImport
+            ? "WpfDatasetInterchange.TargetLabel.Import"
+            : "WpfDatasetInterchange.TargetLabel.Export");
 
         public string OperationContractText => SelectedOperation == null
-            ? "\uD615\uC2DD\uC744 \uC120\uD0DD\uD558\uC138\uC694."
-            : $"{SelectedOperation.PurposeText} \u00B7 {SelectedOperation.DirectionText} \u00B7 "
-                + (IsImport
-                    ? "\uC6D0\uBCF8\uC740 \uC77D\uAE30 \uC804\uC6A9\uC73C\uB85C \uC720\uC9C0\uB418\uBA70 \uD604\uC7AC \uB370\uC774\uD130\uC14B\uC5D0 \uC801\uC6A9\uB429\uB2C8\uB2E4."
-                    : "\uD604\uC7AC \uB370\uC774\uD130\uC14B\uC740 \uC77D\uAE30 \uC804\uC6A9\uC73C\uB85C \uC720\uC9C0\uB429\uB2C8\uB2E4.");
+            ? T("WpfDatasetInterchange.Operation.ContractPrompt")
+            : Format(
+                "WpfDatasetInterchange.Operation.Contract",
+                SelectedOperation.PurposeText,
+                SelectedOperation.DirectionText,
+                IsImport
+                    ? T("WpfDatasetInterchange.Operation.ImportContract")
+                    : T("WpfDatasetInterchange.Operation.ExportContract"));
 
         public string SourcePath
         {
@@ -384,11 +400,11 @@ namespace MvcVisionSystem
             lastDryRunSignature = string.Empty;
             CanApply = false;
             Findings.Clear();
-            StatusText = "\uC0AC\uC804\uAC80\uC0AC \uB300\uAE30";
-            StatusDetailText = "\uACBD\uB85C\uB098 \uD615\uC2DD\uC774 \uBC14\uB00C\uBA74 Dry-run\uC744 \uB2E4\uC2DC \uC2E4\uD589\uD574\uC57C \uD569\uB2C8\uB2E4.";
-            MetricText = "\uC774\uBBF8\uC9C0 - \u00B7 \uC5B4\uB178\uD14C\uC774\uC158 - \u00B7 \uD074\uB798\uC2A4 -";
-            SourceIntegrityText = "\uC6D0\uBCF8 \uBB34\uACB0\uC131: \uBBF8\uD655\uC778";
-            TargetIntegrityText = "\uC694\uCCAD \uB300\uC0C1: \uBBF8\uD655\uC778";
+            StatusText = T("WpfDatasetInterchange.Status.Waiting");
+            StatusDetailText = T("WpfDatasetInterchange.Status.Detail");
+            MetricText = T("WpfDatasetInterchange.Metric.Empty");
+            SourceIntegrityText = T("WpfDatasetInterchange.Integrity.SourceUnknown");
+            TargetIntegrityText = T("WpfDatasetInterchange.Integrity.TargetUnknown");
         }
 
         private void ApplyReport(DatasetInterchangePreflightReport report)
@@ -396,48 +412,77 @@ namespace MvcVisionSystem
             Findings.Clear();
             foreach (string issue in report.Issues)
             {
-                Findings.Add(new WpfDatasetInterchangeIssueItem(issue, isBlocking: true));
+                Findings.Add(new WpfDatasetInterchangeIssueItem(LocalizeInterchangeText(issue), isBlocking: true));
             }
 
             foreach (string warning in report.Warnings)
             {
-                Findings.Add(new WpfDatasetInterchangeIssueItem(warning, isBlocking: false));
+                Findings.Add(new WpfDatasetInterchangeIssueItem(LocalizeInterchangeText(warning), isBlocking: false));
             }
 
             StatusText = TranslateStatus(report);
-            StatusDetailText = report.DetailText;
-            MetricText =
-                $"\uC774\uBBF8\uC9C0 {report.ImageCount} \u00B7 \uC5B4\uB178\uD14C\uC774\uC158 {report.AnnotationCount} \u00B7 \uD074\uB798\uC2A4 {report.CategoryCount}";
+            StatusDetailText = LocalizeInterchangeText(report.DetailText);
+            MetricText = Format(
+                "WpfDatasetInterchange.Metric.Counts",
+                report.ImageCount,
+                report.AnnotationCount,
+                report.CategoryCount);
             SourceIntegrityText = report.SourceUnchanged
-                ? $"\uC6D0\uBCF8 \uBB34\uACB0\uC131: \uC720\uC9C0 \u00B7 {ShortFingerprint(report.SourceFingerprint)}"
-                : "\uC6D0\uBCF8 \uBB34\uACB0\uC131: \uBCC0\uACBD \uAC10\uC9C0";
+                ? Format(
+                    "WpfDatasetInterchange.Integrity.SourceKept",
+                    ShortFingerprint(report.SourceFingerprint))
+                : T("WpfDatasetInterchange.Integrity.SourceChanged");
             TargetIntegrityText = report.IsDryRun
                 ? report.RequestedTargetUnchanged
-                    ? "\uC694\uCCAD \uB300\uC0C1: Dry-run \uC911 \uBCC0\uACBD \uC5C6\uC74C"
-                    : "\uC694\uCCAD \uB300\uC0C1: \uBCC0\uACBD \uAC10\uC9C0"
-                : "\uC694\uCCAD \uB300\uC0C1: \uC801\uC6A9 \uC644\uB8CC";
+                    ? T("WpfDatasetInterchange.Integrity.TargetDryRunKept")
+                    : T("WpfDatasetInterchange.Integrity.TargetChanged")
+                : T("WpfDatasetInterchange.Integrity.TargetApplied");
         }
 
         private static string TranslateStatus(DatasetInterchangePreflightReport report)
         {
             if (report.Issues.Count > 0)
             {
-                return report.IsDryRun ? "Dry-run \uCC28\uB2E8" : "\uC801\uC6A9 \uC2E4\uD328";
+                return report.IsDryRun
+                    ? T("WpfDatasetInterchange.Status.DryRunBlocked")
+                    : T("WpfDatasetInterchange.Status.ApplyFailed");
             }
 
             if (!report.IsDryRun)
             {
-                return "\uBCC0\uD658 \uC801\uC6A9 \uC644\uB8CC";
+                return T("WpfDatasetInterchange.Status.Applied");
             }
 
             return report.Warnings.Count > 0
-                ? "\uC8FC\uC758\uC0AC\uD56D \uD655\uC778 \uD6C4 \uC801\uC6A9 \uAC00\uB2A5"
-                : "\uC801\uC6A9 \uAC00\uB2A5";
+                ? T("WpfDatasetInterchange.Status.ReadyWithWarnings")
+                : T("WpfDatasetInterchange.Status.Ready");
         }
 
         private static string ShortFingerprint(string value)
             => string.IsNullOrWhiteSpace(value) || value.Length <= 12
                 ? value
                 : value.Substring(0, 12);
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(SourceLabelText));
+            OnPropertyChanged(nameof(TargetLabelText));
+            OnPropertyChanged(nameof(OperationContractText));
+            DatasetPurposeText = WpfDatasetContextPresentationService.FormatPurposeName(
+                data?.ProjectSettings?.DatasetPurpose ?? LabelingDatasetPurpose.ObjectDetection);
+            InvalidateDryRun();
+        }
+
+        private static string T(string key)
+            => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] arguments)
+            => string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                T(key),
+                arguments ?? Array.Empty<object>());
+
+        private static string LocalizeInterchangeText(string value)
+            => WpfLocalizationTextRuntimeService.Translate(value ?? string.Empty);
     }
 }

@@ -1,4 +1,5 @@
 using OpenVisionLab.Mvvm;
+using OpenVisionLab;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -1180,14 +1181,20 @@ namespace MvcVisionSystem
             ApplyWorkflowStageShortcutState(stage);
             ApplyRightWorkflowDockPreset(stage);
 
-            WpfWorkflowStagePresentation presentation = WpfWorkflowStagePresentationService.Build(stage);
+            RefreshLocalizedPresentation();
+        }
+
+        public void RefreshLocalizedPresentation()
+        {
+            WpfWorkflowStagePresentation presentation = WpfWorkflowStagePresentationService.Build(currentWorkflowStage);
             WorkflowStageProgressText = presentation.ProgressText;
             WorkflowStageTitleText = presentation.TitleText;
             WorkflowStageDetailText = presentation.DetailText;
             WorkflowStageNextActionText = presentation.NextActionText;
-            RightWorkflowViewTitleText = BuildRightWorkflowViewTitle(stage, GetActiveRightWorkflowShortcut());
-            RightWorkflowViewDetailText = BuildRightWorkflowViewDetail(stage, GetActiveRightWorkflowShortcut());
-            RightWorkflowRailCurrentViewText = BuildRightWorkflowRailCurrentViewText(stage, GetActiveRightWorkflowShortcut());
+            RightWorkflowViewTitleText = BuildRightWorkflowViewTitle(currentWorkflowStage, GetActiveRightWorkflowShortcut());
+            RightWorkflowViewDetailText = BuildRightWorkflowViewDetail(currentWorkflowStage, GetActiveRightWorkflowShortcut());
+            RightWorkflowRailCurrentViewText = BuildRightWorkflowRailCurrentViewText(currentWorkflowStage, GetActiveRightWorkflowShortcut());
+            RefreshRightWorkflowDockPresentation();
         }
 
         public void SetRightWorkflowShortcut(WpfRightWorkflowShortcut shortcut)
@@ -1233,25 +1240,25 @@ namespace MvcVisionSystem
             if (stage == WpfShellWorkflowStage.Dataset)
             {
                 return shortcut == WpfRightWorkflowShortcut.ClassCatalog
-                    ? "\uD074\uB798\uC2A4"
-                    : "\uB370\uC774\uD130\uC14B \uD648";
+                    ? T("WpfShell.Right.Title.Classes")
+                    : T("WpfShell.Right.Title.Dataset");
             }
 
             if (stage == WpfShellWorkflowStage.Labeling)
             {
                 return shortcut switch
                 {
-                    WpfRightWorkflowShortcut.LabelingGuide => "\uD604\uC7AC \uC791\uC5C5",
-                    WpfRightWorkflowShortcut.ClassCatalog => "\uD074\uB798\uC2A4",
-                    _ => "\uC800\uC7A5 \uB77C\uBCA8"
+                    WpfRightWorkflowShortcut.LabelingGuide => T("WpfShell.Right.Title.CurrentTask"),
+                    WpfRightWorkflowShortcut.ClassCatalog => T("WpfShell.Right.Title.Classes"),
+                    _ => T("WpfShell.Right.Title.SavedLabels")
                 };
             }
 
             return stage switch
             {
-                WpfShellWorkflowStage.Inference => "AI 후보 검토",
-                WpfShellWorkflowStage.TrainingModel => "\uD559\uC2B5/\uBAA8\uB378",
-                _ => "\uB370\uC774\uD130\uC14B \uD648"
+                WpfShellWorkflowStage.Inference => T("WpfShell.Right.Title.AiCandidates"),
+                WpfShellWorkflowStage.TrainingModel => T("WpfShell.Right.Title.TrainingModel"),
+                _ => T("WpfShell.Right.Title.Dataset")
             };
         }
 
@@ -1260,25 +1267,25 @@ namespace MvcVisionSystem
             if (stage == WpfShellWorkflowStage.Dataset)
             {
                 return shortcut == WpfRightWorkflowShortcut.ClassCatalog
-                    ? "\uB370\uC774\uD130\uC14B \uD559\uC2B5 \uBAA9\uC801\uC5D0 \uB9DE\uB294 \uD074\uB798\uC2A4 \uC774\uB984\uACFC \uC0C9\uC0C1\uC744 \uAD00\uB9AC\uD569\uB2C8\uB2E4."
-                    : "\uB370\uC774\uD130\uC14B \uC900\uBE44\uC640 \uC774\uBBF8\uC9C0/\uD074\uB798\uC2A4 \uC0C1\uD0DC\uB97C \uD655\uC778\uD569\uB2C8\uB2E4.";
+                    ? T("WpfShell.Right.Detail.DatasetClasses")
+                    : T("WpfShell.Right.Detail.Dataset");
             }
 
             if (stage == WpfShellWorkflowStage.Labeling)
             {
                 return shortcut switch
                 {
-                    WpfRightWorkflowShortcut.LabelingGuide => "\uD604\uC7AC \uC774\uBBF8\uC9C0\uC5D0\uC11C \uD655\uC778, \uD655\uC815, \uC2A4\uD0B5 \uC911 \uB2E4\uC74C \uD589\uB3D9\uC744 \uC55E\uC5D0 \uBCF4\uC5EC\uC90D\uB2C8\uB2E4.",
-                    WpfRightWorkflowShortcut.ClassCatalog => "\uB77C\uBCA8 \uD074\uB798\uC2A4 \uC774\uB984\uACFC \uC0C9\uC0C1\uC744 \uAD00\uB9AC\uD569\uB2C8\uB2E4.",
-                    _ => "\uD604\uC7AC \uC774\uBBF8\uC9C0\uC758 \uC800\uC7A5 \uB77C\uBCA8\uC744 \uD655\uC778\uD558\uACE0 \uC218\uC815\uD569\uB2C8\uB2E4."
+                    WpfRightWorkflowShortcut.LabelingGuide => T("WpfShell.Right.Detail.CurrentTask"),
+                    WpfRightWorkflowShortcut.ClassCatalog => T("WpfShell.Right.Detail.Classes"),
+                    _ => T("WpfShell.Right.Detail.SavedLabels")
                 };
             }
 
             return stage switch
             {
-                WpfShellWorkflowStage.Inference => "\uBAA8\uB378 \uD6C4\uBCF4 \uAC80\uD1A0\uC6A9\uC785\uB2C8\uB2E4. \uC9C1\uC811 \uB77C\uBCA8\uB9C1\uB9CC \uD588\uB2E4\uBA74 \uAC74\uB108\uB701\uB2C8\uB2E4.",
-                WpfShellWorkflowStage.TrainingModel => "\uD559\uC2B5 \uACB0\uACFC \uBAA8\uB378\uACFC \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.",
-                _ => "\uB370\uC774\uD130\uC14B \uC900\uBE44\uC640 \uC774\uBBF8\uC9C0/\uD074\uB798\uC2A4 \uC0C1\uD0DC\uB97C \uD655\uC778\uD569\uB2C8\uB2E4."
+                WpfShellWorkflowStage.Inference => T("WpfShell.Right.Detail.AiCandidates"),
+                WpfShellWorkflowStage.TrainingModel => T("WpfShell.Right.Detail.TrainingModel"),
+                _ => T("WpfShell.Right.Detail.Dataset")
             };
         }
 
@@ -1287,25 +1294,25 @@ namespace MvcVisionSystem
             if (stage == WpfShellWorkflowStage.Dataset)
             {
                 return shortcut == WpfRightWorkflowShortcut.ClassCatalog
-                    ? "\uD074\uB798\uC2A4"
-                    : "\uD648";
+                    ? T("WpfShell.Right.Rail.Classes")
+                    : T("WpfShell.Right.Rail.Home");
             }
 
             if (stage == WpfShellWorkflowStage.Labeling)
             {
                 return shortcut switch
                 {
-                    WpfRightWorkflowShortcut.LabelingGuide => "\uC791\uC5C5",
-                    WpfRightWorkflowShortcut.ClassCatalog => "\uD074\uB798\uC2A4",
-                    _ => "\uB77C\uBCA8"
+                    WpfRightWorkflowShortcut.LabelingGuide => T("WpfShell.Right.Rail.Task"),
+                    WpfRightWorkflowShortcut.ClassCatalog => T("WpfShell.Right.Rail.Classes"),
+                    _ => T("WpfShell.Right.Rail.Labels")
                 };
             }
 
             return stage switch
             {
-                WpfShellWorkflowStage.Inference => "AI 후보",
-                WpfShellWorkflowStage.TrainingModel => "\uBAA8\uB378",
-                _ => "\uD648"
+                WpfShellWorkflowStage.Inference => T("WpfShell.Right.Rail.AiCandidates"),
+                WpfShellWorkflowStage.TrainingModel => T("WpfShell.Right.Rail.Model"),
+                _ => T("WpfShell.Right.Rail.Home")
             };
         }
 
@@ -1378,8 +1385,7 @@ namespace MvcVisionSystem
                 IsRightWorkflowDockExpanded = true;
                 IsRightWorkflowDockRailVisible = false;
                 RightWorkflowPaneGridLength = WorkspaceCanvasPaneGridLengthValue;
-                RightWorkflowDockToggleText = "\uC811\uAE30";
-                RightWorkflowDockToggleToolTip = "\uD559\uC2B5/\uBAA8\uB378 \uC13C\uD130\uB294 \uD604\uC7AC \uD654\uBA74 \uC804\uCCB4 \uB108\uBE44\uB85C \uD45C\uC2DC\uB429\uB2C8\uB2E4.";
+                RefreshRightWorkflowDockPresentation();
                 return;
             }
 
@@ -1388,10 +1394,24 @@ namespace MvcVisionSystem
             RightWorkflowPaneGridLength = isExpanded
                 ? new GridLength(rightWorkflowExpandedPaneWidth)
                 : RightWorkflowCollapsedPaneGridLengthValue;
-            RightWorkflowDockToggleText = isExpanded ? "\uC811\uAE30" : "\uC5F4\uAE30";
-            RightWorkflowDockToggleToolTip = isExpanded
-                ? "\uC624\uB978\uCABD \uC791\uC5C5 \uD328\uB110\uC744 \uC811\uACE0 \uCE94\uBC84\uC2A4 \uACF5\uAC04\uC744 \uB113\uD799\uB2C8\uB2E4."
-                : "\uC624\uB978\uCABD \uC791\uC5C5 \uD328\uB110\uC744 \uC5F4\uC5B4 \uB77C\uBCA8, \uB3C4\uAD6C, \uBAA8\uB378 \uC124\uC815\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.";
+            RefreshRightWorkflowDockPresentation();
+        }
+
+        private void RefreshRightWorkflowDockPresentation()
+        {
+            if (IsModelWorkspaceActive)
+            {
+                RightWorkflowDockToggleText = T("WpfShell.Right.Dock.Collapse");
+                RightWorkflowDockToggleToolTip = T("WpfShell.Right.Dock.ModelWorkspace");
+                return;
+            }
+
+            RightWorkflowDockToggleText = IsRightWorkflowDockExpanded
+                ? T("WpfShell.Right.Dock.Collapse")
+                : T("WpfShell.Right.Dock.Expand");
+            RightWorkflowDockToggleToolTip = IsRightWorkflowDockExpanded
+                ? T("WpfShell.Right.Dock.Collapse.ToolTip")
+                : T("WpfShell.Right.Dock.Expand.ToolTip");
         }
 
         public void SetRightWorkflowExpandedPaneWidth(double width)
@@ -2005,5 +2025,7 @@ namespace MvcVisionSystem
                 ? text.Substring(0, 30) + "..."
                 : text;
         }
+
+        private static string T(string key) => OpenVisionLanguageService.T(key);
     }
 }

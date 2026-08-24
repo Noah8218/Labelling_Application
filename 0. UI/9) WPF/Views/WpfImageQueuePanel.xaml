@@ -21,6 +21,7 @@
         </Style>
 
         <Style x:Key="QueueIconButtonStyle" TargetType="{x:Type ui:Button}">
+            <Setter Property="Template" Value="{DynamicResource WpfUiDarkButtonTemplate}" />
             <Setter Property="Width" Value="40" />
             <Setter Property="MinWidth" Value="40" />
             <Setter Property="Height" Value="32" />
@@ -44,6 +45,7 @@
         </Style>
 
         <Style x:Key="QueuePrimaryActionButtonStyle" TargetType="{x:Type ui:Button}">
+            <Setter Property="Template" Value="{DynamicResource WpfUiDarkButtonTemplate}" />
             <Setter Property="MinWidth" Value="72" />
             <Setter Property="Height" Value="32" />
             <Setter Property="Padding" Value="6,0" />
@@ -62,6 +64,7 @@
         </Style>
 
         <Style x:Key="QueueQuickFilterButtonStyle" TargetType="{x:Type ui:Button}">
+            <Setter Property="Template" Value="{DynamicResource WpfUiDarkButtonTemplate}" />
             <Setter Property="Height" Value="30" />
             <Setter Property="MinWidth" Value="84" />
             <Setter Property="Padding" Value="7,0" />
@@ -208,7 +211,7 @@
             <Setter Property="Margin" Value="5,1" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="ToolTip" Value="{Binding QueueRowToolTip}" />
+            <Setter Property="ToolTip" Value="{Binding LocalizedQueueRowToolTip}" />
         </Style>
 
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -327,7 +330,8 @@
                     CornerRadius="6,6,0,0"
                     BorderBrush="{DynamicResource BorderBrushDark}"
                     BorderThickness="0,0,0,1">
-                <TextBlock Text="&#xC774;&#xBBF8;&#xC9C0; &#xD050;"
+                <TextBlock x:Name="ImageQueuePanelTitleText"
+                           Text="{Binding PanelTitleText}"
                            Foreground="{DynamicResource PrimaryTextBrush}"
                            FontFamily="Segoe UI"
                            FontSize="12"
@@ -353,22 +357,22 @@
                            MinHeight="36"
                            Margin="0,0,0,3"
                            VerticalAlignment="Center">
-                    <ui:Button Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC124;&#xC815;&#xB41C; &#xC774;&#xBBF8;&#xC9C0; &#xD3F4;&#xB354; &#xBD88;&#xB7EC;&#xC624;&#xAE30;" AutomationProperties.AutomationId="LoadConfiguredImageRootButton" AutomationProperties.Name="&#xC124;&#xC815; &#xD3F4;&#xB354;" Command="{Binding LoadImageRootCommand}">
+                    <ui:Button Style="{StaticResource QueueIconButtonStyle}" ToolTip="{Binding LoadConfiguredImageRootToolTipText}" AutomationProperties.AutomationId="LoadConfiguredImageRootButton" AutomationProperties.Name="{Binding LoadConfiguredImageRootNameText}" Command="{Binding LoadImageRootCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="FolderImage" />
                     </ui:Button>
-                    <ui:Button Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC774;&#xBBF8;&#xC9C0; &#xD3F4;&#xB354; &#xC120;&#xD0DD;" AutomationProperties.Name="&#xD3F4;&#xB354;" Command="{Binding BrowseImageFolderCommand}">
+                    <ui:Button Style="{StaticResource QueueIconButtonStyle}" ToolTip="{Binding BrowseImageFolderToolTipText}" AutomationProperties.Name="{Binding BrowseImageFolderNameText}" Command="{Binding BrowseImageFolderCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="FolderOpen" />
                     </ui:Button>
-                    <ui:Button Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC774;&#xBBF8;&#xC9C0; &#xBAA9;&#xB85D; &#xC0C8;&#xB85C;&#xACE0;&#xCE68;" AutomationProperties.Name="&#xC0C8;&#xB85C;&#xACE0;&#xCE68;" Command="{Binding RefreshImageQueueCommand}">
+                    <ui:Button Style="{StaticResource QueueIconButtonStyle}" ToolTip="{Binding RefreshImageQueueToolTipText}" AutomationProperties.Name="{Binding RefreshImageQueueNameText}" Command="{Binding RefreshImageQueueCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="Refresh" />
                     </ui:Button>
-                    <ui:Button x:Name="NextUnlabeledPrimaryButton" Style="{StaticResource QueuePrimaryActionButtonStyle}" MinWidth="104" ToolTip="{Binding NextUnlabeledToolTip}" AutomationProperties.AutomationId="NextUnlabeledPrimaryButton" AutomationProperties.Name="{Binding NextUnlabeledActionText}" Command="{Binding NextUnlabeledCommand}">
+                    <ui:Button x:Name="NextUnlabeledPrimaryButton" Style="{StaticResource QueuePrimaryActionButtonStyle}" MinWidth="104" ToolTip="{Binding NextUnlabeledToolTip}" AutomationProperties.AutomationId="NextUnlabeledPrimaryButton" AutomationProperties.Name="{Binding NextUnlabeledActionText}" AutomationProperties.HelpText="{Binding NextUnlabeledToolTip}" Command="{Binding NextUnlabeledCommand}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ArrowRightCircleOutline" />
                             <TextBlock x:Name="NextUnlabeledPrimaryButtonText" Text="{Binding NextUnlabeledActionText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </ui:Button>
-                    <ui:Button x:Name="OpenSelectedQueueImageButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC120;&#xD0DD; &#xC774;&#xBBF8;&#xC9C0;&#xB97C; &#xB2E4;&#xC2DC; &#xC5F4;&#xAE30;" AutomationProperties.Name="&#xC5F4;&#xAE30;" IsEnabled="{Binding IsOpenSelectedImageEnabled}" Command="{Binding OpenSelectedQueueImageCommand}">
+                    <ui:Button x:Name="OpenSelectedQueueImageButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="{Binding OpenSelectedQueueImageToolTipText}" AutomationProperties.Name="{Binding OpenSelectedQueueImageNameText}" IsEnabled="{Binding IsOpenSelectedImageEnabled}" Command="{Binding OpenSelectedQueueImageCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="ImageOutline" />
                     </ui:Button>
                 </WrapPanel>
@@ -415,9 +419,9 @@
                                MinWidth="38"
                                Height="24"
                                Margin="6,0,0,0"
-                               ToolTip="현재 이미지 폴더를 파일 탐색기에서 엽니다."
+                                ToolTip="{Binding CurrentImageFolderOpenToolTipText}"
                                AutomationProperties.AutomationId="OpenCurrentImageFolderButton"
-                               AutomationProperties.Name="현재 이미지 폴더 열기"
+                                AutomationProperties.Name="{Binding CurrentImageFolderOpenNameText}"
                                IsEnabled="{Binding IsOpenCurrentImageFolderEnabled}"
                                Command="{Binding OpenCurrentImageFolderCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="FolderOpenOutline" />
@@ -488,14 +492,14 @@
                         Padding="7,6"
                         Margin="0,0,0,5"
                         Visibility="{Binding AnomalyImageReviewVisibility}"
-                        AutomationProperties.Name="현재 이미지 OK NG 판정">
+                         AutomationProperties.Name="{Binding AnomalyCardAutomationNameText}">
                     <StackPanel>
-                        <TextBlock Text="이미지 전체를 판정하세요"
+                        <TextBlock Text="{Binding AnomalyCardTitleText}"
                                    Foreground="{DynamicResource PrimaryTextBrush}"
                                    FontFamily="Segoe UI"
                                    FontSize="11"
                                    FontWeight="SemiBold" />
-                        <TextBlock Text="결함 위치를 그리는 작업이 아닙니다. 한 번 누르면 저장하고 다음 미판정 이미지로 이동합니다."
+                        <TextBlock Text="{Binding AnomalyCardDetailText}"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    FontFamily="Segoe UI"
                                    FontSize="9.5"
@@ -508,12 +512,12 @@
                                        Height="34"
                                        Margin="0,0,3,0"
                                        AutomationProperties.AutomationId="MarkAnomalyNormalButton"
-                                       AutomationProperties.Name="정상 OK 확정 후 다음"
-                                       ToolTip="현재 이미지 전체를 정상(OK)으로 저장하고 다음 미판정 이미지 열기"
+                                        AutomationProperties.Name="{Binding AnomalyNormalNameText}"
+                                        ToolTip="{Binding AnomalyNormalToolTipText}"
                                        Command="{Binding MarkAnomalyNormalCommand}">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="CheckboxMarkedCircleOutline" />
-                                    <TextBlock Text="정상(OK) → 다음" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding AnomalyNormalButtonText}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </ui:Button>
                             <ui:Button x:Name="MarkAnomalyAbnormalButton"
@@ -521,12 +525,12 @@
                                        Height="34"
                                        Margin="3,0,0,0"
                                        AutomationProperties.AutomationId="MarkAnomalyAbnormalButton"
-                                       AutomationProperties.Name="이상 NG 확정 후 다음"
-                                       ToolTip="현재 이미지 전체를 이상(NG)으로 저장하고 다음 미판정 이미지 열기"
+                                        AutomationProperties.Name="{Binding AnomalyAbnormalNameText}"
+                                        ToolTip="{Binding AnomalyAbnormalToolTipText}"
                                        Command="{Binding MarkAnomalyAbnormalCommand}">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="AlertCircleOutline" />
-                                    <TextBlock Text="이상(NG) → 다음" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding AnomalyAbnormalButtonText}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </ui:Button>
                         </UniformGrid>
@@ -536,10 +540,10 @@
                                    Margin="0,5,0,0"
                                    HorizontalAlignment="Stretch"
                                    AutomationProperties.AutomationId="ClearAnomalyReviewButton"
-                                   AutomationProperties.Name="미판정으로 되돌리기"
-                                   ToolTip="현재 이미지의 저장된 OK 또는 NG 판정을 삭제하고 미판정으로 되돌리기"
+                                    AutomationProperties.Name="{Binding ClearAnomalyReviewNameText}"
+                                    ToolTip="{Binding ClearAnomalyReviewToolTipText}"
                                    Command="{Binding ClearAnomalyReviewCommand}">
-                            <TextBlock Text="미판정으로 되돌리기" FontSize="10" HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding ClearAnomalyReviewButtonText}" FontSize="10" HorizontalAlignment="Center" />
                         </ui:Button>
                     </StackPanel>
                 </Border>
@@ -587,8 +591,8 @@
                                        MinWidth="82"
                                        Height="26"
                                        Margin="0,0,4,0"
-                                       AutomationProperties.Name="폴더명 기준 일괄 판정"
-                                       ToolTip="아직 판정하지 않은 이미지만 OK/normal은 정상, NG/abnormal은 이상으로 일괄 판정합니다."
+                                        AutomationProperties.Name="{Binding ApplyAnomalySuggestionNameText}"
+                                        ToolTip="{Binding ApplyAnomalySuggestionToolTipText}"
                                        Command="{Binding ApplyAnomalyFolderStateSuggestionCommand}">
                                 <TextBlock Text="{Binding AnomalyFolderStateSuggestionApplyText}" FontSize="10" VerticalAlignment="Center" />
                             </ui:Button>
@@ -597,10 +601,10 @@
                                        MinWidth="66"
                                        Height="26"
                                        Margin="0"
-                                       AutomationProperties.Name="이미지별 확인"
-                                       ToolTip="폴더명은 사용하지 않고 이미지를 하나씩 정상 또는 이상으로 판정합니다."
+                                        AutomationProperties.Name="{Binding DismissAnomalySuggestionNameText}"
+                                        ToolTip="{Binding DismissAnomalySuggestionToolTipText}"
                                        Command="{Binding DismissAnomalyFolderStateSuggestionCommand}">
-                                <TextBlock Text="이미지별 확인" FontSize="10" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding DismissAnomalySuggestionButtonText}" FontSize="10" VerticalAlignment="Center" />
                             </ui:Button>
                         </WrapPanel>
                     </Grid>
@@ -614,7 +618,7 @@
                     </Grid.ColumnDefinitions>
                     <ComboBox x:Name="ImageQueueFilterBox"
                               Style="{StaticResource ImageQueueFilterComboBoxStyle}"
-                              ToolTip="&#xC0C1;&#xD0DC; &#xD544;&#xD130;"
+                               ToolTip="{Binding FilterToolTipText}"
                               mvvm:InputCommandBehaviors.SelectedItemChangedCommand="{Binding FilterSelectionChangedCommand}" />
                     <Grid Grid.Column="2">
                         <iconPacks:PackIconMaterial Width="14"
@@ -627,7 +631,7 @@
                                                     IsHitTestVisible="False" />
                         <TextBox x:Name="ImageQueueSearchBox"
                                  AutomationProperties.AutomationId="ImageQueueSearchBox"
-                                 AutomationProperties.Name="&#xC774;&#xBBF8;&#xC9C0; &#xD050; &#xAC80;&#xC0C9;"
+                                  AutomationProperties.Name="{Binding SearchAutomationNameText}"
                                  Height="24"
                                  Background="{DynamicResource InputBrush}"
                                  Foreground="{DynamicResource PrimaryTextBrush}"
@@ -635,7 +639,7 @@
                                  FontFamily="Segoe UI"
                                  FontSize="12"
                                  Padding="24,2,6,2"
-                                 ToolTip="&#xD30C;&#xC77C;&#xBA85; &#xAC80;&#xC0C9;"
+                                  ToolTip="{Binding SearchToolTipText}"
                                  mvvm:InputCommandBehaviors.TextInputCommand="{Binding SearchTextChangedCommand}" />
                     </Grid>
                 </Grid>
@@ -650,7 +654,7 @@
                            Tag="{Binding IsQueueFilterUnfinishedActive}"
                            AutomationProperties.AutomationId="QueueWorklistButton"
                            AutomationProperties.Name="{Binding QueueWorklistAutomationName}"
-                           ToolTip="&#xBBF8;&#xD310;&#xC815;, &#xC800;&#xC7A5; &#xD544;&#xC694;, AI &#xD6C4;&#xBCF4;, &#xAC80;&#xC0AC; &#xC2E4;&#xD328;, &#xC218;&#xC815; &#xD544;&#xC694; &#xC774;&#xBBF8;&#xC9C0;&#xB9CC; &#xBD05;&#xB2C8;&#xB2E4;."
+                            ToolTip="{Binding QueueWorklistToolTipText}"
                            Command="{Binding QueueFilterUnfinishedCommand}">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -691,37 +695,37 @@
                 </ui:Button>
 
                 <UniformGrid Grid.Row="6" Columns="3" VerticalAlignment="Center" Visibility="Collapsed">
-                    <ui:Button x:Name="QueueFilterAllButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterAllActive}" AutomationProperties.Name="&#xC804;&#xCCB4; &#xD544;&#xD130;" ToolTip="&#xC804;&#xCCB4; &#xC774;&#xBBF8;&#xC9C0; &#xBCF4;&#xAE30;" Command="{Binding QueueFilterAllCommand}">
+                    <ui:Button x:Name="QueueFilterAllButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterAllActive}" AutomationProperties.Name="{Binding QueueFilterAllText}" ToolTip="{Binding QueueFilterAllText}" Command="{Binding QueueFilterAllCommand}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ViewListOutline" />
                             <TextBlock x:Name="QueueFilterAllText" Text="{Binding QueueFilterAllText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </ui:Button>
-                    <ui:Button x:Name="QueueFilterCandidateButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterCandidateActive}" AutomationProperties.Name="AI &#xD6C4;&#xBCF4; &#xD544;&#xD130;" ToolTip="AI &#xD6C4;&#xBCF4;&#xAC00; &#xC788;&#xB294; &#xC774;&#xBBF8;&#xC9C0;&#xB9CC; &#xBCF4;&#xAE30;" Command="{Binding QueueFilterCandidateCommand}">
+                    <ui:Button x:Name="QueueFilterCandidateButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterCandidateActive}" AutomationProperties.Name="{Binding QueueFilterCandidateText}" ToolTip="{Binding QueueFilterCandidateText}" Command="{Binding QueueFilterCandidateCommand}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ImageSearch" />
                             <TextBlock x:Name="QueueFilterCandidateText" Text="{Binding QueueFilterCandidateText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </ui:Button>
-                    <ui:Button x:Name="QueueFilterFailedButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterFailedActive}" AutomationProperties.Name="&#xC2E4;&#xD328; &#xD544;&#xD130;" ToolTip="&#xAC80;&#xC0AC; &#xC2E4;&#xD328; &#xC774;&#xBBF8;&#xC9C0;&#xB9CC; &#xBCF4;&#xAE30;" Command="{Binding QueueFilterFailedCommand}">
+                    <ui:Button x:Name="QueueFilterFailedButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterFailedActive}" AutomationProperties.Name="{Binding QueueFilterFailedText}" ToolTip="{Binding QueueFilterFailedText}" Command="{Binding QueueFilterFailedCommand}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="AlertCircleOutline" />
                             <TextBlock x:Name="QueueFilterFailedText" Text="{Binding QueueFilterFailedText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </ui:Button>
-                    <ui:Button x:Name="QueueFilterConfirmedButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterConfirmedActive}" AutomationProperties.Name="&#xC800;&#xC7A5;&#xB428; &#xD544;&#xD130;" ToolTip="&#xC800;&#xC7A5; &#xB77C;&#xBCA8;&#xC774; &#xC644;&#xB8CC;&#xB41C; &#xC774;&#xBBF8;&#xC9C0;&#xB9CC; &#xBCF4;&#xAE30;" Command="{Binding QueueFilterConfirmedCommand}">
+                    <ui:Button x:Name="QueueFilterConfirmedButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterConfirmedActive}" AutomationProperties.Name="{Binding QueueFilterConfirmedText}" ToolTip="{Binding QueueFilterConfirmedText}" Command="{Binding QueueFilterConfirmedCommand}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="CheckboxMarkedCircleOutline" />
                             <TextBlock x:Name="QueueFilterConfirmedText" Text="{Binding QueueFilterConfirmedText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </ui:Button>
-                    <ui:Button x:Name="QueueFilterSkippedButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterSkippedActive}" AutomationProperties.Name="&#xD6C4;&#xBCF4; &#xC228;&#xAE40; &#xD544;&#xD130;" ToolTip="AI &#xD6C4;&#xBCF4;&#xB97C; &#xC228;&#xAE34; &#xC774;&#xBBF8;&#xC9C0;&#xB9CC; &#xBCF4;&#xAE30;" Command="{Binding QueueFilterSkippedCommand}">
+                    <ui:Button x:Name="QueueFilterSkippedButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterSkippedActive}" AutomationProperties.Name="{Binding QueueFilterSkippedText}" ToolTip="{Binding QueueFilterSkippedText}" Command="{Binding QueueFilterSkippedCommand}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="SkipNext" />
                             <TextBlock x:Name="QueueFilterSkippedText" Text="{Binding QueueFilterSkippedText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </ui:Button>
-                    <ui:Button x:Name="QueueFilterNoCandidateButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterNoCandidateActive}" AutomationProperties.Name="&#xAC1D;&#xCCB4; &#xC5C6;&#xC74C; &#xD544;&#xD130;" ToolTip="AI &#xD6C4;&#xBCF4;&#xAC00; &#xC5C6;&#xACE0; &#xAC1D;&#xCCB4; &#xC5C6;&#xC74C;&#xC73C;&#xB85C; &#xAC80;&#xD1A0;&#xB41C; &#xC774;&#xBBF8;&#xC9C0;&#xB9CC; &#xBCF4;&#xAE30;" Command="{Binding QueueFilterNoCandidateCommand}">
+                    <ui:Button x:Name="QueueFilterNoCandidateButton" Style="{StaticResource QueueQuickFilterButtonStyle}" Tag="{Binding IsQueueFilterNoCandidateActive}" AutomationProperties.Name="{Binding QueueFilterNoCandidateText}" ToolTip="{Binding QueueFilterNoCandidateText}" Command="{Binding QueueFilterNoCandidateCommand}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="MinusCircleOutline" />
                             <TextBlock x:Name="QueueFilterNoCandidateText" Text="{Binding QueueFilterNoCandidateText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
@@ -730,22 +734,22 @@
                 </UniformGrid>
 
                 <WrapPanel Grid.Row="7" VerticalAlignment="Center" Visibility="{Binding StandardQueueWorkflowVisibility}">
-                    <ui:Button x:Name="DetectSelectedQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC120;&#xD0DD; &#xC774;&#xBBF8;&#xC9C0; &#xAC80;&#xC0AC;" AutomationProperties.Name="&#xC120;&#xD0DD; &#xAC80;&#xC0AC;" IsEnabled="{Binding IsDetectSelectedEnabled}" Command="{Binding DetectSelectedQueueCommand}">
+                    <ui:Button x:Name="DetectSelectedQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="{Binding DetectSelectedToolTipText}" AutomationProperties.Name="{Binding DetectSelectedNameText}" IsEnabled="{Binding IsDetectSelectedEnabled}" Command="{Binding DetectSelectedQueueCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="ImageSearch" />
                     </ui:Button>
-                    <ui:Button x:Name="BatchDetectQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xD45C;&#xC2DC; &#xBAA9;&#xB85D; AI &#xBC30;&#xCE58; &#xC0AC;&#xC804;&#xC810;&#xAC80;" AutomationProperties.Name="AI &#xBC30;&#xCE58; &#xC0AC;&#xC804;&#xC810;&#xAC80;" IsEnabled="{Binding IsBatchDetectEnabled}" Command="{Binding BatchDetectQueueCommand}">
+                    <ui:Button x:Name="BatchDetectQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="{Binding BatchDetectToolTipText}" AutomationProperties.Name="{Binding BatchDetectNameText}" IsEnabled="{Binding IsBatchDetectEnabled}" Command="{Binding BatchDetectQueueCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="PlaylistPlay" />
                     </ui:Button>
-                    <ui:Button x:Name="TemplateBatchQueueButton" Style="{StaticResource QueuePrimaryActionButtonStyle}" MinWidth="104" ToolTip="전체 이미지를 템플릿으로 한 번씩 검사하고 라벨 없는 이미지에만 바로 저장" AutomationProperties.AutomationId="TemplateBatchQueueButton" AutomationProperties.Name="전체 이미지 자동 저장" IsEnabled="{Binding IsTemplateBatchEnabled}" Command="{Binding TemplateBatchQueueCommand}">
+                    <ui:Button x:Name="TemplateBatchQueueButton" Style="{StaticResource QueuePrimaryActionButtonStyle}" MinWidth="104" ToolTip="{Binding TemplateBatchToolTipText}" AutomationProperties.AutomationId="TemplateBatchQueueButton" AutomationProperties.Name="{Binding TemplateBatchNameText}" IsEnabled="{Binding IsTemplateBatchEnabled}" Command="{Binding TemplateBatchQueueCommand}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="SelectionSearch" />
-                            <TextBlock x:Name="TemplateBatchQueueText" Text="전체 자동 저장" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="TemplateBatchQueueText" Text="{Binding TemplateBatchButtonText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </ui:Button>
-                    <ui:Button x:Name="RetryFailedQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC2E4;&#xD328; &#xD56D;&#xBAA9; AI &#xBC30;&#xCE58; &#xC0AC;&#xC804;&#xC810;&#xAC80;" AutomationProperties.Name="&#xC2E4;&#xD328; &#xC7AC;&#xC2DC;&#xB3C4; &#xC0AC;&#xC804;&#xC810;&#xAC80;" IsEnabled="{Binding IsRetryFailedEnabled}" Command="{Binding RetryFailedQueueCommand}">
+                    <ui:Button x:Name="RetryFailedQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="{Binding RetryFailedToolTipText}" AutomationProperties.Name="{Binding RetryFailedNameText}" IsEnabled="{Binding IsRetryFailedEnabled}" Command="{Binding RetryFailedQueueCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="Reload" />
                     </ui:Button>
-                    <ui:Button x:Name="StopBatchQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="&#xC77C;&#xAD04; &#xAC80;&#xC0AC; &#xC911;&#xC9C0;" AutomationProperties.Name="&#xC911;&#xC9C0;" IsEnabled="{Binding IsStopBatchEnabled}" Command="{Binding StopBatchQueueCommand}">
+                    <ui:Button x:Name="StopBatchQueueButton" Style="{StaticResource QueueIconButtonStyle}" ToolTip="{Binding StopBatchToolTipText}" AutomationProperties.Name="{Binding StopBatchNameText}" IsEnabled="{Binding IsStopBatchEnabled}" Command="{Binding StopBatchQueueCommand}">
                         <iconPacks:PackIconMaterial Style="{StaticResource QueueIconStyle}" Kind="StopCircleOutline" />
                     </ui:Button>
                 </WrapPanel>
@@ -756,7 +760,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="BatchStatusText"
-                               Text="&#xBC30;&#xCE58; &#xB300;&#xAE30;"
+                               Text="{Binding BatchStatusText}"
                                Foreground="{DynamicResource SecondaryTextBrush}"
                                FontFamily="Segoe UI"
                                FontSize="11"
@@ -801,12 +805,17 @@
                       mvvm:InputCommandBehaviors.SelectedItemChangedCommand="{Binding QueueSelectionChangedCommand}"
                       mvvm:InputCommandBehaviors.MouseDoubleClickInputCommand="{Binding QueueMouseDoubleClickCommand}">
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="&#xD30C;&#xC77C;" Width="*" MinWidth="116">
+                    <DataGridTemplateColumn Header="파일" Width="*" MinWidth="116">
+                        <DataGridTemplateColumn.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DataContext.QueueFileColumnHeaderText, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.HeaderTemplate>
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid Margin="4,2"
-                                      ToolTip="{Binding QueueRowToolTip}"
-                                      AutomationProperties.Name="{Binding QueueRowAccessibleName}">
+                                      ToolTip="{Binding LocalizedQueueRowToolTip}"
+                                      AutomationProperties.Name="{Binding LocalizedQueueRowAccessibleName}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="3" />
                                         <ColumnDefinition Width="36" />
@@ -853,30 +862,36 @@
                                                        FontSize="12"
                                                        TextTrimming="CharacterEllipsis" />
                                             <Border Grid.Column="1" Style="{StaticResource QueueStatusBadgeStyle}">
-                                                <TextBlock Text="{Binding QueueBadgeText}" Foreground="{Binding QueueIconBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" TextAlignment="Center" />
+                                                <TextBlock Text="{Binding LocalizedQueueBadgeText}" Foreground="{Binding QueueIconBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" TextAlignment="Center" />
                                             </Border>
                                         </Grid>
-                                        <TextBlock Text="{Binding QueueStatusSummary}" Foreground="{DynamicResource DisabledTextBrush}" FontSize="10" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding LocalizedQueueStatusSummary}" Foreground="{DynamicResource DisabledTextBrush}" FontSize="10" TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
                                 </Grid>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="작업" Binding="{Binding LabelStatus}" Width="60" ElementStyle="{StaticResource ImageQueueTextStyle}">
+                    <DataGridTextColumn Header="작업" Binding="{Binding LocalizedLabelStatus}" Width="60" ElementStyle="{StaticResource ImageQueueTextStyle}">
                         <DataGridTextColumn.HeaderTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding DataContext.QueueDecisionColumnHeaderText, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" />
                             </DataTemplate>
                         </DataGridTextColumn.HeaderTemplate>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="상태" Binding="{Binding DetectStatus}" Width="64" ElementStyle="{StaticResource ImageQueueTextStyle}">
+                    <DataGridTextColumn Header="상태" Binding="{Binding LocalizedDetectStatus}" Width="64" ElementStyle="{StaticResource ImageQueueTextStyle}">
                         <DataGridTextColumn.HeaderTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding DataContext.QueueSecondaryColumnHeaderText, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" />
                             </DataTemplate>
                         </DataGridTextColumn.HeaderTemplate>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="&#xD06C;&#xAE30;" Binding="{Binding Dimensions}" Width="54" ElementStyle="{StaticResource ImageQueueTextStyle}" />
+                    <DataGridTextColumn Header="크기" Binding="{Binding Dimensions}" Width="54" ElementStyle="{StaticResource ImageQueueTextStyle}">
+                        <DataGridTextColumn.HeaderTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DataContext.QueueDimensionsColumnHeaderText, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}" />
+                            </DataTemplate>
+                        </DataGridTextColumn.HeaderTemplate>
+                    </DataGridTextColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

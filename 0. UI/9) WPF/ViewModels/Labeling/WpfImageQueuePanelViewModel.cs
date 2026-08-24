@@ -1,6 +1,9 @@
+using OpenVisionLab;
 using OpenVisionLab.Mvvm;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
@@ -20,13 +23,20 @@ namespace MvcVisionSystem
         private bool isTemplateBatchEnabled;
         private bool isRetryFailedEnabled;
         private bool isStopBatchEnabled;
-        private string queueFilterUnfinishedText = WpfImageQueuePresenter.FormatWorklistActionText(0);
-        private string queueFilterAllText = "\uC804\uCCB4";
-        private string queueFilterCandidateText = WpfImageQueuePresenter.FormatQuickFilterText("AI \uD6C4\uBCF4", 0);
-        private string queueFilterFailedText = WpfImageQueuePresenter.FormatQuickFilterText("\uC2E4\uD328", 0);
-        private string queueFilterConfirmedText = WpfImageQueuePresenter.FormatQuickFilterText("\uC800\uC7A5\uB428", 0);
-        private string queueFilterSkippedText = WpfImageQueuePresenter.FormatQuickFilterText("\uC228\uAE40", 0);
-        private string queueFilterNoCandidateText = WpfImageQueuePresenter.FormatQuickFilterText("\uAC1D\uCCB4\uC5C6\uC74C", 0);
+        private string queueFilterUnfinishedText = Format("WpfImageQueue.Filter.Unfinished", 0);
+        private string queueFilterAllText = T("WpfImageQueue.Filter.All");
+        private string queueFilterCandidateText = Format("WpfImageQueue.Filter.Candidate", 0);
+        private string queueFilterFailedText = Format("WpfImageQueue.Filter.Failed", 0);
+        private string queueFilterConfirmedText = Format("WpfImageQueue.Filter.Confirmed", 0);
+        private string queueFilterSkippedText = Format("WpfImageQueue.Filter.Skipped", 0);
+        private string queueFilterNoCandidateText = Format("WpfImageQueue.Filter.NoCandidate", 0);
+        private WpfImageQueueFilter selectedFilterForPresentation = WpfImageQueueFilter.All;
+        private int unfinishedCountForPresentation;
+        private int candidateCountForPresentation;
+        private int failedCountForPresentation;
+        private int confirmedCountForPresentation;
+        private int skippedCountForPresentation;
+        private int noCandidateCountForPresentation;
         private bool isQueueFilterUnfinishedActive;
         private bool isQueueFilterAllActive = true;
         private bool isQueueFilterCandidateActive;
@@ -35,24 +45,27 @@ namespace MvcVisionSystem
         private bool isQueueFilterSkippedActive;
         private bool isQueueFilterNoCandidateActive;
         private WpfImageQueueItem selectedQueueItem;
-        private string currentImageTaskTitleText = "\uC774\uBBF8\uC9C0 \uC120\uD0DD";
-        private string currentImageTaskDetailText = "\uC67C\uCABD \uBAA9\uB85D\uC5D0\uC11C \uC774\uBBF8\uC9C0\uB97C \uC120\uD0DD\uD558\uBA74 \uC800\uC7A5/\uAC80\uC0AC \uC0C1\uD0DC\uB97C \uBCF4\uC5EC\uC90D\uB2C8\uB2E4.";
-        private string currentImageTaskBadgeText = "\uB300\uAE30";
+        private string currentImageTaskTitleText = T("WpfImageQueue.Current.Waiting.Title");
+        private string currentImageTaskDetailText = T("WpfImageQueue.Current.Waiting.StandardDetail");
+        private string currentImageTaskBadgeText = T("WpfImageQueue.Current.Waiting.Badge");
         private string currentImageTaskKey = "Waiting";
-        private string currentImageTaskToolTip = "\uC774\uBBF8\uC9C0\uB97C \uC120\uD0DD\uD558\uBA74 \uD604\uC7AC \uC791\uC5C5 \uC0C1\uD0DC\uAC00 \uD45C\uC2DC\uB429\uB2C8\uB2E4.";
+        private string currentImageTaskToolTip = T("WpfImageQueue.Current.Waiting.ToolTip");
         private Action<WpfImageQueueItem> selectedQueueItemChanged = NoOpQueueItemCommand;
         private string currentImageFolderPath = string.Empty;
-        private string currentImageFolderDisplayText = "이미지 폴더를 선택하세요.";
+        private string currentImageFolderDisplayText = T("WpfImageQueue.Folder.Empty");
         private bool isOpenCurrentImageFolderEnabled;
         private bool isAnomalyFolderStateSuggestionVisible;
-        private string anomalyFolderStateSuggestionTitleText = "폴더명으로 초기 판정을 제안합니다";
+        private string anomalyFolderStateSuggestionTitleText = T("WpfImageQueue.Anomaly.Suggestion.DefaultTitle");
         private string anomalyFolderStateSuggestionText = string.Empty;
-        private string anomalyFolderStateSuggestionApplyText = "일괄 판정";
+        private string anomalyFolderStateSuggestionApplyText = T("WpfImageQueue.Anomaly.Suggestion.DefaultApply");
+        private int anomalyNormalCount;
+        private int anomalyAbnormalCount;
+        private int anomalyTotalCount;
         private bool isAnomalyImageReviewMode;
         private System.Windows.Visibility anomalyImageReviewVisibility = System.Windows.Visibility.Collapsed;
         private System.Windows.Visibility standardQueueWorkflowVisibility = System.Windows.Visibility.Visible;
-        private string queueDecisionColumnHeaderText = "저장";
-        private string queueSecondaryColumnHeaderText = "검사";
+        private string queueDecisionColumnHeaderText = T("WpfImageQueue.Decision.Standard");
+        private string queueSecondaryColumnHeaderText = T("WpfImageQueue.Secondary.Standard");
         private ICommand loadImageRootCommand = new RelayCommand(NoOpCommand);
         private ICommand browseImageFolderCommand = new RelayCommand(NoOpCommand);
         private ICommand openCurrentImageFolderCommand = new RelayCommand(NoOpCommand);
@@ -83,19 +96,113 @@ namespace MvcVisionSystem
 
         public string ViewName => nameof(WpfImageQueuePanel);
 
-        public string QueueWorklistTitleText => "확인 필요 Worklist";
+        public string PanelTitleText => T("WpfImageQueue.Panel.Title");
+
+        public string BatchStatusText => T("WpfImageQueue.Batch.Waiting");
+
+        public string LoadConfiguredImageRootNameText => T("WpfImageQueue.LoadConfigured.Name");
+
+        public string LoadConfiguredImageRootToolTipText => T("WpfImageQueue.LoadConfigured.ToolTip");
+
+        public string BrowseImageFolderNameText => T("WpfImageQueue.Browse.Name");
+
+        public string BrowseImageFolderToolTipText => T("WpfImageQueue.Browse.ToolTip");
+
+        public string RefreshImageQueueNameText => T("WpfImageQueue.Refresh.Name");
+
+        public string RefreshImageQueueToolTipText => T("WpfImageQueue.Refresh.ToolTip");
+
+        public string OpenSelectedQueueImageNameText => T("WpfImageQueue.OpenSelected.Name");
+
+        public string OpenSelectedQueueImageToolTipText => T("WpfImageQueue.OpenSelected.ToolTip");
+
+        public string CurrentImageFolderOpenNameText => T("WpfImageQueue.CurrentFolder.Open.Name");
+
+        public string CurrentImageFolderOpenToolTipText => T("WpfImageQueue.CurrentFolder.Open.ToolTip");
+
+        public string QueueWorklistTitleText => T("WpfImageQueue.Worklist.Title");
 
         public string QueueWorklistSummaryText => IsAnomalyImageReviewMode
-            ? "미판정 OK/NG 이미지만 모아 순서대로 확인"
-            : "미판정 · 저장 필요 · AI 후보 · 검사 실패 · 수정 필요";
+            ? T("WpfImageQueue.Worklist.Summary.Anomaly")
+            : T("WpfImageQueue.Worklist.Summary.Standard");
+
+        public string QueueWorklistToolTipText => T("WpfImageQueue.Worklist.ToolTip");
 
         public string QueueWorklistAutomationName => $"{QueueWorklistTitleText} / {QueueFilterUnfinishedText}";
 
-        public string NextUnlabeledActionText => IsAnomalyImageReviewMode ? "다음 미판정" : "\uB2E4\uC74C \uBBF8\uC644\uB8CC";
+        public string NextUnlabeledActionText => IsAnomalyImageReviewMode
+            ? T("WpfImageQueue.Next.Anomaly")
+            : T("WpfImageQueue.Next.Standard");
 
         public string NextUnlabeledToolTip => IsAnomalyImageReviewMode
-            ? "정상(OK) 또는 이상(NG) 판정이 없는 다음 이미지를 엽니다."
-            : "\uC800\uC7A5\uB428/\uAC1D\uCCB4\uC5C6\uC74C \uC774\uBBF8\uC9C0\uB294 \uAC74\uB108\uB6F0\uACE0 \uB77C\uBCA8\uC774 \uD544\uC694\uD55C \uB2E4\uC74C \uC774\uBBF8\uC9C0\uB97C \uC5FD\uB2C8\uB2E4.";
+            ? T("WpfImageQueue.Next.Anomaly.ToolTip")
+            : T("WpfImageQueue.Next.Standard.ToolTip");
+
+        public string FilterToolTipText => T("WpfImageQueue.Filter.ToolTip");
+
+        public string SearchAutomationNameText => T("WpfImageQueue.Search.Name");
+
+        public string SearchToolTipText => T("WpfImageQueue.Search.ToolTip");
+
+        public string DetectSelectedNameText => T("WpfImageQueue.Action.Detect.Name");
+
+        public string DetectSelectedToolTipText => T("WpfImageQueue.Action.Detect.ToolTip");
+
+        public string BatchDetectNameText => T("WpfImageQueue.Action.Batch.Name");
+
+        public string BatchDetectToolTipText => T("WpfImageQueue.Action.Batch.ToolTip");
+
+        public string TemplateBatchNameText => T("WpfImageQueue.Action.Template.Name");
+
+        public string TemplateBatchToolTipText => T("WpfImageQueue.Action.Template.ToolTip");
+
+        public string TemplateBatchButtonText => T("WpfImageQueue.Action.Template.Text");
+
+        public string RetryFailedNameText => T("WpfImageQueue.Action.Retry.Name");
+
+        public string RetryFailedToolTipText => T("WpfImageQueue.Action.Retry.ToolTip");
+
+        public string StopBatchNameText => T("WpfImageQueue.Action.Stop.Name");
+
+        public string StopBatchToolTipText => T("WpfImageQueue.Action.Stop.ToolTip");
+
+        public string QueueFileColumnHeaderText => T("WpfImageQueue.Column.File");
+
+        public string QueueDimensionsColumnHeaderText => T("WpfImageQueue.Column.Dimensions");
+
+        public string AnomalyCardAutomationNameText => T("WpfImageQueue.Anomaly.Card.Name");
+
+        public string AnomalyCardTitleText => T("WpfImageQueue.Anomaly.Card.Title");
+
+        public string AnomalyCardDetailText => T("WpfImageQueue.Anomaly.Card.Detail");
+
+        public string AnomalyNormalNameText => T("WpfImageQueue.Anomaly.Normal.Name");
+
+        public string AnomalyNormalToolTipText => T("WpfImageQueue.Anomaly.Normal.ToolTip");
+
+        public string AnomalyNormalButtonText => T("WpfImageQueue.Anomaly.Normal.Text");
+
+        public string AnomalyAbnormalNameText => T("WpfImageQueue.Anomaly.Abnormal.Name");
+
+        public string AnomalyAbnormalToolTipText => T("WpfImageQueue.Anomaly.Abnormal.ToolTip");
+
+        public string AnomalyAbnormalButtonText => T("WpfImageQueue.Anomaly.Abnormal.Text");
+
+        public string ClearAnomalyReviewNameText => T("WpfImageQueue.Anomaly.Clear.Name");
+
+        public string ClearAnomalyReviewToolTipText => T("WpfImageQueue.Anomaly.Clear.ToolTip");
+
+        public string ClearAnomalyReviewButtonText => T("WpfImageQueue.Anomaly.Clear.Text");
+
+        public string ApplyAnomalySuggestionNameText => T("WpfImageQueue.Anomaly.Suggestion.Apply.Name");
+
+        public string ApplyAnomalySuggestionToolTipText => T("WpfImageQueue.Anomaly.Suggestion.Apply.ToolTip");
+
+        public string DismissAnomalySuggestionNameText => T("WpfImageQueue.Anomaly.Suggestion.Dismiss.Name");
+
+        public string DismissAnomalySuggestionToolTipText => T("WpfImageQueue.Anomaly.Suggestion.Dismiss.ToolTip");
+
+        public string DismissAnomalySuggestionButtonText => T("WpfImageQueue.Anomaly.Suggestion.Dismiss.Text");
 
         public WpfImageQueueItem SelectedQueueItem
         {
@@ -577,6 +684,26 @@ namespace MvcVisionSystem
             ClearAnomalyReviewCommand = new RelayCommand(clearAnomalyReview ?? NoOpCommand);
         }
 
+        public void RefreshLocalizedPresentation(IEnumerable<WpfImageQueueItem> queueItems = null)
+        {
+            foreach (WpfImageQueueItem item in queueItems ?? Array.Empty<WpfImageQueueItem>())
+            {
+                item?.RefreshLocalizedPresentation();
+            }
+
+            QueueDecisionColumnHeaderText = IsAnomalyImageReviewMode
+                ? T("WpfImageQueue.Decision.Anomaly")
+                : T("WpfImageQueue.Decision.Standard");
+            QueueSecondaryColumnHeaderText = IsAnomalyImageReviewMode
+                ? T("WpfImageQueue.Secondary.Anomaly")
+                : T("WpfImageQueue.Secondary.Standard");
+            CurrentImageFolderDisplayText = FormatFolderDisplayPath(CurrentImageFolderPath);
+            RefreshQuickFilterText();
+            RefreshAnomalyFolderStateSuggestionText();
+            OnPropertyChanged(string.Empty);
+            RefreshCurrentImageTaskSummary();
+        }
+
         public void SetAnomalyImageReviewMode(bool enabled)
         {
             IsAnomalyImageReviewMode = enabled;
@@ -586,8 +713,12 @@ namespace MvcVisionSystem
             StandardQueueWorkflowVisibility = enabled
                 ? System.Windows.Visibility.Collapsed
                 : System.Windows.Visibility.Visible;
-            QueueDecisionColumnHeaderText = enabled ? "판정" : "저장";
-            QueueSecondaryColumnHeaderText = enabled ? "상태" : "검사";
+            QueueDecisionColumnHeaderText = enabled
+                ? T("WpfImageQueue.Decision.Anomaly")
+                : T("WpfImageQueue.Decision.Standard");
+            QueueSecondaryColumnHeaderText = enabled
+                ? T("WpfImageQueue.Secondary.Anomaly")
+                : T("WpfImageQueue.Secondary.Standard");
             OnPropertyChanged(nameof(NextUnlabeledActionText));
             OnPropertyChanged(nameof(NextUnlabeledToolTip));
             OnPropertyChanged(nameof(QueueWorklistSummaryText));
@@ -608,18 +739,22 @@ namespace MvcVisionSystem
                 + abnormalCount
                 + (suggestion?.ExistingReviewCount ?? 0)
                 + (suggestion?.UnmatchedImageCount ?? 0);
-            AnomalyFolderStateSuggestionTitleText = "OK/NG 폴더 구조를 발견했습니다";
-            AnomalyFolderStateSuggestionText = $"OK/normal {normalCount}장 → 정상 · NG/abnormal {abnormalCount}장 → 이상. 총 {totalCount}장 중 아직 판정하지 않은 이미지만 적용합니다.";
-            AnomalyFolderStateSuggestionApplyText = $"{normalCount + abnormalCount}장 일괄 판정";
+            anomalyNormalCount = normalCount;
+            anomalyAbnormalCount = abnormalCount;
+            anomalyTotalCount = totalCount;
+            RefreshAnomalyFolderStateSuggestionText();
             IsAnomalyFolderStateSuggestionVisible = true;
         }
 
         public void ClearAnomalyFolderStateSuggestion()
         {
             IsAnomalyFolderStateSuggestionVisible = false;
-            AnomalyFolderStateSuggestionTitleText = "폴더명으로 초기 판정을 제안합니다";
+            anomalyNormalCount = 0;
+            anomalyAbnormalCount = 0;
+            anomalyTotalCount = 0;
+            AnomalyFolderStateSuggestionTitleText = T("WpfImageQueue.Anomaly.Suggestion.DefaultTitle");
             AnomalyFolderStateSuggestionText = string.Empty;
-            AnomalyFolderStateSuggestionApplyText = "일괄 판정";
+            AnomalyFolderStateSuggestionApplyText = T("WpfImageQueue.Anomaly.Suggestion.DefaultApply");
         }
 
         public void SetCurrentImageFolder(string folderPath, bool canOpenFolder)
@@ -654,13 +789,14 @@ namespace MvcVisionSystem
             int noCandidateCount,
             int unfinishedCount = 0)
         {
-            QueueFilterUnfinishedText = WpfImageQueuePresenter.FormatWorklistActionText(unfinishedCount);
-            QueueFilterAllText = "\uC804\uCCB4";
-            QueueFilterCandidateText = WpfImageQueuePresenter.FormatQuickFilterText("AI \uD6C4\uBCF4", candidateCount);
-            QueueFilterFailedText = WpfImageQueuePresenter.FormatQuickFilterText("\uC2E4\uD328", failedCount);
-            QueueFilterConfirmedText = WpfImageQueuePresenter.FormatQuickFilterText("\uC800\uC7A5\uB428", confirmedCount);
-            QueueFilterSkippedText = WpfImageQueuePresenter.FormatQuickFilterText("\uC228\uAE40", skippedCount);
-            QueueFilterNoCandidateText = WpfImageQueuePresenter.FormatQuickFilterText("\uAC1D\uCCB4\uC5C6\uC74C", noCandidateCount);
+            selectedFilterForPresentation = selectedFilter;
+            unfinishedCountForPresentation = Math.Max(0, unfinishedCount);
+            candidateCountForPresentation = Math.Max(0, candidateCount);
+            failedCountForPresentation = Math.Max(0, failedCount);
+            confirmedCountForPresentation = Math.Max(0, confirmedCount);
+            skippedCountForPresentation = Math.Max(0, skippedCount);
+            noCandidateCountForPresentation = Math.Max(0, noCandidateCount);
+            RefreshQuickFilterText();
 
             IsQueueFilterUnfinishedActive = selectedFilter == WpfImageQueueFilter.Unlabeled;
             IsQueueFilterAllActive = selectedFilter == WpfImageQueueFilter.All;
@@ -669,6 +805,42 @@ namespace MvcVisionSystem
             IsQueueFilterConfirmedActive = selectedFilter == WpfImageQueueFilter.Confirmed;
             IsQueueFilterSkippedActive = selectedFilter == WpfImageQueueFilter.Skipped;
             IsQueueFilterNoCandidateActive = selectedFilter == WpfImageQueueFilter.NoCandidate;
+        }
+
+        private void RefreshQuickFilterText()
+        {
+            QueueFilterUnfinishedText = Format("WpfImageQueue.Filter.Unfinished", unfinishedCountForPresentation);
+            QueueFilterAllText = T("WpfImageQueue.Filter.All");
+            QueueFilterCandidateText = Format("WpfImageQueue.Filter.Candidate", candidateCountForPresentation);
+            QueueFilterFailedText = Format("WpfImageQueue.Filter.Failed", failedCountForPresentation);
+            QueueFilterConfirmedText = Format("WpfImageQueue.Filter.Confirmed", confirmedCountForPresentation);
+            QueueFilterSkippedText = Format("WpfImageQueue.Filter.Skipped", skippedCountForPresentation);
+            QueueFilterNoCandidateText = Format("WpfImageQueue.Filter.NoCandidate", noCandidateCountForPresentation);
+        }
+
+        private void RefreshAnomalyFolderStateSuggestionText()
+        {
+            if (anomalyNormalCount <= 0 && anomalyAbnormalCount <= 0)
+            {
+                if (!IsAnomalyFolderStateSuggestionVisible)
+                {
+                    AnomalyFolderStateSuggestionTitleText = T("WpfImageQueue.Anomaly.Suggestion.DefaultTitle");
+                    AnomalyFolderStateSuggestionText = string.Empty;
+                    AnomalyFolderStateSuggestionApplyText = T("WpfImageQueue.Anomaly.Suggestion.DefaultApply");
+                }
+
+                return;
+            }
+
+            AnomalyFolderStateSuggestionTitleText = T("WpfImageQueue.Anomaly.Suggestion.FoundTitle");
+            AnomalyFolderStateSuggestionText = Format(
+                "WpfImageQueue.Anomaly.Suggestion.FoundText",
+                anomalyNormalCount,
+                anomalyAbnormalCount,
+                anomalyTotalCount);
+            AnomalyFolderStateSuggestionApplyText = Format(
+                "WpfImageQueue.Anomaly.Suggestion.ApplyCount",
+                anomalyNormalCount + anomalyAbnormalCount);
         }
 
         private void OnSelectedQueueItemPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -690,6 +862,12 @@ namespace MvcVisionSystem
 
         private void RefreshCurrentImageTaskSummary()
         {
+            if (OpenVisionLanguageService.CurrentLanguage == OpenVisionLanguage.English)
+            {
+                RefreshCurrentImageTaskSummaryEnglish();
+                return;
+            }
+
             WpfImageQueueItem item = selectedQueueItem;
             if (item == null)
             {
@@ -851,6 +1029,159 @@ namespace MvcVisionSystem
                 statusSummary);
         }
 
+        private void RefreshCurrentImageTaskSummaryEnglish()
+        {
+            WpfImageQueueItem item = selectedQueueItem;
+            if (item == null)
+            {
+                CurrentImageTaskTitleText = T("WpfImageQueue.Current.Waiting.Title");
+                CurrentImageTaskDetailText = IsAnomalyImageReviewMode
+                    ? T("WpfImageQueue.Current.Waiting.AnomalyDetail")
+                    : T("WpfImageQueue.Current.Waiting.StandardDetail");
+                CurrentImageTaskBadgeText = T("WpfImageQueue.Current.Waiting.Badge");
+                CurrentImageTaskKey = "Waiting";
+                CurrentImageTaskToolTip = BuildCurrentImageTaskToolTip(
+                    null,
+                    CurrentImageTaskTitleText,
+                    CurrentImageTaskDetailText,
+                    T("WpfImageQueue.Current.Waiting.ToolTip"));
+                return;
+            }
+
+            if (IsAnomalyImageReviewMode)
+            {
+                CurrentImageTaskTitleText = T("WpfImageQueue.Current.Anomaly.Title");
+                switch (item.AnomalyReviewState)
+                {
+                    case AnomalyImageReviewState.Normal:
+                        CurrentImageTaskDetailText = T("WpfImageQueue.Current.Anomaly.NormalDetail");
+                        CurrentImageTaskBadgeText = "OK";
+                        CurrentImageTaskKey = "AnomalyNormal";
+                        break;
+                    case AnomalyImageReviewState.Abnormal:
+                        CurrentImageTaskDetailText = T("WpfImageQueue.Current.Anomaly.AbnormalDetail");
+                        CurrentImageTaskBadgeText = "NG";
+                        CurrentImageTaskKey = "AnomalyAbnormal";
+                        break;
+                    default:
+                        CurrentImageTaskDetailText = T("WpfImageQueue.Current.Anomaly.UnreviewedDetail");
+                        CurrentImageTaskBadgeText = T("WpfImageQueue.Current.Anomaly.UnreviewedBadge");
+                        CurrentImageTaskKey = "AnomalyUnreviewed";
+                        break;
+                }
+
+                CurrentImageTaskToolTip = BuildCurrentImageTaskToolTip(
+                    item.FileName,
+                    CurrentImageTaskTitleText,
+                    CurrentImageTaskDetailText,
+                    item.LocalizedQueueStatusSummary);
+                return;
+            }
+
+            string labelStatus = item.LocalizedLabelStatus;
+            string detectStatus = item.LocalizedDetectStatus;
+            string statusSummary = string.IsNullOrWhiteSpace(item.LocalizedQueueStatusSummary)
+                ? string.Format(
+                    CultureInfo.InvariantCulture,
+                    "{0}: {1} / {2}: {3}",
+                    T("WpfImageQueue.Row.SavePrefix"),
+                    labelStatus,
+                    T("WpfImageQueue.Row.InspectPrefix"),
+                    detectStatus)
+                : item.LocalizedQueueStatusSummary;
+
+            if (item.IsSaveRequired)
+            {
+                CurrentImageTaskTitleText = T("WpfImageQueue.Current.SaveRequired.Title");
+                CurrentImageTaskDetailText = statusSummary;
+                CurrentImageTaskBadgeText = string.IsNullOrWhiteSpace(item.LocalizedQueueBadgeText)
+                    ? T("WpfImageQueue.Current.SaveRequired.Badge")
+                    : item.LocalizedQueueBadgeText;
+                CurrentImageTaskKey = "SaveRequired";
+            }
+            else if (item.QualityReviewState == Yolo.YoloImageQualityReviewState.NeedsFix)
+            {
+                CurrentImageTaskTitleText = T("WpfImageQueue.Current.NeedsFix.Title");
+                CurrentImageTaskDetailText = T("WpfImageQueue.Current.NeedsFix.Detail");
+                CurrentImageTaskBadgeText = T("WpfImageQueue.Current.NeedsFix.Badge");
+                CurrentImageTaskKey = "NeedsFix";
+            }
+            else if (item.QualityReviewState == Yolo.YoloImageQualityReviewState.Reviewed)
+            {
+                CurrentImageTaskTitleText = T("WpfImageQueue.Current.QualityReviewed.Title");
+                CurrentImageTaskDetailText = T("WpfImageQueue.Current.QualityReviewed.Detail");
+                CurrentImageTaskBadgeText = T("WpfImageQueue.Current.QualityReviewed.Badge");
+                CurrentImageTaskKey = "QualityReviewed";
+            }
+            else
+            {
+                switch (item.ReviewState)
+                {
+                    case Yolo.YoloImageReviewState.Requested:
+                        CurrentImageTaskTitleText = T("WpfImageQueue.Current.Requested.Title");
+                        CurrentImageTaskDetailText = T("WpfImageQueue.Current.Requested.Detail");
+                        CurrentImageTaskBadgeText = T("WpfImageQueue.Current.Requested.Badge");
+                        CurrentImageTaskKey = "Requested";
+                        break;
+                    case Yolo.YoloImageReviewState.Candidate:
+                        CurrentImageTaskTitleText = T("WpfImageQueue.Current.Candidate.Title");
+                        CurrentImageTaskDetailText = T("WpfImageQueue.Current.Candidate.Detail");
+                        CurrentImageTaskBadgeText = string.IsNullOrWhiteSpace(item.LocalizedQueueBadgeText)
+                            ? "AI"
+                            : item.LocalizedQueueBadgeText;
+                        CurrentImageTaskKey = "Candidate";
+                        break;
+                    case Yolo.YoloImageReviewState.Failed:
+                        CurrentImageTaskTitleText = T("WpfImageQueue.Current.Failed.Title");
+                        CurrentImageTaskDetailText = statusSummary;
+                        CurrentImageTaskBadgeText = T("WpfImageQueue.Current.Failed.Badge");
+                        CurrentImageTaskKey = "Failed";
+                        break;
+                    case Yolo.YoloImageReviewState.Confirmed:
+                        CurrentImageTaskTitleText = T("WpfImageQueue.Current.Saved.Title");
+                        CurrentImageTaskDetailText = T("WpfImageQueue.Current.Saved.Detail");
+                        CurrentImageTaskBadgeText = T("WpfImageQueue.Current.Saved.Badge");
+                        CurrentImageTaskKey = "Saved";
+                        break;
+                    case Yolo.YoloImageReviewState.NoCandidate:
+                        CurrentImageTaskTitleText = T("WpfImageQueue.Current.NoCandidate.Title");
+                        CurrentImageTaskDetailText = T("WpfImageQueue.Current.NoCandidate.Detail");
+                        CurrentImageTaskBadgeText = T("WpfImageQueue.Current.NoCandidate.Badge");
+                        CurrentImageTaskKey = "Saved";
+                        break;
+                    case Yolo.YoloImageReviewState.Skipped:
+                        CurrentImageTaskTitleText = T("WpfImageQueue.Current.Skipped.Title");
+                        CurrentImageTaskDetailText = T("WpfImageQueue.Current.Skipped.Detail");
+                        CurrentImageTaskBadgeText = T("WpfImageQueue.Current.Skipped.Badge");
+                        CurrentImageTaskKey = "Skipped";
+                        break;
+                    default:
+                        if (item.IsLabeled)
+                        {
+                            CurrentImageTaskTitleText = T("WpfImageQueue.Current.Saved.Title");
+                            CurrentImageTaskDetailText = statusSummary;
+                            CurrentImageTaskBadgeText = T("WpfImageQueue.Current.Saved.Badge");
+                            CurrentImageTaskKey = "Saved";
+                        }
+                        else
+                        {
+                            CurrentImageTaskTitleText = T("WpfImageQueue.Current.NeedsLabel.Title");
+                            CurrentImageTaskDetailText = T("WpfImageQueue.Current.NeedsLabel.Detail");
+                            CurrentImageTaskBadgeText = T("WpfImageQueue.Current.NeedsLabel.Badge");
+                            CurrentImageTaskKey = "NeedsLabel";
+                        }
+
+                        break;
+                }
+            }
+
+            CurrentImageTaskToolTip = BuildCurrentImageTaskToolTip(
+                item.FileName,
+                CurrentImageTaskTitleText,
+                CurrentImageTaskDetailText,
+                statusSummary);
+        }
+
         private static string BuildCurrentImageTaskToolTip(
             string fileName,
             string title,
@@ -879,7 +1210,13 @@ namespace MvcVisionSystem
             {
                 text = string.IsNullOrWhiteSpace(text)
                     ? normalizedStatus
-                    : $"{text}{Environment.NewLine}\uC0C1\uD0DC: {normalizedStatus}";
+                    : string.Format(
+                        CultureInfo.InvariantCulture,
+                        "{0}{1}{2}: {3}",
+                        text,
+                        Environment.NewLine,
+                        T("WpfImageQueue.Current.StatusPrefix"),
+                        normalizedStatus);
             }
 
             return text;
@@ -889,7 +1226,7 @@ namespace MvcVisionSystem
         {
             if (string.IsNullOrWhiteSpace(folderPath))
             {
-                return "이미지 폴더를 선택하세요.";
+                return T("WpfImageQueue.Folder.Empty");
             }
 
             const int MaximumVisibleCharacters = 54;
@@ -917,6 +1254,16 @@ namespace MvcVisionSystem
             {
                 return folderPath;
             }
+        }
+
+        private static string T(string key) => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] arguments)
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                T(key),
+                arguments ?? Array.Empty<object>());
         }
     }
 }

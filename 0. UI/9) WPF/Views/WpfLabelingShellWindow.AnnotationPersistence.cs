@@ -32,11 +32,12 @@ namespace MvcVisionSystem
                     && SaveCurrentEmptyAnnotations();
             }
 
-            bool saved = LabelingAnnotationPersistence.SaveCurrent(activeImageBitmap, roisByClass, segmentsByClass, global.Data);
-            if (saved && !TrySaveCurrentObjectMetadata())
-            {
-                return false;
-            }
+            bool saved = LabelingAnnotationPersistence.SaveCurrentWithAdditionalArtifacts(
+                activeImageBitmap,
+                roisByClass,
+                segmentsByClass,
+                global.Data,
+                TrySaveCurrentObjectMetadata);
 
             if (saved)
             {
@@ -59,15 +60,12 @@ namespace MvcVisionSystem
 
             SaveTrainingEditorFields();
             // Object-detection datasets still need an empty label file for reviewed normal images.
-            bool saved = LabelingAnnotationPersistence.SaveCurrent(
+            bool saved = LabelingAnnotationPersistence.SaveCurrentWithAdditionalArtifacts(
                 activeImageBitmap,
                 new Dictionary<string, List<CRectangleObject>>(StringComparer.OrdinalIgnoreCase),
                 new Dictionary<string, List<LabelingSegmentationObject>>(StringComparer.OrdinalIgnoreCase),
-                global.Data);
-            if (saved && !TrySaveCurrentObjectMetadata())
-            {
-                return false;
-            }
+                global.Data,
+                TrySaveCurrentObjectMetadata);
 
             if (saved)
             {

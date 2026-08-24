@@ -62,6 +62,7 @@
                                    FontSize="10.5" />
                     </Border>
                     <Button x:Name="ShellLogToggleButton"
+                            Style="{DynamicResource ToolbarButtonStyle}"
                             Grid.Column="3"
                             AutomationProperties.AutomationId="ShellLogToggleButton"
                             AutomationProperties.Name="{Binding LogPaneToggleText}"
@@ -91,6 +92,7 @@
                   Visibility="{Binding ExpandedLogVisibility}">
                 <logView:LogPanelView x:Name="ShellLogPanel" />
                 <Button x:Name="ShellLogExpandedToggleButton"
+                        Style="{DynamicResource ToolbarButtonStyle}"
                         AutomationProperties.AutomationId="ShellLogExpandedToggleButton"
                         AutomationProperties.Name="{Binding LogPaneToggleText}"
                         ToolTip="{Binding LogPaneToggleToolTip}"

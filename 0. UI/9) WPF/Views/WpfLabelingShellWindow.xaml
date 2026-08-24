@@ -24,6 +24,7 @@
         <ResourceDictionary.MergedDictionaries>
             <ui:ThemesDictionary Theme="Dark" />
             <ui:ControlsDictionary />
+            <ResourceDictionary Source="../Themes/WpfButtonStateTemplates.xaml" />
         </ResourceDictionary.MergedDictionaries>
 
         <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0C0D0F" />
@@ -219,6 +220,7 @@
         </Style>
 
         <Style x:Key="RightWorkflowShortcutButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Template" Value="{StaticResource WpfDarkButtonTemplate}" />
             <Setter Property="Height" Value="34" />
             <Setter Property="MinWidth" Value="0" />
             <Setter Property="Margin" Value="0" />
@@ -262,6 +264,7 @@
         </Style>
 
         <Style x:Key="RightWorkflowDockButtonStyle" TargetType="{x:Type Button}">
+            <Setter Property="Template" Value="{StaticResource WpfDarkButtonTemplate}" />
             <Setter Property="Height" Value="26" />
             <Setter Property="Width" Value="28" />
             <Setter Property="MinWidth" Value="28" />
@@ -290,9 +293,15 @@
             <Setter Property="FontSize" Value="9" />
             <Style.Triggers>
                 <Trigger Property="Tag" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
                     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="Foreground" Value="{DynamicResource SelectedRowTextBrush}" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="{DynamicResource ToolbarButtonDisabledBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButtonDisabledBorderBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}" />
+                    <Setter Property="Opacity" Value="1" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -358,6 +367,7 @@
         </Style>
 
         <Style x:Key="WpfUiToolbarButtonStyle" TargetType="{x:Type ui:Button}">
+            <Setter Property="Template" Value="{StaticResource WpfUiDarkButtonTemplate}" />
             <Setter Property="Height" Value="30" />
             <Setter Property="MinWidth" Value="68" />
             <Setter Property="Margin" Value="4,0,0,0" />
@@ -426,10 +436,16 @@
         <Style x:Key="WorkflowModeToolbarButtonStyle" TargetType="{x:Type ui:Button}" BasedOn="{StaticResource WpfUiToolbarButtonStyle}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
                     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="Foreground" Value="{DynamicResource SelectedRowTextBrush}" />
                 </DataTrigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="{DynamicResource ToolbarButtonDisabledBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButtonDisabledBorderBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}" />
+                    <Setter Property="Opacity" Value="1" />
+                </Trigger>
             </Style.Triggers>
         </Style>
 
@@ -442,10 +458,16 @@
             <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                    <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
                     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="Foreground" Value="{DynamicResource SelectedRowTextBrush}" />
                 </DataTrigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="{DynamicResource ToolbarButtonDisabledBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButtonDisabledBorderBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}" />
+                    <Setter Property="Opacity" Value="1" />
+                </Trigger>
             </Style.Triggers>
         </Style>
 
@@ -561,6 +583,43 @@
                 <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#334052" />
                 <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#F4F7FB" />
             </Style.Resources>
+        </Style>
+
+        <Style x:Key="HeaderLanguageComboBoxStyle"
+               TargetType="ComboBox"
+               BasedOn="{StaticResource SettingsComboBoxStyle}">
+            <Setter Property="Width" Value="104" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Background" Value="{DynamicResource InputBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                        <Setter Property="Padding" Value="8,5" />
+                        <Style.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource SelectedRowTextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource SelectedRowTextBrush}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="SettingsLabelStyle" TargetType="TextBlock">
@@ -750,29 +809,38 @@
                 BorderThickness="0,0,0,1">
             <Grid Margin="16,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250" />
+                    <ColumnDefinition Width="260" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="360" />
+                    <ColumnDefinition Width="380" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal"
-                            VerticalAlignment="Center">
-                    <TextBlock Text="&#xB77C;&#xBCA8;&#xB9C1; &#xC6CC;&#xD06C;&#xBCA4;&#xCE58;"
+                <Grid x:Name="ShellHeaderIdentityPanel"
+                      VerticalAlignment="Center"
+                      ClipToBounds="True">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="ShellHeaderTitleText"
+                               Text="{Binding LanguageViewModel[WpfShell.Header.Title]}"
                                Foreground="{DynamicResource PrimaryTextBrush}"
                                FontFamily="Segoe UI"
                                FontSize="14"
                                FontWeight="SemiBold"
                                TextTrimming="CharacterEllipsis" />
-                    <TextBlock Text="&#xD050; / &#xCE94;&#xBC84;&#xC2A4; / &#xBAA8;&#xB378;"
+                    <TextBlock x:Name="ShellHeaderSubtitleText"
+                               Grid.Column="1"
+                               Text="{Binding LanguageViewModel[WpfShell.Header.Subtitle]}"
                                Foreground="{DynamicResource SecondaryTextBrush}"
                                FontFamily="Segoe UI"
                                FontSize="11"
                                Margin="8,1,0,0"
                                VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis" />
-                </StackPanel>
+                </Grid>
 
-                <StackPanel Grid.Column="1"
+                <StackPanel x:Name="ShellHeaderActionPanel"
+                            Grid.Column="1"
                             Orientation="Horizontal"
                             VerticalAlignment="Center"
                             HorizontalAlignment="Right"
@@ -781,31 +849,43 @@
                                Style="{StaticResource WpfUiToolbarButtonStyle}"
                                MinWidth="92"
                                Visibility="{Binding ShellViewModel.IsAnnotationWorkflowVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}"
-                               AutomationProperties.Name="&#xB77C;&#xBCA8; &#xC800;&#xC7A5;"
-                               ToolTip="&#xD604;&#xC7AC; &#xBC15;&#xC2A4;&#xC640; &#xD655;&#xC815; &#xB77C;&#xBCA8; &#xC800;&#xC7A5;"
+                               AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Header.Save.Name]}"
+                               ToolTip="{Binding LanguageViewModel[WpfShell.Header.Save.ToolTip]}"
                                Command="{Binding ShellViewModel.SaveAnnotationsCommand}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ContentSave" />
-                            <TextBlock Text="&#xB77C;&#xBCA8; &#xC800;&#xC7A5;" VerticalAlignment="Center" />
+                            <TextBlock x:Name="SaveAnnotationsButtonText"
+                                       Text="{Binding LanguageViewModel[WpfShell.Header.Save.Text]}"
+                                       VerticalAlignment="Center" />
                         </StackPanel>
                     </ui:Button>
                     <ui:Button x:Name="DetectButton"
                                Style="{StaticResource WpfUiToolbarButtonStyle}"
                                MinWidth="96"
-                               AutomationProperties.Name="&#xD604;&#xC7AC; &#xC774;&#xBBF8;&#xC9C0; &#xAC80;&#xC0AC;"
-                               ToolTip="&#xD604;&#xC7AC; &#xC774;&#xBBF8;&#xC9C0;&#xB85C; &#xBAA8;&#xB378; &#xAC80;&#xC0AC; &#xC2E4;&#xD589;"
+                               AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Header.Inspect.Name]}"
+                               ToolTip="{Binding LanguageViewModel[WpfShell.Header.Inspect.ToolTip]}"
                                IsEnabled="{Binding ShellViewModel.IsCurrentImageDetectionEnabled}"
                                Command="{Binding ShellViewModel.DetectCurrentImageCommand}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ImageSearch" />
-                            <TextBlock Text="&#xD604;&#xC7AC; &#xAC80;&#xC0AC;" VerticalAlignment="Center" />
+                            <TextBlock x:Name="DetectButtonText"
+                                       Text="{Binding LanguageViewModel[WpfShell.Header.Inspect.Text]}"
+                                       VerticalAlignment="Center" />
                         </StackPanel>
                     </ui:Button>
+                    <ComboBox x:Name="MainLanguageSelector"
+                              Style="{StaticResource HeaderLanguageComboBoxStyle}"
+                              AutomationProperties.AutomationId="MainLanguageSelector"
+                              AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Language.Name]}"
+                              ToolTip="{Binding LanguageViewModel[WpfShell.Language.ToolTip]}"
+                              ItemsSource="{Binding LanguageViewModel.LanguageOptions}"
+                              SelectedItem="{Binding LanguageViewModel.SelectedLanguage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              DisplayMemberPath="DisplayName" />
                     <ToggleButton x:Name="HeaderToolsMenuButton"
                                   Style="{StaticResource HeaderToolMenuToggleButtonStyle}"
                                   AutomationProperties.AutomationId="HeaderToolsMenuButton"
-                                  AutomationProperties.Name="&#xC124;&#xC815;/&#xB3C4;&#xAD6C;"
-                                  ToolTip="&#xC124;&#xC815;&#xACFC; &#xBCF4;&#xC870; &#xB3C4;&#xAD6C; &#xC5F4;&#xAE30;">
+                                  AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Header.Tools.Name]}"
+                                  ToolTip="{Binding LanguageViewModel[WpfShell.Header.Tools.ToolTip]}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <iconPacks:PackIconMaterial x:Name="HeaderToolsMenuIcon"
                                                         Width="15"
@@ -831,7 +911,7 @@
                                 CornerRadius="4">
                             <StackPanel>
                                 <TextBlock x:Name="HeaderToolsMenuTitleText"
-                                           Text="&#xC124;&#xC815;/&#xB3C4;&#xAD6C;"
+                                           Text="{Binding LanguageViewModel[WpfShell.Header.Tools.Title]}"
                                            Foreground="{DynamicResource PrimaryTextBrush}"
                                            FontFamily="Segoe UI"
                                            FontSize="12"
@@ -1268,7 +1348,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center"
                             Margin="0,0,8,0">
-                    <TextBlock Text="&#xB2E8;&#xACC4;"
+                    <TextBlock Text="{Binding LanguageViewModel[WpfShell.Stage.Label]}"
                                Foreground="{DynamicResource PrimaryTextBrush}"
                                FontFamily="Segoe UI"
                                FontSize="13"
@@ -1286,8 +1366,8 @@
                     <ui:Button x:Name="DatasetHomeStageButton"
                                Style="{StaticResource WorkflowStageButtonStyle}"
                                AutomationProperties.AutomationId="DatasetHomeStageButton"
-                               AutomationProperties.Name="&#xB370;&#xC774;&#xD130;&#xC14B; &#xD648;"
-                               ToolTip="&#xB370;&#xC774;&#xD130;&#xC14B;&#xC744; &#xB9CC;&#xB4E4;&#xAC70;&#xB098; &#xAE30;&#xC874; &#xB370;&#xC774;&#xD130;&#xC14B;&#xC744; &#xC5F4;&#xC5B4; &#xC2DC;&#xC791;&#xD569;&#xB2C8;&#xB2E4;."
+                               AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Stage.Dataset.Name]}"
+                               ToolTip="{Binding LanguageViewModel[WpfShell.Stage.Dataset.ToolTip]}"
                                Tag="{Binding ShellViewModel.IsDatasetStageActive, ElementName=ShellWindow}"
                                Command="{Binding ShellViewModel.DatasetHomeCommand, ElementName=ShellWindow}">
                         <Grid>
@@ -1296,8 +1376,9 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="DatabaseOutline" />
-                            <TextBlock Grid.Column="1"
-                                       Text="1 &#xB370;&#xC774;&#xD130;&#xC14B;"
+                            <TextBlock x:Name="DatasetHomeStageText"
+                                       Grid.Column="1"
+                                       Text="{Binding LanguageViewModel[WpfShell.Stage.Dataset.Text]}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis" />
@@ -1306,8 +1387,8 @@
                     <ui:Button x:Name="LabelingWorkbenchStageButton"
                                Style="{StaticResource WorkflowStageButtonStyle}"
                                AutomationProperties.AutomationId="LabelingWorkbenchStageButton"
-                               AutomationProperties.Name="&#xB77C;&#xBCA8;&#xB9C1; &#xC6CC;&#xD06C;&#xBCA4;&#xCE58;"
-                               ToolTip="&#xB77C;&#xBCA8;&#xB9CC; &#xBCF4;&#xBA74;&#xC11C; &#xC815;&#xB2F5;&#xC744; &#xB9CC;&#xB4E4;&#xACE0; &#xC800;&#xC7A5;&#xD569;&#xB2C8;&#xB2E4;."
+                               AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Stage.Labeling.Name]}"
+                               ToolTip="{Binding LanguageViewModel[WpfShell.Stage.Labeling.ToolTip]}"
                                Tag="{Binding ShellViewModel.IsLabelingStageActive, ElementName=ShellWindow}"
                                Command="{Binding ShellViewModel.LabelingWorkbenchCommand, ElementName=ShellWindow}">
                         <Grid>
@@ -1316,8 +1397,9 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="SchoolOutline" />
-                            <TextBlock Grid.Column="1"
-                                       Text="2 &#xB77C;&#xBCA8;&#xB9C1;"
+                            <TextBlock x:Name="LabelingWorkbenchStageText"
+                                       Grid.Column="1"
+                                       Text="{Binding LanguageViewModel[WpfShell.Stage.Labeling.Text]}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis" />
@@ -1326,8 +1408,8 @@
                     <ui:Button x:Name="InferenceReviewStageButton"
                                Style="{StaticResource WorkflowStageButtonStyle}"
                                AutomationProperties.AutomationId="InferenceReviewStageButton"
-                               AutomationProperties.Name="AI &#xD6C4;&#xBCF4; &#xAC80;&#xD1A0;"
-                               ToolTip="&#xAC80;&#xC0AC; &#xBAA8;&#xB378;&#xC774; &#xB9CC;&#xB4E0; AI &#xD6C4;&#xBCF4;&#xB97C; &#xC800;&#xC7A5; &#xB77C;&#xBCA8;&#xB85C; &#xD655;&#xC815;&#xD558;&#xAC70;&#xB098; &#xD6C4;&#xBCF4;&#xB9CC; &#xC228;&#xAE41;&#xB2C8;&#xB2E4;."
+                               AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Stage.Inference.Name]}"
+                               ToolTip="{Binding LanguageViewModel[WpfShell.Stage.Inference.ToolTip]}"
                                Tag="{Binding ShellViewModel.IsInferenceStageActive, ElementName=ShellWindow}"
                                Command="{Binding ShellViewModel.InferenceReviewCommand, ElementName=ShellWindow}">
                         <Grid>
@@ -1336,8 +1418,9 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="RobotIndustrial" />
-                            <TextBlock Grid.Column="1"
-                                       Text="3 AI &#xD6C4;&#xBCF4;"
+                            <TextBlock x:Name="InferenceReviewStageText"
+                                       Grid.Column="1"
+                                       Text="{Binding LanguageViewModel[WpfShell.Stage.Inference.Text]}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis" />
@@ -1346,8 +1429,8 @@
                     <ui:Button x:Name="TrainingModelStageButton"
                                Style="{StaticResource WorkflowStageButtonStyle}"
                                AutomationProperties.AutomationId="TrainingModelStageButton"
-                               AutomationProperties.Name="&#xD559;&#xC2B5;/&#xBAA8;&#xB378; &#xC13C;&#xD130;"
-                               ToolTip="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC810;&#xAC80;, &#xD559;&#xC2B5; &#xC9C4;&#xD589;, &#xBAA8;&#xB378; &#xD6C4;&#xBCF4; &#xC801;&#xC6A9;&#xC744; &#xD655;&#xC778;&#xD569;&#xB2C8;&#xB2E4;."
+                               AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Stage.Training.Name]}"
+                               ToolTip="{Binding LanguageViewModel[WpfShell.Stage.Training.ToolTip]}"
                                Tag="{Binding ShellViewModel.IsTrainingModelStageActive, ElementName=ShellWindow}"
                                Command="{Binding ShellViewModel.TrainingModelCenterCommand, ElementName=ShellWindow}">
                         <Grid>
@@ -1356,8 +1439,9 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="Tune" />
-                            <TextBlock Grid.Column="1"
-                                       Text="4 &#xD559;&#xC2B5;/&#xBAA8;&#xB378;"
+                            <TextBlock x:Name="TrainingModelStageText"
+                                       Grid.Column="1"
+                                       Text="{Binding LanguageViewModel[WpfShell.Stage.Training.Text]}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis" />
@@ -1367,7 +1451,7 @@
                 <Border x:Name="WorkflowStageSummaryPanel"
                         Grid.Column="2"
                         AutomationProperties.AutomationId="WorkflowStageSummaryPanel"
-                        AutomationProperties.Name="&#xD604;&#xC7AC; &#xC791;&#xC5C5; &#xB2E8;&#xACC4; &#xC694;&#xC57D;"
+                        AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Stage.Summary.Name]}"
                         ToolTip="{Binding ShellViewModel.WorkflowStageDetailText, ElementName=ShellWindow}"
                         Background="{DynamicResource CanvasBrush}"
                         BorderBrush="{DynamicResource BorderBrushDark}"
@@ -1525,7 +1609,7 @@
                                                 Margin="0,0,6,0"
                                                 Foreground="{DynamicResource AccentBrush}"
                                                 VerticalAlignment="Center" />
-                    <TextBlock Text="&#xD604;&#xC7AC; &#xB370;&#xC774;&#xD130;&#xC14B;"
+                    <TextBlock Text="{Binding LanguageViewModel[WpfShell.Dataset.Current]}"
                                Foreground="{DynamicResource SecondaryTextBrush}"
                                FontFamily="Segoe UI"
                                FontSize="10"
@@ -1563,7 +1647,7 @@
                     </Grid.ColumnDefinitions>
                     <Border x:Name="DatasetStoragePathCard"
                             AutomationProperties.AutomationId="DatasetStoragePathCard"
-                            AutomationProperties.Name="라벨 및 레시피 저장 폴더"
+                            AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Dataset.Storage.Name]}"
                             Background="{DynamicResource CanvasBrush}"
                             BorderBrush="{DynamicResource BorderBrushDark}"
                             BorderThickness="1"
@@ -1572,7 +1656,7 @@
                             Visibility="Collapsed"
                             ToolTip="{Binding ShellViewModel.CurrentDatasetToolTip, ElementName=ShellWindow}">
                         <StackPanel>
-                            <TextBlock Text="저장 폴더"
+                            <TextBlock Text="{Binding LanguageViewModel[WpfShell.Dataset.Storage.Text]}"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                        FontFamily="Segoe UI"
                                        FontSize="10"
@@ -1590,7 +1674,7 @@
                     <Border x:Name="DatasetImageRootCard"
                              Grid.Column="0"
                             AutomationProperties.AutomationId="DatasetImageRootCard"
-                            AutomationProperties.Name="원본 이미지 폴더"
+                            AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Dataset.Images.Name]}"
                             Background="{DynamicResource CanvasBrush}"
                             BorderBrush="{DynamicResource BorderBrushDark}"
                             BorderThickness="1"
@@ -1599,7 +1683,7 @@
                             Visibility="Collapsed"
                             ToolTip="{Binding ShellViewModel.CurrentDatasetToolTip, ElementName=ShellWindow}">
                         <StackPanel>
-                            <TextBlock Text="이미지 폴더"
+                            <TextBlock Text="{Binding LanguageViewModel[WpfShell.Dataset.Images.Text]}"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                        FontFamily="Segoe UI"
                                        FontSize="10"
@@ -1617,13 +1701,13 @@
                     <Border x:Name="DatasetSourceCard"
                             Grid.Column="0"
                             AutomationProperties.AutomationId="DatasetSourceCard"
-                            AutomationProperties.Name="&#xC791;&#xC5C5; &#xAE30;&#xC900;"
+                            AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Dataset.Basis.Name]}"
                             Background="Transparent"
                             BorderThickness="0"
                             Padding="4,1"
                             ToolTip="{Binding ShellViewModel.CurrentDatasetToolTip, ElementName=ShellWindow}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xAE30;&#xC900;"
+                            <TextBlock Text="{Binding LanguageViewModel[WpfShell.Dataset.Basis.Text]}"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                        FontFamily="Segoe UI"
                                        FontSize="9"
@@ -1669,40 +1753,40 @@
                                Style="{StaticResource ToolbarButtonStyle}"
                                MinWidth="84"
                                AutomationProperties.AutomationId="ChangeDatasetButton"
-                               AutomationProperties.Name="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC120;&#xD0DD;"
-                               ToolTip="&#xC774;&#xBBF8; &#xB9CC;&#xB4E4;&#xC5B4;&#xC9C4; &#xB370;&#xC774;&#xD130;&#xC14B;&#xC744; &#xC120;&#xD0DD;&#xD574; &#xC5FD;&#xB2C8;&#xB2E4;."
+                               AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Dataset.Change.Name]}"
+                               ToolTip="{Binding LanguageViewModel[WpfShell.Dataset.Change.ToolTip]}"
                                mvvm:InputCommandBehaviors.MouseClickInputCommand="{Binding ShellViewModel.ChangeDatasetCommand, ElementName=ShellWindow}"
                                Command="{Binding ShellViewModel.ChangeDatasetCommand, ElementName=ShellWindow}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="DatabaseSearchOutline" />
-                            <TextBlock Text="&#xB370;&#xC774;&#xD130;&#xC14B;" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding LanguageViewModel[WpfShell.Dataset.Change.Text]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="OpenDatasetFolderButton"
                                Style="{StaticResource ToolbarButtonStyle}"
                                MinWidth="84"
                                AutomationProperties.AutomationId="OpenDatasetFolderButton"
-                               AutomationProperties.Name="라벨 및 레시피 저장 폴더 열기"
-                               ToolTip="현재 데이터셋의 라벨, 레시피, 학습 산출물이 저장되는 폴더를 엽니다."
+                               AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Dataset.OpenStorage.Name]}"
+                               ToolTip="{Binding LanguageViewModel[WpfShell.Dataset.OpenStorage.ToolTip]}"
                                IsEnabled="{Binding ShellViewModel.IsOpenDatasetFolderEnabled, ElementName=ShellWindow}"
                                mvvm:InputCommandBehaviors.MouseClickInputCommand="{Binding ShellViewModel.OpenDatasetFolderCommand, ElementName=ShellWindow}"
                                Command="{Binding ShellViewModel.OpenDatasetFolderCommand, ElementName=ShellWindow}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="FolderOpenOutline" />
-                            <TextBlock Text="저장 폴더" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding LanguageViewModel[WpfShell.Dataset.OpenStorage.Text]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <Button x:Name="ChangeImageFolderButton"
                                Style="{StaticResource ToolbarButtonStyle}"
                                MinWidth="88"
                                AutomationProperties.AutomationId="ChangeImageFolderButton"
-                               AutomationProperties.Name="&#xC774;&#xBBF8;&#xC9C0; &#xD3F4;&#xB354; &#xBCC0;&#xACBD;"
-                               ToolTip="현재 데이터셋이 읽을 원본 이미지 폴더를 다시 선택합니다. 저장 폴더의 기존 라벨은 별도로 유지됩니다."
+                               AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Dataset.ChangeImages.Name]}"
+                               ToolTip="{Binding LanguageViewModel[WpfShell.Dataset.ChangeImages.ToolTip]}"
                                mvvm:InputCommandBehaviors.MouseClickInputCommand="{Binding ShellViewModel.ChangeImageFolderCommand, ElementName=ShellWindow}"
                                Command="{Binding ShellViewModel.ChangeImageFolderCommand, ElementName=ShellWindow}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="FolderImage" />
-                            <TextBlock Text="이미지 폴더" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding LanguageViewModel[WpfShell.Dataset.ChangeImages.Text]}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -1752,8 +1836,8 @@
             <GridSplitter x:Name="LeftWorkspaceSplitter"
                           Grid.Column="1"
                           AutomationProperties.AutomationId="LeftWorkspaceSplitter"
-                          AutomationProperties.Name="작업 패널 너비 조절"
-                          ToolTip="드래그하여 작업 패널과 캔버스 너비를 조절합니다."
+                          AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Splitter.WorkPanel.Name]}"
+                          ToolTip="{Binding LanguageViewModel[WpfShell.Splitter.WorkPanel.ToolTip]}"
                           Background="{DynamicResource BorderBrushDark}"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Stretch"
@@ -1767,8 +1851,8 @@
             <GridSplitter x:Name="RightWorkspaceSplitter"
                           Grid.Column="3"
                           AutomationProperties.AutomationId="RightWorkspaceSplitter"
-                          AutomationProperties.Name="이미지 큐 너비 조절"
-                          ToolTip="드래그하여 캔버스와 이미지 큐 너비를 조절합니다."
+                          AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Splitter.ImageQueue.Name]}"
+                          ToolTip="{Binding LanguageViewModel[WpfShell.Splitter.ImageQueue.ToolTip]}"
                           Background="{DynamicResource BorderBrushDark}"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Stretch"
@@ -1781,7 +1865,7 @@
             <Border x:Name="RightWorkflowDockPanel"
                     Grid.Column="0"
                     AutomationProperties.AutomationId="RightWorkflowDockPanel"
-                    AutomationProperties.Name="&#xC791;&#xC5C5; &#xD328;&#xB110;"
+                    AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.WorkPanel]}"
                     Style="{StaticResource PanelBorderStyle}">
                 <Grid>
                     <Grid x:Name="RightWorkflowExpandedContent"
@@ -1838,7 +1922,7 @@
                             Grid.Row="1"
                             Height="34"
                             AutomationProperties.AutomationId="WorkflowStageSubNavigationRail"
-                            AutomationProperties.Name="&#xD604;&#xC7AC; &#xB2E8;&#xACC4; &#xC791;&#xC5C5; &#xD0ED;"
+                            AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.StageTabs]}"
                             Background="{DynamicResource ToolbarButtonBrush}"
                             BorderBrush="{DynamicResource BorderBrushDark}"
                             BorderThickness="0,0,0,1"
@@ -1850,93 +1934,93 @@
                                          Visibility="{Binding ShellViewModel.IsRightWorkflowShortcutBarVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <Button x:Name="RightWorkflowDatasetHomeButton"
                                         AutomationProperties.AutomationId="RightWorkflowDatasetHomeButton"
-                                        AutomationProperties.Name="&#xB370;&#xC774;&#xD130;&#xC14B; &#xD648; &#xBCF4;&#xAE30;"
-                                        ToolTip="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC900;&#xBE44;, &#xC774;&#xBBF8;&#xC9C0;, &#xC791;&#xC5C5; &#xC21C;&#xC11C;&#xB97C; &#xBCF4;&#xC5EC;&#xC90D;&#xB2C8;&#xB2E4;."
+                                        AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Dataset.Name]}"
+                                        ToolTip="{Binding LanguageViewModel[WpfShell.Right.Dataset.ToolTip]}"
                                         Command="{Binding ShellViewModel.DatasetHomeCommand, ElementName=ShellWindow}"
                                         Tag="{Binding ShellViewModel.IsLabelingGuideShortcutActive, ElementName=ShellWindow}"
                                         Visibility="{Binding ShellViewModel.IsDatasetStageActive, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}"
                                         Style="{StaticResource RightWorkflowShortcutButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="DatabaseOutline" Width="12" Height="12" Margin="0,0,4,0" />
-                                        <TextBlock Text="&#xB370;&#xC774;&#xD130;&#xC14B;" />
+                                        <TextBlock Text="{Binding LanguageViewModel[WpfShell.Right.Dataset.Text]}" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="RightWorkflowSavedLabelsButton"
                                         AutomationProperties.AutomationId="RightWorkflowSavedLabelsButton"
-                                        AutomationProperties.Name="&#xC800;&#xC7A5; &#xB77C;&#xBCA8; &#xBCF4;&#xAE30;"
-                                        ToolTip="&#xC800;&#xC7A5;&#xB41C; &#xB77C;&#xBCA8;&#xC744; &#xBCF4;&#xACE0; &#xC218;&#xC815;&#xD569;&#xB2C8;&#xB2E4;."
+                                        AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Labels.Name]}"
+                                        ToolTip="{Binding LanguageViewModel[WpfShell.Right.Labels.ToolTip]}"
                                         Command="{Binding ShellViewModel.ShowSavedLabelsViewCommand, ElementName=ShellWindow}"
                                         Tag="{Binding ShellViewModel.IsSavedLabelsShortcutActive, ElementName=ShellWindow}"
                                         Visibility="{Binding ShellViewModel.IsLabelingStageActive, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}"
                                         Style="{StaticResource RightWorkflowShortcutButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="PlaylistCheck" Width="12" Height="12" Margin="0,0,4,0" />
-                                        <TextBlock Text="&#xB77C;&#xBCA8;" />
+                                        <TextBlock Text="{Binding LanguageViewModel[WpfShell.Right.Labels.Text]}" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="RightWorkflowGuideToolsButton"
                                         AutomationProperties.AutomationId="RightWorkflowGuideToolsButton"
-                                        AutomationProperties.Name="&#xD604;&#xC7AC; &#xC791;&#xC5C5; &#xBCF4;&#xAE30;"
-                                        ToolTip="&#xD604;&#xC7AC; &#xC774;&#xBBF8;&#xC9C0;&#xC5D0;&#xC11C; &#xB2E4;&#xC74C;&#xC73C;&#xB85C; &#xD560; &#xB77C;&#xBCA8;&#xB9C1; &#xC791;&#xC5C5;&#xC744; &#xBCF4;&#xC5EC;&#xC90D;&#xB2C8;&#xB2E4;."
+                                        AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Task.Name]}"
+                                        ToolTip="{Binding LanguageViewModel[WpfShell.Right.Task.ToolTip]}"
                                         Command="{Binding ShellViewModel.ShowLabelingGuideViewCommand, ElementName=ShellWindow}"
                                         Tag="{Binding ShellViewModel.IsLabelingGuideShortcutActive, ElementName=ShellWindow}"
                                         Visibility="{Binding ShellViewModel.IsLabelingStageActive, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}"
                                         Style="{StaticResource RightWorkflowShortcutButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="ClipboardTextOutline" Width="12" Height="12" Margin="0,0,4,0" />
-                                        <TextBlock Text="&#xC791;&#xC5C5;" />
+                                        <TextBlock Text="{Binding LanguageViewModel[WpfShell.Right.Task.Text]}" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="RightWorkflowClassCatalogButton"
                                         AutomationProperties.AutomationId="RightWorkflowClassCatalogButton"
-                                        AutomationProperties.Name="&#xD074;&#xB798;&#xC2A4; &#xAD00;&#xB9AC; &#xBCF4;&#xAE30;"
-                                        ToolTip="&#xB77C;&#xBCA8; &#xD074;&#xB798;&#xC2A4;&#xB97C; &#xCD94;&#xAC00;&#xD558;&#xAC70;&#xB098; &#xC218;&#xC815;&#xD569;&#xB2C8;&#xB2E4;."
+                                        AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Classes.Name]}"
+                                        ToolTip="{Binding LanguageViewModel[WpfShell.Right.Classes.ToolTip]}"
                                         Command="{Binding ShellViewModel.ShowClassCatalogViewCommand, ElementName=ShellWindow}"
                                         Tag="{Binding ShellViewModel.IsClassCatalogShortcutActive, ElementName=ShellWindow}"
                                         Visibility="{Binding ShellViewModel.IsClassCatalogViewVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}"
                                         Style="{StaticResource RightWorkflowShortcutButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="TagMultipleOutline" Width="12" Height="12" Margin="0,0,4,0" />
-                                        <TextBlock Text="&#xD074;&#xB798;&#xC2A4;" />
+                                        <TextBlock Text="{Binding LanguageViewModel[WpfShell.Right.Classes.Text]}" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="RightWorkflowInferenceCandidatesButton"
                                         AutomationProperties.AutomationId="RightWorkflowInferenceCandidatesButton"
-                                        AutomationProperties.Name="AI &#xD6C4;&#xBCF4; &#xBCF4;&#xAE30;"
-                                        ToolTip="AI &#xD6C4;&#xBCF4; &#xAC80;&#xD1A0; &#xD328;&#xB110;&#xB85C; &#xC774;&#xB3D9;&#xD569;&#xB2C8;&#xB2E4;."
+                                        AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.AiCandidates.Name]}"
+                                        ToolTip="{Binding LanguageViewModel[WpfShell.Right.AiCandidates.ToolTip]}"
                                         Command="{Binding ShellViewModel.InferenceReviewCommand, ElementName=ShellWindow}"
                                         Tag="{Binding ShellViewModel.IsInferenceStageActive, ElementName=ShellWindow}"
                                         Visibility="{Binding ShellViewModel.IsInferenceStageActive, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}"
                                         Style="{StaticResource RightWorkflowShortcutButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="RobotIndustrial" Width="12" Height="12" Margin="0,0,4,0" />
-                                        <TextBlock Text="AI &#xD6C4;&#xBCF4;" />
+                                        <TextBlock Text="{Binding LanguageViewModel[WpfShell.Right.AiCandidates.Text]}" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="RightWorkflowInferenceInspectButton"
                                         AutomationProperties.AutomationId="RightWorkflowInferenceInspectButton"
-                                        AutomationProperties.Name="&#xD604;&#xC7AC; &#xAC80;&#xC0AC;"
-                                        ToolTip="&#xD604;&#xC7AC; &#xC774;&#xBBF8;&#xC9C0;&#xB85C; &#xBAA8;&#xB378; &#xAC80;&#xC0AC;&#xB97C; &#xC2E4;&#xD589;&#xD569;&#xB2C8;&#xB2E4;."
+                                        AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Inspect.Name]}"
+                                        ToolTip="{Binding LanguageViewModel[WpfShell.Right.Inspect.ToolTip]}"
                                         Command="{Binding ShellViewModel.DetectCurrentImageCommand, ElementName=ShellWindow}"
                                         IsEnabled="{Binding ShellViewModel.IsCurrentImageDetectionEnabled, ElementName=ShellWindow}"
                                         Visibility="{Binding ShellViewModel.IsInferenceStageActive, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}"
                                         Style="{StaticResource RightWorkflowPanelActionButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="ImageSearch" Width="12" Height="12" Margin="0,0,4,0" />
-                                        <TextBlock Text="&#xD604;&#xC7AC; &#xAC80;&#xC0AC;" />
+                                        <TextBlock Text="{Binding LanguageViewModel[WpfShell.Right.Inspect.Text]}" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="RightWorkflowTrainingModelButton"
                                         AutomationProperties.AutomationId="RightWorkflowTrainingModelButton"
-                                        AutomationProperties.Name="&#xD559;&#xC2B5;/&#xBAA8;&#xB378; &#xBCF4;&#xAE30;"
-                                        ToolTip="&#xD559;&#xC2B5;, &#xB370;&#xC774;&#xD130;&#xC14B; &#xC810;&#xAC80;, &#xBAA8;&#xB378; &#xD788;&#xC2A4;&#xD1A0;&#xB9AC;&#xB97C; &#xD655;&#xC778;&#xD569;&#xB2C8;&#xB2E4;."
+                                        AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Training.Name]}"
+                                        ToolTip="{Binding LanguageViewModel[WpfShell.Right.Training.ToolTip]}"
                                         Command="{Binding ShellViewModel.TrainingModelCenterCommand, ElementName=ShellWindow}"
                                         Tag="{Binding ShellViewModel.IsTrainingModelStageActive, ElementName=ShellWindow}"
                                         Visibility="{Binding ShellViewModel.IsTrainingModelStageActive, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}"
                                         Style="{StaticResource RightWorkflowShortcutButtonStyle}">
                                     <StackPanel Orientation="Horizontal">
                                         <iconPacks:PackIconMaterial Kind="Tune" Width="12" Height="12" Margin="0,0,4,0" />
-                                        <TextBlock Text="&#xD559;&#xC2B5;/&#xBAA8;&#xB378;" />
+                                        <TextBlock Text="{Binding LanguageViewModel[WpfShell.Right.Training.Text]}" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="RightWorkflowTrainingReviewCandidateButton"
@@ -1970,7 +2054,7 @@
                     </Border>
                     <TabControl x:Name="ReviewTabControl"
                                 AutomationProperties.AutomationId="RightWorkflowViewHost"
-                                AutomationProperties.Name="&#xC791;&#xC5C5; &#xB2E8;&#xACC4; &#xD654;&#xBA74;"
+                                AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.ViewHost]}"
                                 Grid.Row="2"
                                 TabStripPlacement="Top"
                                 Background="Transparent"
@@ -1980,32 +2064,32 @@
                                 ItemContainerStyle="{StaticResource WorkflowViewHostTabItemStyle}">
                         <TabItem x:Name="ObjectsReviewTab"
                                  AutomationProperties.AutomationId="ObjectsReviewTab"
-                                 AutomationProperties.Name="&#xC800;&#xC7A5; &#xB77C;&#xBCA8;"
-                                 Header="&#xC800;&#xC7A5; &#xB77C;&#xBCA8;"
+                                 AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Tab.SavedLabels]}"
+                                 Header="{Binding LanguageViewModel[WpfShell.Right.Tab.SavedLabels]}"
                                  Visibility="{Binding ShellViewModel.IsSavedLabelsViewVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <local:WpfObjectReviewPanel x:Name="ObjectReviewPanelControl" />
                         </TabItem>
                         <TabItem x:Name="CandidatesReviewTab"
                                  AutomationProperties.AutomationId="CandidatesReviewTab"
-                                 AutomationProperties.Name="AI &#xD6C4;&#xBCF4;"
-                                 Header="AI &#xD6C4;&#xBCF4;"
+                                 AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Tab.AiCandidates]}"
+                                 Header="{Binding LanguageViewModel[WpfShell.Right.Tab.AiCandidates]}"
                                  Visibility="{Binding ShellViewModel.IsCandidateReviewViewVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <local:WpfCandidateReviewPanel x:Name="CandidateReviewPanelControl" />
                         </TabItem>
                         <TabItem x:Name="LearningReviewTab"
                                  AutomationProperties.AutomationId="LearningReviewTab"
-                                 AutomationProperties.Name="&#xAC00;&#xC774;&#xB4DC;/&#xB3C4;&#xAD6C;"
-                                 Header="&#xAC00;&#xC774;&#xB4DC;/&#xB3C4;&#xAD6C;"
+                                 AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Tab.GuideTools]}"
+                                 Header="{Binding LanguageViewModel[WpfShell.Right.Tab.GuideTools]}"
                                  Visibility="{Binding ShellViewModel.IsGuideToolsViewVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <local:WpfLearningWorkflowPanel x:Name="LearningWorkflowPanelControl" />
                         </TabItem>
                         <TabItem x:Name="ClassesReviewTab"
-                                 Header="&#xD074;&#xB798;&#xC2A4;"
+                                 Header="{Binding LanguageViewModel[WpfShell.Right.Tab.Classes]}"
                                  Visibility="{Binding ShellViewModel.IsClassCatalogViewVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <local:WpfClassCatalogPanel x:Name="ClassCatalogPanelControl" />
                         </TabItem>
                         <TabItem x:Name="YoloSettingsReviewTab"
-                                 Header="&#xBAA8;&#xB378;"
+                                 Header="{Binding LanguageViewModel[WpfShell.Right.Tab.Model]}"
                                  Visibility="{Binding ShellViewModel.IsYoloModelCenterViewVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -2544,6 +2628,7 @@
                                                                                 Margin="0,2,0,5"
                                                                                 TextWrapping="Wrap" />
                                                                      <ui:Button x:Name="PromoteSelectedModelHistoryButton"
+                                                                                Style="{StaticResource WpfUiToolbarButtonStyle}"
                                                                                 AutomationProperties.AutomationId="PromoteSelectedModelHistoryButton"
                                                                                 Height="28"
                                                                                 HorizontalAlignment="Left"
@@ -3290,14 +3375,14 @@
                     </Grid>
                     <Border x:Name="RightWorkflowCollapsedRail"
                             AutomationProperties.AutomationId="RightWorkflowCollapsedRail"
-                            AutomationProperties.Name="&#xC811;&#xD78C; &#xC791;&#xC5C5; &#xD328;&#xB110;"
+                            AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.CollapsedRail]}"
                             Background="{DynamicResource PanelBrush}"
                             CornerRadius="6"
                             Visibility="{Binding ShellViewModel.IsRightWorkflowDockRailVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <StackPanel Margin="5,7" HorizontalAlignment="Center">
                             <Border x:Name="RightWorkflowRailContextBadge"
                                     AutomationProperties.AutomationId="RightWorkflowRailContextBadge"
-                                    AutomationProperties.Name="&#xC791;&#xC5C5; &#xD328;&#xB110; &#xD604;&#xC7AC; &#xBCF4;&#xAE30;"
+                                    AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.ContextBadge]}"
                                     Width="60"
                                     Background="{DynamicResource CanvasBrush}"
                                     BorderBrush="{DynamicResource AccentBrush}"
@@ -3308,7 +3393,7 @@
                                     ToolTip="{Binding ShellViewModel.RightWorkflowViewTitleText, ElementName=ShellWindow}">
                                 <StackPanel HorizontalAlignment="Center">
                                     <TextBlock x:Name="RightWorkflowRailContextTitleText"
-                                               Text="&#xC791;&#xC5C5;"
+                                               Text="{Binding LanguageViewModel[WpfShell.Right.Task.Text]}"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                FontFamily="Segoe UI"
                                                FontSize="9"
@@ -3325,7 +3410,7 @@
                             </Border>
                             <Button x:Name="RightWorkflowRailOpenButton"
                                     AutomationProperties.AutomationId="RightWorkflowRailOpenButton"
-                                    AutomationProperties.Name="&#xC791;&#xC5C5; &#xD328;&#xB110; &#xC5F4;&#xAE30;"
+                                    AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Open.Name]}"
                                     ToolTip="{Binding ShellViewModel.RightWorkflowDockToggleToolTip, ElementName=ShellWindow}"
                                     Command="{Binding ShellViewModel.ToggleRightWorkflowDockCommand, ElementName=ShellWindow}"
                                     Style="{StaticResource RightWorkflowRailButtonStyle}">
@@ -3335,7 +3420,7 @@
                                                                 Height="15"
                                                                 HorizontalAlignment="Center" />
                                     <TextBlock x:Name="RightWorkflowRailOpenText"
-                                               Text="&#xC5F4;&#xAE30;"
+                                               Text="{Binding LanguageViewModel[WpfShell.Right.Open.Text]}"
                                                Margin="0,2,0,0"
                                                TextAlignment="Center" />
                                 </StackPanel>
@@ -3346,8 +3431,8 @@
                                        Margin="0,1,0,8" />
                             <Button x:Name="RightWorkflowRailSavedLabelsButton"
                                     AutomationProperties.AutomationId="RightWorkflowRailSavedLabelsButton"
-                                    AutomationProperties.Name="&#xC800;&#xC7A5; &#xB77C;&#xBCA8; &#xD328;&#xB110; &#xC5F4;&#xAE30;"
-                                    ToolTip="&#xC800;&#xC7A5;&#xB41C; &#xB77C;&#xBCA8; &#xBAA9;&#xB85D;&#xC744; &#xC5FD;&#xB2C8;&#xB2E4;."
+                                    AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Labels.Name]}"
+                                    ToolTip="{Binding LanguageViewModel[WpfShell.Right.Labels.ToolTip]}"
                                     Command="{Binding ShellViewModel.ShowSavedLabelsViewCommand, ElementName=ShellWindow}"
                                     Tag="{Binding ShellViewModel.IsSavedLabelsShortcutActive, ElementName=ShellWindow}"
                                     Style="{StaticResource RightWorkflowRailButtonStyle}">
@@ -3357,15 +3442,15 @@
                                                                 Height="15"
                                                                 HorizontalAlignment="Center" />
                                     <TextBlock x:Name="RightWorkflowRailSavedLabelsText"
-                                               Text="&#xB77C;&#xBCA8;"
+                                               Text="{Binding LanguageViewModel[WpfShell.Right.Labels.Text]}"
                                                Margin="0,2,0,0"
                                                TextAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button x:Name="RightWorkflowRailGuideToolsButton"
                                     AutomationProperties.AutomationId="RightWorkflowRailGuideToolsButton"
-                                    AutomationProperties.Name="&#xD604;&#xC7AC; &#xC791;&#xC5C5; &#xD328;&#xB110; &#xC5F4;&#xAE30;"
-                                    ToolTip="&#xD604;&#xC7AC; &#xC774;&#xBBF8;&#xC9C0;&#xC5D0;&#xC11C; &#xB2E4;&#xC74C;&#xC73C;&#xB85C; &#xD560; &#xB77C;&#xBCA8;&#xB9C1; &#xC791;&#xC5C5;&#xC744; &#xC5FD;&#xB2C8;&#xB2E4;."
+                                    AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Task.Name]}"
+                                    ToolTip="{Binding LanguageViewModel[WpfShell.Right.Task.ToolTip]}"
                                     Command="{Binding ShellViewModel.ShowLabelingGuideViewCommand, ElementName=ShellWindow}"
                                     Tag="{Binding ShellViewModel.IsLabelingGuideShortcutActive, ElementName=ShellWindow}"
                                     Style="{StaticResource RightWorkflowRailButtonStyle}">
@@ -3375,15 +3460,15 @@
                                                                 Height="15"
                                                                 HorizontalAlignment="Center" />
                                     <TextBlock x:Name="RightWorkflowRailGuideToolsText"
-                                               Text="&#xC791;&#xC5C5;"
+                                               Text="{Binding LanguageViewModel[WpfShell.Right.Task.Text]}"
                                                Margin="0,2,0,0"
                                                TextAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button x:Name="RightWorkflowRailClassCatalogButton"
                                     AutomationProperties.AutomationId="RightWorkflowRailClassCatalogButton"
-                                    AutomationProperties.Name="&#xD074;&#xB798;&#xC2A4; &#xD328;&#xB110; &#xC5F4;&#xAE30;"
-                                    ToolTip="&#xD074;&#xB798;&#xC2A4; &#xAD00;&#xB9AC;&#xB97C; &#xC5FD;&#xB2C8;&#xB2E4;."
+                                    AutomationProperties.Name="{Binding LanguageViewModel[WpfShell.Right.Classes.Name]}"
+                                    ToolTip="{Binding LanguageViewModel[WpfShell.Right.Classes.ToolTip]}"
                                     Command="{Binding ShellViewModel.ShowClassCatalogViewCommand, ElementName=ShellWindow}"
                                     Tag="{Binding ShellViewModel.IsClassCatalogShortcutActive, ElementName=ShellWindow}"
                                     Style="{StaticResource RightWorkflowRailButtonStyle}">
@@ -3393,7 +3478,7 @@
                                                                 Height="15"
                                                                 HorizontalAlignment="Center" />
                                     <TextBlock x:Name="RightWorkflowRailClassCatalogText"
-                                               Text="&#xD074;&#xB798;&#xC2A4;"
+                                               Text="{Binding LanguageViewModel[WpfShell.Right.Classes.Text]}"
                                                Margin="0,2,0,0"
                                                TextAlignment="Center" />
                                 </StackPanel>

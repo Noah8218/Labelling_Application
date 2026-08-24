@@ -4,7 +4,7 @@
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:local="clr-namespace:MvcVisionSystem"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC120;&#xD0DD;"
+        Title="{Binding WindowTitleText}"
         Width="900"
         Height="720"
         MinWidth="820"
@@ -21,12 +21,18 @@
                             CornerRadius="0" />
     </shell:WindowChrome.WindowChrome>
     <Window.Resources>
+        <ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary Source="../Themes/WpfButtonStateTemplates.xaml" />
+        </ResourceDictionary.MergedDictionaries>
         <SolidColorBrush x:Key="PanelBrush" Color="#1F1F1F" />
         <SolidColorBrush x:Key="PanelAltBrush" Color="#242424" />
         <SolidColorBrush x:Key="BorderBrush" Color="#3A3A3A" />
         <SolidColorBrush x:Key="AccentBrush" Color="#EF4444" />
+        <SolidColorBrush x:Key="PrimaryActionBrush" Color="#B91C1C" />
         <SolidColorBrush x:Key="SecondaryTextBrush" Color="#B8BDC7" />
         <Style x:Key="DatasetSelectButtonStyle" TargetType="Button">
+            <Setter Property="Template" Value="{StaticResource WpfDarkButtonTemplate}" />
             <Setter Property="Background" Value="#2D2D2D" />
             <Setter Property="Foreground" Value="#F3F4F6" />
             <Setter Property="BorderBrush" Value="#454545" />
@@ -38,7 +44,7 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style x:Key="DatasetSelectPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DatasetSelectButtonStyle}">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Background" Value="{StaticResource PrimaryActionBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
         </Style>
         <Style x:Key="DatasetListItemStyle" TargetType="ListBoxItem">
@@ -91,7 +97,7 @@
                                FontSize="11"
                                TextTrimming="CharacterEllipsis"
                                Margin="0,3,0,0" />
-                    <TextBlock Text="{Binding ClassesText, StringFormat=&#xD074;&#xB798;&#xC2A4;: {0}}"
+                    <TextBlock Text="{Binding ClassesLabelText}"
                                Foreground="#E5E7EB"
                                FontFamily="Segoe UI"
                                FontSize="11"
@@ -137,6 +143,7 @@
                 </StackPanel>
             </Grid>
         </DataTemplate>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid>
@@ -146,7 +153,7 @@
         </Grid.RowDefinitions>
 
         <local:WpfWindowTitleBar Grid.Row="0"
-                                 TitleText="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC120;&#xD0DD;"
+                                 TitleText="{Binding WindowTitleText}"
                                  SubtitleText="OpenVisionLab Labeling Studio"
                                  IconKind="DatabaseSearchOutline" />
 
@@ -278,10 +285,10 @@
                                     Grid.Column="2"
                                     Style="{StaticResource DatasetSelectPrimaryButtonStyle}"
                                     AutomationProperties.AutomationId="CreateDatasetGuideButton"
-                                    AutomationProperties.Name="&#xC0C8; &#xC800;&#xC7A5; &#xD3F4;&#xB354;&#xB85C; &#xB370;&#xC774;&#xD130;&#xC14B; &#xB9CC;&#xB4E4;&#xAE30;"
+                                    AutomationProperties.Name="{Binding CreateDatasetGuideButtonText}"
                                     Command="{Binding CreateNewCommand}"
                                     Margin="12,0,0,0"
-                                    Content="&#xB9CC;&#xB4E4;&#xAE30;" />
+                                    Content="{Binding CreateDatasetGuideButtonText}" />
                         </Grid>
                     </Border>
                 </Grid>
@@ -321,14 +328,14 @@
                                                         Foreground="{StaticResource AccentBrush}"
                                                         HorizontalAlignment="Center"
                                                         Margin="0,0,0,10" />
-                            <TextBlock Text="&#xC544;&#xC9C1; &#xC5F4; &#xB370;&#xC774;&#xD130;&#xC14B;&#xC774; &#xC5C6;&#xC2B5;&#xB2C8;&#xB2E4;"
+                            <TextBlock Text="{Binding EmptyStateTitleText}"
                                        Foreground="#F3F4F6"
                                        FontFamily="Segoe UI"
                                        FontSize="16"
                                        FontWeight="SemiBold"
                                        TextAlignment="Center"
                                        TextWrapping="Wrap" />
-                            <TextBlock Text="&#xC0C8; &#xB370;&#xC774;&#xD130;&#xC14B;&#xC740; &#xC0C8; &#xC800;&#xC7A5; &#xD3F4;&#xB354;&#xB97C; &#xAE30;&#xC900;&#xC73C;&#xB85C; &#xB77C;&#xBCA8;&#xC744; &#xBD84;&#xB9AC;&#xD569;&#xB2C8;&#xB2E4;."
+                            <TextBlock Text="{Binding EmptyStateDetailText}"
                                        Foreground="{StaticResource SecondaryTextBrush}"
                                        FontFamily="Segoe UI"
                                        FontSize="12"
@@ -338,10 +345,10 @@
                             <Button x:Name="CreateFirstDatasetButton"
                                     Style="{StaticResource DatasetSelectPrimaryButtonStyle}"
                                     AutomationProperties.AutomationId="CreateFirstDatasetButton"
-                                    AutomationProperties.Name="&#xCCAB; &#xB370;&#xC774;&#xD130;&#xC14B; &#xB9CC;&#xB4E4;&#xAE30;"
+                                    AutomationProperties.Name="{Binding CreateFirstDatasetButtonText}"
                                     Command="{Binding CreateNewCommand}"
                                     HorizontalAlignment="Center"
-                                    Content="&#xC0C8; &#xB370;&#xC774;&#xD130;&#xC14B; &#xB9CC;&#xB4E4;&#xAE30;" />
+                                    Content="{Binding CreateFirstDatasetButtonText}" />
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -364,30 +371,30 @@
                     <Button x:Name="RefreshDatasetSelectionButton"
                             Style="{StaticResource DatasetSelectButtonStyle}"
                             AutomationProperties.AutomationId="RefreshDatasetSelectionButton"
-                            AutomationProperties.Name="&#xB370;&#xC774;&#xD130;&#xC14B; &#xBAA9;&#xB85D; &#xC0C8;&#xB85C;&#xACE0;&#xCE68;"
+                            AutomationProperties.Name="{Binding RefreshButtonText}"
                             Command="{Binding RefreshCommand}"
                             Margin="0,0,8,0"
-                            Content="&#xC0C8;&#xB85C;&#xACE0;&#xCE68;" />
+                            Content="{Binding RefreshButtonText}" />
                     <Button x:Name="CreateNewDatasetFromSelectionButton"
                             Style="{StaticResource DatasetSelectButtonStyle}"
                             AutomationProperties.AutomationId="CreateNewDatasetFromSelectionButton"
-                            AutomationProperties.Name="&#xC0C8; &#xB370;&#xC774;&#xD130;&#xC14B; &#xB9CC;&#xB4E4;&#xAE30;"
+                            AutomationProperties.Name="{Binding CreateNewButtonText}"
                             Command="{Binding CreateNewCommand}"
                             Margin="0,0,8,0"
-                            Content="&#xC0C8; &#xB370;&#xC774;&#xD130;&#xC14B;" />
+                            Content="{Binding CreateNewButtonText}" />
                     <Button x:Name="CancelDatasetSelectionButton"
                             Style="{StaticResource DatasetSelectButtonStyle}"
                             AutomationProperties.AutomationId="CancelDatasetSelectionButton"
-                            AutomationProperties.Name="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC120;&#xD0DD; &#xCDE8;&#xC18C;"
+                            AutomationProperties.Name="{Binding CancelButtonText}"
                             Command="{Binding CancelCommand}"
                             Margin="0,0,8,0"
-                            Content="&#xCDE8;&#xC18C;" />
+                            Content="{Binding CancelButtonText}" />
                     <Button x:Name="OpenSelectedDatasetButton"
                             Style="{StaticResource DatasetSelectPrimaryButtonStyle}"
                             AutomationProperties.AutomationId="OpenSelectedDatasetButton"
-                            AutomationProperties.Name="&#xC120;&#xD0DD;&#xD55C; &#xB370;&#xC774;&#xD130;&#xC14B; &#xC5F4;&#xAE30;"
+                            AutomationProperties.Name="{Binding OpenSelectedButtonText}"
                             Command="{Binding OpenCommand}"
-                            Content="&#xC120;&#xD0DD; &#xC5F4;&#xAE30;" />
+                            Content="{Binding OpenSelectedButtonText}" />
                 </StackPanel>
             </Grid>
         </Grid>

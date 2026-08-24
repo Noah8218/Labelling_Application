@@ -17,6 +17,8 @@
         <SolidColorBrush x:Key="SecondaryTextBrush" Color="#AEB9C7" />
         <SolidColorBrush x:Key="MutedTextBrush" Color="#78879A" />
         <SolidColorBrush x:Key="ActionBrush" Color="#285A70" />
+        <SolidColorBrush x:Key="ActionHoverBrush" Color="#20495B" />
+        <SolidColorBrush x:Key="ActionPressedBrush" Color="#183744" />
         <SolidColorBrush x:Key="ActionBorderBrush" Color="#4B8DA4" />
         <SolidColorBrush x:Key="InputBrush" Color="#101722" />
         <SolidColorBrush x:Key="BadgeBrush" Color="#263348" />
@@ -70,6 +72,36 @@
             <Setter Property="Background" Value="{StaticResource ActionBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource ActionBorderBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonChrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="{StaticResource ActionHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="{StaticResource ActionPressedBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="ButtonChrome" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ButtonChrome" Property="Background" Value="{StaticResource PanelBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="TextBox">

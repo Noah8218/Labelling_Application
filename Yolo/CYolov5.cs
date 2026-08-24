@@ -96,8 +96,12 @@ namespace MvcVisionSystem.Yolo
                 return;
             }
 
-            // Write the yaml data to a file
-            File.WriteAllText(outputYamlPath, yaml, new UTF8Encoding(false));
+            AnnotationFilePersistence.WriteAtomically(
+                outputYamlPath,
+                temporaryPath => File.WriteAllText(
+                    temporaryPath,
+                    yaml,
+                    new UTF8Encoding(false)));
         }
 
         public static string NormalizeYamlPath(string path)

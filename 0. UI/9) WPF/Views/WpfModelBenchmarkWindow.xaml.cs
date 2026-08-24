@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using OpenVisionLab;
 using Wpf.Ui.Appearance;
 using FluentWindow = Wpf.Ui.Controls.FluentWindow;
 using MediaBrush = System.Windows.Media.Brush;
@@ -44,6 +45,7 @@ namespace MvcVisionSystem
         public WpfModelBenchmarkWindow(WpfModelBenchmarkViewModel viewModel = null)
         {
             InitializeComponent();
+            WpfLocalizationTextRuntimeService.RegisterWindow(this);
             DataContext = viewModel ?? new WpfModelBenchmarkViewModel();
             Loaded += OnWindowLoaded;
             Unloaded += OnWindowUnloaded;
@@ -77,16 +79,48 @@ namespace MvcVisionSystem
 
         private void OnWindowLoaded(object sender, RoutedEventArgs e)
         {
+            OpenVisionLanguageService.LanguageChanged += OnLanguageChanged;
+            Dispatcher.BeginInvoke(
+                DispatcherPriority.ApplicationIdle,
+                new Action(ApplyLocalizedColumnHeaders));
             AttachDashboardViewModel();
             RenderQualityTaktCanvas();
         }
 
         private void OnWindowUnloaded(object sender, RoutedEventArgs e)
         {
+            OpenVisionLanguageService.LanguageChanged -= OnLanguageChanged;
             if (observedViewModel != null)
             {
                 observedViewModel.PropertyChanged -= OnDashboardViewModelPropertyChanged;
                 observedViewModel = null;
+            }
+        }
+
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(
+                DispatcherPriority.ApplicationIdle,
+                new Action(ApplyLocalizedColumnHeaders));
+        }
+
+        private void ApplyLocalizedColumnHeaders()
+        {
+            if (ModelBenchmarkSummaryGrid == null)
+            {
+                return;
+            }
+
+            if (ModelBenchmarkSummaryGrid.Columns.Count > 3)
+            {
+                ModelBenchmarkSummaryGrid.Columns[3].Header =
+                    OpenVisionLanguageService.T("WpfModelBenchmark.Header.Runtime");
+            }
+
+            if (ModelBenchmarkSummaryGrid.Columns.Count > 6)
+            {
+                ModelBenchmarkSummaryGrid.Columns[6].Header =
+                    OpenVisionLanguageService.T("WpfModelBenchmark.Header.BaselineDelta");
             }
         }
 

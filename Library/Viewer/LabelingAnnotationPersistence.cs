@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using MvcVisionSystem._1._Core;
 using MvcVisionSystem.DrawObject;
@@ -22,8 +24,33 @@ namespace MvcVisionSystem
             IReadOnlyDictionary<string, List<CRectangleObject>> rois,
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments,
             CData data)
+            => SaveCurrentWithAdditionalArtifacts(image, rois, segments, data, null);
+
+        internal static bool SaveCurrentWithAdditionalArtifacts(
+            Image image,
+            IReadOnlyDictionary<string, List<CRectangleObject>> rois,
+            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments,
+            CData data,
+            Func<bool> saveAdditionalArtifacts)
+            => SaveImageAnnotations(
+                data?.LastSelectImageName,
+                image,
+                rois,
+                segments,
+                data,
+                sourceImagePath: string.Empty,
+                saveAdditionalArtifacts: saveAdditionalArtifacts);
+
+        internal static bool SaveImageAnnotations(
+            string imageName,
+            Image image,
+            IReadOnlyDictionary<string, List<CRectangleObject>> rois,
+            IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments,
+            CData data,
+            string sourceImagePath,
+            Func<bool> saveAdditionalArtifacts = null)
         {
-            if (image == null || data == null || string.IsNullOrWhiteSpace(data.LastSelectImageName))
+            if (image == null || data == null || string.IsNullOrWhiteSpace(imageName))
             {
                 return false;
             }
@@ -31,19 +58,34 @@ namespace MvcVisionSystem
             IReadOnlyDictionary<string, List<CRectangleObject>> normalizedRois = NormalizeRoisByClass(rois);
             EnsureRoiClasses(data, normalizedRois);
             EnsureSegmentationClasses(data, segments);
-            YoloAnnotationService.SaveAnnotations(
-                data.LastSelectImageName,
-                image,
-                normalizedRois,
-                data.ClassNamedList,
-                data);
-            YoloSegmentationAnnotationService.SaveSegmentationAnnotations(
-                data.LastSelectImageName,
-                image,
-                segments,
-                data.ClassNamedList,
-                data);
-            return true;
+            try
+            {
+                return AnnotationFilePersistence.ExecuteTransaction(() =>
+                {
+                    YoloAnnotationService.SaveAnnotations(
+                        imageName,
+                        image,
+                        normalizedRois,
+                        data.ClassNamedList,
+                        data,
+                        sourceImagePath);
+                    YoloSegmentationAnnotationService.SaveSegmentationAnnotations(
+                        imageName,
+                        image,
+                        segments,
+                        data.ClassNamedList,
+                        data);
+                    return saveAdditionalArtifacts?.Invoke() ?? true;
+                });
+            }
+            catch (YoloImageIdentityCollisionException)
+            {
+                return false;
+            }
+            catch (InvalidDataException)
+            {
+                return false;
+            }
         }
 
         private static IReadOnlyDictionary<string, List<CRectangleObject>> NormalizeRoisByClass(

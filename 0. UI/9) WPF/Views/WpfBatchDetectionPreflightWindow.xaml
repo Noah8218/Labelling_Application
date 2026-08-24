@@ -19,6 +19,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
+                <ResourceDictionary Source="../Themes/WpfButtonStateTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0C0D0F" />
             <SolidColorBrush x:Key="PanelBrush" Color="#171717" />
@@ -32,6 +33,7 @@
             <SolidColorBrush x:Key="GridLineBrush" Color="#2A2A2A" />
             <SolidColorBrush x:Key="GridHeaderBrush" Color="#202020" />
             <Style x:Key="PreflightButtonStyle" TargetType="{x:Type ui:Button}">
+                <Setter Property="Template" Value="{StaticResource WpfUiDarkButtonTemplate}" />
                 <Setter Property="Height" Value="34" />
                 <Setter Property="MinWidth" Value="96" />
                 <Setter Property="Padding" Value="12,0" />

@@ -113,10 +113,11 @@ namespace MvcVisionSystem.Yolo
                 : request.TargetPath;
             string requestedTargetBefore = ComputePathFingerprint(requestedTargetEvidencePath);
             string temporaryRoot = string.Empty;
+            CData stagedImportData = null;
 
             try
             {
-                object conversionResult;
+                object conversionResult = null;
                 if (isDryRun)
                 {
                     temporaryRoot = Path.Combine(
@@ -125,18 +126,28 @@ namespace MvcVisionSystem.Yolo
                         "interchange-preflight-" + Guid.NewGuid().ToString("N"));
                     Directory.CreateDirectory(temporaryRoot);
                     conversionResult = isImport
-                        ? ExecuteImport(CloneForDryRun(request.Data, temporaryRoot), request, capability)
+                        ? ExecuteImport(CloneForOutputRoot(request.Data, temporaryRoot), request, capability)
                         : ExecuteExport(request.Data, BuildDryRunTargetPath(temporaryRoot, request.TargetPath, capability), capability);
+                }
+                else if (isImport)
+                {
+                    temporaryRoot = BuildImportStageRoot(request.Data.OutputRootPath);
+                    Directory.CreateDirectory(temporaryRoot);
+                    stagedImportData = CloneForOutputRoot(request.Data, temporaryRoot);
+                    conversionResult = ExecuteImport(stagedImportData, request, capability);
+                    WriteFinalTargetDataYaml(stagedImportData, request.Data.OutputRootPath);
                 }
                 else
                 {
-                    conversionResult = isImport
-                        ? ExecuteImport(request.Data, request, capability)
-                        : ExecuteExport(request.Data, request.TargetPath, capability);
+                    conversionResult = ExecuteExport(request.Data, request.TargetPath, capability);
                 }
 
                 PopulateCounts(report, conversionResult);
                 AppendResultWarnings(report, conversionResult);
+                if (!isDryRun && isImport && report.SkippedCount == 0)
+                {
+                    PromoteStagedImport(stagedImportData, request.Data);
+                }
             }
             catch (Exception ex)
             {
@@ -294,7 +305,7 @@ namespace MvcVisionSystem.Yolo
                 _ => throw new NotSupportedException($"Unsupported import format: {capability.FormatKey}")
             };
 
-        private static CData CloneForDryRun(CData source, string temporaryRoot)
+        private static CData CloneForOutputRoot(CData source, string outputRoot)
         {
             var clone = new CData
             {
@@ -304,16 +315,152 @@ namespace MvcVisionSystem.Yolo
                         ?? LabelingDatasetPurpose.ObjectDetection
                 }
             };
-            clone.ConfigureOutputRoot(temporaryRoot);
-            clone.ClassNamedList = (source.ClassNamedList ?? new List<CClassItem>())
+            clone.ConfigureOutputRoot(outputRoot);
+            clone.ClassNamedList = CloneClasses(source.ClassNamedList);
+            return clone;
+        }
+
+        private static string BuildImportStageRoot(string targetRoot)
+        {
+            string normalizedTarget = Path.GetFullPath(targetRoot ?? string.Empty)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string parent = Path.GetDirectoryName(normalizedTarget)
+                ?? throw new InvalidOperationException("Dataset root must have a parent directory.");
+            string name = Path.GetFileName(normalizedTarget);
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new InvalidOperationException("Dataset root must not be a drive root.");
+            }
+
+            Directory.CreateDirectory(parent);
+            return Path.Combine(parent, $".{name}.interchange-stage-{Guid.NewGuid():N}");
+        }
+
+        private static void WriteFinalTargetDataYaml(CData stagedData, string targetRoot)
+        {
+            string normalizedTarget = Path.GetFullPath(targetRoot ?? string.Empty);
+            CYolov5.CreateYaml(
+                Path.Combine(normalizedTarget, "data", "train", "images"),
+                Path.Combine(normalizedTarget, "data", "valid", "images"),
+                Path.Combine(normalizedTarget, "data", "test", "images"),
+                (stagedData.ClassNamedList ?? new List<CClassItem>())
+                    .Select(item => item?.Text ?? string.Empty)
+                    .ToList(),
+                stagedData.DataYamlFilePath);
+        }
+
+        private static void PromoteStagedImport(CData stagedData, CData targetData)
+        {
+            string stageRoot = Path.GetFullPath(stagedData.OutputRootPath);
+            string targetRoot = Path.GetFullPath(targetData.OutputRootPath);
+            List<string> stagedFiles = Directory.EnumerateFiles(stageRoot, "*", SearchOption.AllDirectories)
+                .OrderBy(path => Path.GetRelativePath(stageRoot, path), StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            List<string> targetDirectories = new[] { targetRoot }
+                .Concat(Directory.EnumerateDirectories(stageRoot, "*", SearchOption.AllDirectories)
+                    .Select(path => Path.GetFullPath(Path.Combine(targetRoot, Path.GetRelativePath(stageRoot, path)))))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(path => path.Length)
+                .ToList();
+            List<string> missingDirectories = targetDirectories
+                .Where(path => !Directory.Exists(path))
+                .OrderByDescending(path => path.Length)
+                .ToList();
+            targetData.ClassNamedList ??= new List<CClassItem>();
+            int originalClassCount = targetData.ClassNamedList.Count;
+
+            try
+            {
+                foreach (string targetDirectory in targetDirectories)
+                {
+                    if (!IsPathInside(targetDirectory, targetRoot))
+                    {
+                        throw new InvalidDataException("Staged import produced a directory outside the dataset root.");
+                    }
+
+                    Directory.CreateDirectory(targetDirectory);
+                }
+
+                AnnotationFilePersistence.ExecuteTransaction(() =>
+                {
+                    foreach (string stagedPath in stagedFiles)
+                    {
+                        string relativePath = Path.GetRelativePath(stageRoot, stagedPath);
+                        string targetPath = Path.GetFullPath(Path.Combine(targetRoot, relativePath));
+                        if (!IsPathInside(targetPath, targetRoot))
+                        {
+                            throw new InvalidDataException("Staged import produced a path outside the dataset root.");
+                        }
+
+                        AnnotationFilePersistence.WriteAtomically(
+                            targetPath,
+                            temporaryPath => File.Copy(stagedPath, temporaryPath, overwrite: true));
+                    }
+
+                    AppendImportedClasses(targetData, stagedData, originalClassCount);
+                });
+            }
+            catch
+            {
+                while (targetData.ClassNamedList.Count > originalClassCount)
+                {
+                    targetData.ClassNamedList.RemoveAt(targetData.ClassNamedList.Count - 1);
+                }
+
+                DeleteEmptyDirectories(missingDirectories);
+                throw;
+            }
+        }
+
+        private static void AppendImportedClasses(CData targetData, CData stagedData, int originalClassCount)
+        {
+            List<CClassItem> stagedClasses = stagedData.ClassNamedList ?? new List<CClassItem>();
+            if (stagedClasses.Count < originalClassCount)
+            {
+                throw new InvalidDataException("Staged import removed an existing class.");
+            }
+
+            for (int index = 0; index < originalClassCount; index++)
+            {
+                if (!string.Equals(
+                    targetData.ClassNamedList[index]?.Text,
+                    stagedClasses[index]?.Text,
+                    StringComparison.Ordinal))
+                {
+                    throw new InvalidDataException("Staged import changed an existing class.");
+                }
+            }
+
+            for (int index = originalClassCount; index < stagedClasses.Count; index++)
+            {
+                CClassItem item = stagedClasses[index];
+                targetData.ClassNamedList.Add(new CClassItem
+                {
+                    Text = item?.Text ?? string.Empty,
+                    DrawColor = item?.DrawColor ?? System.Drawing.Color.Black
+                });
+            }
+        }
+
+        private static void DeleteEmptyDirectories(IEnumerable<string> paths)
+        {
+            foreach (string path in paths)
+            {
+                if (Directory.Exists(path) && !Directory.EnumerateFileSystemEntries(path).Any())
+                {
+                    Directory.Delete(path);
+                }
+            }
+        }
+
+        private static List<CClassItem> CloneClasses(IEnumerable<CClassItem> classes)
+            => (classes ?? Enumerable.Empty<CClassItem>())
                 .Select(item => new CClassItem
                 {
                     Text = item?.Text ?? string.Empty,
                     DrawColor = item?.DrawColor ?? System.Drawing.Color.Black
                 })
                 .ToList();
-            return clone;
-        }
 
         private static string BuildDryRunTargetPath(
             string temporaryRoot,

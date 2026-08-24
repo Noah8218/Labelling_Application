@@ -26,6 +26,7 @@ namespace MvcVisionSystem
         public WpfEnvironmentSetupCenterWindow(WpfEnvironmentSetupCenterViewModel viewModel = null)
         {
             InitializeComponent();
+            WpfLocalizationTextRuntimeService.RegisterWindow(this);
             DataContext = viewModel ?? new WpfEnvironmentSetupCenterViewModel();
         }
 

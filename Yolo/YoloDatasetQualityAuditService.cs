@@ -58,8 +58,20 @@ namespace MvcVisionSystem.Yolo
                 }
 
                 splitSummary.LabelFileCount++;
-                using Image image = Image.FromFile(imagePath);
-                CountLabelFile(data, labelPath, image.Size, splitSummary, report);
+                Size imageSize;
+                try
+                {
+                    using Image image = Image.FromFile(imagePath);
+                    imageSize = image.Size;
+                }
+                catch
+                {
+                    // Dataset integrity validation reports the exact unreadable image.
+                    // Keep the remaining read-only quality audit available.
+                    continue;
+                }
+
+                CountLabelFile(data, labelPath, imageSize, splitSummary, report);
             }
 
             return splitSummary;

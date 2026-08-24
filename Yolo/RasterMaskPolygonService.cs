@@ -10,7 +10,8 @@ namespace MvcVisionSystem.Yolo
         public static IReadOnlyList<SegmentationGeometry.SegmentationMaskRegion> BuildRegions(
             byte[] maskData,
             Size maskSize,
-            Size imageSize)
+            Size imageSize,
+            Rectangle knownBounds = default)
         {
             if (maskData == null
                 || maskSize.Width <= 0
@@ -21,7 +22,7 @@ namespace MvcVisionSystem.Yolo
                 return Array.Empty<SegmentationGeometry.SegmentationMaskRegion>();
             }
 
-            List<BoundaryEdge> edges = BuildBoundaryEdges(maskData, maskSize);
+            List<BoundaryEdge> edges = BuildBoundaryEdges(maskData, maskSize, knownBounds);
             if (edges.Count == 0)
             {
                 return Array.Empty<SegmentationGeometry.SegmentationMaskRegion>();
@@ -88,9 +89,12 @@ namespace MvcVisionSystem.Yolo
                 .ToList();
         }
 
-        private static List<BoundaryEdge> BuildBoundaryEdges(byte[] maskData, Size size)
+        private static List<BoundaryEdge> BuildBoundaryEdges(byte[] maskData, Size size, Rectangle knownBounds)
         {
-            Rectangle bounds = SegmentationGeometry.GetMaskBounds(maskData, size);
+            Rectangle imageBounds = new Rectangle(Point.Empty, size);
+            Rectangle bounds = knownBounds.IsEmpty
+                ? SegmentationGeometry.GetMaskBounds(maskData, size)
+                : Rectangle.Intersect(knownBounds, imageBounds);
             var edges = new List<BoundaryEdge>();
             for (int y = bounds.Top; y < bounds.Bottom; y++)
             {

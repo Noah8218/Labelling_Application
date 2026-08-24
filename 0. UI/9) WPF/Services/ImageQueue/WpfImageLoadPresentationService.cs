@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using OpenVisionLab;
 
 namespace MvcVisionSystem
 {
@@ -26,7 +27,7 @@ namespace MvcVisionSystem
         {
             return string.Format(
                 CultureInfo.CurrentCulture,
-                "\uB370\uC774\uD130\uC14B: {0}  {1}x{2}",
+                OpenVisionLanguageService.T("WpfShell.Status.DatasetLoaded"),
                 Path.GetFileName(imagePath),
                 imageSize.Width,
                 imageSize.Height);
@@ -34,7 +35,10 @@ namespace MvcVisionSystem
 
         public string BuildModelStatus(string weightsPath)
         {
-            return string.Format(CultureInfo.CurrentCulture, "\uBAA8\uB378: {0}", Path.GetFileName(weightsPath ?? string.Empty));
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                OpenVisionLanguageService.T("WpfShell.Status.Model"),
+                Path.GetFileName(weightsPath ?? string.Empty));
         }
 
         public string BuildAnnotationLoadedStatus()

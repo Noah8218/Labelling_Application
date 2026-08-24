@@ -126,6 +126,8 @@
   <ItemGroup>
     <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Mvvm\OpenVisionLab.Mvvm.csproj"
                       Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Mvvm\OpenVisionLab.Mvvm.csproj')" />
+    <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Localization\OpenVisionLab.Localization.csproj"
+                      Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Localization\OpenVisionLab.Localization.csproj')" />
     <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging\OpenVisionLab.Logging.csproj"
                       Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging\OpenVisionLab.Logging.csproj')" />
     <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging.Controls\OpenVisionLab.Logging.Controls.csproj"

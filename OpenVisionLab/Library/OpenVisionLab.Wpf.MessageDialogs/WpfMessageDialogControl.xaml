@@ -44,7 +44,7 @@
         <Style x:Key="PrimaryDialogButtonStyle"
                TargetType="{x:Type Button}"
                BasedOn="{StaticResource DialogButtonBaseStyle}">
-            <Setter Property="Background" Value="#E53935" />
+            <Setter Property="Background" Value="#B91C1C" />
             <Setter Property="BorderBrush" Value="#E53935" />
             <Setter Property="Foreground" Value="White" />
         </Style>

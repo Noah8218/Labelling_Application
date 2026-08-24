@@ -22,6 +22,7 @@ namespace MvcVisionSystem
         public TextBlock CurrentDrawingClassTitleTextBlock => CurrentDrawingClassTitleText;
         public TextBlock CurrentDrawingClassDetailTextBlock => CurrentDrawingClassDetailText;
         public TextBlock ActionTextBlock => ClassCatalogActionText;
+        public TextBlock ClassSectionLabelTextBlock => ClassSectionLabelText;
         public TextBox ClassNameTextBox => ClassNameBox;
         public WpfUiButton AddClass => AddClassButton;
         public WpfUiButton RenameClass => RenameClassButton;

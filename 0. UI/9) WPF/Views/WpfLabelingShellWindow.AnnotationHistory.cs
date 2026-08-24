@@ -134,7 +134,7 @@ namespace MvcVisionSystem
 
             WpfAnnotationHistorySnapshot target = undoAnnotationHistory[undoAnnotationHistory.Count - 1];
             undoAnnotationHistory.RemoveAt(undoAnnotationHistory.Count - 1);
-            redoAnnotationHistory.Add(CaptureAnnotationHistory($"Redo {target.ActionName}"));
+            redoAnnotationHistory.Add(CaptureHistoryForOppositeStack($"Redo {target.ActionName}", target));
             RestoreAnnotationHistorySnapshot(target);
             string displayActionName = FormatHistoryActionForDisplay(target.ActionName);
             SetYoloCommandStatus($"\uB418\uB3CC\uB9AC\uAE30: {displayActionName}", isBusy: false);
@@ -166,7 +166,7 @@ namespace MvcVisionSystem
 
             WpfAnnotationHistorySnapshot target = redoAnnotationHistory[redoAnnotationHistory.Count - 1];
             redoAnnotationHistory.RemoveAt(redoAnnotationHistory.Count - 1);
-            undoAnnotationHistory.Add(CaptureAnnotationHistory($"Undo {target.ActionName}"));
+            undoAnnotationHistory.Add(CaptureHistoryForOppositeStack($"Undo {target.ActionName}", target));
             if (undoAnnotationHistory.Count > AnnotationHistoryLimit)
             {
                 undoAnnotationHistory.RemoveAt(0);
@@ -179,6 +179,17 @@ namespace MvcVisionSystem
             MarkAnnotationsDirty($"\uB2E4\uC2DC \uC801\uC6A9 {displayActionName}");
             RefreshAnnotationHistoryToolState();
             return true;
+        }
+
+        private WpfAnnotationHistorySnapshot CaptureHistoryForOppositeStack(
+            string actionName,
+            WpfAnnotationHistorySnapshot target)
+        {
+            return WpfAnnotationHistoryService.CaptureMaskDeltaInverse(
+                    actionName,
+                    target,
+                    manualSegments)
+                ?? CaptureAnnotationHistory(actionName);
         }
 
         private void RestoreAnnotationHistorySnapshot(WpfAnnotationHistorySnapshot snapshot)

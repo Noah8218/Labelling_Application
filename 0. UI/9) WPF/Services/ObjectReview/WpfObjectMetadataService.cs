@@ -711,7 +711,7 @@ namespace MvcVisionSystem
                 {
                     if (File.Exists(path))
                     {
-                        File.Delete(path);
+                        AnnotationFilePersistence.Delete(path);
                     }
                     continue;
                 }
@@ -723,11 +723,11 @@ namespace MvcVisionSystem
                     ImageName = imageName,
                     Objects = records
                 };
-                string temporaryPath = path + ".tmp";
-                File.WriteAllText(
-                    temporaryPath,
-                    JsonConvert.SerializeObject(file, Formatting.Indented));
-                File.Move(temporaryPath, path, overwrite: true);
+                AnnotationFilePersistence.WriteAtomically(
+                    path,
+                    temporaryPath => File.WriteAllText(
+                        temporaryPath,
+                        JsonConvert.SerializeObject(file, Formatting.Indented)));
                 writtenPaths.Add(path);
             }
 

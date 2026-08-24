@@ -1,4 +1,5 @@
 using MvcVisionSystem.Yolo;
+using OpenVisionLab;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -179,12 +180,19 @@ namespace MvcVisionSystem
             string reviewCountText = WpfImageQueuePresenter.BuildReviewCountSummary(summary);
             string filterText = filter == WpfImageQueueFilter.All
                 ? string.Empty
-                : $" / 필터 {WpfImageQueueFilterOption.GetDisplayName(filter)}";
+                : Format("WpfShell.Status.DatasetFilter", WpfImageQueueFilterOption.GetDisplayName(filter));
             string loadingText = loadedCount >= 0 && totalToLoad > 0 && loadedCount < totalToLoad
-                ? $" / 로드 {loadedCount}/{totalToLoad}"
+                ? Format("WpfShell.Status.DatasetLoading", loadedCount, totalToLoad)
                 : string.Empty;
 
-            return $"데이터셋: {Math.Max(0, visibleCount)}/{summary.TotalCount} 이미지 / 완료 {summary.CompletedCount}{reviewCountText}{filterText}{loadingText}";
+            return Format(
+                "WpfShell.Status.DatasetSummary",
+                Math.Max(0, visibleCount),
+                summary.TotalCount,
+                summary.CompletedCount,
+                reviewCountText,
+                filterText,
+                loadingText);
         }
 
         public static string BuildDatasetStatusTextWithActiveImage(
@@ -220,7 +228,18 @@ namespace MvcVisionSystem
 
             // Keep the active file visible even while queue detail loading updates
             // the summary; EXE smokes and operators both need that orientation.
-            return $"{statusText} / \uD604\uC7AC {System.IO.Path.GetFileName(activeImagePath)}";
+            return Format(
+                "WpfShell.Status.DatasetActiveImage",
+                statusText,
+                System.IO.Path.GetFileName(activeImagePath));
+        }
+
+        private static string Format(string key, params object[] arguments)
+        {
+            return string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                OpenVisionLanguageService.T(key),
+                arguments ?? Array.Empty<object>());
         }
 
         public static bool MatchesFilter(WpfImageQueueItem item, WpfImageQueueFilter filter)

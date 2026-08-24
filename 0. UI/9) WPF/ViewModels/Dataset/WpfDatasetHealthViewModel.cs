@@ -1,5 +1,6 @@
 using MvcVisionSystem._1._Core;
 using MvcVisionSystem.Yolo;
+using OpenVisionLab;
 using OpenVisionLab.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -51,6 +52,7 @@ namespace MvcVisionSystem
             this.data = data;
             RefreshCommand = new RelayCommand(() => Refresh(this.data));
             OpenSelectedVisualQaImageCommand = new RelayCommand(OpenSelectedVisualQaImage);
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
             Refresh(data);
         }
 
@@ -114,9 +116,9 @@ namespace MvcVisionSystem
             private set => SetProperty(ref generatedAtText, value ?? string.Empty);
         }
 
-        public string DataScopeText => "분석 범위: 현재 Recipe 저장 데이터입니다. 외부 YOLO data.yaml은 별도 입력이며 이 화면의 집계에 포함하지 않습니다.";
+        public string DataScopeText => T("WpfDatasetHealth.Scope");
 
-        public string EvidenceBoundaryText => "이 화면은 데이터 구조와 라벨 상태를 점검합니다. 모델 채택에는 독립 held-out 데이터와 같은 조건의 모델 비교가 추가로 필요합니다.";
+        public string EvidenceBoundaryText => T("WpfDatasetHealth.EvidenceBoundary");
 
         public string AnomalyDetailText
         {
@@ -259,12 +261,12 @@ namespace MvcVisionSystem
                 DatasetName = WpfDatasetContextPresentationService.BuildDatasetName(string.Empty, data?.OutputRootPath);
                 PurposeText = WpfDatasetContextPresentationService.FormatPurposeName(data?.ProjectSettings?.DatasetPurpose ?? LabelingDatasetPurpose.ObjectDetection);
                 OutputRootText = data?.OutputRootPath ?? string.Empty;
-                StatusText = "저장 데이터 분석 실패";
+                StatusText = T("WpfDatasetHealth.Status.AnalysisFailed");
                 StatusDetailText = ex.Message;
                 GeneratedAtText = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                 AnomalyDetailText = string.Empty;
                 IsAnomalyDataset = data?.ProjectSettings?.DatasetPurpose == LabelingDatasetPurpose.AnomalyDetection;
-                Issues.Add(new WpfDatasetHealthIssueItem("분석 중 오류가 발생했습니다. 저장 폴더와 이미지 파일을 확인하세요.", isBlocking: true));
+                Issues.Add(new WpfDatasetHealthIssueItem(T("WpfDatasetHealth.Issue.Error"), isBlocking: true));
                 HasIssues = true;
                 HasClasses = false;
             }
@@ -300,18 +302,27 @@ namespace MvcVisionSystem
                 visualQaCatalogItems.Clear();
                 visualQaCatalogItems.AddRange(catalog.Items);
                 string truncationText = catalog.IsTruncated
-                    ? $" · 최대 {WpfDatasetVisualQaService.MaximumCatalogItemCount}개 표시"
+                    ? Format("WpfDatasetHealth.VisualQa.Truncated", WpfDatasetVisualQaService.MaximumCatalogItemCount)
                     : string.Empty;
                 visualQaCatalogStatusText = selectedClassIndex.HasValue
-                    ? $"검사 {catalog.ScannedImageCount}장 · 클래스 일치 {catalog.MatchedImageCount}장"
-                        + $" · 문제 {catalog.ProblemCount}장 · 목록 {catalog.Items.Count}장{truncationText}"
-                    : $"검사 {catalog.ScannedImageCount}장 · 문제 {catalog.ProblemCount}장"
-                        + $" · 표본 포함 {catalog.Items.Count}장{truncationText}";
+                    ? Format(
+                        "WpfDatasetHealth.VisualQa.ClassSummary",
+                        catalog.ScannedImageCount,
+                        catalog.MatchedImageCount,
+                        catalog.ProblemCount,
+                        catalog.Items.Count,
+                        truncationText)
+                    : Format(
+                        "WpfDatasetHealth.VisualQa.CatalogSummary",
+                        catalog.ScannedImageCount,
+                        catalog.ProblemCount,
+                        catalog.Items.Count,
+                        truncationText);
             }
             catch (Exception ex)
             {
                 visualQaCatalogItems.Clear();
-                visualQaCatalogStatusText = "시각 QA 목록 생성 실패: " + ex.Message;
+                visualQaCatalogStatusText = Format("WpfDatasetHealth.VisualQa.CatalogFailure", ex.Message);
             }
             finally
             {
@@ -325,7 +336,7 @@ namespace MvcVisionSystem
         private void ResetVisualQa()
         {
             visualQaCatalogItems.Clear();
-            visualQaCatalogStatusText = "시각 QA 탭을 열면 저장 라벨 문제와 표본을 읽습니다.";
+            visualQaCatalogStatusText = T("WpfDatasetHealth.VisualQa.NotLoaded");
             RefreshVisualQaClassFilters();
             RefreshVisualQaSplitFilters();
             RefreshVisibleVisualQaItems();
@@ -393,16 +404,28 @@ namespace MvcVisionSystem
                     string.Equals(item.ImagePath, previousImagePath, StringComparison.OrdinalIgnoreCase))
                 ?? VisualQaItems.FirstOrDefault(item => item.IsProblem)
                 ?? VisualQaItems.FirstOrDefault();
-            VisualQaStatusText = !isVisualQaLoaded
-                ? visualQaCatalogStatusText
-                : $"{visualQaCatalogStatusText} · 표시 {VisualQaItems.Count}장 · "
-                    + (string.Equals(SelectedVisualQaSplitFilter, AllVisualQaSplits, StringComparison.Ordinal)
-                        ? "전체 분할"
-                        : $"{SelectedVisualQaSplitFilter} 분할")
-                    + (SelectedVisualQaClassFilter?.ClassIndex.HasValue == true
-                        ? $" · 클래스 {SelectedVisualQaClassFilter.Text}"
-                        : string.Empty)
-                    + (ShowOnlyVisualQaProblems ? " · 문제만" : string.Empty);
+            if (!isVisualQaLoaded)
+            {
+                VisualQaStatusText = visualQaCatalogStatusText;
+                return;
+            }
+
+            string splitLabel = string.Equals(SelectedVisualQaSplitFilter, AllVisualQaSplits, StringComparison.Ordinal)
+                ? T("WpfDatasetHealth.VisualQa.AllSplitLabel")
+                : Format("WpfDatasetHealth.VisualQa.SplitLabel", SelectedVisualQaSplitFilter);
+            string classLabel = SelectedVisualQaClassFilter?.ClassIndex.HasValue == true
+                ? Format("WpfDatasetHealth.VisualQa.ClassLabel", SelectedVisualQaClassFilter.Text)
+                : string.Empty;
+            string problemsSuffix = ShowOnlyVisualQaProblems
+                ? T("WpfDatasetHealth.VisualQa.ProblemsOnlySuffix")
+                : string.Empty;
+            VisualQaStatusText = Format(
+                "WpfDatasetHealth.VisualQa.VisibleSummary",
+                visualQaCatalogStatusText,
+                VisualQaItems.Count,
+                splitLabel,
+                classLabel,
+                problemsSuffix);
         }
 
         private void OpenSelectedVisualQaImage()
@@ -430,14 +453,18 @@ namespace MvcVisionSystem
             DatasetName = WpfDatasetContextPresentationService.BuildDatasetName(string.Empty, data?.OutputRootPath);
             PurposeText = WpfDatasetContextPresentationService.FormatPurposeName(report.Purpose);
             OutputRootText = string.IsNullOrWhiteSpace(data?.OutputRootPath)
-                ? "저장 폴더를 확인하세요."
+                ? T("WpfDatasetHealth.OutputRootPrompt")
                 : data.OutputRootPath;
             IsAnomalyDataset = report.Purpose == LabelingDatasetPurpose.AnomalyDetection;
-            StatusText = report.IsReady ? "학습 입력 구조: 준비됨" : "학습 입력 구조: 확인 필요";
+            StatusText = report.IsReady
+                ? T("WpfDatasetHealth.Status.Ready")
+                : T("WpfDatasetHealth.Status.NeedsAttention");
             StatusDetailText = report.IsReady
-                ? "저장된 분할과 주 라벨을 읽어 현재 상태를 정리했습니다."
+                ? T("WpfDatasetHealth.Status.Detail.Ready")
                 : FormatIssue(report.Issues.FirstOrDefault());
-            GeneratedAtText = "갱신 " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            GeneratedAtText = Format(
+                "WpfDatasetHealth.GeneratedAt",
+                DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
             AnomalyDetailText = BuildAnomalyDetailText(report);
 
             Metrics.Clear();
@@ -473,7 +500,9 @@ namespace MvcVisionSystem
             }
             if (report.Issues.Count > 6)
             {
-                Issues.Add(new WpfDatasetHealthIssueItem($"추가 확인 항목 {report.Issues.Count - 6}개가 있습니다. 상세 라벨 점검 또는 품질 보고서를 사용하세요.", isBlocking: false));
+                Issues.Add(new WpfDatasetHealthIssueItem(
+                    Format("WpfDatasetHealth.Issue.Additional", report.Issues.Count - 6),
+                    isBlocking: false));
             }
             HasIssues = Issues.Count > 0;
         }
@@ -483,36 +512,70 @@ namespace MvcVisionSystem
             if (report.Purpose == LabelingDatasetPurpose.AnomalyDetection)
             {
                 AnomalyClassificationTrainingReadinessReport anomaly = report.AnomalyReadiness;
-                yield return new WpfDatasetHealthMetricItem("원본 이미지", (anomaly?.SourceImageCount ?? 0).ToString(CultureInfo.InvariantCulture), "현재 연결된 원본 이미지", isProblem: false);
-                yield return new WpfDatasetHealthMetricItem("검토 완료", ((anomaly?.NormalImageCount ?? 0) + (anomaly?.AbnormalImageCount ?? 0)).ToString(CultureInfo.InvariantCulture), "정상/이상으로 확정된 이미지", isProblem: false);
-                yield return new WpfDatasetHealthMetricItem("정상 / 이상", $"{anomaly?.NormalImageCount ?? 0} / {anomaly?.AbnormalImageCount ?? 0}", "분류 학습에 사용하는 두 상태", isProblem: anomaly?.NormalImageCount == 0 || anomaly?.AbnormalImageCount == 0);
-                yield return new WpfDatasetHealthMetricItem("미검토", (anomaly?.UnreviewedImageCount ?? 0).ToString(CultureInfo.InvariantCulture), "학습 전에 정상 또는 이상으로 분류할 이미지", isProblem: (anomaly?.UnreviewedImageCount ?? 0) > 0);
+                yield return new WpfDatasetHealthMetricItem(
+                    T("WpfDatasetHealth.Metric.OriginalImages"),
+                    (anomaly?.SourceImageCount ?? 0).ToString(CultureInfo.InvariantCulture),
+                    T("WpfDatasetHealth.Metric.SourceImagesDetail"),
+                    isProblem: false);
+                yield return new WpfDatasetHealthMetricItem(
+                    T("WpfDatasetHealth.Metric.Reviewed"),
+                    ((anomaly?.NormalImageCount ?? 0) + (anomaly?.AbnormalImageCount ?? 0)).ToString(CultureInfo.InvariantCulture),
+                    T("WpfDatasetHealth.Metric.ReviewedDetail"),
+                    isProblem: false);
+                yield return new WpfDatasetHealthMetricItem(
+                    T("WpfDatasetHealth.Metric.NormalAbnormal"),
+                    $"{anomaly?.NormalImageCount ?? 0} / {anomaly?.AbnormalImageCount ?? 0}",
+                    T("WpfDatasetHealth.Metric.NormalAbnormalDetail"),
+                    isProblem: anomaly?.NormalImageCount == 0 || anomaly?.AbnormalImageCount == 0);
+                yield return new WpfDatasetHealthMetricItem(
+                    T("WpfDatasetHealth.Metric.Unreviewed"),
+                    (anomaly?.UnreviewedImageCount ?? 0).ToString(CultureInfo.InvariantCulture),
+                    T("WpfDatasetHealth.Metric.UnreviewedDetail"),
+                    isProblem: (anomaly?.UnreviewedImageCount ?? 0) > 0);
                 yield break;
             }
 
             YoloDatasetStatistics statistics = report.YoloReadiness?.Statistics ?? new YoloDatasetStatistics();
             string primaryLabelValue = report.Purpose == LabelingDatasetPurpose.Segmentation
-                ? statistics.TotalSegmentationObjectCount > 0
+                    ? statistics.TotalSegmentationObjectCount > 0
                     ? statistics.TotalSegmentationObjectCount.ToString(CultureInfo.InvariantCulture)
-                    : $"마스크 {statistics.TotalMaskFileCount}"
+                    : Format("WpfDatasetHealth.Metric.Segments", statistics.TotalMaskFileCount)
                 : report.PrimaryLabelCount.ToString(CultureInfo.InvariantCulture);
             string primaryLabelDetail = report.Purpose == LabelingDatasetPurpose.Segmentation
-                ? "세그먼트 객체 또는 저장된 마스크"
-                : "YOLO 박스 객체";
+                ? T("WpfDatasetHealth.Metric.Segments")
+                : T("WpfDatasetHealth.Metric.YoloObjects");
             string qualityValue = report.QualityStatus switch
             {
-                YoloDatasetHealthQualityStatus.Healthy => "정상",
-                YoloDatasetHealthQualityStatus.NotEvaluated => "미확인",
+                YoloDatasetHealthQualityStatus.Healthy => T("WpfDatasetHealth.Metric.Healthy"),
+                YoloDatasetHealthQualityStatus.NotEvaluated => T("WpfDatasetHealth.Metric.NotEvaluated"),
                 _ => report.QualityProblemCount.ToString(CultureInfo.InvariantCulture)
             };
             string qualityDetail = report.Purpose == LabelingDatasetPurpose.Segmentation
-                ? "SEG 누락·손상 annotation 점검"
-                : "누락 라벨과 잘못된 라벨 줄";
+                ? T("WpfDatasetHealth.Metric.SegmentationQuality")
+                : T("WpfDatasetHealth.Metric.MissingLabels");
             bool qualityNeedsAttention = report.QualityStatus != YoloDatasetHealthQualityStatus.Healthy;
-            yield return new WpfDatasetHealthMetricItem("저장 이미지", report.TotalImageCount.ToString(CultureInfo.InvariantCulture), "학습 / 검증 / 최종 검증 분할", isProblem: report.TotalImageCount == 0);
-            yield return new WpfDatasetHealthMetricItem("주 라벨", primaryLabelValue, primaryLabelDetail, isProblem: report.PrimaryLabelCount == 0);
-            yield return new WpfDatasetHealthMetricItem("라벨 품질", qualityValue, qualityDetail, isProblem: qualityNeedsAttention);
-            yield return new WpfDatasetHealthMetricItem("분할 중복", report.SplitContentOverlapCount == 0 ? "없음" : report.SplitContentOverlapCount.ToString(CultureInfo.InvariantCulture), "학습/검증/최종 검증 간 동일 이미지 내용", isProblem: report.SplitContentOverlapCount > 0);
+            yield return new WpfDatasetHealthMetricItem(
+                T("WpfDatasetHealth.Metric.StoredImages"),
+                report.TotalImageCount.ToString(CultureInfo.InvariantCulture),
+                T("WpfDatasetHealth.Metric.StoredImagesDetail"),
+                isProblem: report.TotalImageCount == 0);
+            yield return new WpfDatasetHealthMetricItem(
+                T("WpfDatasetHealth.Metric.PrimaryLabel"),
+                primaryLabelValue,
+                primaryLabelDetail,
+                isProblem: report.PrimaryLabelCount == 0);
+            yield return new WpfDatasetHealthMetricItem(
+                T("WpfDatasetHealth.Metric.LabelQuality"),
+                qualityValue,
+                qualityDetail,
+                isProblem: qualityNeedsAttention);
+            yield return new WpfDatasetHealthMetricItem(
+                T("WpfDatasetHealth.Metric.SplitOverlap"),
+                report.SplitContentOverlapCount == 0
+                    ? T("WpfDatasetHealth.Metric.None")
+                    : report.SplitContentOverlapCount.ToString(CultureInfo.InvariantCulture),
+                T("WpfDatasetHealth.Metric.SplitOverlapDetail"),
+                isProblem: report.SplitContentOverlapCount > 0);
         }
 
         private static string BuildAnomalyDetailText(YoloDatasetHealthReport report)
@@ -523,7 +586,10 @@ namespace MvcVisionSystem
             }
 
             AnomalyClassificationTrainingReadinessReport anomaly = report.AnomalyReadiness;
-            return $"학습 분할 포함: 정상 {anomaly?.TrainNormalImageCount ?? 0}장 / 이상 {anomaly?.TrainAbnormalImageCount ?? 0}장. 원본 검토 상태와 학습 분할은 별도로 확인합니다.";
+            return Format(
+                "WpfDatasetHealth.AnomalyDetail",
+                anomaly?.TrainNormalImageCount ?? 0,
+                anomaly?.TrainAbnormalImageCount ?? 0);
         }
 
         private static bool IsBlockingIssue(string issue)
@@ -541,36 +607,53 @@ namespace MvcVisionSystem
             string normalized = issue?.Trim() ?? string.Empty;
             if (normalized.Length == 0)
             {
-                return "저장 데이터 점검 결과를 확인하세요.";
+                return T("WpfDatasetHealth.Issue.Empty");
             }
 
             if (normalized.Contains("Test split is empty", StringComparison.OrdinalIgnoreCase))
             {
-                return "최종 검증 분할이 비어 있습니다. 모델 비교 전 독립 이미지를 확보하세요.";
+                return T("WpfDatasetHealth.Issue.TestSplitEmpty");
             }
 
             if (normalized.Contains("duplicate image content", StringComparison.OrdinalIgnoreCase))
             {
-                return "학습/검증/최종 검증 분할에 같은 이미지 내용이 있습니다. 분할을 다시 확인하세요.";
+                return T("WpfDatasetHealth.Issue.DuplicateImages");
             }
 
             if (normalized.Contains("class balance is skewed", StringComparison.OrdinalIgnoreCase))
             {
-                return "클래스별 라벨 수 차이가 큽니다. 적은 클래스 표본을 추가하세요.";
+                return T("WpfDatasetHealth.Issue.ClassBalance");
             }
 
             if (normalized.Contains("has only", StringComparison.OrdinalIgnoreCase))
             {
-                return "클래스 표본 수가 적습니다. 학습 결과를 신뢰하기 전에 라벨 이미지를 추가하세요.";
+                return T("WpfDatasetHealth.Issue.SmallClass");
             }
 
             if (normalized.Contains("unreviewed image", StringComparison.OrdinalIgnoreCase))
             {
-                return "미검토 이미지가 있습니다. 정상 또는 이상 상태를 저장한 뒤 학습하세요.";
+                return T("WpfDatasetHealth.Issue.Unreviewed");
             }
 
-            return WpfTrainingReadinessPresentationService.BuildFriendlyIssueSummary(normalized);
+            return WpfLocalizationTextRuntimeService.Translate(
+                WpfTrainingReadinessPresentationService.BuildFriendlyIssueSummary(normalized));
         }
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            Refresh(data);
+            OnPropertyChanged(nameof(DataScopeText));
+            OnPropertyChanged(nameof(EvidenceBoundaryText));
+        }
+
+        private static string T(string key)
+            => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] arguments)
+            => string.Format(
+                CultureInfo.InvariantCulture,
+                T(key),
+                arguments ?? Array.Empty<object>());
     }
 
     public sealed class WpfDatasetHealthMetricItem
@@ -600,14 +683,28 @@ namespace MvcVisionSystem
             SplitText = FormatSplit(source.Split);
             ImageCount = source.ImageCount;
             PrimaryAnnotationText = purpose == LabelingDatasetPurpose.Segmentation
-                ? $"세그먼트/마스크 {source.PrimaryAnnotationCount}"
-                : $"객체 {source.PrimaryAnnotationCount}";
+                ? Format("WpfDatasetHealth.Split.Segments", source.PrimaryAnnotationCount)
+                : Format("WpfDatasetHealth.Split.Objects", source.PrimaryAnnotationCount);
             CoverageText = purpose == LabelingDatasetPurpose.Segmentation
-                ? $"세그먼트 파일 {source.SegmentFileCount} / 마스크 {source.MaskFileCount} / 누락 {source.MissingLabelCount} / 손상 {source.InvalidLabelLineCount}"
-                : $"누락 {source.MissingLabelCount} / invalid {source.InvalidLabelLineCount}";
+                ? Format(
+                    "WpfDatasetHealth.Split.CoverageSeg",
+                    source.SegmentFileCount,
+                    source.MaskFileCount,
+                    source.MissingLabelCount,
+                    source.InvalidLabelLineCount)
+                : Format(
+                    "WpfDatasetHealth.Split.CoverageBox",
+                    source.MissingLabelCount,
+                    source.InvalidLabelLineCount);
             DetailText = purpose == LabelingDatasetPurpose.Segmentation
-                ? $"보조 box 라벨 파일 {source.LabelFileCount} / 빈 정상 {source.EmptyLabelCount}"
-                : $"라벨 파일 {source.LabelFileCount} / 빈 정상 {source.EmptyLabelCount}";
+                ? Format(
+                    "WpfDatasetHealth.Split.DetailSeg",
+                    source.LabelFileCount,
+                    source.EmptyLabelCount)
+                : Format(
+                    "WpfDatasetHealth.Split.DetailBox",
+                    source.LabelFileCount,
+                    source.EmptyLabelCount);
             HasProblem = purpose == LabelingDatasetPurpose.Segmentation
                 ? source.MissingLabelCount > 0
                     || source.InvalidLabelLineCount > 0
@@ -631,12 +728,21 @@ namespace MvcVisionSystem
         {
             return split?.Trim().ToLowerInvariant() switch
             {
-                "train" => "학습",
-                "valid" => "검증",
-                "test" => "최종 검증",
-                _ => string.IsNullOrWhiteSpace(split) ? "미확인" : split
+                "train" => T("WpfDatasetHealth.Split.Train"),
+                "valid" => T("WpfDatasetHealth.Split.Valid"),
+                "test" => T("WpfDatasetHealth.Split.Test"),
+                _ => string.IsNullOrWhiteSpace(split) ? T("WpfDatasetHealth.Split.Unknown") : split
             };
         }
+
+        private static string T(string key)
+            => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] arguments)
+            => string.Format(
+                CultureInfo.InvariantCulture,
+                T(key),
+                arguments ?? Array.Empty<object>());
     }
 
     public sealed class WpfDatasetHealthClassRow
@@ -648,14 +754,17 @@ namespace MvcVisionSystem
             SharePercent = Math.Clamp(sharePercent, 0D, 100D);
             ShareText = SharePercent.ToString("0.0", CultureInfo.InvariantCulture) + "%";
             StatusText = Count == 0
-                ? "라벨 필요"
+                ? T("WpfDatasetHealth.Class.NeedsLabel")
                 : isAnomaly
-                    ? "검토 완료"
+                    ? T("WpfDatasetHealth.Class.Reviewed")
                     : Count < 5
-                        ? "표본 추가 권장"
-                        : "확인";
+                        ? T("WpfDatasetHealth.Class.AddSamples")
+                        : T("WpfDatasetHealth.Class.Checked");
             IsProblem = Count == 0;
         }
+
+        private static string T(string key)
+            => OpenVisionLanguageService.T(key);
 
         public string ClassName { get; }
 

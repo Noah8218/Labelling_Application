@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -472,6 +473,9 @@ namespace MvcVisionSystem.Yolo
                 return;
             }
 
+            ValidateImageFiles(mode, images, errors);
+            ValidateArtifactOwnership(mode, images, labelDirectory, "*.txt", "label", errors);
+
             foreach (string imagePath in images)
             {
                 string labelPath = Path.Combine(labelDirectory, $"{Path.GetFileNameWithoutExtension(imagePath)}.txt");
@@ -523,6 +527,11 @@ namespace MvcVisionSystem.Yolo
                 return;
             }
 
+            Dictionary<string, Size> imageSizes = ValidateImageFiles(mode, images, errors);
+            ValidateArtifactOwnership(mode, images, segmentDirectory, "*.json", "segment", errors);
+            ValidateArtifactOwnership(mode, images, maskDirectory, "*.png", "mask", errors);
+            ValidateArtifactOwnership(mode, images, labelDirectory, "*.txt", "label", errors);
+
             foreach (string imagePath in images)
             {
                 string fileStem = Path.GetFileNameWithoutExtension(imagePath);
@@ -543,7 +552,15 @@ namespace MvcVisionSystem.Yolo
 
                 if (hasSegment)
                 {
-                    ValidateSegmentFile(mode, segmentPath, classes, errors);
+                    if (imageSizes.TryGetValue(imagePath, out Size imageSize))
+                    {
+                        ValidateSegmentFile(mode, segmentPath, maskPath, imageSize, classes, errors);
+                    }
+                }
+
+                if (hasMask && imageSizes.TryGetValue(imagePath, out Size maskImageSize))
+                {
+                    ValidateMaskFile(mode, maskPath, maskImageSize, errors);
                 }
             }
         }
@@ -569,7 +586,13 @@ namespace MvcVisionSystem.Yolo
             ValidateSegmentationImageAndAnnotationSet(mode, imageDirectory, segmentDirectory, maskDirectory, labelDirectory, classes, errors);
         }
 
-        private static void ValidateSegmentFile(string mode, string segmentPath, IReadOnlyList<CClassItem> classes, List<string> errors)
+        private static void ValidateSegmentFile(
+            string mode,
+            string segmentPath,
+            string maskPath,
+            Size imageSize,
+            IReadOnlyList<CClassItem> classes,
+            List<string> errors)
         {
             SegmentationAnnotationFile annotation;
             try
@@ -582,26 +605,100 @@ namespace MvcVisionSystem.Yolo
                 return;
             }
 
-            int polygonCount = 0;
-            foreach (SegmentationPolygonRecord record in annotation?.Polygons ?? new List<SegmentationPolygonRecord>())
+            if (((annotation?.ImageWidth ?? 0) > 0 && annotation.ImageWidth != imageSize.Width)
+                || ((annotation?.ImageHeight ?? 0) > 0 && annotation.ImageHeight != imageSize.Height))
             {
-                polygonCount++;
-                if (record?.Points == null || record.Points.Count < 3)
-                {
-                    errors.Add($"{mode} segment polygon has fewer than three points at {Path.GetFileName(segmentPath)}:{polygonCount}");
-                    continue;
-                }
+                errors.Add($"{mode} dataset integrity: segment dimensions at '{Path.GetFileName(segmentPath)}' do not match the image {imageSize.Width}x{imageSize.Height}.");
+            }
 
-                if (string.IsNullOrWhiteSpace(record.ClassName)
-                    && (classes == null || record.ClassIndex < 0 || record.ClassIndex >= classes.Count))
+            if (annotation?.Polygons == null || annotation.Polygons.Count == 0)
+            {
+                errors.Add($"{mode} segment JSON has no polygons: {Path.GetFileName(segmentPath)}");
+                return;
+            }
+
+            try
+            {
+                YoloSegmentationAnnotationService.LoadSegmentationObjects(
+                    segmentPath,
+                    maskPath,
+                    classes,
+                    imageSize);
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"{mode} segment JSON is invalid at {Path.GetFileName(segmentPath)}: {ex.Message}");
+            }
+        }
+
+        private static Dictionary<string, Size> ValidateImageFiles(
+            string mode,
+            IReadOnlyList<string> images,
+            List<string> errors)
+        {
+            var sizes = new Dictionary<string, Size>(StringComparer.OrdinalIgnoreCase);
+            foreach (IGrouping<string, string> collision in (images ?? Array.Empty<string>())
+                .GroupBy(Path.GetFileNameWithoutExtension, StringComparer.OrdinalIgnoreCase)
+                .Where(group => group.Count() > 1))
+            {
+                errors.Add(
+                    $"{mode} dataset integrity: duplicate image stem '{collision.Key}' is used by "
+                    + string.Join(", ", collision.Select(Path.GetFileName).OrderBy(name => name, StringComparer.OrdinalIgnoreCase))
+                    + ". Keep exactly one image file for each stem.");
+            }
+
+            foreach (string imagePath in images ?? Array.Empty<string>())
+            {
+                try
                 {
-                    errors.Add($"{mode} segment polygon has invalid class index at {Path.GetFileName(segmentPath)}:{polygonCount}");
+                    using Image image = Image.FromFile(imagePath);
+                    sizes[imagePath] = image.Size;
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"{mode} dataset integrity: unreadable image '{Path.GetFileName(imagePath)}': {ex.Message}");
                 }
             }
 
-            if (polygonCount == 0)
+            return sizes;
+        }
+
+        private static void ValidateArtifactOwnership(
+            string mode,
+            IReadOnlyList<string> images,
+            string artifactDirectory,
+            string searchPattern,
+            string artifactName,
+            List<string> errors)
+        {
+            if (!Directory.Exists(artifactDirectory))
             {
-                errors.Add($"{mode} segment JSON has no polygons: {Path.GetFileName(segmentPath)}");
+                return;
+            }
+
+            var imageStems = new HashSet<string>(
+                (images ?? Array.Empty<string>()).Select(Path.GetFileNameWithoutExtension),
+                StringComparer.OrdinalIgnoreCase);
+            foreach (string artifactPath in Directory.EnumerateFiles(artifactDirectory, searchPattern)
+                .Where(path => !imageStems.Contains(Path.GetFileNameWithoutExtension(path))))
+            {
+                errors.Add($"{mode} dataset integrity: orphan {artifactName} '{Path.GetFileName(artifactPath)}' has no image with the same stem.");
+            }
+        }
+
+        private static void ValidateMaskFile(string mode, string maskPath, Size imageSize, List<string> errors)
+        {
+            try
+            {
+                using Image mask = Image.FromFile(maskPath);
+                if (mask.Size != imageSize)
+                {
+                    errors.Add($"{mode} dataset integrity: mask dimensions at '{Path.GetFileName(maskPath)}' do not match the image {imageSize.Width}x{imageSize.Height}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"{mode} dataset integrity: unreadable mask '{Path.GetFileName(maskPath)}': {ex.Message}");
             }
         }
 

@@ -257,6 +257,7 @@ namespace MvcVisionSystem
         {
             this.viewModels = viewModels ?? throw new ArgumentNullException(nameof(viewModels));
             InitializeComponent();
+            WpfLocalizationTextRuntimeService.RegisterWindow(this);
             PromoteSharedThemeResourcesToApplication();
             ApplyInitialWindowSizeToWorkArea();
             inferenceStatusPulseTimer = new DispatcherTimer(DispatcherPriority.Render, Dispatcher)
@@ -285,10 +286,12 @@ namespace MvcVisionSystem
             };
             displayAdjustmentRefreshTimer.Tick += DisplayAdjustmentRefreshTimer_Tick;
             DataContext = viewModels;
+            viewModels.LanguageViewModel.LanguageChanged += LanguageViewModel_LanguageChanged;
             RuntimeDiagnosticsViewModel.AttachGraphicsCapabilityProvider(
                 () => WpfOpenGlRuntimeCapabilityProbe.Probe(MainCanvasViewModel.ImageViewer));
             RuntimeDiagnosticsViewModel.ConfigureOpenSetupCenterAction(ExecuteOpenEnvironmentSetupCenterCommand);
             RestoreWorkspaceLayoutSettings();
+            ShellViewModel.RefreshLocalizedPresentation();
             TemplateMatchingAutoLabelViewModel.ConfigureHost(this);
             ComposePanelViewModels();
             LearningWorkflowViewModel.PropertyChanged += LearningWorkflowViewModel_PropertyChanged;

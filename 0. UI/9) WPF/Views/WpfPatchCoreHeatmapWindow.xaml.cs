@@ -28,6 +28,7 @@ namespace MvcVisionSystem
         public WpfPatchCoreHeatmapWindow(WpfCandidateReviewPanelViewModel viewModel)
         {
             InitializeComponent();
+            WpfLocalizationTextRuntimeService.RegisterWindow(this);
             DataContext = viewModel;
         }
 

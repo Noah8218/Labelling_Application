@@ -1,5 +1,6 @@
 using MahApps.Metro.IconPacks;
 using MvcVisionSystem.Yolo;
+using OpenVisionLab;
 using OpenVisionLab.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -48,6 +49,7 @@ namespace MvcVisionSystem
 
         public WpfDatasetSetupWizardViewModel()
         {
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
             DatasetPurposeModes.Add(new WpfLearningModeItem(WpfLearningMode.ObjectDetection, "\uAC1D\uCCB4 \uD0D0\uC9C0", PackIconMaterialKind.ShapeSquareRoundedPlus, "\uBC15\uC2A4 \uB77C\uBCA8 \uB370\uC774\uD130\uC14B"));
             DatasetPurposeModes.Add(new WpfLearningModeItem(WpfLearningMode.Segmentation, "\uC138\uADF8\uBA58\uD14C\uC774\uC158", PackIconMaterialKind.ViewListOutline, "\uD3F4\uB9AC\uACE4\uACFC \uB9C8\uC2A4\uD06C \uB77C\uBCA8"));
             DatasetPurposeModes.Add(new WpfLearningModeItem(WpfLearningMode.AnomalyDetection, "\uC774\uC0C1 \uD0D0\uC9C0", PackIconMaterialKind.AlertCircleOutline, "이미지 전체 정상/이상 판정"));
@@ -57,13 +59,15 @@ namespace MvcVisionSystem
 
         public string ViewName => nameof(WpfDatasetSetupWizardWindow);
 
-        public string SetupSummaryText => "목적, 저장 위치, 원본 이미지, 클래스, 최초 검사 모델을 한 화면에서 확인한 뒤 새 Recipe를 생성합니다.";
+        public string WindowTitleText => T("WpfDatasetSetup.Title");
 
-        public string SetupSourceRuleTitleText => "\uC800\uC7A5 \uD3F4\uB354\uC640 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB294 \uC5ED\uD560\uC774 \uB2E4\uB985\uB2C8\uB2E4";
+        public string SetupSummaryText => T("WpfDatasetSetup.Summary");
 
-        public string SetupSourceRuleDetailText => "\uC800\uC7A5 \uD3F4\uB354\uB294 \uB77C\uBCA8, Recipe, \uD559\uC2B5 \uACB0\uACFC\uB97C \uBCF4\uAD00\uD558\uB294 \uB370\uC774\uD130\uC14B \uAE30\uC900\uC785\uB2C8\uB2E4. \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB294 \uC6D0\uBCF8 \uC774\uBBF8\uC9C0\uB97C \uBCF4\uB294 \uC704\uCE58\uC77C \uBFD0\uC774\uBBC0\uB85C, \uAC19\uC740 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB97C \uC368\uB3C4 \uC0C8 \uC800\uC7A5 \uD3F4\uB354\uBA74 \uB77C\uBCA8\uC774 \uC11E\uC774\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
+        public string SetupSourceRuleTitleText => T("WpfDatasetSetup.SourceRule.Title");
 
-        public string SetupSourceRuleChecklistText => "\uC0C8\uB85C \uC2DC\uC791: \uC0C8 \uC800\uC7A5 \uD3F4\uB354 / \uAE30\uC874 \uC791\uC5C5 \uACC4\uC18D: \uAE30\uC874 \uC800\uC7A5 \uD3F4\uB354 / \uC6D0\uBCF8 \uC774\uBBF8\uC9C0\uB9CC \uAD50\uCCB4: \uC774\uBBF8\uC9C0 \uD3F4\uB354 \uBCC0\uACBD";
+        public string SetupSourceRuleDetailText => T("WpfDatasetSetup.SourceRule.Detail");
+
+        public string SetupSourceRuleChecklistText => T("WpfDatasetSetup.SourceRule.Checklist");
 
         public ObservableCollection<WpfLearningModeItem> DatasetPurposeModes { get; } = new ObservableCollection<WpfLearningModeItem>();
 
@@ -201,8 +205,8 @@ namespace MvcVisionSystem
 
         public string ModelSetupHelpText
             => string.IsNullOrWhiteSpace(WeightsPath)
-                ? "모델 파일은 선택 사항입니다. 비워 두면 수동 라벨링으로 시작하고 나중에 학습 모델을 적용할 수 있습니다."
-                : "선택한 모델 파일은 Recipe 생성과 함께 현재 검사 모델로 저장됩니다.";
+                ? T("WpfDatasetSetup.ModelHelp.Empty")
+                : T("WpfDatasetSetup.ModelHelp.Selected");
 
         public string PreviewText
         {
@@ -312,7 +316,7 @@ namespace MvcVisionSystem
             WeightsPath = string.Empty;
             AnomalyNormalClassNamesText = "normal";
             AnomalyAbnormalClassNamesText = "abnormal";
-            StatusText = "\uC0DD\uC131 \uC804\uC5D0 \uC0C8 \uC800\uC7A5 \uD3F4\uB354, \uC2DC\uC791 \uC774\uBBF8\uC9C0, \uD074\uB798\uC2A4\uB97C \uD655\uC778\uD558\uC138\uC694.";
+            StatusText = T("WpfDatasetSetup.Status.Initial");
             RefreshPreview();
         }
 
@@ -327,35 +331,35 @@ namespace MvcVisionSystem
             string normalizedRecipeName = (RecipeName ?? string.Empty).Trim();
             if (!WpfProjectRecipeService.IsValidRecipeName(normalizedRecipeName))
             {
-                error = "Recipe \uC774\uB984\uC5D0 \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uB294 \uBB38\uC790\uAC00 \uC788\uC2B5\uB2C8\uB2E4.";
+                error = T("WpfDatasetSetup.Error.InvalidRecipeName");
                 return false;
             }
 
             string normalizedOutputRoot = (OutputRootPath ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(normalizedOutputRoot))
             {
-                error = "\uB370\uC774\uD130\uC14B \uC800\uC7A5 \uACBD\uB85C\uB97C \uC785\uB825\uD558\uC138\uC694.";
+                error = T("WpfDatasetSetup.Error.StorageRequired");
                 return false;
             }
 
             IReadOnlyList<string> classNames = ParseClassNames(ClassNamesText);
             if (classNames.Count == 0)
             {
-                error = "\uCD5C\uC18C 1\uAC1C \uC774\uC0C1\uC758 \uD074\uB798\uC2A4\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4.";
+                error = T("WpfDatasetSetup.Error.ClassRequired");
                 return false;
             }
 
             string normalizedImageRoot = (ImageRootPath ?? string.Empty).Trim();
             if (!string.IsNullOrWhiteSpace(normalizedImageRoot) && !Directory.Exists(normalizedImageRoot))
             {
-                error = "원본 이미지 폴더를 찾을 수 없습니다.";
+                error = T("WpfDatasetSetup.Error.ImageRootMissing");
                 return false;
             }
 
             string normalizedWeightsPath = (WeightsPath ?? string.Empty).Trim();
             if (!string.IsNullOrWhiteSpace(normalizedWeightsPath) && !File.Exists(normalizedWeightsPath))
             {
-                error = "검사 모델 파일을 찾을 수 없습니다.";
+                error = T("WpfDatasetSetup.Error.WeightsMissing");
                 return false;
             }
 
@@ -377,7 +381,7 @@ namespace MvcVisionSystem
                 ?? WpfDatasetSamplePresetService.CreateEmptyPreset(request.Purpose);
             if (!samplePreset.IsAvailable)
             {
-                error = $"{samplePreset.Text}: {samplePreset.AvailabilityText}";
+                error = Format("WpfDatasetSetup.Error.SampleUnavailable", samplePreset.Text, samplePreset.AvailabilityText);
                 return false;
             }
 
@@ -413,19 +417,19 @@ namespace MvcVisionSystem
             IReadOnlyList<string> classNames = ParseClassNames(ClassNamesText);
             string classSummary = classNames.Count == 0 ? "-" : string.Join(", ", classNames);
             ClassSummaryText = classNames.Count == 0
-                ? "\uC0DD\uC131\uB420 \uD074\uB798\uC2A4\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uCD5C\uC18C 1\uAC1C\uB97C \uC785\uB825\uD558\uC138\uC694."
-                : string.Format(CultureInfo.InvariantCulture, "\uC0DD\uC131\uB420 \uD074\uB798\uC2A4 {0}\uAC1C: {1}", classNames.Count, classSummary);
+                ? T("WpfDatasetSetup.ClassSummary.Empty")
+                : Format("WpfDatasetSetup.ClassSummary.Count", classNames.Count, classSummary);
             string outputName = string.IsNullOrWhiteSpace(OutputRootPath) ? "-" : Path.GetFileName(OutputRootPath.Trim());
             string sampleSummary = SelectedSamplePreset == null ? "-" : SelectedSamplePreset.Text;
             StorageHelpText = string.IsNullOrWhiteSpace(OutputRootPath)
-                ? "\uC0C8 \uC800\uC7A5 \uD3F4\uB354\uB97C \uC120\uD0DD\uD558\uC138\uC694. \uC774 \uD3F4\uB354\uAC00 \uB77C\uBCA8, Recipe, \uD559\uC2B5 \uD30C\uC77C\uC744 \uBCF4\uAD00\uD558\uB294 \uB370\uC774\uD130\uC14B \uAE30\uC900\uC785\uB2C8\uB2E4."
-                : $"\uC774 \uC800\uC7A5 \uD3F4\uB354\uAC00 \uB77C\uBCA8/Recipe/\uD559\uC2B5 \uD30C\uC77C\uC758 \uAE30\uC900\uC785\uB2C8\uB2E4. \uC0DD\uC131 \uD6C4 \uB77C\uBCA8\uC740 \uC774 \uACBD\uB85C\uC5D0 \uBD84\uB9AC\uB429\uB2C8\uB2E4: {OutputRootPath.Trim()}";
+                ? T("WpfDatasetSetup.StorageHelp.Empty")
+                : Format("WpfDatasetSetup.StorageHelp.Selected", OutputRootPath.Trim());
             ImageSourcePreviewText = BuildImageSourcePreviewText(SelectedSamplePreset, ImageRootPath);
             OnPropertyChanged(nameof(ModelSetupHelpText));
-            IsolationHelpText = "\uC800\uC7A5 \uD3F4\uB354\uAC00 \uB370\uC774\uD130\uC14B\uC744 \uAD6C\uBD84\uD569\uB2C8\uB2E4. \uAC19\uC740 \uC6D0\uBCF8 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB97C \uC368\uB3C4 \uC0C8 \uC800\uC7A5 \uD3F4\uB354\uBA74 \uB77C\uBCA8\uACFC \uD559\uC2B5 \uACB0\uACFC\uAC00 \uBD84\uB9AC\uB429\uB2C8\uB2E4.";
+            IsolationHelpText = T("WpfDatasetSetup.IsolationHelp");
             PreviewText = string.Format(
                 CultureInfo.InvariantCulture,
-                "목적: {0} / 시작 데이터: {1} / Recipe: {2} / 저장 폴더: {3} / 클래스: {4} / 모델: {5}",
+                T("WpfDatasetSetup.Preview"),
                 FormatPurposeText(purpose),
                 sampleSummary,
                 string.IsNullOrWhiteSpace(RecipeName) ? "-" : RecipeName.Trim(),
@@ -438,29 +442,47 @@ namespace MvcVisionSystem
         {
             if (!string.IsNullOrWhiteSpace(imageRootPath))
             {
-                return $"원본 이미지 폴더: {imageRootPath.Trim()}";
+                return Format("WpfDatasetSetup.ImageSource.Selected", imageRootPath.Trim());
             }
 
             if (samplePreset == null || samplePreset.Kind == WpfDatasetSamplePresetKind.Empty)
             {
-                return "원본 이미지 폴더: 비워 두면 Recipe 내부 train/images 폴더로 시작합니다.";
+                return T("WpfDatasetSetup.ImageSource.Empty");
             }
 
             string sourcePath = string.IsNullOrWhiteSpace(samplePreset.ImageSourcePath)
-                ? "\uC0D8\uD50C \uC6D0\uBCF8 \uACBD\uB85C \uBBF8\uD655\uC778"
+                ? T("WpfDatasetSetup.ImageSource.Unknown")
                 : samplePreset.ImageSourcePath;
-            return $"\uC6D0\uBCF8 \uC774\uBBF8\uC9C0 \uD3F4\uB354: {sourcePath}";
+            return Format("WpfDatasetSetup.ImageSource.Sample", sourcePath);
         }
 
         private static string FormatPurposeText(LabelingDatasetPurpose purpose)
         {
             return purpose switch
             {
-                LabelingDatasetPurpose.Segmentation => "\uC138\uADF8\uBA58\uD14C\uC774\uC158",
-                LabelingDatasetPurpose.AnomalyDetection => "\uC774\uC0C1 \uD0D0\uC9C0",
-                _ => "\uAC1D\uCCB4 \uD0D0\uC9C0"
+                LabelingDatasetPurpose.Segmentation => T("WpfShell.Dataset.Purpose.Segmentation"),
+                LabelingDatasetPurpose.AnomalyDetection => T("WpfShell.Dataset.Purpose.AnomalyDetection"),
+                _ => T("WpfShell.Dataset.Purpose.ObjectDetection")
             };
         }
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(WindowTitleText));
+            OnPropertyChanged(nameof(SetupSummaryText));
+            OnPropertyChanged(nameof(SetupSourceRuleTitleText));
+            OnPropertyChanged(nameof(SetupSourceRuleDetailText));
+            OnPropertyChanged(nameof(SetupSourceRuleChecklistText));
+            OnPropertyChanged(nameof(ModelSetupHelpText));
+            StatusText = WpfLocalizationTextRuntimeService.Translate(StatusText);
+            RefreshSamplePresets();
+            RefreshPreview();
+        }
+
+        private static string T(string key) => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] values)
+            => string.Format(CultureInfo.InvariantCulture, T(key), values ?? Array.Empty<object>());
 
         private void RefreshSamplePresets()
         {
@@ -537,6 +559,10 @@ namespace MvcVisionSystem
 
     public sealed class WpfDatasetSamplePresetItem
     {
+        private readonly string text;
+        private readonly string toolTip;
+        private readonly string availabilityText;
+
         public WpfDatasetSamplePresetItem(
             WpfDatasetSamplePresetKind kind,
             LabelingDatasetPurpose purpose,
@@ -550,22 +576,22 @@ namespace MvcVisionSystem
         {
             Kind = kind;
             Purpose = purpose;
-            Text = text ?? string.Empty;
-            ToolTip = toolTip ?? string.Empty;
             ImageSourcePath = imageSourcePath ?? string.Empty;
             LabelSourcePath = labelSourcePath ?? string.Empty;
             ClassNames = classNames ?? Array.Empty<string>();
             IsAvailable = isAvailable;
-            AvailabilityText = availabilityText ?? string.Empty;
+            this.text = text ?? string.Empty;
+            this.toolTip = toolTip ?? string.Empty;
+            this.availabilityText = availabilityText ?? string.Empty;
         }
 
         public WpfDatasetSamplePresetKind Kind { get; }
 
         public LabelingDatasetPurpose Purpose { get; }
 
-        public string Text { get; }
+        public string Text => WpfLocalizationTextRuntimeService.Translate(text);
 
-        public string ToolTip { get; }
+        public string ToolTip => WpfLocalizationTextRuntimeService.Translate(toolTip);
 
         public string ImageSourcePath { get; }
 
@@ -575,6 +601,6 @@ namespace MvcVisionSystem
 
         public bool IsAvailable { get; }
 
-        public string AvailabilityText { get; }
+        public string AvailabilityText => WpfLocalizationTextRuntimeService.Translate(availabilityText);
     }
 }

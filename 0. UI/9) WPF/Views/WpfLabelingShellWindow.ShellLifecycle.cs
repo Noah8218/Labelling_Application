@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using OpenVisionLab;
 using OpenVisionLab.Wpf.MessageDialogs;
 using System.Windows.Threading;
 
@@ -19,7 +20,7 @@ namespace MvcVisionSystem
                 {
                     TryLoadStartupSampleImage();
                 }
-                SetPythonStatus("\uCD94\uB860: \uC2E4\uD589 \uB300\uAE30");
+                SetPythonStatus(OpenVisionLanguageService.T("WpfShell.Status.InferenceWaiting"));
                 AppendLog("시작 완료. 추론은 사용자가 명시적으로 실행할 때만 시작합니다.");
             }), DispatcherPriority.ApplicationIdle);
         }
@@ -201,6 +202,7 @@ namespace MvcVisionSystem
 
         private void ExecuteClosedCommand()
         {
+            viewModels.LanguageViewModel.LanguageChanged -= LanguageViewModel_LanguageChanged;
             DiscardCrashRecoveryJournal();
             SaveWorkspaceLayoutSettings();
             CloseModelBenchmarkWindow();

@@ -51,11 +51,20 @@ namespace MvcVisionSystem.Yolo
                 .FirstOrDefault(File.Exists);
             if (!string.IsNullOrWhiteSpace(segmentPath))
             {
-                IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments =
-                    YoloSegmentationAnnotationService.LoadSegmentationObjects(
-                        segmentPath,
+                IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments;
+                try
+                {
+                    segments = YoloSegmentationAnnotationService.LoadSegmentationObjectsForImage(
+                        imagePath,
                         data?.ClassNamedList,
+                        data,
                         imageSize);
+                }
+                catch (InvalidDataException)
+                {
+                    return new YoloImageLabelStatus(segmentPath, 0, 1);
+                }
+
                 int objectCount = segments?
                     .Values
                     .Where(list => list != null)

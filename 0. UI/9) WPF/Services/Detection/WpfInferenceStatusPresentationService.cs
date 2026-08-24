@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using MvcVisionSystem._1._Core;
 using MvcVisionSystem.Yolo;
+using OpenVisionLab;
 
 namespace MvcVisionSystem
 {
@@ -43,7 +44,7 @@ namespace MvcVisionSystem
             PythonModelRuntimeState runtimeState)
         {
             return validationResult?.IsValid == true
-                ? "\uCD94\uB860: \uC900\uBE44 \uC644\uB8CC"
+                ? OpenVisionLanguageService.T("WpfShell.Status.InferenceReady")
                 : runtimeState?.SummaryText ?? string.Empty;
         }
 
@@ -59,9 +60,13 @@ namespace MvcVisionSystem
 
             string displayPath = WpfTrainingWeightsService.FormatWeightsDisplayPath(weightsPath);
             string runtimeLabel = BuildRuntimeLabel(settings);
-            return hasPendingModelCandidate
-                ? $"\uAC80\uC0AC \uD6C4\uBCF4: {runtimeLabel} / {displayPath}"
-                : $"\uAC80\uC0AC \uBAA8\uB378: {runtimeLabel} / {displayPath}";
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                OpenVisionLanguageService.T(hasPendingModelCandidate
+                    ? "WpfShell.Status.InspectionCandidate"
+                    : "WpfShell.Status.InspectionModel"),
+                runtimeLabel,
+                displayPath);
         }
 
         public static string BuildInspectionModelToolTip(

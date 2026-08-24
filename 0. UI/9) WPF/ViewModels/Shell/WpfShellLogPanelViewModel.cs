@@ -1,4 +1,6 @@
 using OpenVisionLab.Mvvm;
+using OpenVisionLab;
+using System.Globalization;
 using System;
 using System.Windows;
 using System.Windows.Input;
@@ -14,15 +16,21 @@ namespace MvcVisionSystem
 
         private bool isLogPaneExpanded;
         private int logCount;
-        private string logSummaryText = "\uB85C\uADF8 0\uAC74";
-        private string latestLogText = "\uCD5C\uADFC \uB85C\uADF8 \uC5C6\uC74C";
-        private string logPaneToggleText = "\uB85C\uADF8 \uC5F4\uAE30";
-        private string logPaneToggleToolTip = "\uD558\uB2E8 \uC0C1\uC138 \uB85C\uADF8\uB97C \uC5F4\uC5B4 \uC2E4\uD589 \uC774\uB825\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.";
+        private string logSummaryText = Format("WpfShell.Log.Count", 0);
+        private string latestLogText = T("WpfShell.Log.Empty");
+        private string latestLogMessage = string.Empty;
+        private string logPaneToggleText = T("WpfShell.Log.Toggle.Open");
+        private string logPaneToggleToolTip = T("WpfShell.Log.Toggle.Open.ToolTip");
         private Visibility collapsedSummaryVisibility = Visibility.Visible;
         private Visibility expandedLogVisibility = Visibility.Collapsed;
         private GridLength logPaneGridLength = CollapsedLogPaneGridLengthValue;
         private GridLength logPaneSeparatorGridLength = CollapsedSeparatorGridLengthValue;
         private ICommand toggleLogPaneCommand;
+
+        public WpfShellLogPanelViewModel()
+        {
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
+        }
 
         public string ViewName => nameof(WpfShellLogPanel);
 
@@ -106,19 +114,54 @@ namespace MvcVisionSystem
             ExpandedLogVisibility = isExpanded ? Visibility.Visible : Visibility.Collapsed;
             LogPaneGridLength = isExpanded ? ExpandedLogPaneGridLengthValue : CollapsedLogPaneGridLengthValue;
             LogPaneSeparatorGridLength = isExpanded ? ExpandedSeparatorGridLengthValue : CollapsedSeparatorGridLengthValue;
-            LogPaneToggleText = isExpanded ? "\uB85C\uADF8 \uC811\uAE30" : "\uB85C\uADF8 \uC5F4\uAE30";
+            LogPaneToggleText = isExpanded
+                ? T("WpfShell.Log.Toggle.Close")
+                : T("WpfShell.Log.Toggle.Open");
             LogPaneToggleToolTip = isExpanded
-                ? "\uD558\uB2E8 \uB85C\uADF8\uB97C \uC811\uACE0 \uCE94\uBC84\uC2A4 \uC138\uB85C \uACF5\uAC04\uC744 \uB113\uD799\uB2C8\uB2E4."
-                : "\uD558\uB2E8 \uC0C1\uC138 \uB85C\uADF8\uB97C \uC5F4\uC5B4 \uC2E4\uD589 \uC774\uB825\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.";
+                ? T("WpfShell.Log.Toggle.Close.ToolTip")
+                : T("WpfShell.Log.Toggle.Open.ToolTip");
         }
 
         public void RecordLog(string message)
         {
             LogCount++;
-            LogSummaryText = $"\uB85C\uADF8 {LogCount}\uAC74";
-            LatestLogText = string.IsNullOrWhiteSpace(message)
-                ? "\uCD5C\uADFC \uB85C\uADF8: \uB0B4\uC6A9 \uC5C6\uC74C"
-                : $"\uCD5C\uADFC \uB85C\uADF8: {message.Trim()}";
+            latestLogMessage = message?.Trim() ?? string.Empty;
+            RefreshLocalizedPresentation();
+        }
+
+        public void RefreshLocalizedPresentation()
+        {
+            LogSummaryText = Format("WpfShell.Log.Count", LogCount);
+            string localizedMessage = string.IsNullOrWhiteSpace(latestLogMessage)
+                ? string.Empty
+                : WpfLocalizationTextRuntimeService.Translate(latestLogMessage);
+            LatestLogText = string.IsNullOrWhiteSpace(localizedMessage)
+                ? T("WpfShell.Log.Empty")
+                : Format("WpfShell.Log.Latest", localizedMessage);
+            LogPaneToggleText = IsLogPaneExpanded
+                ? T("WpfShell.Log.Toggle.Close")
+                : T("WpfShell.Log.Toggle.Open");
+            LogPaneToggleToolTip = IsLogPaneExpanded
+                ? T("WpfShell.Log.Toggle.Close.ToolTip")
+                : T("WpfShell.Log.Toggle.Open.ToolTip");
+        }
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            RefreshLocalizedPresentation();
+        }
+
+        private static string T(string key)
+        {
+            return OpenVisionLanguageService.T(key);
+        }
+
+        private static string Format(string key, params object[] arguments)
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                T(key),
+                arguments ?? Array.Empty<object>());
         }
 
         private void ToggleLogPane()

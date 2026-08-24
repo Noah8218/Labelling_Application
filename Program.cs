@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using OpenVisionLab;
 
 namespace MvcVisionSystem
 {
@@ -18,6 +19,7 @@ namespace MvcVisionSystem
             }
 
             WpfRuntimeDiagnosticsService.ConfigureApplicationStartup();
+            OpenVisionLanguageService.Load();
             using (Mutex mutex = new Mutex(true, "MvcVisionSystem", out bool bNew))
             {
                 if (!bNew)

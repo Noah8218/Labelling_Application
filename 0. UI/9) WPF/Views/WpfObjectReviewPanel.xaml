@@ -10,6 +10,7 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
         <Style x:Key="ObjectReviewButtonStyle" TargetType="{x:Type ui:Button}">
+            <Setter Property="Template" Value="{DynamicResource WpfUiDarkButtonTemplate}" />
             <Setter Property="Background" Value="{DynamicResource ToolbarButtonBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButtonBorderBrush}" />
@@ -614,7 +615,11 @@
                           FontFamily="Segoe UI"
                           FontSize="11"
                           IsExpanded="True">
-                    <StackPanel Margin="0,4,0,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  MaxHeight="100"
+                                  CanContentScroll="True">
+                        <StackPanel Margin="0,4,0,0">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -860,7 +865,8 @@
                                        ToolTip="Recipe &#xD0DC;&#xADF8; &#xC815;&#xC758;&#xB9CC; &#xBE48; &#xBAA9;&#xB85D;&#xC73C;&#xB85C; &#xB418;&#xB3CC;&#xB9BC;. &#xAE30;&#xC874; &#xAC1D;&#xCCB4; &#xD0DC;&#xADF8;&#xB294; &#xBCF4;&#xC874;"
                                        Command="{Binding ResetRecipeMetadataTagsCommand}" />
                         </Grid>
-                    </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Expander>
                 <Expander x:Name="SegmentationAdvancedEditExpander"
                           AutomationProperties.AutomationId="SegmentationAdvancedEditExpander"

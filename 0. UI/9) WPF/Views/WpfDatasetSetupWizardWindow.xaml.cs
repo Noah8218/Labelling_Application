@@ -9,6 +9,7 @@ namespace MvcVisionSystem
         public WpfDatasetSetupWizardWindow()
         {
             InitializeComponent();
+            WpfLocalizationTextRuntimeService.RegisterWindow(this);
         }
 
         public WpfDatasetSetupWizardViewModel ViewModel => DataContext as WpfDatasetSetupWizardViewModel;

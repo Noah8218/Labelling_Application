@@ -1,5 +1,6 @@
 using MahApps.Metro.IconPacks;
 using MvcVisionSystem.Yolo;
+using OpenVisionLab;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -54,35 +55,43 @@ namespace MvcVisionSystem
             var parts = new List<string>();
             if (summary.NeedsFixCount > 0)
             {
-                parts.Add($"수정 필요 {summary.NeedsFixCount}");
+                parts.Add(Format("WpfImageQueue.Filter.NeedsFix", summary.NeedsFixCount));
             }
 
             if (summary.CandidateCount > 0)
             {
-                parts.Add($"AI 후보 {summary.CandidateCount}");
+                parts.Add(Format("WpfImageQueue.Filter.Candidate", summary.CandidateCount));
             }
 
             if (summary.FailedCount > 0)
             {
-                parts.Add($"실패 {summary.FailedCount}");
+                parts.Add(Format("WpfImageQueue.Filter.Failed", summary.FailedCount));
             }
 
             if (summary.ConfirmedCount > 0)
             {
-                parts.Add($"저장됨 {summary.ConfirmedCount}");
+                parts.Add(Format("WpfImageQueue.Filter.Confirmed", summary.ConfirmedCount));
             }
 
             if (summary.SkippedCount > 0)
             {
-                parts.Add($"숨김 {summary.SkippedCount}");
+                parts.Add(Format("WpfImageQueue.Filter.Skipped", summary.SkippedCount));
             }
 
             if (summary.NoCandidateCount > 0)
             {
-                parts.Add($"객체없음 {summary.NoCandidateCount}");
+                parts.Add(Format("WpfImageQueue.Filter.NoCandidate", summary.NoCandidateCount));
             }
 
             return parts.Count == 0 ? string.Empty : " / " + string.Join(" / ", parts);
+        }
+
+        private static string Format(string key, params object[] arguments)
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                OpenVisionLanguageService.T(key),
+                arguments ?? Array.Empty<object>());
         }
 
         private static string FormatSelection(string selection)

@@ -1,10 +1,12 @@
 using MvcVisionSystem.Yolo;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using OpenVisionLab;
 using DrawingSize = System.Drawing.Size;
 
 namespace MvcVisionSystem
@@ -175,8 +177,18 @@ namespace MvcVisionSystem
             int loaded = Math.Min(Math.Max(0, loadedCount), total);
             string activeText = string.IsNullOrWhiteSpace(activeImagePath)
                 ? string.Empty
-                : $" / \uD604\uC7AC {Path.GetFileName(activeImagePath)}";
-            SetDatasetStatus($"\uB370\uC774\uD130\uC14B: {imageQueueItems.Count}/{total} \uC774\uBBF8\uC9C0 / \uC0C1\uD0DC \uD655\uC778 {loaded}/{total}{activeText}");
+                : string.Format(
+                    CultureInfo.InvariantCulture,
+                    OpenVisionLanguageService.T("WpfShell.Status.DatasetDetailActiveImage"),
+                    Path.GetFileName(activeImagePath));
+            SetDatasetStatus(string.Format(
+                CultureInfo.InvariantCulture,
+                OpenVisionLanguageService.T("WpfShell.Status.DatasetDetailProgress"),
+                imageQueueItems.Count,
+                total,
+                loaded,
+                total,
+                activeText));
         }
 
         private WpfImageQueueDetail BuildImageQueueDetail(

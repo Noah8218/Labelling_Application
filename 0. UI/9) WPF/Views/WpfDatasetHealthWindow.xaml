@@ -19,6 +19,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
+                <ResourceDictionary Source="../Themes/WpfButtonStateTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0C0D0F" />
@@ -39,6 +40,7 @@
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
             <Style x:Key="DatasetHealthActionButtonStyle" TargetType="{x:Type ui:Button}">
+                <Setter Property="Template" Value="{StaticResource WpfUiDarkButtonTemplate}" />
                 <Setter Property="Height" Value="32" />
                 <Setter Property="Padding" Value="11,4" />
                 <Setter Property="Background" Value="{DynamicResource ToolbarButtonBrush}" />
@@ -607,7 +609,7 @@
                                                                TextTrimming="CharacterEllipsis"
                                                                ToolTip="{Binding ImagePath}" />
                                                     <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                                        <TextBlock Text="{Binding SplitText}"
+                                                        <TextBlock Text="{Binding DisplaySplitText}"
                                                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                                                    FontFamily="Segoe UI"
                                                                    FontSize="9.5" />

@@ -21,8 +21,10 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
+                <ResourceDictionary Source="../Themes/WpfButtonStateTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <Style x:Key="PatchCoreHeatmapWindowButtonStyle" TargetType="{x:Type ui:Button}">
+                <Setter Property="Template" Value="{StaticResource WpfUiDarkButtonTemplate}" />
                 <Setter Property="Background" Value="{DynamicResource ToolbarButtonBrush}" />
                 <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ToolbarButtonBorderBrush}" />

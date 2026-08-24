@@ -29,6 +29,7 @@ namespace MvcVisionSystem
             RegisterClassCatalogName(nameof(CurrentDrawingClassTitleText), CurrentDrawingClassTitleText);
             RegisterClassCatalogName(nameof(CurrentDrawingClassDetailText), CurrentDrawingClassDetailText);
             RegisterClassCatalogName(nameof(ClassCatalogActionText), ClassCatalogActionText);
+            RegisterClassCatalogName(nameof(ClassSectionLabelText), ClassSectionLabelText);
             RegisterClassCatalogName(nameof(ClassNameBox), ClassNameBox);
             RegisterClassCatalogName(nameof(AddClassButton), AddClassButton);
             RegisterClassCatalogName(nameof(RenameClassButton), RenameClassButton);

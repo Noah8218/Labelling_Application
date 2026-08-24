@@ -1,3 +1,4 @@
+using OpenVisionLab;
 using OpenVisionLab.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,7 @@ namespace MvcVisionSystem
         {
             this.catalogService = catalogService ?? new WpfModelBenchmarkCatalogService();
             this.repositoryRoot = repositoryRoot ?? string.Empty;
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
             TaskFilters.Add("\uC804\uCCB4");
             filteredRuns = CollectionViewSource.GetDefaultView(CatalogRuns);
             filteredRuns.Filter = MatchesFilter;
@@ -112,7 +114,7 @@ namespace MvcVisionSystem
         public bool HasSelectedGroundTruthPreviewPredictionBox => SelectedGroundTruthExample?.HasPredictionBoxOverlay ?? false;
 
         public string GroundTruthPreviewTitleText => SelectedGroundTruthExample == null
-            ? "선택 오류 원본"
+            ? T("WpfModelBenchmark.GroundTruthPreview.ErrorTitle")
             : SelectedGroundTruthExample.ImageName;
 
         public string GroundTruthPreviewDetailText => SelectedGroundTruthExample == null
@@ -126,12 +128,22 @@ namespace MvcVisionSystem
             }.Where(value => !string.IsNullOrWhiteSpace(value)));
 
         public string GroundTruthPreviewStatusText => SelectedGroundTruthExample == null
-            ? "오류 예시를 선택하세요."
+            ? T("WpfModelBenchmark.GroundTruthPreview.SelectPrompt")
             : HasSelectedGroundTruthPreview
                 ? string.Empty
-                : "원본 이미지 경로를 열 수 없습니다.";
+                : T("WpfModelBenchmark.GroundTruthPreview.SourceMissing");
 
         public ICollectionView FilteredRuns => filteredRuns;
+
+        public string SummaryTabText => T("WpfModelBenchmark.Tab.Summary");
+
+        public string MetricsTabText => T("WpfModelBenchmark.Tab.Metrics");
+
+        public string ClassErrorsTabText => T("WpfModelBenchmark.Tab.ClassErrors");
+
+        public string RunConditionsTabText => T("WpfModelBenchmark.Tab.RunConditions");
+
+        public string ThresholdTabText => T("WpfModelBenchmark.Tab.Threshold");
 
         public ICommand RefreshCommand { get; }
 
@@ -476,7 +488,7 @@ namespace MvcVisionSystem
                 return true;
             }
 
-            StatusText = $"\uBE44\uAD50 \uC120\uD0DD\uC740 {MaximumSelectedRunCount}\uAC1C\uAE4C\uC9C0 \uAC00\uB2A5\uD569\uB2C8\uB2E4.";
+            StatusText = Format("WpfModelBenchmark.Status.SelectionLimit", MaximumSelectedRunCount);
             return false;
         }
 
@@ -562,8 +574,8 @@ namespace MvcVisionSystem
             ComparisonNoticeText = BuildComparisonNotice(selectedRuns, baseline);
             RebuildDashboard(selectedRuns, baseline);
             StatusText = selectedItems.Count == 0
-                ? $"\uC2E4\uD589 {CatalogRuns.Count}\uAC1C \u00B7 \uC120\uD0DD 0/{MaximumSelectedRunCount}"
-                : $"\uC2E4\uD589 {CatalogRuns.Count}\uAC1C \u00B7 \uC120\uD0DD {selectedItems.Count}/{MaximumSelectedRunCount} \u00B7 \uAE30\uC900 {baseline?.DisplayName}";
+                ? Format("WpfModelBenchmark.Status.Empty", CatalogRuns.Count, MaximumSelectedRunCount)
+                : Format("WpfModelBenchmark.Status.Selected", CatalogRuns.Count, selectedItems.Count, MaximumSelectedRunCount, baseline?.DisplayName);
         }
 
         private void RebuildMetricRows(IReadOnlyList<WpfModelBenchmarkRun> selectedRuns, WpfModelBenchmarkRun baseline)
@@ -606,8 +618,8 @@ namespace MvcVisionSystem
             bool anomalyOnly = selectedRuns.Count > 0
                 && selectedRuns.All(run => string.Equals(run.TaskKey, "anomaly-classification", StringComparison.OrdinalIgnoreCase));
             GroundTruthExamplesTitleText = anomalyOnly
-                ? "\uC774\uBBF8\uC9C0\uBCC4 \uD310\uC815 \uACB0\uACFC"
-                : "\uC815\uB2F5 \uB300\uC870 \uC624\uB958 \uC608\uC2DC";
+                ? T("WpfModelBenchmark.GroundTruth.Title.Decision")
+                : T("WpfModelBenchmark.GroundTruth.Title.Errors");
             foreach (WpfModelBenchmarkRun run in selectedRuns)
             {
                 IReadOnlyDictionary<int, WpfModelBenchmarkClassMetric> metricsByClass = run.ClassMetrics
@@ -660,12 +672,12 @@ namespace MvcVisionSystem
 
             GroundTruthReviewNoticeText = notices.Count > 0
                 ? string.Join("  |  ", notices)
-                : "선택한 리포트에 클래스별/정답 대조 정보가 없습니다. 새 비교를 실행하면 추가됩니다.";
+                : T("WpfModelBenchmark.GroundTruth.Notice.Empty");
             GroundTruthErrorExampleStatusText = GroundTruthExamples.Count > 0
                 ? anomalyOnly
                     ? $"\uC624\uB958 \uC6B0\uC120\uC73C\uB85C \uC800\uC7A5\uB41C \uC774\uBBF8\uC9C0\uBCC4 \uD310\uC815 \uACB0\uACFC {GroundTruthExamples.Count}\uAC74\uC785\uB2C8\uB2E4. \uD45C\uC2DC\uB294 \uCD5C\uB300 500\uAC74\uC785\uB2C8\uB2E4."
                     : $"\uB9AC\uD3EC\uD2B8\uC5D0 \uC800\uC7A5\uB41C \uC624\uB958 \uC608\uC2DC {GroundTruthExamples.Count}\uAC74"
-                : "리포트에 저장된 미검출/오검출 예시가 없습니다.";
+                : T("WpfModelBenchmark.GroundTruth.Errors.Empty");
             if (notices.Count == 0
                 && selectedRuns.Count > 0
                 && selectedRuns.All(run => string.Equals(run.TaskKey, "segmentation", StringComparison.OrdinalIgnoreCase)))
@@ -697,8 +709,8 @@ namespace MvcVisionSystem
 
             HasThresholdReviewRows = ThresholdReviewRows.Count > 0;
             ThresholdReviewStatusText = HasThresholdReviewRows
-                ? $"\uC800\uC7A5\uB41C \uC608\uCE21/\uC815\uB2F5 \uB300\uC870 \uB9AC\uD3EC\uD2B8 {reviewRunCount}\uAC1C\uC758 \uC784\uACC4\uAC12\uBCC4 \uACB0\uACFC\uC785\uB2C8\uB2E4. \uC774 \uD654\uBA74\uC740 \uCD94\uB860\uC744 \uB2E4\uC2DC \uC2E4\uD589\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
-                : "\uC120\uD0DD\uD55C \uB9AC\uD3EC\uD2B8\uC5D0\uB294 v2 \uC784\uACC4\uAC12 \uB300\uC870\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uAC1D\uCCB4 \uD0D0\uC9C0 \uBE44\uAD50\uB97C \uB2E4\uC2DC \uC2E4\uD589\uD558\uBA74 \uC800\uC7A5\uB429\uB2C8\uB2E4.";
+                ? Format("WpfModelBenchmark.Threshold.Status.Ready", reviewRunCount)
+                : T("WpfModelBenchmark.Threshold.Status.Empty");
         }
 
         private void RebuildDashboard(IReadOnlyList<WpfModelBenchmarkRun> selectedRuns, WpfModelBenchmarkRun baseline)
@@ -708,16 +720,16 @@ namespace MvcVisionSystem
 
             if (baseline == null)
             {
-                DashboardEvidenceText = "\uC120\uD0DD \uC5C6\uC74C";
-                DashboardEvidenceDetailText = "\uBE44\uAD50\uD560 \uC2E4\uD589\uC744 \uC120\uD0DD\uD558\uC138\uC694.";
-                DashboardQualityText = "\uC9C0\uD45C \uC5C6\uC74C";
-                DashboardQualityDetailText = "\uC120\uD0DD\uB41C \uC2E4\uD589\uC758 \uB300\uD45C \uC9C0\uD45C\uAC00 \uC5EC\uAE30\uC5D0 \uD45C\uC2DC\uB429\uB2C8\uB2E4.";
-                DashboardTaktText = "Takt \uC5C6\uC74C";
-                DashboardTaktDetailText = "\uB3D9\uC77C \uC2E4\uD589 \uC870\uAC74\uC758 \uC2E4\uD589\uC744 \uC120\uD0DD\uD558\uC138\uC694.";
-                DashboardDecisionText = "\uD310\uC815 \uC5C6\uC74C";
-                DashboardDecisionDetailText = "\uC120\uD0DD \uD6C4 \uBCF4\uACE0\uC11C\uC758 \uD310\uC815\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.";
-                DashboardQualityTaktStatusText = "\uB3D9\uC77C \uD3C9\uAC00 \uADFC\uAC70\uC640 \uD0C0\uC774\uBC0D \uC870\uAC74\uC758 \uC2E4\uD589 2\uAC1C \uC774\uC0C1\uC774 \uD544\uC694\uD569\uB2C8\uB2E4.";
-                DashboardOutcomeStatusText = "\uC815\uB2F5 \uB300\uC870 \uACB0\uACFC\uAC00 \uC788\uB294 \uD0D0\uC9C0 \uBCF4\uACE0\uC11C\uB97C \uC120\uD0DD\uD558\uC138\uC694.";
+                DashboardEvidenceText = T("WpfModelBenchmark.Dashboard.Evidence.None");
+                DashboardEvidenceDetailText = T("WpfModelBenchmark.Dashboard.Evidence.Prompt");
+                DashboardQualityText = T("WpfModelBenchmark.Dashboard.Quality.None");
+                DashboardQualityDetailText = T("WpfModelBenchmark.Dashboard.Quality.Prompt");
+                DashboardTaktText = T("WpfModelBenchmark.Dashboard.Takt.None");
+                DashboardTaktDetailText = T("WpfModelBenchmark.Dashboard.Takt.Prompt");
+                DashboardDecisionText = T("WpfModelBenchmark.Dashboard.Decision.None");
+                DashboardDecisionDetailText = T("WpfModelBenchmark.Dashboard.Decision.Prompt");
+                DashboardQualityTaktStatusText = T("WpfModelBenchmark.Dashboard.QualityTakt.Prompt");
+                DashboardOutcomeStatusText = T("WpfModelBenchmark.Dashboard.Outcome.Prompt");
                 HasDashboardQualityTaktPoints = false;
                 HasDashboardOutcomeRows = false;
                 DashboardRevision = DashboardRevision == int.MaxValue ? 0 : DashboardRevision + 1;
@@ -917,12 +929,12 @@ namespace MvcVisionSystem
         {
             if (selectedRuns.Count == 0)
             {
-                return "\uBE44\uAD50\uD560 \uC2E4\uD589\uC774 \uC120\uD0DD\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4.";
+                return T("WpfModelBenchmark.Comparison.None");
             }
 
             if (selectedRuns.Count == 1)
             {
-                return "\uAE30\uC900 \uC2E4\uD589 1\uAC1C\uAC00 \uC120\uD0DD\uB418\uC5C8\uC2B5\uB2C8\uB2E4.";
+                return T("WpfModelBenchmark.Comparison.One");
             }
 
             if (selectedRuns.Any(run => !string.Equals(run.TaskKey, baseline?.TaskKey, StringComparison.OrdinalIgnoreCase)))
@@ -951,6 +963,23 @@ namespace MvcVisionSystem
 
             return "\uC815\uD655\uB3C4/Takt \uBE44\uAD50 \uAC00\uB2A5 \u00B7 " + evidenceIdentityText;
         }
+
+        private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(SummaryTabText));
+            OnPropertyChanged(nameof(MetricsTabText));
+            OnPropertyChanged(nameof(ClassErrorsTabText));
+            OnPropertyChanged(nameof(RunConditionsTabText));
+            OnPropertyChanged(nameof(ThresholdTabText));
+            OnPropertyChanged(nameof(GroundTruthPreviewTitleText));
+            OnPropertyChanged(nameof(GroundTruthPreviewStatusText));
+            RefreshComparison();
+        }
+
+        private static string T(string key) => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] values)
+            => string.Format(CultureInfo.InvariantCulture, T(key), values ?? Array.Empty<object>());
 
         private static string NormalizePath(string path)
         {

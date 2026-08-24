@@ -7,6 +7,7 @@ namespace MvcVisionSystem
         public WpfDatasetSelectionWindow()
         {
             InitializeComponent();
+            WpfLocalizationTextRuntimeService.RegisterWindow(this);
         }
 
         public WpfDatasetSelectionWindowViewModel ViewModel => DataContext as WpfDatasetSelectionWindowViewModel;

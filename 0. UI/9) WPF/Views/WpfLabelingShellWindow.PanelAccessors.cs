@@ -110,6 +110,7 @@ namespace MvcVisionSystem
         private Wpf.Ui.Controls.Button QueueFilterSkippedButton => ImageQueuePanelControl?.QueueFilterSkipped;
         private Wpf.Ui.Controls.Button QueueFilterNoCandidateButton => ImageQueuePanelControl?.QueueFilterNoCandidate;
         private TextBlock QueueFilterUnfinishedText => ImageQueuePanelControl?.QueueFilterUnfinishedTextBlock;
+        private TextBlock ImageQueuePanelTitleText => ImageQueuePanelControl?.PanelTitleTextBlock;
         private TextBlock QueueFilterAllText => ImageQueuePanelControl?.QueueFilterAllTextBlock;
         private TextBlock QueueFilterCandidateText => ImageQueuePanelControl?.QueueFilterCandidateTextBlock;
         private TextBlock QueueFilterFailedText => ImageQueuePanelControl?.QueueFilterFailedTextBlock;
@@ -251,6 +252,7 @@ namespace MvcVisionSystem
         private TextBlock CurrentDrawingClassTitleText => ClassCatalogPanelControl?.CurrentDrawingClassTitleTextBlock;
         private TextBlock CurrentDrawingClassDetailText => ClassCatalogPanelControl?.CurrentDrawingClassDetailTextBlock;
         private TextBlock ClassCatalogActionText => ClassCatalogPanelControl?.ActionTextBlock;
+        private TextBlock ClassSectionLabelText => ClassCatalogPanelControl?.ClassSectionLabelTextBlock;
         private TextBox ClassNameBox => ClassCatalogPanelControl?.ClassNameTextBox;
         private Wpf.Ui.Controls.Button AddClassButton => ClassCatalogPanelControl?.AddClass;
         private Wpf.Ui.Controls.Button RenameClassButton => ClassCatalogPanelControl?.RenameClass;

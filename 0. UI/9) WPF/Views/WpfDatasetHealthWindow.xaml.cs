@@ -28,6 +28,7 @@ namespace MvcVisionSystem
         public WpfDatasetHealthWindow(WpfDatasetHealthViewModel viewModel = null)
         {
             InitializeComponent();
+            WpfLocalizationTextRuntimeService.RegisterWindow(this);
             DataContext = viewModel ?? new WpfDatasetHealthViewModel();
         }
 

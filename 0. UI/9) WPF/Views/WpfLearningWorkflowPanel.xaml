@@ -766,7 +766,7 @@
                   HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="10">
             <TextBlock x:Name="DatasetPurposeHeaderText"
-                       Text="&#xB370;&#xC774;&#xD130;&#xC14B; &#xBAA9;&#xC801;"
+                       Text="{Binding DatasetPurposeHeaderText}"
                        Style="{StaticResource LearningWorkflowCaptionStyle}"
                        Visibility="{Binding DatasetOnboardingVisibility}"
                        Margin="0,0,0,4" />
@@ -1031,7 +1031,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0"
                                     Margin="0,0,8,0">
-                            <TextBlock Text="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC900;&#xBE44;"
+                            <TextBlock Text="{Binding DatasetSetupSectionTitleText}"
                                        Style="{StaticResource LearningWorkflowCaptionStyle}" />
                             <TextBlock x:Name="DatasetSetupFirstActionText"
                                        Text="{Binding DatasetSetupFirstActionText}"
@@ -1057,8 +1057,8 @@
                             <Button x:Name="DatasetSetupStartButton"
                                     Style="{StaticResource LearningWorkflowMiniButtonStyle}"
                                     AutomationProperties.AutomationId="DatasetSetupStartButton"
-                                    AutomationProperties.Name="&#xC0C8; &#xB370;&#xC774;&#xD130;&#xC14B; &#xB9CC;&#xB4E4;&#xAE30;"
-                                    ToolTip="&#xC0C8; &#xB370;&#xC774;&#xD130;&#xC14B;&#xC744; &#xB9CC;&#xB4E4;&#xACE0; &#xC774;&#xBBF8;&#xC9C0;/&#xB77C;&#xBCA8; &#xC800;&#xC7A5; &#xD3F4;&#xB354;&#xB97C; &#xBD84;&#xB9AC;&#xD569;&#xB2C8;&#xB2E4;."
+                                    AutomationProperties.Name="{Binding DatasetSetupActionText}"
+                                    ToolTip="{Binding DatasetSetupStartToolTipText}"
                                     Command="{Binding DatasetSetupStartCommand}"
                                     CommandParameter="{Binding SelectedDatasetPurposeMode}">
                                 <StackPanel Orientation="Horizontal"
@@ -1075,8 +1075,8 @@
                             <Button x:Name="DatasetOpenExistingButton"
                                     Style="{StaticResource LearningWorkflowMiniButtonStyle}"
                                     AutomationProperties.AutomationId="DatasetOpenExistingButton"
-                                    AutomationProperties.Name="&#xAE30;&#xC874; &#xB370;&#xC774;&#xD130;&#xC14B; &#xC5F4;&#xAE30;"
-                                    ToolTip="&#xC774;&#xBBF8; &#xB9CC;&#xB4E4;&#xC5B4; &#xB454; &#xB370;&#xC774;&#xD130;&#xC14B;&#xC744; &#xC120;&#xD0DD;&#xD574;&#xC11C; &#xC5FD;&#xB2C8;&#xB2E4;."
+                                    AutomationProperties.Name="{Binding DatasetOpenExistingButtonText}"
+                                    ToolTip="{Binding DatasetOpenExistingToolTipText}"
                                     Command="{Binding DatasetOpenExistingCommand}"
                                     Margin="0,6,0,0">
                                 <StackPanel Orientation="Horizontal"
@@ -1086,7 +1086,7 @@
                                                                 Height="14"
                                                                 Margin="0,0,4,0"
                                                                 VerticalAlignment="Center" />
-                                    <TextBlock Text="&#xAE30;&#xC874; &#xC5F4;&#xAE30;" />
+                                    <TextBlock Text="{Binding DatasetOpenExistingButtonText}" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>

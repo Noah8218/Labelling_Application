@@ -1,3 +1,5 @@
+using OpenVisionLab;
+
 namespace MvcVisionSystem
 {
     public sealed class WpfWorkflowStagePresentation
@@ -35,32 +37,34 @@ namespace MvcVisionSystem
             {
                 WpfShellWorkflowStage.Labeling => new WpfWorkflowStagePresentation(
                     stage,
-                    "2/4 라벨링",
-                    "라벨링 워크벤치",
-                    "저장 라벨만 보며 박스를 그리고 클래스 확인 후 라벨 저장.",
-                    "다음: 현재 검사로 AI 후보 만들기"),
+                    T("WpfShell.Workflow.Labeling.Progress"),
+                    T("WpfShell.Workflow.Labeling.Title"),
+                    T("WpfShell.Workflow.Labeling.Detail"),
+                    T("WpfShell.Workflow.Labeling.Next")),
 
                 WpfShellWorkflowStage.Inference => new WpfWorkflowStagePresentation(
                     stage,
-                    "3/4 AI 후보(선택)",
-                    "AI 후보 검토(선택)",
-                    "모델이 만든 자동 라벨 후보가 있을 때만 맞는 후보를 저장 라벨로 확정합니다. 직접 라벨링만 할 때는 건너뜁니다.",
-                    "다음: 후보가 없으면 4 학습/모델, 있으면 확정 또는 숨김"),
+                    T("WpfShell.Workflow.Inference.Progress"),
+                    T("WpfShell.Workflow.Inference.Title"),
+                    T("WpfShell.Workflow.Inference.Detail"),
+                    T("WpfShell.Workflow.Inference.Next")),
 
                 WpfShellWorkflowStage.TrainingModel => new WpfWorkflowStagePresentation(
                     stage,
-                    "4/4 학습/모델",
-                    "학습/모델 센터",
-                    "\uB370\uC774\uD130\uC14B \uC810\uAC80, \uD559\uC2B5 \uC9C4\uD589, best.pt \uD6C4\uBCF4\uC640 \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uC744 \uAD6C\uBD84\uD574 \uD655\uC778\uD569\uB2C8\uB2E4.",
-                    "다음: 검증 후 모델 저장 또는 현재 검사로 확인"),
+                    T("WpfShell.Workflow.Training.Progress"),
+                    T("WpfShell.Workflow.Training.Title"),
+                    T("WpfShell.Workflow.Training.Detail"),
+                    T("WpfShell.Workflow.Training.Next")),
 
                 _ => new WpfWorkflowStagePresentation(
                     WpfShellWorkflowStage.Dataset,
-                    "1/4 데이터셋",
-                    "데이터셋 홈",
-                    "새 데이터셋을 만들거나 기존 데이터셋을 열고 저장 폴더와 이미지 폴더를 확인합니다.",
-                    "다음: 라벨링 워크벤치에서 정답 라벨 저장")
+                    T("WpfShell.Workflow.Dataset.Progress"),
+                    T("WpfShell.Workflow.Dataset.Title"),
+                    T("WpfShell.Workflow.Dataset.Detail"),
+                    T("WpfShell.Workflow.Dataset.Next"))
             };
         }
+
+        private static string T(string key) => OpenVisionLanguageService.T(key);
     }
 }

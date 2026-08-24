@@ -115,16 +115,10 @@ namespace MvcVisionSystem._1._Core
                 string imageName = Path.GetFileName(imagePath);
                 if (data.ProjectSettings?.DatasetPurpose == LabelingDatasetPurpose.Segmentation)
                 {
-                    YoloAnnotationService.SaveAnnotations(
+                    bool saved = LabelingAnnotationPersistence.SaveImageAnnotations(
                         imageName,
                         sourceImage,
                         new Dictionary<string, List<CRectangleObject>>(StringComparer.OrdinalIgnoreCase),
-                        data.ClassNamedList,
-                        data,
-                        sourceImagePath: imagePath);
-                    YoloSegmentationAnnotationService.SaveSegmentationAnnotations(
-                        imageName,
-                        sourceImage,
                         BuildSegmentsByClass(
                             classItem,
                             className,
@@ -136,8 +130,16 @@ namespace MvcVisionSystem._1._Core
                             sourceMaskData,
                             sourceMaskSize,
                             sourceMaskBounds),
-                        data.ClassNamedList,
-                        data);
+                        data,
+                        sourceImagePath: imagePath);
+                    if (!saved)
+                    {
+                        return TemplateMatchingBatchAutoLabelItemResult.Failed(
+                            imagePath,
+                            "annotation transaction did not commit",
+                            stopwatch.Elapsed,
+                            sourceImage.Size);
+                    }
                 }
                 else
                 {

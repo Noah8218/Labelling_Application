@@ -1,4 +1,5 @@
 using OpenVisionLab.Mvvm;
+using OpenVisionLab;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,9 +27,12 @@ namespace MvcVisionSystem
             ImagePath = imagePath ?? string.Empty;
             ImageName = Path.GetFileName(ImagePath);
             SplitText = splitText ?? string.Empty;
-            StatusText = statusText ?? string.Empty;
-            DetailText = detailText ?? string.Empty;
-            ObjectCountText = objectCount > 0 ? $"객체 {objectCount}" : "객체 없음";
+            DisplaySplitText = LocalizeSplit(splitText);
+            StatusText = LocalizeStatus(statusText);
+            DetailText = LocalizeDetail(detailText);
+            ObjectCountText = objectCount > 0
+                ? Format("WpfDatasetHealth.VisualQa.ObjectCount", objectCount)
+                : T("WpfDatasetHealth.VisualQa.NoObjects");
             IsProblem = isProblem;
             ClassIndexes = (classIndexes ?? Enumerable.Empty<int>())
                 .Where(index => index >= 0)
@@ -41,6 +45,7 @@ namespace MvcVisionSystem
         public string ImagePath { get; }
         public string ImageName { get; }
         public string SplitText { get; }
+        public string DisplaySplitText { get; }
         public string StatusText { get; }
         public string DetailText { get; }
         public string ObjectCountText { get; }
@@ -65,6 +70,64 @@ namespace MvcVisionSystem
         }
 
         public bool HasPreview => PreviewSource != null;
+
+        private static string LocalizeSplit(string value)
+        {
+            string normalized = value?.Trim().ToLowerInvariant() ?? string.Empty;
+            return normalized switch
+            {
+                "train" => T("WpfDatasetHealth.Split.Train"),
+                "valid" => T("WpfDatasetHealth.Split.Valid"),
+                "test" => T("WpfDatasetHealth.Split.Test"),
+                "원본" => T("WpfDatasetHealth.Metric.OriginalImages"),
+                _ => value ?? string.Empty
+            };
+        }
+
+        private static string LocalizeStatus(string value)
+        {
+            string normalized = value?.Trim() ?? string.Empty;
+            return normalized switch
+            {
+                "라벨 누락" => T("WpfDatasetHealth.VisualQa.LabelMissing"),
+                "라벨 오류" => T("WpfDatasetHealth.VisualQa.LabelError"),
+                "빈 라벨 검토" => T("WpfDatasetHealth.VisualQa.EmptyLabelReview"),
+                "저장 라벨 표본" => T("WpfDatasetHealth.VisualQa.SavedLabelSample"),
+                "미검토" => T("WpfDatasetHealth.Metric.Unreviewed"),
+                _ => WpfLocalizationTextRuntimeService.Translate(value ?? string.Empty)
+            };
+        }
+
+        private static string LocalizeDetail(string value)
+        {
+            string normalized = value?.Trim() ?? string.Empty;
+            if (normalized.StartsWith("해석할 수 없는 라벨 ", StringComparison.Ordinal)
+                && normalized.EndsWith("줄", StringComparison.Ordinal))
+            {
+                string count = normalized.Substring("해석할 수 없는 라벨 ".Length);
+                count = count.Substring(0, count.Length - 1);
+                return Format("WpfDatasetHealth.VisualQa.InvalidLines", count);
+            }
+
+            return normalized switch
+            {
+                "이미지와 짝이 되는 저장 annotation이 없습니다." => T("WpfDatasetHealth.VisualQa.MissingAnnotation"),
+                "배경 이미지로 의도한 빈 라벨인지 확인하세요." => T("WpfDatasetHealth.VisualQa.EmptyLabelHint"),
+                "저장된 geometry를 읽기 전용으로 확인합니다." => T("WpfDatasetHealth.VisualQa.ReadOnlyGeometry"),
+                "저장된 이미지 판정 표본입니다." => T("WpfDatasetHealth.VisualQa.ReviewedSample"),
+                "학습 전에 정상 또는 이상으로 판정하세요." => T("WpfDatasetHealth.VisualQa.ReviewBeforeTraining"),
+                _ => WpfLocalizationTextRuntimeService.Translate(value ?? string.Empty)
+            };
+        }
+
+        private static string T(string key)
+            => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] arguments)
+            => string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                T(key),
+                arguments ?? Array.Empty<object>());
     }
 
     public sealed class WpfDatasetVisualQaCatalog
@@ -98,7 +161,7 @@ namespace MvcVisionSystem
             ClassName = className?.Trim() ?? string.Empty;
             Text = classIndex.HasValue
                 ? $"{classIndex.Value} · {ClassName}"
-                : WpfDatasetHealthViewModel.AllVisualQaClasses;
+                : T("WpfDatasetHealth.VisualQa.AllClasses");
         }
 
         public int? ClassIndex { get; }
@@ -109,5 +172,8 @@ namespace MvcVisionSystem
             => other != null
                 && ClassIndex == other.ClassIndex
                 && string.Equals(ClassName, other.ClassName, StringComparison.Ordinal);
+
+        private static string T(string key)
+            => OpenVisionLanguageService.T(key);
     }
 }

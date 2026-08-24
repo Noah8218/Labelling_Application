@@ -59,6 +59,51 @@ namespace MvcVisionSystem
                 restoreConfirmedCandidates: false);
         }
 
+        public static WpfAnnotationHistorySnapshot CaptureMaskDeltaInverse(
+            string actionName,
+            WpfAnnotationHistorySnapshot snapshot,
+            IReadOnlyList<LabelingSegmentationObject> manualSegments)
+        {
+            if (snapshot == null
+                || snapshot.MaskSegmentDeltas.Count == 0
+                || snapshot.RestoreManualRois
+                || snapshot.RestoreManualSegments
+                || snapshot.RestorePendingCandidates
+                || snapshot.RestoreConfirmedCandidates)
+            {
+                return null;
+            }
+
+            var inverseDeltas = new List<WpfMaskSegmentHistoryDelta>(snapshot.MaskSegmentDeltas.Count);
+            foreach (WpfMaskSegmentHistoryDelta delta in snapshot.MaskSegmentDeltas)
+            {
+                WpfMaskSegmentHistoryDelta inverse = CaptureMaskDeltaInverse(
+                    delta,
+                    snapshot.MaskSegmentDeltas,
+                    manualSegments);
+                if (inverse == null)
+                {
+                    return null;
+                }
+
+                inverseDeltas.Add(inverse);
+            }
+
+            return new WpfAnnotationHistorySnapshot(
+                actionName,
+                Array.Empty<Rectangle>(),
+                Array.Empty<string>(),
+                Array.Empty<CanvasRoiShapeKind>(),
+                Array.Empty<LabelingSegmentationObject>(),
+                Array.Empty<YoloWorkerSmokeCandidate>(),
+                Array.Empty<YoloWorkerSmokeCandidate>(),
+                inverseDeltas,
+                restoreManualRois: false,
+                restoreManualSegments: false,
+                restorePendingCandidates: false,
+                restoreConfirmedCandidates: false);
+        }
+
         public static void Restore(
             WpfAnnotationHistorySnapshot snapshot,
             IList<Rectangle> manualRois,
@@ -151,6 +196,117 @@ namespace MvcVisionSystem
             };
         }
 
+        private static WpfMaskSegmentHistoryDelta CaptureMaskDeltaInverse(
+            WpfMaskSegmentHistoryDelta delta,
+            IReadOnlyList<WpfMaskSegmentHistoryDelta> siblingDeltas,
+            IReadOnlyList<LabelingSegmentationObject> manualSegments)
+        {
+            if (delta == null)
+            {
+                return null;
+            }
+
+            if (delta.RestoreRemovedSegment)
+            {
+                return new WpfMaskSegmentHistoryDelta(
+                    delta.SegmentIndex,
+                    Rectangle.Empty,
+                    Array.Empty<byte>(),
+                    delta.MaskSize,
+                    delta.MaskBounds,
+                    delta.RenderVersion,
+                    delta.RenderDirtyBounds,
+                    delta.ClassName,
+                    delta.ClassItem,
+                    delta.ObjectId,
+                    delta.ComponentIndex,
+                    delta.ZOrder,
+                    delta.LastStructuralOperation,
+                    delta.Selected,
+                    removeCreatedSegment: true);
+            }
+
+            LabelingSegmentationObject segment = ResolveMaskDeltaSource(manualSegments, delta, siblingDeltas);
+            if (segment?.IsRasterMask != true)
+            {
+                return null;
+            }
+
+            Rectangle restoreBounds = delta.RemoveCreatedSegment
+                ? segment.Bounds
+                : Rectangle.Intersect(delta.RestoreBounds, new Rectangle(Point.Empty, segment.MaskSize));
+            byte[] pixels = CopyMaskRegion(segment.MaskData, segment.MaskSize, restoreBounds);
+            if (restoreBounds.IsEmpty || pixels.Length != restoreBounds.Width * restoreBounds.Height)
+            {
+                return null;
+            }
+
+            return new WpfMaskSegmentHistoryDelta(
+                delta.SegmentIndex,
+                restoreBounds,
+                pixels,
+                segment.MaskSize,
+                segment.MaskBounds,
+                segment.RenderVersion,
+                segment.RenderDirtyBounds,
+                segment.ClassName,
+                segment.ClassItem,
+                segment.ObjectId,
+                segment.ComponentIndex,
+                segment.ZOrder,
+                segment.LastStructuralOperation,
+                segment.Selected,
+                restoreRemovedSegment: delta.RemoveCreatedSegment);
+        }
+
+        private static LabelingSegmentationObject ResolveMaskDeltaSource(
+            IReadOnlyList<LabelingSegmentationObject> manualSegments,
+            WpfMaskSegmentHistoryDelta delta,
+            IReadOnlyList<WpfMaskSegmentHistoryDelta> siblingDeltas)
+        {
+            if (manualSegments == null || delta == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(delta.ObjectId))
+            {
+                LabelingSegmentationObject byId = manualSegments.FirstOrDefault(segment =>
+                    string.Equals(segment?.ObjectId, delta.ObjectId, StringComparison.Ordinal));
+                if (byId != null)
+                {
+                    return byId;
+                }
+            }
+
+            int sourceIndex = delta.SegmentIndex - (siblingDeltas ?? Array.Empty<WpfMaskSegmentHistoryDelta>())
+                .Count(item => item?.RestoreRemovedSegment == true && item.SegmentIndex < delta.SegmentIndex);
+            return sourceIndex >= 0 && sourceIndex < manualSegments.Count
+                ? manualSegments[sourceIndex]
+                : null;
+        }
+
+        private static byte[] CopyMaskRegion(byte[] maskData, Size maskSize, Rectangle bounds)
+        {
+            if (maskData == null
+                || maskSize.Width <= 0
+                || maskSize.Height <= 0
+                || maskData.Length != maskSize.Width * maskSize.Height
+                || bounds.IsEmpty)
+            {
+                return Array.Empty<byte>();
+            }
+
+            var pixels = new byte[bounds.Width * bounds.Height];
+            for (int y = 0; y < bounds.Height; y++)
+            {
+                int sourceOffset = ((bounds.Top + y) * maskSize.Width) + bounds.Left;
+                Buffer.BlockCopy(maskData, sourceOffset, pixels, y * bounds.Width, bounds.Width);
+            }
+
+            return pixels;
+        }
+
         private static CClassItem CloneClassItem(CClassItem source)
         {
             if (source == null)
@@ -188,13 +344,18 @@ namespace MvcVisionSystem
                 return;
             }
 
-            foreach (WpfMaskSegmentHistoryDelta delta in deltas ?? Array.Empty<WpfMaskSegmentHistoryDelta>())
+            IReadOnlyList<WpfMaskSegmentHistoryDelta> availableDeltas = (deltas ?? Array.Empty<WpfMaskSegmentHistoryDelta>())
+                .Where(delta => delta != null)
+                .ToList();
+            IEnumerable<WpfMaskSegmentHistoryDelta> orderedDeltas = availableDeltas.Any(delta => delta.RemoveCreatedSegment)
+                ? availableDeltas
+                    .Where(delta => !delta.RemoveCreatedSegment)
+                    .Concat(availableDeltas
+                        .Where(delta => delta.RemoveCreatedSegment)
+                        .OrderByDescending(delta => delta.SegmentIndex))
+                : availableDeltas;
+            foreach (WpfMaskSegmentHistoryDelta delta in orderedDeltas)
             {
-                if (delta == null)
-                {
-                    continue;
-                }
-
                 if (delta.RemoveCreatedSegment)
                 {
                     if (delta.SegmentIndex >= 0 && delta.SegmentIndex < manualSegments.Count)
@@ -238,6 +399,16 @@ namespace MvcVisionSystem
                 int insertIndex = Math.Max(0, Math.Min(delta.SegmentIndex, manualSegments.Count));
                 manualSegments.Insert(insertIndex, restored);
                 return restored;
+            }
+
+            if (!string.IsNullOrWhiteSpace(delta.ObjectId))
+            {
+                LabelingSegmentationObject byId = manualSegments.FirstOrDefault(segment =>
+                    string.Equals(segment?.ObjectId, delta.ObjectId, StringComparison.Ordinal));
+                if (byId != null)
+                {
+                    return byId;
+                }
             }
 
             if (delta.SegmentIndex < 0 || delta.SegmentIndex >= manualSegments.Count)

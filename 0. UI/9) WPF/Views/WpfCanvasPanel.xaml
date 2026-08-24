@@ -7,6 +7,7 @@
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <UserControl.Resources>
         <Style x:Key="CanvasCommandButtonStyle" TargetType="{x:Type ui:Button}">
+            <Setter Property="Template" Value="{DynamicResource WpfUiDarkButtonTemplate}" />
             <Setter Property="Height" Value="26" />
             <Setter Property="MinWidth" Value="38" />
             <Setter Property="Padding" Value="7,0" />
@@ -135,6 +136,7 @@
         </Style>
 
         <Style x:Key="SmartMaskPointToggleStyle" TargetType="ToggleButton">
+            <Setter Property="Template" Value="{DynamicResource WpfDarkToggleButtonTemplate}" />
             <Setter Property="Height" Value="26" />
             <Setter Property="MinWidth" Value="82" />
             <Setter Property="Padding" Value="8,0" />
@@ -807,6 +809,8 @@
                                                         Foreground="{DynamicResource SecondaryTextBrush}"
                                                         VerticalAlignment="Center" />
                             <TextBlock x:Name="CanvasFirstLabelLoopText"
+                                       AutomationProperties.AutomationId="CanvasFirstLabelLoopText"
+                                       AutomationProperties.Name="{Binding FirstLabelLoopText}"
                                        Text="{Binding FirstLabelLoopText}"
                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                        FontFamily="Segoe UI"
@@ -1682,8 +1686,8 @@
                         Background="{DynamicResource FrameBrush}"
                         BorderBrush="{DynamicResource BorderBrushDark}"
                         BorderThickness="0,0,1,0"
-                        Padding="4,6"
-                        AutomationProperties.Name="&#xB77C;&#xBCA8;&#xB9C1; &#xB3C4;&#xAD6C;">
+                        Padding="4,6,3,6"
+                        AutomationProperties.Name="{Binding DataContext.LanguageViewModel[WpfShell.Canvas.AnnotationTools], RelativeSource={RelativeSource AncestorType=ui:FluentWindow}}">
                     <StackPanel>
                         <ListBox x:Name="CanvasAnnotationToolListBox"
                                  Style="{StaticResource CanvasAnnotationToolListBoxStyle}"
