@@ -1,5 +1,14 @@
 # Release Notes
 
+## 0.2.1 — 2026-08-25
+
+- Fixed the supported Minimum `1100x720` WPF workspace so the image queue
+  remains inside the window with the required right-side safety margin.
+- Preserved the existing panel-width persistence contract, `맞춤` / `1:1`
+  viewer actions, annotation commands, and saved-label behavior.
+- This is a compatible PATCH candidate; no annotation format, Recipe schema,
+  dependency, model, or deployment contract changed.
+
 ## 0.2.0 — 2026-08-24
 
 - Versioned Public promotion candidate for the bounded WPF presentation

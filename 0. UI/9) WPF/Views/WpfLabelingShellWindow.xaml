@@ -1798,7 +1798,7 @@
         <local:WpfStatusBarPanel x:Name="StatusBarPanelControl"
                                  DockPanel.Dock="Top" />
 
-        <Grid x:Name="MainWorkspaceGrid" Margin="10">
+        <Grid x:Name="MainWorkspaceGrid" Margin="0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="RightWorkflowColumn"
                                   Width="{Binding ShellViewModel.RightWorkflowPaneGridLength, ElementName=ShellWindow}"
@@ -1827,6 +1827,7 @@
             <local:WpfImageQueuePanel x:Name="ImageQueuePanelControl"
                                       Grid.Column="4"
                                       Grid.RowSpan="3"
+                                      Margin="0,0,4,0"
                                       Visibility="{Binding ShellViewModel.IsImageQueueWorkspaceVisible, ElementName=ShellWindow, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
             <local:WpfCanvasPanel x:Name="CanvasPanelControl"
