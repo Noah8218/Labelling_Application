@@ -15,7 +15,7 @@ namespace MvcVisionSystem
 
     public sealed class WpfBatchDetectionPreflightRequest
     {
-        public CData Data { get; set; }
+        public LabelingProjectData Data { get; set; }
 
         public IReadOnlyList<WpfImageQueueItem> Items { get; set; } =
             Array.Empty<WpfImageQueueItem>();
@@ -111,7 +111,7 @@ namespace MvcVisionSystem
         public WpfBatchDetectionPreflightReport DryRun(WpfBatchDetectionPreflightRequest request)
         {
             request ??= new WpfBatchDetectionPreflightRequest();
-            CData data = request.Data;
+            LabelingProjectData data = request.Data;
             PythonModelSettings settings = data?.ProjectSettings?.PythonModel;
             var issues = new List<string>();
             var warnings = new List<string>();
@@ -189,7 +189,7 @@ namespace MvcVisionSystem
         }
 
         private static IReadOnlyList<WpfBatchClassMappingItem> BuildClassMappings(
-            CData data,
+            LabelingProjectData data,
             ICollection<string> issues)
         {
             List<string> names = data?.ClassNamedList?

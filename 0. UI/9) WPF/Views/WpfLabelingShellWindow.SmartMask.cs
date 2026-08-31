@@ -238,7 +238,11 @@ namespace MvcVisionSystem
             {
                 try
                 {
-                    global.Data.SaveConfig(recipeName, refreshDatasetVersion: false);
+                    RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName, refreshDatasetVersion: false);
+                    if (!saveResult.IsSuccess)
+                    {
+                        AppendLog("\uC790\uB3D9 \uC724\uACFD \uC635\uC158 \uC800\uC7A5 \uC2E4\uD328: " + saveResult.ErrorMessage);
+                    }
                 }
                 catch (Exception error)
                 {

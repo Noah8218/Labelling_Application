@@ -8,7 +8,7 @@ namespace MvcVisionSystem.Yolo
 {
     public static class YoloImageLabelStatusService
     {
-        public static YoloImageLabelStatus Build(string imagePath, Size imageSize, CData data)
+        public static YoloImageLabelStatus Build(string imagePath, Size imageSize, LabelingProjectData data)
         {
             if (data?.ProjectSettings?.DatasetPurpose == LabelingDatasetPurpose.Segmentation)
             {
@@ -45,7 +45,7 @@ namespace MvcVisionSystem.Yolo
             return new YoloImageLabelStatus(labelPath, objectCount, invalidLineCount);
         }
 
-        private static YoloImageLabelStatus BuildSegmentationStatus(string imagePath, Size imageSize, CData data)
+        private static YoloImageLabelStatus BuildSegmentationStatus(string imagePath, Size imageSize, LabelingProjectData data)
         {
             string segmentPath = YoloSegmentationAnnotationService.GetCandidateSegmentPaths(imagePath, data)
                 .FirstOrDefault(File.Exists);

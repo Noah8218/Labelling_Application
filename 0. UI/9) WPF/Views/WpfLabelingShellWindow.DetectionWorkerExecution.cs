@@ -78,7 +78,7 @@ namespace MvcVisionSystem
             SetYoloCommandStatus(WpfInferenceStatusPresentationService.BuildWorkerPreparingCommandStatus(), isBusy: true);
             bool ready = workerReadyAlreadyChecked
                 ? true
-                : await global.EnsurePythonModelClientReadyAsync(timeoutMilliseconds).ConfigureAwait(true);
+                : await global.ModelRuntime.EnsurePythonModelClientReadyAsync(timeoutMilliseconds).ConfigureAwait(true);
             if (!ready)
             {
                 SetGlobalInferenceStatus(WpfInferenceStatusPresentationService.BuildWorkerConnectionFailureInferenceStatus(), isBusy: false, isWarning: true);
@@ -105,15 +105,15 @@ namespace MvcVisionSystem
                 AppendLog(WpfInferenceStatusPresentationService.BuildWorkerStartLog(imagePath, modelSourceText));
                 SetYoloCommandStatus(WpfInferenceStatusPresentationService.BuildWorkerRequestCommandStatus(), isBusy: true);
                 bool started = applyToCanvas
-                    ? global.DetectionWorkflow.TryStartCurrentImageDetection(
+                    ? global.ModelRuntime.DetectionWorkflow.TryStartCurrentImageDetection(
                         global.Data,
-                        global.DeepLearning,
-                        global.DetectionResults,
+                        global.ModelRuntime.DeepLearning,
+                        global.DetectionTransport,
                         () => true)
-                    : global.DetectionWorkflow.TryStartImagePathDetection(
+                    : global.ModelRuntime.DetectionWorkflow.TryStartImagePathDetection(
                         global.Data,
-                        global.DeepLearning,
-                        global.DetectionResults,
+                        global.ModelRuntime.DeepLearning,
+                        global.DetectionTransport,
                         imagePath,
                         requestImageSize,
                         () => true);

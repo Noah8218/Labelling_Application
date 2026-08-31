@@ -27,17 +27,57 @@ namespace MvcVisionSystem
 
         public WpfObjectReviewPanelViewModel ObjectReviewViewModel => viewModels.ObjectReviewViewModel;
 
-        public WpfCandidateReviewPanelViewModel CandidateReviewViewModel => viewModels.CandidateReviewViewModel;
+        public WpfCandidateReviewPanelViewModel CandidateReviewViewModel
+        {
+            get
+            {
+                EnsureModelWorkflowPanelsComposed();
+                return viewModels.ModelWorkflowViewModels.CandidateReviewViewModel;
+            }
+        }
+
+        public WpfCandidateReviewPanelViewModel ExistingCandidateReviewViewModel =>
+            viewModels.CandidateReviewViewModel;
 
         public WpfClassCatalogPanelViewModel ClassCatalogViewModel => viewModels.ClassCatalogViewModel;
 
-        public WpfYoloStatusPanelViewModel YoloStatusViewModel => viewModels.YoloStatusViewModel;
+        public WpfYoloStatusPanelViewModel YoloStatusViewModel
+        {
+            get
+            {
+                EnsureModelWorkflowPanelsComposed();
+                return viewModels.ModelWorkflowViewModels.YoloStatusViewModel;
+            }
+        }
+
+        public WpfYoloStatusPanelViewModel ExistingYoloStatusViewModel =>
+            viewModels.YoloStatusViewModel;
 
         public WpfProjectConfigPanelViewModel ProjectConfigViewModel => viewModels.ProjectConfigViewModel;
 
-        public WpfYoloModelSettingsPanelViewModel YoloModelSettingsViewModel => viewModels.YoloModelSettingsViewModel;
+        public WpfYoloModelSettingsPanelViewModel YoloModelSettingsViewModel
+        {
+            get
+            {
+                EnsureModelWorkflowPanelsComposed();
+                return viewModels.ModelWorkflowViewModels.YoloModelSettingsViewModel;
+            }
+        }
 
-        public WpfTrainingSettingsPanelViewModel TrainingSettingsViewModel => viewModels.TrainingSettingsViewModel;
+        public WpfYoloModelSettingsPanelViewModel ExistingYoloModelSettingsViewModel =>
+            viewModels.YoloModelSettingsViewModel;
+
+        public WpfTrainingSettingsPanelViewModel TrainingSettingsViewModel
+        {
+            get
+            {
+                EnsureModelWorkflowPanelsComposed();
+                return viewModels.ModelWorkflowViewModels.TrainingSettingsViewModel;
+            }
+        }
+
+        public WpfTrainingSettingsPanelViewModel ExistingTrainingSettingsViewModel =>
+            viewModels.TrainingSettingsViewModel;
 
         public WpfStatusBarPanelViewModel StatusBarViewModel => viewModels.StatusBarViewModel;
 

@@ -7,7 +7,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 
 namespace MvcVisionSystem.Yolo
 {
@@ -306,7 +305,7 @@ namespace MvcVisionSystem.Yolo
                 errors.Add(prefix + "prediction mask was not found: " + maskPath);
                 return false;
             }
-            if (!string.Equals(ComputeFileSha256(maskPath), record.PredictionMaskSha256, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(HashingService.ComputeFileSha256(maskPath), record.PredictionMaskSha256, StringComparison.OrdinalIgnoreCase))
             {
                 errors.Add(prefix + "prediction mask SHA-256 does not match its manifest.");
                 return false;
@@ -586,13 +585,6 @@ namespace MvcVisionSystem.Yolo
                 : string.Equals(value, "valid", StringComparison.OrdinalIgnoreCase)
                     ? "valid"
                     : "test";
-        }
-
-        private static string ComputeFileSha256(string path)
-        {
-            using SHA256 hash = SHA256.Create();
-            using FileStream stream = File.OpenRead(path);
-            return Convert.ToHexString(hash.ComputeHash(stream));
         }
 
         private sealed class ValidatedPredictionRun

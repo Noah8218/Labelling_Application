@@ -284,8 +284,8 @@ namespace MvcVisionSystem
                 if (connected)
                 {
                     string requestId = CreateRequestId();
-                    global.DeepLearning.SendHealthCheck(requestId);
-                    global.DeepLearning.SendModelStatus(requestId, ensureLoaded: false);
+                    global.ModelRuntime.DeepLearning.SendHealthCheck(requestId);
+                    global.ModelRuntime.DeepLearning.SendModelStatus(requestId, ensureLoaded: false);
                 }
 
                 await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);

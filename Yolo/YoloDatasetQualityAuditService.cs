@@ -17,7 +17,7 @@ namespace MvcVisionSystem.Yolo
 
         private static readonly string[] ImageExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
-        public static YoloDatasetQualityAuditReport Build(CData data)
+        public static YoloDatasetQualityAuditReport Build(LabelingProjectData data)
         {
             var report = new YoloDatasetQualityAuditReport();
             if (data == null)
@@ -36,7 +36,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static YoloDatasetQualityAuditSplitSummary BuildSplit(
-            CData data,
+            LabelingProjectData data,
             string split,
             YoloDatasetQualityAuditReport report)
         {
@@ -78,7 +78,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static void CountLabelFile(
-            CData data,
+            LabelingProjectData data,
             string labelPath,
             Size imageSize,
             YoloDatasetQualityAuditSplitSummary splitSummary,

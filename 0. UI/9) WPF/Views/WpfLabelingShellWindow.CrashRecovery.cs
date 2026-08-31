@@ -132,7 +132,7 @@ namespace MvcVisionSystem
                 foreach (WpfCrashRecoverySegment source in draft.Segments
                     ?? Enumerable.Empty<WpfCrashRecoverySegment>())
                 {
-                    CClassItem classItem = EnsureClassItem(source.ClassName);
+                    LabelClass classItem = EnsureClassItem(source.ClassName);
                     var segment = new LabelingSegmentationObject
                     {
                         ClassName = classItem?.Text ?? source.ClassName,

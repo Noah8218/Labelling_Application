@@ -12,7 +12,7 @@ namespace MvcVisionSystem.Yolo
         public const string AbnormalClassFolderName = "abnormal";
 
         public AnomalyClassificationDatasetExportResult Export(
-            CData data,
+            LabelingProjectData data,
             IEnumerable<string> imagePaths,
             string datasetRootPath = "")
         {
@@ -92,7 +92,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static string ResolveDatasetRootPath(CData data, string datasetRootPath)
+        private static string ResolveDatasetRootPath(LabelingProjectData data, string datasetRootPath)
         {
             if (!string.IsNullOrWhiteSpace(datasetRootPath))
             {

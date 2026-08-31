@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using OpenVisionLab.Wpf.MessageDialogs;
 
@@ -17,13 +19,17 @@ namespace MvcVisionSystem
         private void LoadObjectMetadataForActiveImage(string imagePath)
         {
             RestoreObjectMetadataTagsFromProject();
-            WpfObjectMetadataLoadResult result = objectMetadataPersistenceService.LoadForImage(
-                imagePath,
-                manualRois,
-                manualRoiClassNames,
-                manualSegments,
-                objectMetadataStateService,
-                global.Data);
+            WpfObjectReviewLoadResult workflowResult = objectReviewWorkflowService.Load(
+                BuildObjectReviewPersistenceRequest(
+                    imagePath,
+                    Path.GetFileName(imagePath ?? string.Empty)));
+            if (workflowResult.ShouldClearExistingState)
+            {
+                objectMetadataStateService.Clear();
+            }
+
+            ApplyObjectReviewMetadataChanges(workflowResult.MetadataChanges);
+            WpfObjectMetadataLoadResult result = workflowResult.PersistenceResult;
             if (!string.IsNullOrWhiteSpace(result.StatusText))
             {
                 AppendLog(result.IsCompatible
@@ -32,17 +38,12 @@ namespace MvcVisionSystem
             }
         }
 
-        private bool TrySaveCurrentObjectMetadata()
+        private bool TrySaveCurrentObjectMetadata(string imageName)
         {
             try
             {
-                objectMetadataPersistenceService.Save(
-                    global.Data.LastSelectImageName,
-                    manualRois,
-                    manualRoiClassNames,
-                    manualSegments,
-                    objectMetadataStateService,
-                    global.Data);
+                objectReviewWorkflowService.Save(
+                    BuildObjectReviewPersistenceRequest(string.Empty, imageName));
                 return true;
             }
             catch (Exception ex)
@@ -57,13 +58,26 @@ namespace MvcVisionSystem
         private void ExecuteTogglePersistentOccludedCommand()
         {
             if (!TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef item)
-                || !TryTogglePersistentOccluded(item, out WpfPersistentObjectMetadata metadata))
+                || !TryCaptureObjectReviewSnapshot(item, out WpfObjectReviewObjectSnapshot snapshot))
             {
                 SetYoloCommandStatus(
                     "\uC218\uB3D9 \uBC15\uC2A4 \uB610\uB294 \uC138\uADF8\uBA3C\uD2B8\uB97C \uC120\uD0DD\uD558\uC138\uC694.",
                     isBusy: false);
                 return;
             }
+
+            WpfObjectReviewMutationResult workflowResult =
+                objectReviewWorkflowService.ToggleOccluded(snapshot);
+            if (!workflowResult.IsApplicable
+                || !ApplyObjectReviewMutation(workflowResult))
+            {
+                SetYoloCommandStatus(
+                    "\uC218\uB3D9 \uBC15\uC2A4 \uB610\uB294 \uC138\uADF8\uBA3C\uD2B8\uB97C \uC120\uD0DD\uD558\uC138\uC694.",
+                    isBusy: false);
+                return;
+            }
+
+            WpfPersistentObjectMetadata metadata = workflowResult.Metadata;
 
             RefreshObjectListWithSelection(item);
             MarkAnnotationsDirty(
@@ -79,9 +93,9 @@ namespace MvcVisionSystem
 
         private void ExecuteTogglePersistentTagCommand(string requestedTag)
         {
-            string tag = WpfObjectMetadataStateService.NormalizeTag(requestedTag);
-            if (string.IsNullOrWhiteSpace(tag)
-                || !TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef item))
+            if (string.IsNullOrWhiteSpace(requestedTag?.Trim())
+                || !TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef item)
+                || !TryCaptureObjectReviewSnapshot(item, out WpfObjectReviewObjectSnapshot snapshot))
             {
                 SetYoloCommandStatus(
                     "\uC218\uB3D9 \uBC15\uC2A4/\uC138\uADF8\uBA3C\uD2B8\uB97C \uC120\uD0DD\uD558\uACE0 \uD0DC\uADF8\uB97C \uC785\uB825\uD558\uC138\uC694.",
@@ -89,15 +103,18 @@ namespace MvcVisionSystem
                 return;
             }
 
-            WpfPersistentObjectMetadata current = GetObjectPersistentMetadata(item);
-            bool alreadyApplied = current.Tags.Any(value =>
-                string.Equals(value, tag, StringComparison.OrdinalIgnoreCase));
-            if (!alreadyApplied && !TryEnsureRecipeMetadataTag(tag))
+            WpfObjectReviewMutationResult workflowResult = objectReviewWorkflowService.ToggleTag(
+                snapshot,
+                requestedTag,
+                global.Data,
+                GetCurrentRecipeName());
+            if (!workflowResult.IsApplicable)
             {
+                ReportObjectReviewWorkflowError(workflowResult);
                 return;
             }
 
-            if (!TryTogglePersistentTag(item, tag, out WpfPersistentObjectMetadata metadata))
+            if (!ApplyObjectReviewMutation(workflowResult))
             {
                 SetYoloCommandStatus(
                     "\uC218\uB3D9 \uBC15\uC2A4 \uB610\uB294 \uC138\uADF8\uBA3C\uD2B8\uC5D0\uB9CC \uD0DC\uADF8\uB97C \uC801\uC6A9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
@@ -105,6 +122,8 @@ namespace MvcVisionSystem
                 return;
             }
 
+            string tag = workflowResult.Tag;
+            WpfPersistentObjectMetadata metadata = workflowResult.Metadata;
             bool isApplied = metadata.Tags.Any(value =>
                 string.Equals(value, tag, StringComparison.OrdinalIgnoreCase));
             RefreshObjectListWithSelection(item);
@@ -121,24 +140,17 @@ namespace MvcVisionSystem
 
         private void ExecuteResetRecipeMetadataTagsCommand()
         {
-            EnsureProjectSettings();
-            if (global.Data.ProjectSettings.ObjectReviewTags.Count == 0)
+            WpfObjectReviewMutationResult workflowResult =
+                objectReviewWorkflowService.ResetRecipeMetadataTags(
+                    global.Data,
+                    GetCurrentRecipeName());
+            if (!workflowResult.IsApplicable)
             {
-                SetYoloCommandStatus(
-                    "\uD604\uC7AC Recipe \uD0DC\uADF8 \uBAA9\uB85D\uC774 \uC774\uBBF8 \uBE44\uC5B4 \uC788\uC2B5\uB2C8\uB2E4.",
-                    isBusy: false);
+                ReportObjectReviewWorkflowError(workflowResult);
                 return;
             }
 
-            List<string> previousTags = global.Data.ProjectSettings.ObjectReviewTags.ToList();
-            global.Data.ProjectSettings.ObjectReviewTags.Clear();
-            if (!TryPersistRecipeMetadataTagDefinitions())
-            {
-                global.Data.ProjectSettings.ObjectReviewTags = previousTags;
-                return;
-            }
-
-            ObjectReviewViewModel?.SetMetadataTagDefinitions(Array.Empty<string>());
+            ApplyObjectReviewMutation(workflowResult);
             const string status =
                 "Recipe \uD0DC\uADF8 \uBAA9\uB85D\uC744 \uAE30\uBCF8\uAC12(\uBE48 \uBAA9\uB85D)\uC73C\uB85C \uB418\uB3CC\uB838\uC2B5\uB2C8\uB2E4. \uAE30\uC874 \uAC1D\uCCB4\uC5D0 \uC800\uC7A5\uB41C \uD0DC\uADF8\uB294 \uC0AD\uC81C\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
             SetYoloCommandStatus(status, isBusy: false);
@@ -147,7 +159,7 @@ namespace MvcVisionSystem
 
         private void ExecuteBeginObjectGroupSelectionCommand()
         {
-            objectGroupSelectionService.Begin();
+            objectReviewWorkflowService.BeginGroupSelection();
             ObjectReviewViewModel?.SetGroupSelectionMode(true);
             const string status = "\uADF8\uB8F9 \uAD6C\uC131 \uC120\uD0DD \uC2DC\uC791: \uBAA9\uB85D\uC5D0\uC11C \uBBF8\uADF8\uB8F9 \uC800\uC7A5 \uAC1D\uCCB4\uB97C 2\uAC1C \uC774\uC0C1 \uC120\uD0DD\uD558\uC138\uC694.";
             ObjectReviewViewModel?.RefreshGroupSelectionPresentation(status);
@@ -159,8 +171,8 @@ namespace MvcVisionSystem
 
         private void CancelObjectGroupSelection(bool updateStatus)
         {
-            bool wasActive = objectGroupSelectionService.IsActive;
-            objectGroupSelectionService.Cancel();
+            bool wasActive = objectReviewWorkflowService.IsGroupSelectionActive;
+            objectReviewWorkflowService.CancelGroupSelection();
             ObjectReviewViewModel?.SetGroupSelectionMode(false);
             if (wasActive && updateStatus)
             {
@@ -178,7 +190,7 @@ namespace MvcVisionSystem
                 return;
             }
 
-            if (!objectGroupSelectionService.SetSelected(
+            if (!objectReviewWorkflowService.SetGroupSelection(
                 item,
                 row.IsGroupSelected,
                 out string error))
@@ -194,36 +206,29 @@ namespace MvcVisionSystem
 
         private void ExecuteCreateObjectGroupCommand()
         {
-            if (!objectGroupSelectionService.TryCreatePlan(
-                GetObjectPersistentMetadata,
-                out WpfObjectReviewGroupCreatePlan plan,
-                out string error))
+            WpfObjectReviewMutationResult workflowResult = objectReviewWorkflowService.CreateGroup(
+                CaptureObjectReviewSnapshots());
+            if (!workflowResult.IsApplicable)
             {
-                ObjectReviewViewModel?.RefreshGroupSelectionPresentation(error);
-                SetYoloCommandStatus(error, isBusy: false);
+                ObjectReviewViewModel?.RefreshGroupSelectionPresentation(workflowResult.ErrorMessage);
+                SetYoloCommandStatus(workflowResult.ErrorMessage, isBusy: false);
                 return;
             }
 
-            foreach (WpfObjectReviewItemRef member in plan.Members)
+            if (!ApplyObjectReviewMutation(workflowResult))
             {
-                if (!TrySetObjectGroupId(member, plan.GroupId))
-                {
-                    foreach (WpfObjectReviewItemRef rollback in plan.Members)
-                    {
-                        TrySetObjectGroupId(rollback, string.Empty);
-                    }
-                    const string applyError = "\uADF8\uB8F9 \uAD6C\uC131\uC6D0 \uC801\uC6A9 \uC911 \uAC1D\uCCB4\uAC00 \uBCC0\uACBD\uB418\uC5B4 \uC804\uCCB4 \uC791\uC5C5\uC744 \uB418\uB3CC\uB838\uC2B5\uB2C8\uB2E4.";
-                    ObjectReviewViewModel?.RefreshGroupSelectionPresentation(applyError);
-                    SetYoloCommandStatus(applyError, isBusy: false);
-                    return;
-                }
+                const string applyError = "\uADF8\uB8F9 \uAD6C\uC131\uC6D0 \uC801\uC6A9 \uC911 \uAC1D\uCCB4\uAC00 \uBCC0\uACBD\uB418\uC5B4 \uC804\uCCB4 \uC791\uC5C5\uC744 \uB418\uB3CC\uB838\uC2B5\uB2C8\uB2E4.";
+                ObjectReviewViewModel?.RefreshGroupSelectionPresentation(applyError);
+                SetYoloCommandStatus(applyError, isBusy: false);
+                return;
             }
 
-            WpfObjectReviewItemRef selection = plan.Members.FirstOrDefault();
+            WpfObjectReviewItemRef selection = workflowResult.FocusItem;
+            int memberCount = workflowResult.MetadataChanges.Count;
             CancelObjectGroupSelection(updateStatus: false);
             RefreshObjectListWithSelection(selection);
-            MarkAnnotationsDirty($"\uAC80\uC218 \uADF8\uB8F9 \uC0DD\uC131: {plan.Members.Count}\uAC1C");
-            string status = $"\uAC80\uC218 \uADF8\uB8F9 \uC0DD\uC131: {plan.Members.Count}\uAC1C \u00B7 \uB77C\uBCA8 \uC800\uC7A5 \uD544\uC694";
+            MarkAnnotationsDirty($"\uAC80\uC218 \uADF8\uB8F9 \uC0DD\uC131: {memberCount}\uAC1C");
+            string status = $"\uAC80\uC218 \uADF8\uB8F9 \uC0DD\uC131: {memberCount}\uAC1C \u00B7 \uB77C\uBCA8 \uC800\uC7A5 \uD544\uC694";
             SetYoloCommandStatus(status, isBusy: false);
             AppendLog(status);
         }
@@ -235,16 +240,22 @@ namespace MvcVisionSystem
                 return;
             }
 
-            string groupId = GetObjectPersistentMetadata(item).GroupId;
-            if (string.IsNullOrWhiteSpace(groupId) || !TrySetObjectGroupId(item, string.Empty))
+            WpfObjectReviewMutationResult workflowResult = objectReviewWorkflowService.RemoveSelectedFromGroup(
+                CaptureObjectReviewSnapshots(),
+                item);
+            if (!workflowResult.IsApplicable)
             {
                 SetYoloCommandStatus("\uC120\uD0DD\uD55C \uADF8\uB8F9 \uAD6C\uC131\uC6D0\uC744 \uD655\uC778\uD558\uC138\uC694.", isBusy: false);
                 return;
             }
 
-            int dissolved = objectMetadataStateService.DissolveInvalidGroups(
-                manualRois.Count,
-                manualSegments);
+            if (!ApplyObjectReviewMutation(workflowResult))
+            {
+                SetYoloCommandStatus("\uC120\uD0DD\uD55C \uADF8\uB8F9 \uAD6C\uC131\uC6D0\uC744 \uD655\uC778\uD558\uC138\uC694.", isBusy: false);
+                return;
+            }
+
+            int dissolved = workflowResult.DissolvedGroupCount;
             RefreshObjectListWithSelection(item);
             MarkAnnotationsDirty("\uAC80\uC218 \uADF8\uB8F9 \uAD6C\uC131\uC6D0 \uC81C\uAC70");
             string status = dissolved > 0
@@ -261,8 +272,9 @@ namespace MvcVisionSystem
                 return;
             }
 
-            string groupId = GetObjectPersistentMetadata(selected).GroupId;
-            IReadOnlyList<WpfObjectReviewItemRef> members = GetObjectGroupMembers(groupId);
+            IReadOnlyList<WpfObjectReviewObjectSnapshot> members = objectReviewWorkflowService.GetGroupMembers(
+                CaptureObjectReviewSnapshots(),
+                selected);
             if (members.Count < 2)
             {
                 SetYoloCommandStatus("\uD574\uC81C\uD560 \uAC80\uC218 \uADF8\uB8F9\uC744 \uC120\uD0DD\uD558\uC138\uC694.", isBusy: false);
@@ -280,9 +292,11 @@ namespace MvcVisionSystem
                 return;
             }
 
-            foreach (WpfObjectReviewItemRef member in members)
+            WpfObjectReviewMutationResult workflowResult = objectReviewWorkflowService.ClearGroup(members);
+            if (!workflowResult.IsApplicable || !ApplyObjectReviewMutation(workflowResult))
             {
-                TrySetObjectGroupId(member, string.Empty);
+                SetYoloCommandStatus("\uC120\uD0DD\uD55C \uAC80\uC218 \uADF8\uB8F9\uC744 \uD655\uC778\uD558\uC138\uC694.", isBusy: false);
+                return;
             }
             RefreshObjectListWithSelection(selected);
             MarkAnnotationsDirty($"\uAC80\uC218 \uADF8\uB8F9 \uD574\uC81C: {members.Count}\uAC1C");
@@ -293,16 +307,21 @@ namespace MvcVisionSystem
 
         private void ExecuteToggleObjectGroupOccludedCommand()
         {
-            if (!TryResolveSelectedGroupMembers(out WpfObjectReviewItemRef selected, out IReadOnlyList<WpfObjectReviewItemRef> members))
+            if (!TryResolveSelectedGroupMembers(
+                out WpfObjectReviewItemRef selected,
+                out IReadOnlyList<WpfObjectReviewObjectSnapshot> members))
             {
                 return;
             }
 
-            bool apply = members.Any(member => !GetObjectPersistentMetadata(member).IsOccluded);
-            foreach (WpfObjectReviewItemRef member in members)
+            WpfObjectReviewMutationResult workflowResult =
+                objectReviewWorkflowService.ToggleGroupOccluded(members);
+            if (!workflowResult.IsApplicable || !ApplyObjectReviewMutation(workflowResult))
             {
-                TrySetObjectOccluded(member, apply);
+                SetYoloCommandStatus("\uC120\uD0DD\uD55C \uADF8\uB8F9 \uAD6C\uC131\uC6D0\uC744 \uD655\uC778\uD558\uC138\uC694.", isBusy: false);
+                return;
             }
+            bool apply = workflowResult.AppliedValue;
             RefreshObjectListWithSelection(selected);
             MarkAnnotationsDirty(apply ? "\uADF8\uB8F9 \uAC00\uB9BC \uC801\uC6A9" : "\uADF8\uB8F9 \uAC00\uB9BC \uD574\uC81C");
             string status = $"\uADF8\uB8F9 {members.Count}\uAC1C \uAC1D\uCCB4 \uAC00\uB9BC {(apply ? "\uC801\uC6A9" : "\uD574\uC81C")} \u00B7 \uB77C\uBCA8 \uC800\uC7A5 \uD544\uC694";
@@ -312,25 +331,33 @@ namespace MvcVisionSystem
 
         private void ExecuteToggleObjectGroupTagCommand(string requestedTag)
         {
-            string tag = WpfObjectMetadataStateService.NormalizeTag(requestedTag);
-            if (string.IsNullOrWhiteSpace(tag)
-                || !TryResolveSelectedGroupMembers(out WpfObjectReviewItemRef selected, out IReadOnlyList<WpfObjectReviewItemRef> members))
+            if (string.IsNullOrWhiteSpace(requestedTag?.Trim())
+                || !TryResolveSelectedGroupMembers(
+                    out WpfObjectReviewItemRef selected,
+                    out IReadOnlyList<WpfObjectReviewObjectSnapshot> members))
             {
                 SetYoloCommandStatus("\uADF8\uB8F9\uACFC Recipe \uD0DC\uADF8\uB97C \uC120\uD0DD\uD558\uC138\uC694.", isBusy: false);
                 return;
             }
 
-            bool apply = members.Any(member => !GetObjectPersistentMetadata(member).Tags.Any(value =>
-                string.Equals(value, tag, StringComparison.OrdinalIgnoreCase)));
-            if (apply && !TryEnsureRecipeMetadataTag(tag))
+            WpfObjectReviewMutationResult workflowResult = objectReviewWorkflowService.ToggleGroupTag(
+                members,
+                requestedTag,
+                global.Data,
+                GetCurrentRecipeName());
+            if (!workflowResult.IsApplicable)
             {
+                ReportObjectReviewWorkflowError(workflowResult);
                 return;
             }
 
-            foreach (WpfObjectReviewItemRef member in members)
+            if (!ApplyObjectReviewMutation(workflowResult))
             {
-                TrySetObjectTag(member, tag, apply);
+                SetYoloCommandStatus("\uC120\uD0DD\uD55C \uADF8\uB8F9 \uAD6C\uC131\uC6D0\uC744 \uD655\uC778\uD558\uC138\uC694.", isBusy: false);
+                return;
             }
+            string tag = workflowResult.Tag;
+            bool apply = workflowResult.AppliedValue;
             RefreshObjectListWithSelection(selected);
             MarkAnnotationsDirty(apply ? $"\uADF8\uB8F9 \uD0DC\uADF8 \uC801\uC6A9: {tag}" : $"\uADF8\uB8F9 \uD0DC\uADF8 \uD574\uC81C: {tag}");
             string status = $"\uADF8\uB8F9 {members.Count}\uAC1C \uAC1D\uCCB4 \uD0DC\uADF8 {(apply ? "\uC801\uC6A9" : "\uD574\uC81C")}: {tag} \u00B7 \uB77C\uBCA8 \uC800\uC7A5 \uD544\uC694";
@@ -340,15 +367,17 @@ namespace MvcVisionSystem
 
         private bool TryResolveSelectedGroupMembers(
             out WpfObjectReviewItemRef selected,
-            out IReadOnlyList<WpfObjectReviewItemRef> members)
+            out IReadOnlyList<WpfObjectReviewObjectSnapshot> members)
         {
-            members = Array.Empty<WpfObjectReviewItemRef>();
+            members = Array.Empty<WpfObjectReviewObjectSnapshot>();
             if (!TryGetSelectedObjectReviewItem(out selected))
             {
                 return false;
             }
 
-            members = GetObjectGroupMembers(GetObjectPersistentMetadata(selected).GroupId);
+            members = objectReviewWorkflowService.GetGroupMembers(
+                CaptureObjectReviewSnapshots(),
+                selected);
             if (members.Count >= 2)
             {
                 return true;
@@ -358,190 +387,160 @@ namespace MvcVisionSystem
             return false;
         }
 
-        private IReadOnlyList<WpfObjectReviewItemRef> GetObjectGroupMembers(string groupId)
+        private WpfObjectReviewPersistenceRequest BuildObjectReviewPersistenceRequest(
+            string imagePath,
+            string imageName)
         {
-            string normalized = WpfObjectMetadataStateService.NormalizeGroupId(groupId);
-            if (string.IsNullOrEmpty(normalized))
+            return new WpfObjectReviewPersistenceRequest(
+                imagePath,
+                imageName,
+                global.Data,
+                CaptureObjectReviewSnapshots());
+        }
+
+        private IReadOnlyList<WpfObjectReviewObjectSnapshot> CaptureObjectReviewSnapshots()
+        {
+            var snapshots = new List<WpfObjectReviewObjectSnapshot>();
+            for (int index = 0; index < manualRois.Count; index++)
             {
-                return Array.Empty<WpfObjectReviewItemRef>();
+                snapshots.Add(new WpfObjectReviewObjectSnapshot(
+                    WpfObjectReviewItemRef.Manual(index),
+                    manualRois[index],
+                    index < manualRoiClassNames.Count ? manualRoiClassNames[index] : string.Empty,
+                    string.Empty,
+                    objectMetadataStateService.GetManualRoiMetadata(index)));
             }
 
-            return (ObjectReviewViewModel?.Objects ?? Enumerable.Empty<WpfObjectReviewListItem>())
-                .Where(row => row?.Payload is WpfObjectReviewItemRef
-                    && string.Equals(row.GroupId, normalized, StringComparison.Ordinal))
-                .Select(row => (WpfObjectReviewItemRef)row.Payload)
+            for (int index = 0; index < manualSegments.Count; index++)
+            {
+                LabelingSegmentationObject segment = manualSegments[index];
+                if (segment == null)
+                {
+                    continue;
+                }
+
+                snapshots.Add(new WpfObjectReviewObjectSnapshot(
+                    WpfObjectReviewItemRef.ManualSegment(index),
+                    Rectangle.Empty,
+                    segment.ClassName,
+                    segment.ObjectId,
+                    objectMetadataStateService.GetManualSegmentMetadata(segment)));
+            }
+
+            return snapshots;
+        }
+
+        private bool TryCaptureObjectReviewSnapshot(
+            WpfObjectReviewItemRef item,
+            out WpfObjectReviewObjectSnapshot snapshot)
+        {
+            snapshot = null;
+            if (item?.Source == WpfObjectReviewSource.ManualRoi
+                && item.Index >= 0
+                && item.Index < manualRois.Count)
+            {
+                snapshot = new WpfObjectReviewObjectSnapshot(
+                    item,
+                    manualRois[item.Index],
+                    item.Index < manualRoiClassNames.Count ? manualRoiClassNames[item.Index] : string.Empty,
+                    string.Empty,
+                    objectMetadataStateService.GetManualRoiMetadata(item.Index));
+                return true;
+            }
+
+            if (item?.Source == WpfObjectReviewSource.ManualSegment
+                && item.Index >= 0
+                && item.Index < manualSegments.Count
+                && manualSegments[item.Index] != null)
+            {
+                LabelingSegmentationObject segment = manualSegments[item.Index];
+                snapshot = new WpfObjectReviewObjectSnapshot(
+                    item,
+                    Rectangle.Empty,
+                    segment.ClassName,
+                    segment.ObjectId,
+                    objectMetadataStateService.GetManualSegmentMetadata(segment));
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool ApplyObjectReviewMutation(WpfObjectReviewMutationResult workflowResult)
+        {
+            if (workflowResult == null || !workflowResult.IsApplicable)
+            {
+                return false;
+            }
+
+            if (workflowResult.RecipeTagsChanged)
+            {
+                EnsureProjectSettings();
+                ObjectReviewViewModel?.SetMetadataTagDefinitions(
+                    global.Data.ProjectSettings.ObjectReviewTags);
+            }
+
+            return ApplyObjectReviewMetadataChanges(workflowResult.MetadataChanges);
+        }
+
+        private bool ApplyObjectReviewMetadataChanges(
+            IEnumerable<WpfObjectReviewMetadataChange> changes)
+        {
+            List<WpfObjectReviewMetadataChange> pending = (changes
+                ?? Enumerable.Empty<WpfObjectReviewMetadataChange>())
                 .ToList();
-        }
-
-        private bool TrySetObjectGroupId(WpfObjectReviewItemRef item, string groupId)
-        {
-            if (item?.Source == WpfObjectReviewSource.ManualRoi
-                && item.Index >= 0
-                && item.Index < manualRois.Count)
+            foreach (WpfObjectReviewMetadataChange change in pending)
             {
-                objectMetadataStateService.SetManualRoiGroupId(item.Index, groupId);
-                return true;
-            }
+                if (change?.Item?.Source == WpfObjectReviewSource.ManualRoi
+                    && change.Item.Index >= 0
+                    && change.Item.Index < manualRois.Count)
+                {
+                    continue;
+                }
 
-            if (item?.Source == WpfObjectReviewSource.ManualSegment
-                && item.Index >= 0
-                && item.Index < manualSegments.Count)
-            {
-                objectMetadataStateService.SetManualSegmentGroupId(manualSegments[item.Index], groupId);
-                return true;
-            }
+                if (change?.Item?.Source == WpfObjectReviewSource.ManualSegment
+                    && change.Item.Index >= 0
+                    && change.Item.Index < manualSegments.Count
+                    && manualSegments[change.Item.Index] != null)
+                {
+                    continue;
+                }
 
-            return false;
-        }
-
-        private bool TrySetObjectOccluded(WpfObjectReviewItemRef item, bool isOccluded)
-        {
-            if (item?.Source == WpfObjectReviewSource.ManualRoi
-                && item.Index >= 0
-                && item.Index < manualRois.Count)
-            {
-                objectMetadataStateService.SetManualRoiOccluded(item.Index, isOccluded);
-                return true;
-            }
-
-            if (item?.Source == WpfObjectReviewSource.ManualSegment
-                && item.Index >= 0
-                && item.Index < manualSegments.Count)
-            {
-                objectMetadataStateService.SetManualSegmentOccluded(manualSegments[item.Index], isOccluded);
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool TrySetObjectTag(WpfObjectReviewItemRef item, string tag, bool isApplied)
-        {
-            if (item?.Source == WpfObjectReviewSource.ManualRoi
-                && item.Index >= 0
-                && item.Index < manualRois.Count)
-            {
-                objectMetadataStateService.SetManualRoiTag(item.Index, tag, isApplied);
-                return true;
-            }
-
-            if (item?.Source == WpfObjectReviewSource.ManualSegment
-                && item.Index >= 0
-                && item.Index < manualSegments.Count)
-            {
-                objectMetadataStateService.SetManualSegmentTag(manualSegments[item.Index], tag, isApplied);
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool TryEnsureRecipeMetadataTag(string tag)
-        {
-            EnsureProjectSettings();
-            List<string> tags = global.Data.ProjectSettings.ObjectReviewTags;
-            if (tags.Any(value => string.Equals(value, tag, StringComparison.OrdinalIgnoreCase)))
-            {
-                return true;
-            }
-
-            if (tags.Count >= WpfObjectMetadataStateService.MaximumTagCount)
-            {
-                SetYoloCommandStatus(
-                    $"\uD604\uC7AC Recipe\uC5D0\uB294 \uD0DC\uADF8\uB97C {WpfObjectMetadataStateService.MaximumTagCount}\uAC1C\uAE4C\uC9C0 \uC815\uC758\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
-                    isBusy: false);
                 return false;
             }
 
-            tags.Add(tag);
-            global.Data.ProjectSettings.EnsureDefaults();
-            if (!TryPersistRecipeMetadataTagDefinitions())
+            foreach (WpfObjectReviewMetadataChange change in pending)
             {
-                global.Data.ProjectSettings.ObjectReviewTags.RemoveAll(value =>
-                    string.Equals(value, tag, StringComparison.OrdinalIgnoreCase));
-                return false;
+                if (change.Item.Source == WpfObjectReviewSource.ManualRoi)
+                {
+                    objectMetadataStateService.SetManualRoiMetadata(
+                        change.Item.Index,
+                        change.Metadata);
+                }
+                else
+                {
+                    objectMetadataStateService.SetManualSegmentMetadata(
+                        manualSegments[change.Item.Index],
+                        change.Metadata);
+                }
             }
 
-            ObjectReviewViewModel?.SetMetadataTagDefinitions(
-                global.Data.ProjectSettings.ObjectReviewTags);
             return true;
         }
 
-        private bool TryPersistRecipeMetadataTagDefinitions()
+        private void ReportObjectReviewWorkflowError(
+            WpfObjectReviewMutationResult workflowResult)
         {
-            string recipeName = GetCurrentRecipeName();
-            if (string.IsNullOrWhiteSpace(recipeName))
+            if (workflowResult == null || string.IsNullOrWhiteSpace(workflowResult.ErrorMessage))
             {
-                SetYoloCommandStatus(
-                    "Recipe\uB97C \uC801\uC6A9\uD55C \uD6C4 \uAC1D\uCCB4 \uD0DC\uADF8 \uBAA9\uB85D\uC744 \uC800\uC7A5\uD558\uC138\uC694.",
-                    isBusy: false);
-                return false;
+                return;
             }
 
-            try
+            SetYoloCommandStatus(workflowResult.ErrorMessage, isBusy: false);
+            if (workflowResult.AppendErrorToLog)
             {
-                projectRecipeSessionService.Save(global.Data, recipeName);
-                return true;
+                AppendLog(workflowResult.ErrorMessage);
             }
-            catch (Exception ex)
-            {
-                string status = $"Recipe \uD0DC\uADF8 \uBAA9\uB85D \uC800\uC7A5 \uC2E4\uD328: {ex.Message}";
-                SetYoloCommandStatus(status, isBusy: false);
-                AppendLog(status);
-                return false;
-            }
-        }
-
-        private bool TryTogglePersistentOccluded(
-            WpfObjectReviewItemRef item,
-            out WpfPersistentObjectMetadata metadata)
-        {
-            metadata = WpfPersistentObjectMetadata.Default;
-            if (item?.Source == WpfObjectReviewSource.ManualRoi
-                && item.Index >= 0
-                && item.Index < manualRois.Count)
-            {
-                metadata = objectMetadataStateService.ToggleManualRoiOccluded(item.Index);
-                return true;
-            }
-
-            if (item?.Source == WpfObjectReviewSource.ManualSegment
-                && item.Index >= 0
-                && item.Index < manualSegments.Count)
-            {
-                metadata = objectMetadataStateService.ToggleManualSegmentOccluded(
-                    manualSegments[item.Index]);
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool TryTogglePersistentTag(
-            WpfObjectReviewItemRef item,
-            string tag,
-            out WpfPersistentObjectMetadata metadata)
-        {
-            metadata = WpfPersistentObjectMetadata.Default;
-            if (item?.Source == WpfObjectReviewSource.ManualRoi
-                && item.Index >= 0
-                && item.Index < manualRois.Count)
-            {
-                metadata = objectMetadataStateService.ToggleManualRoiTag(item.Index, tag);
-                return true;
-            }
-
-            if (item?.Source == WpfObjectReviewSource.ManualSegment
-                && item.Index >= 0
-                && item.Index < manualSegments.Count)
-            {
-                metadata = objectMetadataStateService.ToggleManualSegmentTag(
-                    manualSegments[item.Index],
-                    tag);
-                return true;
-            }
-
-            return false;
         }
 
         private WpfPersistentObjectMetadata GetObjectPersistentMetadata(WpfObjectReviewItemRef item)

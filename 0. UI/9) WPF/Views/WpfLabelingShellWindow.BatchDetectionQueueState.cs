@@ -29,14 +29,14 @@ namespace MvcVisionSystem
             string imageName = Path.GetFileNameWithoutExtension(item.ImagePath);
             YoloImageReviewStatus status = result.Succeeded
                 ? result.CandidateCount > 0
-                    ? imageReviewStatus.SetDetectionCandidates(item.ImagePath, imageName, result.CandidateCount)
-                    : imageReviewStatus.SetDetectionNoCandidates(item.ImagePath, imageName)
-                : imageReviewStatus.SetDetectionFailed(item.ImagePath, imageName, result.Summary);
+                    ? imageQualityReviewWorkflowService.SetDetectionCandidates(item.ImagePath, imageName, result.CandidateCount)
+                    : imageQualityReviewWorkflowService.SetDetectionNoCandidates(item.ImagePath, imageName)
+                : imageQualityReviewWorkflowService.SetDetectionFailed(item.ImagePath, imageName, result.Summary);
             ApplyReviewStatusToItem(item, status);
             ApplyAnomalyClassificationToImage(item.ImagePath, imageName, result.Candidates, saveReviewStatus);
             if (saveReviewStatus)
             {
-                imageReviewStatus.SaveReviewStatus(global.Data);
+                imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
             }
 
             if (refreshQueueView)

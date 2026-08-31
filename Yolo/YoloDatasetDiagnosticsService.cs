@@ -11,7 +11,7 @@ namespace MvcVisionSystem.Yolo
         private const double ClassBalanceWarningRatio = 5D;
         private const double SegmentationBackgroundWarningRatio = 3D;
 
-        public static IReadOnlyList<string> BuildOperatorReport(CData data, bool refreshYaml)
+        public static IReadOnlyList<string> BuildOperatorReport(LabelingProjectData data, bool refreshYaml)
         {
             var lines = new List<string>();
             YoloDatasetReadinessReport report = YoloDatasetReadinessService.Build(data, refreshYaml);
@@ -40,7 +40,7 @@ namespace MvcVisionSystem.Yolo
             return lines;
         }
 
-        private static void AppendQualityHints(List<string> lines, CData data, YoloDatasetStatistics statistics)
+        private static void AppendQualityHints(List<string> lines, LabelingProjectData data, YoloDatasetStatistics statistics)
         {
             if (statistics == null)
             {
@@ -59,7 +59,7 @@ namespace MvcVisionSystem.Yolo
             lines.AddRange(BuildQualityWarnings(data, statistics));
         }
 
-        public static IReadOnlyList<string> BuildQualityWarnings(CData data, YoloDatasetStatistics statistics)
+        public static IReadOnlyList<string> BuildQualityWarnings(LabelingProjectData data, YoloDatasetStatistics statistics)
         {
             var lines = new List<string>();
             if (statistics == null)
@@ -167,7 +167,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static string BuildClassBalanceLine(CData data, YoloDatasetStatistics statistics)
+        private static string BuildClassBalanceLine(LabelingProjectData data, YoloDatasetStatistics statistics)
         {
             List<KeyValuePair<string, int>> classCounts = BuildClassCounts(data, statistics, ResolveDatasetPurpose(data));
             return classCounts.Count == 0
@@ -201,7 +201,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static List<KeyValuePair<string, int>> BuildClassCounts(CData data, YoloDatasetStatistics statistics, LabelingDatasetPurpose purpose)
+        private static List<KeyValuePair<string, int>> BuildClassCounts(LabelingProjectData data, YoloDatasetStatistics statistics, LabelingDatasetPurpose purpose)
         {
             if (statistics == null)
             {
@@ -249,7 +249,7 @@ namespace MvcVisionSystem.Yolo
             return classCounts;
         }
 
-        private static LabelingDatasetPurpose ResolveDatasetPurpose(CData data)
+        private static LabelingDatasetPurpose ResolveDatasetPurpose(LabelingProjectData data)
         {
             data?.ProjectSettings?.EnsureDefaults();
             return data?.ProjectSettings?.DatasetPurpose ?? LabelingDatasetPurpose.ObjectDetection;

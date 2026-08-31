@@ -55,7 +55,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        public static string ResolveReviewStatusFilePath(CData data)
+        public static string ResolveReviewStatusFilePath(LabelingProjectData data)
         {
             string outputRootPath = data?.OutputRootPath;
             if (string.IsNullOrWhiteSpace(outputRootPath))
@@ -66,7 +66,7 @@ namespace MvcVisionSystem.Yolo
             return Path.Combine(outputRootPath, "review-status.json");
         }
 
-        public void LoadReviewStatus(CData data, IEnumerable<string> imagePaths)
+        public void LoadReviewStatus(LabelingProjectData data, IEnumerable<string> imagePaths)
         {
             lock (syncRoot)
             {
@@ -120,7 +120,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        public void SaveReviewStatus(CData data)
+        public void SaveReviewStatus(LabelingProjectData data)
         {
             string filePath = ResolveReviewStatusFilePath(data);
             if (string.IsNullOrWhiteSpace(filePath))
@@ -209,7 +209,7 @@ namespace MvcVisionSystem.Yolo
             return status;
         }
 
-        public YoloImageReviewStatus RefreshLabelStatus(string imagePath, Size imageSize, CData data)
+        public YoloImageReviewStatus RefreshLabelStatus(string imagePath, Size imageSize, LabelingProjectData data)
         {
             if (string.IsNullOrWhiteSpace(imagePath))
             {
@@ -226,7 +226,7 @@ namespace MvcVisionSystem.Yolo
         public YoloImageReviewStatus RefreshLabelStatusAndReviewState(
             string imagePath,
             Size imageSize,
-            CData data,
+            LabelingProjectData data,
             bool hasActiveCandidates)
         {
             if (string.IsNullOrWhiteSpace(imagePath))

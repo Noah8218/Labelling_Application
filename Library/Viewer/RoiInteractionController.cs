@@ -8,7 +8,7 @@ namespace MvcVisionSystem
     public static class RoiInteractionController
     {
         public static bool TrySelect(
-            IList<CRectangleObject> rois,
+            IList<AnnotationRectangleObject> rois,
             Point imagePoint,
             int handleSize,
             out int selectedIndex,
@@ -39,14 +39,14 @@ namespace MvcVisionSystem
             return false;
         }
 
-        public static void ClearSelection(IDictionary<string, List<CRectangleObject>> roiGroups)
+        public static void ClearSelection(IDictionary<string, List<AnnotationRectangleObject>> roiGroups)
         {
             if (roiGroups == null)
             {
                 return;
             }
 
-            foreach (KeyValuePair<string, List<CRectangleObject>> roiGroup in roiGroups)
+            foreach (KeyValuePair<string, List<AnnotationRectangleObject>> roiGroup in roiGroups)
             {
                 for (int i = 0; i < roiGroup.Value.Count; i++)
                 {
@@ -56,10 +56,10 @@ namespace MvcVisionSystem
         }
 
         public static bool TryRemoveSelected(
-            IDictionary<string, List<CRectangleObject>> roiGroups,
+            IDictionary<string, List<AnnotationRectangleObject>> roiGroups,
             string className)
         {
-            if (roiGroups == null || !roiGroups.TryGetValue(className, out List<CRectangleObject> rois))
+            if (roiGroups == null || !roiGroups.TryGetValue(className, out List<AnnotationRectangleObject> rois))
             {
                 return false;
             }
@@ -75,7 +75,7 @@ namespace MvcVisionSystem
         }
 
         public static void ApplyImageBounds(
-            IDictionary<string, List<CRectangleObject>> roiGroups,
+            IDictionary<string, List<AnnotationRectangleObject>> roiGroups,
             Size imageSize)
         {
             if (roiGroups == null)
@@ -83,7 +83,7 @@ namespace MvcVisionSystem
                 return;
             }
 
-            foreach (KeyValuePair<string, List<CRectangleObject>> roiGroup in roiGroups)
+            foreach (KeyValuePair<string, List<AnnotationRectangleObject>> roiGroup in roiGroups)
             {
                 for (int i = 0; i < roiGroup.Value.Count; i++)
                 {

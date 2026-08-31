@@ -7,7 +7,7 @@ namespace MvcVisionSystem.Yolo
 {
     public static class YoloDatasetHealthService
     {
-        public static YoloDatasetHealthReport Build(CData data)
+        public static YoloDatasetHealthReport Build(LabelingProjectData data)
         {
             data?.ProjectSettings?.EnsureDefaults();
             LabelingDatasetPurpose purpose = data?.ProjectSettings?.DatasetPurpose ?? LabelingDatasetPurpose.ObjectDetection;
@@ -51,7 +51,7 @@ namespace MvcVisionSystem.Yolo
                 NormalizeIssues(issues));
         }
 
-        private static YoloDatasetHealthReport BuildAnomalyReport(CData data)
+        private static YoloDatasetHealthReport BuildAnomalyReport(LabelingProjectData data)
         {
             AnomalyClassificationTrainingReadinessReport readiness = AnomalyClassificationTrainingReadinessService.Build(data);
             var classes = new[]
@@ -155,7 +155,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static IReadOnlyList<YoloDatasetHealthClassSummary> BuildClassSummaries(
-            CData data,
+            LabelingProjectData data,
             YoloDatasetStatistics statistics,
             LabelingDatasetPurpose purpose)
         {

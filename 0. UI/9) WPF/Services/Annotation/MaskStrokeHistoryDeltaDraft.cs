@@ -13,7 +13,7 @@ namespace MvcVisionSystem
             int segmentIndex,
             System.Drawing.Size maskSize,
             string className,
-            CClassItem classItem)
+            LabelClass classItem)
             => new MaskStrokeHistoryDeltaDraft
             {
                 SegmentIndex = segmentIndex,
@@ -78,7 +78,7 @@ namespace MvcVisionSystem
 
         public string ClassName { get; private set; }
 
-        public CClassItem ClassItem { get; private set; }
+        public LabelClass ClassItem { get; private set; }
 
         public string ObjectId { get; private set; }
 
@@ -94,10 +94,10 @@ namespace MvcVisionSystem
 
         public bool RestoreIfRemoved { get; private set; }
 
-        private static CClassItem CloneClassItem(CClassItem source)
+        private static LabelClass CloneClassItem(LabelClass source)
             => source == null
                 ? null
-                : new CClassItem
+                : new LabelClass
                 {
                     Text = source.Text ?? string.Empty,
                     DrawColor = source.DrawColor

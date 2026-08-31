@@ -10,7 +10,9 @@ namespace MvcVisionSystem.Yolo
 {
     public sealed class DatasetInterchangeRequest
     {
-        public CData Data { get; set; }
+        public LabelingProjectData Data { get; set; }
+
+        public string RecipeName { get; set; } = string.Empty;
 
         public string FormatKey { get; set; } = string.Empty;
 
@@ -113,7 +115,7 @@ namespace MvcVisionSystem.Yolo
                 : request.TargetPath;
             string requestedTargetBefore = ComputePathFingerprint(requestedTargetEvidencePath);
             string temporaryRoot = string.Empty;
-            CData stagedImportData = null;
+            LabelingProjectData stagedImportData = null;
 
             try
             {
@@ -135,7 +137,6 @@ namespace MvcVisionSystem.Yolo
                     Directory.CreateDirectory(temporaryRoot);
                     stagedImportData = CloneForOutputRoot(request.Data, temporaryRoot);
                     conversionResult = ExecuteImport(stagedImportData, request, capability);
-                    WriteFinalTargetDataYaml(stagedImportData, request.Data.OutputRootPath);
                 }
                 else
                 {
@@ -146,7 +147,7 @@ namespace MvcVisionSystem.Yolo
                 AppendResultWarnings(report, conversionResult);
                 if (!isDryRun && isImport && report.SkippedCount == 0)
                 {
-                    PromoteStagedImport(stagedImportData, request.Data);
+                    PromoteStagedImport(stagedImportData, request.Data, request.RecipeName);
                 }
             }
             catch (Exception ex)
@@ -269,7 +270,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static object ExecuteExport(CData data, string targetPath, DatasetExportCapability capability)
+        private static object ExecuteExport(LabelingProjectData data, string targetPath, DatasetExportCapability capability)
             => capability.FormatKey switch
             {
                 "coco-detection-json" => CocoDetectionExportService.ExportDataset(data, targetPath),
@@ -283,7 +284,7 @@ namespace MvcVisionSystem.Yolo
             };
 
         private static object ExecuteImport(
-            CData data,
+            LabelingProjectData data,
             DatasetInterchangeRequest request,
             DatasetExportCapability capability)
             => capability.FormatKey switch
@@ -305,9 +306,9 @@ namespace MvcVisionSystem.Yolo
                 _ => throw new NotSupportedException($"Unsupported import format: {capability.FormatKey}")
             };
 
-        private static CData CloneForOutputRoot(CData source, string outputRoot)
+        private static LabelingProjectData CloneForOutputRoot(LabelingProjectData source, string outputRoot)
         {
-            var clone = new CData
+            var clone = new LabelingProjectData
             {
                 ProjectSettings = new LabelingProjectSettings
                 {
@@ -336,24 +337,23 @@ namespace MvcVisionSystem.Yolo
             return Path.Combine(parent, $".{name}.interchange-stage-{Guid.NewGuid():N}");
         }
 
-        private static void WriteFinalTargetDataYaml(CData stagedData, string targetRoot)
+        private static void PromoteStagedImport(
+            LabelingProjectData stagedData,
+            LabelingProjectData targetData,
+            string recipeName)
         {
-            string normalizedTarget = Path.GetFullPath(targetRoot ?? string.Empty);
-            CYolov5.CreateYaml(
-                Path.Combine(normalizedTarget, "data", "train", "images"),
-                Path.Combine(normalizedTarget, "data", "valid", "images"),
-                Path.Combine(normalizedTarget, "data", "test", "images"),
-                (stagedData.ClassNamedList ?? new List<CClassItem>())
-                    .Select(item => item?.Text ?? string.Empty)
-                    .ToList(),
-                stagedData.DataYamlFilePath);
-        }
+            if (string.IsNullOrWhiteSpace(recipeName))
+            {
+                throw new InvalidOperationException("An active Recipe is required before imported classes can be applied.");
+            }
 
-        private static void PromoteStagedImport(CData stagedData, CData targetData)
-        {
             string stageRoot = Path.GetFullPath(stagedData.OutputRootPath);
             string targetRoot = Path.GetFullPath(targetData.OutputRootPath);
             List<string> stagedFiles = Directory.EnumerateFiles(stageRoot, "*", SearchOption.AllDirectories)
+                .Where(path => !string.Equals(
+                    Path.GetRelativePath(stageRoot, path),
+                    "data.yaml",
+                    StringComparison.OrdinalIgnoreCase))
                 .OrderBy(path => Path.GetRelativePath(stageRoot, path), StringComparer.OrdinalIgnoreCase)
                 .ToList();
             List<string> targetDirectories = new[] { targetRoot }
@@ -366,7 +366,7 @@ namespace MvcVisionSystem.Yolo
                 .Where(path => !Directory.Exists(path))
                 .OrderByDescending(path => path.Length)
                 .ToList();
-            targetData.ClassNamedList ??= new List<CClassItem>();
+            targetData.ClassNamedList ??= new List<LabelClass>();
             int originalClassCount = targetData.ClassNamedList.Count;
 
             try
@@ -381,7 +381,8 @@ namespace MvcVisionSystem.Yolo
                     Directory.CreateDirectory(targetDirectory);
                 }
 
-                AnnotationFilePersistence.ExecuteTransaction(() =>
+                RecipeConfigurationSaveResult pairResult = null;
+                bool committed = AnnotationFilePersistence.ExecuteTransaction(() =>
                 {
                     foreach (string stagedPath in stagedFiles)
                     {
@@ -398,7 +399,18 @@ namespace MvcVisionSystem.Yolo
                     }
 
                     AppendImportedClasses(targetData, stagedData, originalClassCount);
+                    pairResult = targetData.SaveConfigAndYoloDataYaml(
+                        recipeName,
+                        refreshDatasetVersion: false);
+                    return pairResult.IsSuccess;
                 });
+
+                if (!committed)
+                {
+                    throw new IOException(
+                        pairResult?.ErrorMessage
+                        ?? "Imported classes could not be saved to the active Recipe.");
+                }
             }
             catch
             {
@@ -412,9 +424,9 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static void AppendImportedClasses(CData targetData, CData stagedData, int originalClassCount)
+        private static void AppendImportedClasses(LabelingProjectData targetData, LabelingProjectData stagedData, int originalClassCount)
         {
-            List<CClassItem> stagedClasses = stagedData.ClassNamedList ?? new List<CClassItem>();
+            List<LabelClass> stagedClasses = stagedData.ClassNamedList ?? new List<LabelClass>();
             if (stagedClasses.Count < originalClassCount)
             {
                 throw new InvalidDataException("Staged import removed an existing class.");
@@ -433,8 +445,8 @@ namespace MvcVisionSystem.Yolo
 
             for (int index = originalClassCount; index < stagedClasses.Count; index++)
             {
-                CClassItem item = stagedClasses[index];
-                targetData.ClassNamedList.Add(new CClassItem
+                LabelClass item = stagedClasses[index];
+                targetData.ClassNamedList.Add(new LabelClass
                 {
                     Text = item?.Text ?? string.Empty,
                     DrawColor = item?.DrawColor ?? System.Drawing.Color.Black
@@ -453,9 +465,9 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static List<CClassItem> CloneClasses(IEnumerable<CClassItem> classes)
-            => (classes ?? Enumerable.Empty<CClassItem>())
-                .Select(item => new CClassItem
+        private static List<LabelClass> CloneClasses(IEnumerable<LabelClass> classes)
+            => (classes ?? Enumerable.Empty<LabelClass>())
+                .Select(item => new LabelClass
                 {
                     Text = item?.Text ?? string.Empty,
                     DrawColor = item?.DrawColor ?? System.Drawing.Color.Black

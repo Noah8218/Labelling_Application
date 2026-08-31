@@ -23,7 +23,7 @@ namespace MvcVisionSystem
         }
 
         public WpfModelComparisonRunRequest BuildRequest(
-            CData data,
+            LabelingProjectData data,
             WpfTrainingWeightsService trainingWeightsService,
             string task = "test",
             string baselineWeightsOverride = "")
@@ -31,6 +31,7 @@ namespace MvcVisionSystem
             data?.NormalizeOutputPaths();
             data?.NormalizeTrainingSettings();
             PythonModelSettings settings = data?.ProjectSettings?.PythonModel ?? new PythonModelSettings();
+            PythonModelRuntimePathResolver.ApplyPathDefaults(settings);
             TrainingSettings training = data?.GetTrainingSettings() ?? new TrainingSettings();
             string projectRoot = settings.ProjectRootPath?.Trim() ?? string.Empty;
             string candidateWeights = string.Empty;
@@ -57,7 +58,7 @@ namespace MvcVisionSystem
         }
 
         public WpfModelComparisonRunRequest BuildYoloV5YoloV8DetectionRequest(
-            CData data,
+            LabelingProjectData data,
             string task = "")
             => BuildYoloDetectionEngineRequest(
                 data,
@@ -66,7 +67,7 @@ namespace MvcVisionSystem
                 task);
 
         public WpfModelComparisonRunRequest BuildYoloV8Yolo11DetectionRequest(
-            CData data,
+            LabelingProjectData data,
             string task = "")
             => BuildYoloDetectionEngineRequest(
                 data,
@@ -75,7 +76,7 @@ namespace MvcVisionSystem
                 task);
 
         public WpfModelComparisonRunRequest BuildYoloDetectionEngineRequest(
-            CData data,
+            LabelingProjectData data,
             string baselineEngine,
             string candidateEngine,
             string task = "")
@@ -83,6 +84,7 @@ namespace MvcVisionSystem
             data?.NormalizeOutputPaths();
             data?.NormalizeTrainingSettings();
             PythonModelSettings settings = data?.ProjectSettings?.PythonModel ?? new PythonModelSettings();
+            PythonModelRuntimePathResolver.ApplyPathDefaults(settings);
             TrainingSettings training = data?.GetTrainingSettings() ?? new TrainingSettings();
             ModelRegistrySettings registry = data?.ProjectSettings?.ModelRegistry;
             string normalizedBaselineEngine = PythonModelSettings.NormalizeModelEngine(baselineEngine);
@@ -467,14 +469,14 @@ namespace MvcVisionSystem
                 : DateTime.MinValue;
         }
 
-        private static string ResolveModelTask(CData data)
+        private static string ResolveModelTask(LabelingProjectData data)
         {
             return data?.ProjectSettings?.DatasetPurpose == LabelingDatasetPurpose.Segmentation
                 ? "segment"
                 : "detect";
         }
 
-        private static string ResolveSegmentationPositiveClassName(CData data)
+        private static string ResolveSegmentationPositiveClassName(LabelingProjectData data)
         {
             if (data?.ProjectSettings?.DatasetPurpose != LabelingDatasetPurpose.Segmentation)
             {
@@ -872,26 +874,7 @@ namespace MvcVisionSystem
         }
 
         private static string FindRepositoryRoot()
-        {
-            foreach (string startPath in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
-            {
-                string current = startPath;
-                while (!string.IsNullOrWhiteSpace(current))
-                {
-                    if (File.Exists(Path.Combine(current, "OpenVisionLab.LabelingStudio.sln"))
-                        || File.Exists(Path.Combine(current, "OpenVisionLab.LabelingStudio.csproj"))
-                        || File.Exists(Path.Combine(current, "MvcVisionSystem.sln"))
-                        || File.Exists(Path.Combine(current, "MvcVisionSystem.csproj")))
-                    {
-                        return current;
-                    }
-
-                    current = Directory.GetParent(current)?.FullName;
-                }
-            }
-
-            return Directory.GetCurrentDirectory();
-        }
+            => WpfRepositoryRootResolver.FindRepositoryRoot();
 
         private sealed class EngineModelRuntime
         {

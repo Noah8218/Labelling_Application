@@ -10,15 +10,8 @@ namespace MvcVisionSystem.Yolo
 {
     public static class CocoSegmentationImportService
     {
-        private static readonly string[] DatasetModes =
-        {
-            YoloDatasetSplitService.TrainMode,
-            YoloDatasetSplitService.ValidMode,
-            YoloDatasetSplitService.TestMode
-        };
-
         public static CocoSegmentationImportResult ImportDataset(
-            CData data,
+            LabelingProjectData data,
             string annotationPath,
             string imageRoot,
             string targetSplit = YoloDatasetSplitService.TrainMode)
@@ -38,7 +31,7 @@ namespace MvcVisionSystem.Yolo
                 throw new FileNotFoundException("COCO segmentation annotation file was not found.", annotationPath);
             }
 
-            string split = NormalizeSplit(targetSplit);
+            string split = YoloDatasetSplitService.NormalizeStandardSplit(targetSplit);
             if (string.IsNullOrWhiteSpace(split))
             {
                 throw new ArgumentException("Target split must be train, valid, or test.", nameof(targetSplit));
@@ -56,7 +49,7 @@ namespace MvcVisionSystem.Yolo
             var result = new CocoSegmentationImportResult
             {
                 AnnotationPath = annotationPath,
-                ImageRoot = ResolveImageRoot(annotationPath, imageRoot),
+                ImageRoot = YoloDatasetImportPathService.ResolveImageRoot(annotationPath, imageRoot),
                 TargetSplit = split
             };
 
@@ -81,7 +74,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static bool TryImportImage(
-            CData data,
+            LabelingProjectData data,
             CocoSegmentationImage image,
             IReadOnlyDictionary<int, List<CocoSegmentationAnnotation>> annotationsByImageId,
             IReadOnlyDictionary<int, int> categoryIdToClassIndex,
@@ -93,13 +86,13 @@ namespace MvcVisionSystem.Yolo
                 return false;
             }
 
-            string sourcePath = ResolveSourceImagePath(result.ImageRoot, image.FileName);
+            string sourcePath = YoloDatasetImportPathService.ResolveSourceImagePath(result.ImageRoot, image.FileName);
             if (!File.Exists(sourcePath))
             {
                 return false;
             }
 
-            string fileName = Path.GetFileName(image.FileName.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar));
+            string fileName = YoloDatasetImportPathService.GetFileName(image.FileName);
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 return false;
@@ -137,7 +130,7 @@ namespace MvcVisionSystem.Yolo
         private static Dictionary<string, List<LabelingSegmentationObject>> BuildSegments(
             IEnumerable<CocoSegmentationAnnotation> annotations,
             IReadOnlyDictionary<int, int> categoryIdToClassIndex,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize,
             CocoSegmentationImportResult result)
         {
@@ -196,7 +189,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static void SaveSegmentationArtifacts(
-            CData data,
+            LabelingProjectData data,
             string targetSplit,
             string fileName,
             Image image,
@@ -237,7 +230,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static Dictionary<int, int> BuildClassMap(
-            CData data,
+            LabelingProjectData data,
             IEnumerable<CocoSegmentationCategory> categories,
             CocoSegmentationImportResult result)
         {
@@ -252,12 +245,7 @@ namespace MvcVisionSystem.Yolo
                     continue;
                 }
 
-                int classIndex = FindClassIndex(data, className);
-                if (classIndex < 0)
-                {
-                    ClassCatalogService.TryAddClass(data, className, out _);
-                    classIndex = FindClassIndex(data, className);
-                }
+                int classIndex = ClassCatalogService.FindOrAddClass(data, className);
 
                 if (classIndex >= 0 && !map.ContainsKey(category.Id))
                 {
@@ -269,44 +257,6 @@ namespace MvcVisionSystem.Yolo
             return map;
         }
 
-        private static int FindClassIndex(CData data, string className)
-        {
-            for (int index = 0; index < (data.ClassNamedList?.Count ?? 0); index++)
-            {
-                if (string.Equals(data.ClassNamedList[index]?.Text, className, StringComparison.OrdinalIgnoreCase))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
-        }
-
-        private static string ResolveImageRoot(string annotationPath, string imageRoot)
-            => string.IsNullOrWhiteSpace(imageRoot)
-                ? Path.GetDirectoryName(Path.GetFullPath(annotationPath)) ?? string.Empty
-                : Path.GetFullPath(imageRoot);
-
-        private static string ResolveSourceImagePath(string imageRoot, string fileName)
-        {
-            string normalized = fileName.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
-            return Path.IsPathRooted(normalized)
-                ? normalized
-                : Path.Combine(imageRoot ?? string.Empty, normalized);
-        }
-
-        private static string NormalizeSplit(string split)
-        {
-            foreach (string mode in DatasetModes)
-            {
-                if (string.Equals(split, mode, StringComparison.OrdinalIgnoreCase))
-                {
-                    return mode;
-                }
-            }
-
-            return string.Empty;
-        }
     }
 
 }

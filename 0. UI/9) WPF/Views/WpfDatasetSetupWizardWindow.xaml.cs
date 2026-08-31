@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using TextBox = System.Windows.Controls.TextBox;
@@ -13,6 +14,12 @@ namespace MvcVisionSystem
         }
 
         public WpfDatasetSetupWizardViewModel ViewModel => DataContext as WpfDatasetSetupWizardViewModel;
+
+        protected override void OnClosed(EventArgs e)
+        {
+            ViewModel?.Dispose();
+            base.OnClosed(e);
+        }
 
         public WpfLearningModeItem SelectedDatasetPurpose => WizardDatasetPurposeListBox.SelectedItem as WpfLearningModeItem;
 

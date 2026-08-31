@@ -16,8 +16,8 @@ namespace MvcVisionSystem._1._Core
         public string LastPreparationFailureMessage { get; private set; } = string.Empty;
 
         public bool TryStartTraining(
-            CData data,
-            CCommunicationLearning communication,
+            LabelingProjectData data,
+            PythonModelCommunication communication,
             string runName = "",
             string recipeName = "")
         {
@@ -60,7 +60,7 @@ namespace MvcVisionSystem._1._Core
             string model = data?.ProjectSettings?.PythonModel?.GetProtocolModelName() ?? "yolov5";
             string weightFile = ResolveTrainingWeightFile(training.Weight, model, trainingRequest.Task);
             bool sent = communication.SendTrainingData(
-                CCommunicationLearning.CommandLearning.StartTraining.ToString(),
+                PythonModelCommunication.CommandLearning.StartTraining.ToString(),
                 training.ImageSize.ToString(),
                 training.Batch.ToString(),
                 training.Epoch.ToString(),
@@ -98,7 +98,7 @@ namespace MvcVisionSystem._1._Core
             return sent;
         }
 
-        public bool TryStopTraining(CCommunicationLearning communication)
+        public bool TryStopTraining(PythonModelCommunication communication)
         {
             if (communication == null)
             {
@@ -106,7 +106,7 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            bool sent = communication.Send(CCommunicationLearning.CommandLearning.StopTraining.ToString());
+            bool sent = communication.Send(PythonModelCommunication.CommandLearning.StopTraining.ToString());
             if (!sent)
             {
                 AppLog.ABNORMAL("Python 모델 클라이언트가 연결되지 않아 학습 중지 명령을 보내지 못했습니다.");
@@ -115,12 +115,12 @@ namespace MvcVisionSystem._1._Core
             return sent;
         }
 
-        public bool TryPrepareTrainingDataset(CData data)
+        public bool TryPrepareTrainingDataset(LabelingProjectData data)
         {
             return TryPrepareTrainingDataset(data, out _);
         }
 
-        private bool TryPrepareTrainingDataset(CData data, out YoloTrainingDatasetRequest trainingRequest)
+        private bool TryPrepareTrainingDataset(LabelingProjectData data, out YoloTrainingDatasetRequest trainingRequest)
         {
             bool prepared = datasetPreparationService.TryPrepare(data, out trainingRequest);
             LastPreparationFailureMessage = datasetPreparationService.LastPreparationFailureMessage;

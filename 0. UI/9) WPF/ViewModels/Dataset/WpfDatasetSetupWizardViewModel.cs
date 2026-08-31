@@ -13,7 +13,7 @@ using System.Windows;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfDatasetSetupWizardViewModel : WpfObservableViewModel
+    public sealed class WpfDatasetSetupWizardViewModel : WpfObservableViewModel, IDisposable
     {
         private static readonly Action NoOpCommand = () => { };
         private static readonly Action<object> NoOpSelectionCommand = _ => { };
@@ -46,6 +46,7 @@ namespace MvcVisionSystem
         private bool isApplyingAutomaticPathSync;
         private bool recipeNameWasEdited;
         private bool outputRootPathWasEdited;
+        private bool disposed;
 
         public WpfDatasetSetupWizardViewModel()
         {
@@ -468,6 +469,11 @@ namespace MvcVisionSystem
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             OnPropertyChanged(nameof(WindowTitleText));
             OnPropertyChanged(nameof(SetupSummaryText));
             OnPropertyChanged(nameof(SetupSourceRuleTitleText));
@@ -477,6 +483,17 @@ namespace MvcVisionSystem
             StatusText = WpfLocalizationTextRuntimeService.Translate(StatusText);
             RefreshSamplePresets();
             RefreshPreview();
+        }
+
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
         }
 
         private static string T(string key) => OpenVisionLanguageService.T(key);

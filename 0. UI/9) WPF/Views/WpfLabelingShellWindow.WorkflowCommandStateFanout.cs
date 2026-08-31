@@ -145,7 +145,7 @@ namespace MvcVisionSystem
 
         private void ApplyTrainingSettingsCommandState(WpfWorkflowCommandState state)
         {
-            if (TrainingSettingsViewModel != null)
+            if (viewModels.IsModelWorkflowCreated && TrainingSettingsViewModel != null)
             {
                 TrainingSettingsViewModel.ApplyWorkflowCommandState(state);
                 return;
@@ -159,7 +159,7 @@ namespace MvcVisionSystem
 
         private void ApplyYoloModelSettingsCommandState(WpfWorkflowCommandState state)
         {
-            if (YoloModelSettingsViewModel != null)
+            if (viewModels.IsModelWorkflowCreated && YoloModelSettingsViewModel != null)
             {
                 YoloModelSettingsViewModel.ApplyWorkflowCommandState(state);
                 return;
@@ -192,7 +192,7 @@ namespace MvcVisionSystem
 
         private void ApplyYoloStatusCommandState(WpfWorkflowCommandState state)
         {
-            if (YoloStatusViewModel != null)
+            if (viewModels.IsModelWorkflowCreated && YoloStatusViewModel != null)
             {
                 YoloStatusViewModel.ApplyWorkflowCommandState(state);
                 return;

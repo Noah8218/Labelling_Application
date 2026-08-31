@@ -5,10 +5,29 @@ using System.Runtime.ExceptionServices;
 
 namespace MvcVisionSystem.Yolo
 {
+    internal enum AnnotationFilePersistenceFaultPoint
+    {
+        BeforeTemporaryFlush,
+        BeforeCommit,
+        AfterCommit
+    }
+
     internal static class AnnotationFilePersistence
     {
         [ThreadStatic]
         private static AnnotationFileTransaction currentTransaction;
+
+        [ThreadStatic]
+        private static Action<AnnotationFilePersistenceFaultPoint, string> testFaultInjector;
+
+        internal static IDisposable PushTestFaultInjector(
+            Action<AnnotationFilePersistenceFaultPoint, string> injector)
+        {
+            ArgumentNullException.ThrowIfNull(injector);
+            Action<AnnotationFilePersistenceFaultPoint, string> previous = testFaultInjector;
+            testFaultInjector = injector;
+            return new TestFaultInjectorScope(previous);
+        }
 
         public static bool ExecuteTransaction(Func<bool> saveFiles)
         {
@@ -90,6 +109,7 @@ namespace MvcVisionSystem.Yolo
             try
             {
                 writeTemporaryFile(temporaryPath);
+                InjectTestFault(AnnotationFilePersistenceFaultPoint.BeforeTemporaryFlush, fullPath);
                 using (var stream = new FileStream(
                     temporaryPath,
                     FileMode.Open,
@@ -101,12 +121,16 @@ namespace MvcVisionSystem.Yolo
 
                 if (currentTransaction != null)
                 {
+                    InjectTestFault(AnnotationFilePersistenceFaultPoint.BeforeCommit, fullPath);
                     currentTransaction.Write(temporaryPath, fullPath);
                 }
                 else
                 {
+                    InjectTestFault(AnnotationFilePersistenceFaultPoint.BeforeCommit, fullPath);
                     ReplaceOrMove(temporaryPath, fullPath, backupPath: null);
                 }
+
+                InjectTestFault(AnnotationFilePersistenceFaultPoint.AfterCommit, fullPath);
             }
             finally
             {
@@ -148,6 +172,36 @@ namespace MvcVisionSystem.Yolo
             else
             {
                 File.Move(sourcePath, destinationPath);
+            }
+        }
+
+        private static void InjectTestFault(
+            AnnotationFilePersistenceFaultPoint point,
+            string path)
+        {
+            testFaultInjector?.Invoke(point, path);
+        }
+
+        private sealed class TestFaultInjectorScope : IDisposable
+        {
+            private readonly Action<AnnotationFilePersistenceFaultPoint, string> previous;
+            private bool disposed;
+
+            public TestFaultInjectorScope(
+                Action<AnnotationFilePersistenceFaultPoint, string> previous)
+            {
+                this.previous = previous;
+            }
+
+            public void Dispose()
+            {
+                if (disposed)
+                {
+                    return;
+                }
+
+                testFaultInjector = previous;
+                disposed = true;
             }
         }
 

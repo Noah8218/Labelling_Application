@@ -236,8 +236,13 @@ namespace MvcVisionSystem
 
             try
             {
-                CRecipe.InitDirectory(recipeName);
-                global.Data.SaveConfig(recipeName);
+                Recipe.InitDirectory(recipeName);
+                RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName);
+                if (!saveResult.IsSuccess)
+                {
+                    throw new IOException(saveResult.ErrorMessage);
+                }
+
                 return true;
             }
             catch (Exception ex)

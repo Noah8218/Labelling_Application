@@ -163,7 +163,7 @@ namespace MvcVisionSystem
         {
             EnsureProjectSettings();
 
-            string configuredRoot = global.Data?.ProjectSettings?.PythonModel?.ImageRootPath ?? string.Empty;
+            string configuredRoot = global.Data?.ProjectSettings?.ResolveImageRootPath() ?? string.Empty;
             return datasetImageRootResolver.Resolve(global.Data, configuredRoot, HasQueueImages);
         }
 
@@ -180,7 +180,7 @@ namespace MvcVisionSystem
             ImageQueueViewModel?.SetCurrentImageFolder(currentImageRoot, canOpenFolder: false);
             CancelImageQueueCatalogLoad(waitForCompletion: false);
             CancelImageQueueDetailRefresh(waitForCompletion: false);
-            imageReviewStatus.SetImages(Array.Empty<string>());
+            imageQualityReviewWorkflowService.SetImages(Array.Empty<string>());
             suppressImageQueueSelection = true;
             try
             {
@@ -239,7 +239,7 @@ namespace MvcVisionSystem
             string outputRootPath = global.Data?.OutputRootPath ?? string.Empty;
             string imageRootPath = Directory.Exists(currentImageRoot)
                 ? currentImageRoot
-                : global.Data?.ProjectSettings?.PythonModel?.ImageRootPath ?? string.Empty;
+                : global.Data?.ProjectSettings?.ResolveImageRootPath() ?? string.Empty;
             string datasetName = WpfDatasetContextPresentationService.BuildDatasetName(recipeName, outputRootPath);
             int classCount = global.Data?.ClassNamedList?
                 .Count(item => item != null && !string.IsNullOrWhiteSpace(item.Text)) ?? 0;
@@ -284,6 +284,7 @@ namespace MvcVisionSystem
                 {
                     WpfDatasetSetupExecutionFailure.DuplicateOutputRoot => datasetSetupPresentationService.BuildDuplicateOutputRootMessage(result.ExistingRecipeName),
                     WpfDatasetSetupExecutionFailure.SamplePreset => datasetSetupPresentationService.BuildSamplePresetFailureMessage(result.SampleError),
+                    WpfDatasetSetupExecutionFailure.RecipePersistence => datasetSetupPresentationService.BuildRecipePersistenceFailureMessage(result.PersistenceError),
                     _ => datasetSetupPresentationService.BuildInvalidRecipeNameMessage()
                 };
                 SetDatasetSetupStatus(message);

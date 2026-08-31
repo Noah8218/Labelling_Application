@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 
 namespace MvcVisionSystem
@@ -11,5 +12,11 @@ namespace MvcVisionSystem
         }
 
         public WpfDatasetSelectionWindowViewModel ViewModel => DataContext as WpfDatasetSelectionWindowViewModel;
+
+        protected override void OnClosed(EventArgs e)
+        {
+            ViewModel?.Dispose();
+            base.OnClosed(e);
+        }
     }
 }

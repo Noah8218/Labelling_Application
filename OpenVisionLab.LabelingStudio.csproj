@@ -9,6 +9,9 @@
     <NoWarn>$(NoWarn);CA1416</NoWarn>
     <!-- Legacy namespace retained until the XAML partial-class migration is split out from product naming. -->
     <RootNamespace>MvcVisionSystem</RootNamespace>
+    <!-- The legacy MvcVisionSystem namespace remains unchanged so the existing
+         XAML partials keep their behavior while the product uses its canonical
+         OpenVisionLab Labeling Studio identity. -->
     <AssemblyName>OpenVisionLab.LabelingStudio</AssemblyName>
     <ApplicationIcon>lens.ico</ApplicationIcon>
     <Platforms>AnyCPU;x86;x64</Platforms>
@@ -17,7 +20,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <ArtifactsRoot>$(MSBuildProjectDirectory)\artifacts</ArtifactsRoot>
+    <ArtifactsRoot Condition="'$(OpenVisionLabTestStorageRoot)' != ''">$(OpenVisionLabTestStorageRoot)\artifacts</ArtifactsRoot>
+    <ArtifactsRoot Condition="'$(OpenVisionLabTestStorageRoot)' == '' and '$(ArtifactsRoot)' == ''">$(MSBuildProjectDirectory)\artifacts</ArtifactsRoot>
     <OutputPath>$(ArtifactsRoot)\run\$(Configuration)\</OutputPath>
     <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**</DefaultItemExcludes>
   </PropertyGroup>
@@ -45,16 +49,30 @@
     <EmbeddedResource Remove="OpenVisionLab\**\*.resx" />
     <Page Remove="OpenVisionLab\**\*.xaml" />
     <None Remove="OpenVisionLab\**\*" />
+    <Compile Remove="1. Core\ApplicationState\CData.cs" />
+    <Compile Remove="1. Core\ApplicationState\CGlobal.cs" />
+    <Compile Remove="1. Core\ApplicationState\CRecipe.cs" />
+    <Compile Remove="1. Core\ApplicationState\CSystem.cs" />
+    <Compile Remove="1. Core\Display\CDisplayManager.cs" />
+    <Compile Remove="2. Common\CArgument.cs" />
+    <Compile Remove="2. Common\CCommon.cs" />
+    <Compile Remove="2. Common\CDrawBitmap.cs" />
+    <Compile Remove="2. Common\CParameterManager.cs" />
+    <Compile Remove="3. Communication\TCP\CCommunicationLearning.cs" />
+    <Compile Remove="3. Communication\TCP\CTCPAsync.cs" />
+    <Compile Remove="Library\CViewer.cs" />
+    <Compile Remove="Library\CViewer.Image.cs" />
+    <Compile Remove="Library\CViewer.Rendering.cs" />
+    <Compile Remove="Library\CViewerWinFormsHostAdapter.cs" />
+    <Compile Remove="Library\DrawObject\CRectangleObject.cs" />
+    <Compile Remove="Yolo\CClassList.cs" />
+    <Compile Remove="Yolo\CYolov5.cs" />
     <Compile Remove="tests\**\*.cs" />
     <EmbeddedResource Remove="tests\**\*.resx" />
     <None Remove="tests\**\*" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="CircularProgressBar">
-      <HintPath>dll\CircularProgressBar.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="OpenVisionLab.Core">
       <HintPath>dll\OpenVisionLab.Core.dll</HintPath>
       <Private>True</Private>
@@ -99,10 +117,6 @@
       <HintPath>dll\SharpGL.WinForms.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="WinFormAnimation">
-      <HintPath>dll\WinFormAnimation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -113,7 +127,6 @@
     <PackageReference Include="OpenCvSharp4.Extensions" Version="$(OpenCvSharpVersion)" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="$(OpenCvSharpVersion)" />
     <PackageReference Include="System.Buffers" Version="4.5.1" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.8" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.27" />
     <PackageReference Include="System.Memory" Version="4.5.5" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
@@ -137,7 +150,7 @@
     <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageSpace.Core\OpenVisionLab.ImageSpace.Core.csproj"
                       Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageSpace.Core\OpenVisionLab.ImageSpace.Core.csproj')" />
     <ProjectReference Include="$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageCanvas\OpenVisionLab.ImageCanvas.csproj"
-                      AdditionalProperties="ImageCanvasCopyEmguNativeRuntime=false;ImageCanvasCopyOpenCvVideoRuntime=false"
+                      AdditionalProperties="ImageCanvasCopyOpenCvVideoRuntime=false"
                       Condition="Exists('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.ImageCanvas\OpenVisionLab.ImageCanvas.csproj')" />
   </ItemGroup>
 
@@ -154,7 +167,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Library\CViewer.cs">
+    <Compile Update="Library\AnnotationViewer.cs">
       <SubType>Component</SubType>
     </Compile>
   </ItemGroup>
@@ -258,7 +271,6 @@
     <ItemGroup>
       <ResolvedFileToPublish Remove="$([System.IO.Path]::GetFullPath('$(OpenVisionLabSourceRoot)\Library\OpenVisionLab.Logging\log4net.config'))" />
       <ResolvedFileToPublish Remove="$([System.IO.Path]::GetFullPath('$(OpenVisionLabSourceRoot)\dll\OpenCVSharp\OpenCvSharpExtern.dll'))" />
-      <ResolvedFileToPublish Remove="$([System.IO.Path]::GetFullPath('$(OpenVisionLabSourceRoot)\dll\EmguCV\cvextern.dll'))" />
       <ResolvedFileToPublish Remove="$([System.IO.Path]::GetFullPath('$(OpenVisionLabSourceRoot)\dll\OpenCVSharp\opencv_ffmpeg400_64.dll'))" />
     </ItemGroup>
   </Target>

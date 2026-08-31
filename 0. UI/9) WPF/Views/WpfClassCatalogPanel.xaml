@@ -214,12 +214,13 @@
                        Grid.Column="3"
                        Style="{StaticResource ClassCatalogButtonStyle}"
                        MinWidth="76"
-                       AutomationProperties.Name="{Binding RemoveClassAutomationNameText}"
-                       ToolTip="{Binding RemoveClassToolTipText}"
-                       Command="{Binding RemoveClassCommand}">
+                       AutomationProperties.Name="{Binding ArchiveClassAutomationNameText}"
+                       ToolTip="{Binding ArchiveClassToolTipText}"
+                       IsEnabled="{Binding IsArchiveClassEnabled}"
+                       Command="{Binding ArchiveClassCommand}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <iconPacks:PackIconMaterial Style="{StaticResource ClassCatalogIconStyle}" Kind="TrashCanOutline" />
-                    <TextBlock Text="{Binding RemoveClassButtonText}" VerticalAlignment="Center" />
+                    <iconPacks:PackIconMaterial Style="{StaticResource ClassCatalogIconStyle}" Kind="ArchiveOutline" />
+                    <TextBlock Text="{Binding ArchiveClassButtonText}" VerticalAlignment="Center" />
                 </StackPanel>
             </ui:Button>
             <ui:Button x:Name="RenameClassButton"
@@ -228,6 +229,7 @@
                        MinWidth="64"
                        AutomationProperties.Name="{Binding RenameClassAutomationNameText}"
                        ToolTip="{Binding RenameClassToolTipText}"
+                       IsEnabled="{Binding IsRenameClassEnabled}"
                        Command="{Binding RenameClassCommand}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <iconPacks:PackIconMaterial Style="{StaticResource ClassCatalogIconStyle}" Kind="PencilOutline" />
@@ -315,20 +317,28 @@
                  ItemsSource="{Binding Classes}"
                  SelectedItem="{Binding SelectedClass, Mode=TwoWay}"
                  ItemContainerStyle="{StaticResource ClassCatalogListBoxItemStyle}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  mvvm:InputCommandBehaviors.SelectedItemChangedCommand="{Binding ClassSelectionChangedCommand}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <Border Width="10"
+                    <!-- 긴 canonical class name을 행 너비로 제한해 TextTrimming이 실제로 동작하도록 한다. -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0"
+                                Width="10"
                                 Height="10"
                                 CornerRadius="2"
                                 Background="{Binding DrawBrush}"
                                 Margin="0,0,7,0"
                                 VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding DisplayText}"
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding DisplayText}"
                                    VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
+                    </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

@@ -35,39 +35,7 @@ namespace MvcVisionSystem
         }
 
         public static string FindRepositoryRoot(string startPath = "")
-        {
-            IEnumerable<string> starts = new[]
-            {
-                startPath,
-                Environment.CurrentDirectory,
-                AppContext.BaseDirectory
-            }.Where(path => !string.IsNullOrWhiteSpace(path));
-
-            foreach (string start in starts)
-            {
-                DirectoryInfo current;
-                try
-                {
-                    current = new DirectoryInfo(Path.GetFullPath(start));
-                }
-                catch
-                {
-                    continue;
-                }
-
-                while (current != null)
-                {
-                    if (File.Exists(Path.Combine(current.FullName, "OpenVisionLab.LabelingStudio.csproj")))
-                    {
-                        return current.FullName;
-                    }
-
-                    current = current.Parent;
-                }
-            }
-
-            return Environment.CurrentDirectory;
-        }
+            => WpfRepositoryRootResolver.FindRepositoryRoot(startPath);
 
         private static void LoadPairwiseComparisons(string artifactsRoot, ICollection<WpfModelBenchmarkRun> runs)
         {

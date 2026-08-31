@@ -42,7 +42,7 @@ namespace MvcVisionSystem
             {
                 SaveTrainingEditorFields();
                 RefreshTrainingReadinessPanel(refreshYaml: true);
-                bool ready = await global
+                bool ready = await global.ModelRuntime
                     .EnsurePythonModelClientReadyAsync(GetWorkerConnectTimeoutMilliseconds())
                     .ConfigureAwait(true);
                 if (!ready)
@@ -54,9 +54,9 @@ namespace MvcVisionSystem
                     return;
                 }
 
-                bool started = global.TrainingWorkflow.TryStartTraining(
+                bool started = global.ModelRuntime.TrainingWorkflow.TryStartTraining(
                     global.Data,
-                    global.DeepLearning,
+                    global.ModelRuntime.DeepLearning,
                     recipeName: GetCurrentRecipeName());
                 if (global?.Data?.ProjectSettings?.ExternalYoloDataset?.HasSelection == true)
                 {
@@ -64,7 +64,7 @@ namespace MvcVisionSystem
                 }
                 string startText = WpfTrainingCommandPresentationService.BuildStartCommandResultStatus(
                     started,
-                    global.TrainingWorkflow.LastPreparationFailureMessage);
+                    global.ModelRuntime.TrainingWorkflow.LastPreparationFailureMessage);
                 SetTrainingReadinessStatus(startText);
                 if (!started)
                 {
@@ -107,7 +107,7 @@ namespace MvcVisionSystem
             WpfTrainingRecoveryStatus pendingRecovery = null;
             try
             {
-                bool stopped = await Task.Run(() => global.TrainingWorkflow.TryStopTraining(global.DeepLearning)).ConfigureAwait(true);
+                bool stopped = await Task.Run(() => global.ModelRuntime.TrainingWorkflow.TryStopTraining(global.ModelRuntime.DeepLearning)).ConfigureAwait(true);
                 string stopText = WpfTrainingCommandPresentationService.BuildStopCommandResultStatus(stopped);
                 if (stopped)
                 {

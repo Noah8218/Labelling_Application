@@ -9,23 +9,25 @@
     <RootNamespace>OpenVisionLab.ImageCanvas</RootNamespace>
     <AssemblyName>OpenVisionLab.ImageCanvas</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <ImageCanvasCopyEmguNativeRuntime Condition="'$(ImageCanvasCopyEmguNativeRuntime)' == ''">true</ImageCanvasCopyEmguNativeRuntime>
     <ImageCanvasCopyOpenCvVideoRuntime Condition="'$(ImageCanvasCopyOpenCvVideoRuntime)' == ''">true</ImageCanvasCopyOpenCvVideoRuntime>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Emgu.CV.World" Condition="Exists('..\..\dll\EmguCV\Emgu.CV.World.dll')">
-      <HintPath>..\..\dll\EmguCV\Emgu.CV.World.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Emgu.CV.World" Condition="Exists('..\..\dl\EmguCV\Emgu.CV.World.dll')">
-      <HintPath>..\..\dl\EmguCV\Emgu.CV.World.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="Emgu.CV.World" Condition="Exists('..\_lib\EmguCV\Emgu.CV.World.dll')">
-      <HintPath>..\_lib\EmguCV\Emgu.CV.World.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
+    <!-- Keep legacy teaching views in the public tree without compiling them
+         alongside the current compatibility implementations. -->
+    <Compile Remove="Converter\BooleanToEyeIconConverter .cs" />
+    <Compile Remove="View\AddRoiArrayView.xaml.cs" />
+    <Compile Remove="View\AutoAlignTeachingView.xaml.cs" />
+    <Compile Remove="View\AutoWarpageTeachingView.xaml.cs" />
+    <Compile Remove="ViewModel\AutoAlignTeachingViewModel.cs" />
+    <Compile Remove="ViewModel\AutoWarpageTeachingViewModel.cs" />
+    <Compile Remove="ViewModel\LayoutItemViewModel.cs" />
+    <Page Remove="View\AddRoiArrayView.xaml" />
+    <Page Remove="View\AutoAlignTeachingView.xaml" />
+    <Page Remove="View\AutoWarpageTeachingView.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="SharpGL">
       <HintPath>..\..\dll\SharpGL\SharpGL.dll</HintPath>
       <Private>true</Private>
@@ -42,28 +44,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="ViewModel\AutoAlignTeachingViewModel.cs" />
-    <Compile Remove="ViewModel\AutoWarpageTeachingViewModel.cs" />
-    <Compile Remove="ViewModel\LayoutItemViewModel.cs" />
-    <Compile Remove="View\AddRoiArrayView.xaml.cs" />
-    <Compile Remove="View\AutoAlignTeachingView.xaml.cs" />
-    <Compile Remove="View\AutoWarpageTeachingView.xaml.cs" />
-    <Compile Remove="Converter\BooleanToEyeIconConverter .cs" />
-    <Page Remove="View\AddRoiArrayView.xaml" />
-    <Page Remove="View\AutoAlignTeachingView.xaml" />
-    <Page Remove="View\AutoWarpageTeachingView.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\OpenVisionLab.Localization\OpenVisionLab.Localization.csproj" />
     <ProjectReference Include="..\OpenVisionLab.Mvvm\OpenVisionLab.Mvvm.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\dll\EmguCV\cvextern.dll" Condition="'$(ImageCanvasCopyEmguNativeRuntime)' == 'true'">
-      <Link>cvextern.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="..\..\dll\OpenCVSharp\opencv_ffmpeg400_64.dll" Condition="'$(ImageCanvasCopyOpenCvVideoRuntime)' == 'true'">
       <Link>opencv_ffmpeg400_64.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

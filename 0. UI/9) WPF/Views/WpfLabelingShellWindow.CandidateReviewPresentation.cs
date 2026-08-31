@@ -44,7 +44,8 @@ namespace MvcVisionSystem
         }
 
         private YoloWorkerSmokeCandidate GetSelectedCandidate()
-            => WpfCandidateReviewSelectionService.GetSelectedCandidate(CandidateReviewViewModel?.SelectedCandidate);
+            => WpfCandidateReviewSelectionService.GetSelectedCandidate(
+                viewModels.CandidateReviewViewModel?.SelectedCandidate);
 
 
         private void UpdateDetectionResultOverlay()

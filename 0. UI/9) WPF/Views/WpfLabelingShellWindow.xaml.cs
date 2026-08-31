@@ -90,11 +90,13 @@ namespace MvcVisionSystem
             "DetectionOverlaySelectedTextBrush",
             "DetectionOverlayDetailTextBrush"
         };
-        private readonly CGlobal global = CGlobal.Inst;
+        private readonly LabelingApplicationState global = LabelingApplicationState.Inst;
         private readonly WpfBulkObservableCollection<WpfImageQueueItem> imageQueueItems = new WpfBulkObservableCollection<WpfImageQueueItem>();
         private readonly Dictionary<string, WpfImageQueueItem> imageQueueItemsByPath = new Dictionary<string, WpfImageQueueItem>(StringComparer.OrdinalIgnoreCase);
         private YoloImageReviewStatusService imageReviewStatus = new YoloImageReviewStatusService();
+        private WpfImageQualityReviewWorkflowService imageQualityReviewWorkflowService;
         private AnomalyImageReviewStatusService anomalyImageReviewStatus = new AnomalyImageReviewStatusService();
+        private WpfAnomalyImageReviewWorkflowService anomalyImageReviewWorkflowService;
         private string dismissedAnomalyFolderStateSuggestionRoot = string.Empty;
         private int queuedActiveImageQueueStatusRefreshVersion;
         private readonly WpfImageQueueSelectionService imageQueueSelectionService = new WpfImageQueueSelectionService();
@@ -129,8 +131,7 @@ namespace MvcVisionSystem
         private WpfSegmentationRemoveUnderlyingPlan pendingSegmentationRemoveUnderlyingPlan;
         private readonly WpfObjectSessionStateService objectSessionStateService = new WpfObjectSessionStateService();
         private readonly WpfObjectMetadataStateService objectMetadataStateService = new WpfObjectMetadataStateService();
-        private readonly WpfObjectMetadataPersistenceService objectMetadataPersistenceService = new WpfObjectMetadataPersistenceService();
-        private readonly WpfObjectReviewGroupSelectionService objectGroupSelectionService = new WpfObjectReviewGroupSelectionService();
+        private readonly WpfObjectReviewWorkflowService objectReviewWorkflowService;
         private LabelingSegmentationObject pendingSegmentationSplitSource;
         private int pendingSegmentationSplitSourceIndex = -1;
         private WpfSegmentationSplitOrientation? pendingSegmentationSplitOrientation;
@@ -173,6 +174,7 @@ namespace MvcVisionSystem
         private readonly WpfMobileSamBoxPromptService mobileSamBoxPromptService = new WpfMobileSamBoxPromptService();
         private readonly WpfSmartMaskPromptSessionService smartMaskPromptSession = new WpfSmartMaskPromptSessionService();
         private readonly WpfAnomalyClassificationEvaluationRunService anomalyClassificationEvaluationRunService = new WpfAnomalyClassificationEvaluationRunService();
+        private readonly WpfAnomalyClassificationEvaluationSummaryService anomalyClassificationEvaluationSummaryService = new WpfAnomalyClassificationEvaluationSummaryService();
         private readonly WpfWorkspaceLayoutSettingsService workspaceLayoutSettingsService = new WpfWorkspaceLayoutSettingsService();
         private readonly WpfApplicationClosePolicyService applicationClosePolicyService = new WpfApplicationClosePolicyService();
         private readonly WpfCrashRecoveryJournalService crashRecoveryJournalService = new WpfCrashRecoveryJournalService();
@@ -243,6 +245,7 @@ namespace MvcVisionSystem
         private System.Threading.Tasks.Task crashRecoveryWriteTask = System.Threading.Tasks.Task.CompletedTask;
         private bool isApplicationCloseApproved;
         private bool isApplicationClosePromptOpen;
+        private bool modelWorkflowPanelsComposed;
         private string activeRoiEditHistoryOverlayId = string.Empty;
         private int canvasLayoutAutoFitVersion;
         private readonly WpfLabelingShellViewModels viewModels;
@@ -256,6 +259,11 @@ namespace MvcVisionSystem
         internal WpfLabelingShellWindow(WpfLabelingShellViewModels viewModels)
         {
             this.viewModels = viewModels ?? throw new ArgumentNullException(nameof(viewModels));
+            imageQualityReviewWorkflowService = new WpfImageQualityReviewWorkflowService(imageReviewStatus);
+            anomalyImageReviewWorkflowService = new WpfAnomalyImageReviewWorkflowService(anomalyImageReviewStatus);
+            objectReviewWorkflowService = new WpfObjectReviewWorkflowService(
+                new WpfObjectMetadataPersistenceService(),
+                projectRecipeSessionService);
             InitializeComponent();
             WpfLocalizationTextRuntimeService.RegisterWindow(this);
             PromoteSharedThemeResourcesToApplication();
@@ -301,14 +309,11 @@ namespace MvcVisionSystem
             RegisterImageQueuePanelNames();
             RegisterCanvasPanelNames();
             RegisterObjectReviewPanelNames();
-            RegisterCandidateReviewPanelNames();
             RegisterClassCatalogPanelNames();
-            RegisterYoloStatusPanelNames();
             RegisterProjectConfigPanelNames();
-            RegisterYoloModelSettingsPanelNames();
-            RegisterTrainingSettingsPanelNames();
             RegisterStatusBarPanelNames();
             RegisterShellLogPanelNames();
+            EnsureModelWorkflowPanelsComposed();
             ApplyTheme(ShellTheme.Dark);
             ConfigureLabelingCanvasDefaults();
             MainCanvasViewModel.RoiAdded += MainCanvasViewModel_RoiAdded;
@@ -324,14 +329,18 @@ namespace MvcVisionSystem
             MainCanvasView.DataContext = MainCanvasViewModel;
             MainCanvasView.SizeChanged += MainCanvasView_SizeChanged;
             InitializeImageQueuePanel();
-            InitializeYoloEditorPanel();
             TryRestoreLastOpenedDatasetOnStartup();
             PopulateClassList();
             RefreshCandidateList();
             RefreshObjectList();
             UpdateCandidateActionState();
             UpdateYoloCommandButtons();
-            RefreshTrainingReadinessPanel(refreshYaml: false);
+            // Keep the first-run dashboard/checklist in its explicit "before check"
+            // state.  Dataset Health is an operator action; constructing the shell
+            // must not scan the current data and replace the catalog-backed first
+            // action before the operator chooses to run that check.  Recipe apply,
+            // queue completion, and the explicit guide actions still refresh the
+            // readiness report through their existing paths.
             SetAnnotationSaveStatusWaiting();
             RefreshAnnotationHistoryToolState();
             RefreshShellDatasetContext();

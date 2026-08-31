@@ -8,7 +8,7 @@ namespace MvcVisionSystem
 {
     public static class WpfTrainingReadinessPresentationService
     {
-        public static string BuildStatusText(CData data, YoloDatasetReadinessReport report)
+        public static string BuildStatusText(LabelingProjectData data, YoloDatasetReadinessReport report)
         {
             if (data?.ProjectSettings?.DatasetPurpose == LabelingDatasetPurpose.AnomalyDetection)
             {
@@ -53,7 +53,7 @@ namespace MvcVisionSystem
             => BuildFriendlyIssueText((error ?? string.Empty)
                 .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
 
-        private static string BuildFriendlyIssueText(CData data, YoloDatasetReadinessReport report)
+        private static string BuildFriendlyIssueText(LabelingProjectData data, YoloDatasetReadinessReport report)
         {
             if (report != null
                 && (report.Purpose == LabelingDatasetPurpose.Segmentation

@@ -578,7 +578,7 @@ namespace MvcVisionSystem
             IReadOnlyList<string> manualRoiClassNames,
             IReadOnlyList<LabelingSegmentationObject> manualSegments,
             WpfObjectMetadataStateService stateService,
-            CData data)
+            LabelingProjectData data)
         {
             stateService?.Clear();
             if (stateService == null || data == null || string.IsNullOrWhiteSpace(imagePath))
@@ -677,7 +677,7 @@ namespace MvcVisionSystem
             IReadOnlyList<string> manualRoiClassNames,
             IReadOnlyList<LabelingSegmentationObject> manualSegments,
             WpfObjectMetadataStateService stateService,
-            CData data)
+            LabelingProjectData data)
         {
             if (stateService == null || data == null || string.IsNullOrWhiteSpace(imageName))
             {
@@ -804,7 +804,7 @@ namespace MvcVisionSystem
             return records;
         }
 
-        private static IEnumerable<string> GetCandidateMetadataPaths(string imagePath, CData data)
+        private static IEnumerable<string> GetCandidateMetadataPaths(string imagePath, LabelingProjectData data)
         {
             var paths = new List<string>();
             string imageDirectory = Path.GetDirectoryName(imagePath) ?? string.Empty;

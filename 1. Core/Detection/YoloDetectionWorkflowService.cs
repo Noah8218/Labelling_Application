@@ -9,9 +9,9 @@ namespace MvcVisionSystem._1._Core
     public sealed class YoloDetectionWorkflowService
     {
         public bool TryStartCurrentImageDetection(
-            CData data,
-            CCommunicationLearning communication,
-            DetectionResultApplicationService detectionResults,
+            LabelingProjectData data,
+            PythonModelCommunication communication,
+            DetectionTransportService detectionTransport,
             Func<bool> ensurePythonClientReady)
         {
             if (!ValidatePythonModelSettings(data, out string validationError))
@@ -26,9 +26,9 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            if (detectionResults == null)
+            if (detectionTransport == null)
             {
-                AppLog.ABNORMAL("YOLO 검사 결과 서비스가 초기화되지 않았습니다.");
+                AppLog.ABNORMAL("YOLO 검사 transport가 초기화되지 않았습니다.");
                 return false;
             }
 
@@ -38,13 +38,24 @@ namespace MvcVisionSystem._1._Core
             }
 
             int timeoutSeconds = data.ProjectSettings?.PythonModel?.DetectionTimeoutSeconds ?? 30;
-            return detectionResults.TrySendCurrentImageForDetection(communication, timeoutSeconds);
+            return detectionTransport.TrySendCurrentImageForDetection(communication, timeoutSeconds);
         }
 
-        public bool TryStartImagePathDetection(
-            CData data,
-            CCommunicationLearning communication,
+        public bool TryStartCurrentImageDetection(
+            LabelingProjectData data,
+            PythonModelCommunication communication,
             DetectionResultApplicationService detectionResults,
+            Func<bool> ensurePythonClientReady)
+            => TryStartCurrentImageDetection(
+                data,
+                communication,
+                detectionResults?.Transport,
+                ensurePythonClientReady);
+
+        public bool TryStartImagePathDetection(
+            LabelingProjectData data,
+            PythonModelCommunication communication,
+            DetectionTransportService detectionTransport,
             string imagePath,
             Size imageSize,
             Func<bool> ensurePythonClientReady)
@@ -61,9 +72,9 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            if (detectionResults == null)
+            if (detectionTransport == null)
             {
-                AppLog.ABNORMAL("YOLO 검사 결과 서비스가 초기화되지 않았습니다.");
+                AppLog.ABNORMAL("YOLO 검사 transport가 초기화되지 않았습니다.");
                 return false;
             }
 
@@ -85,7 +96,7 @@ namespace MvcVisionSystem._1._Core
             }
 
             int timeoutSeconds = data.ProjectSettings?.PythonModel?.DetectionTimeoutSeconds ?? 30;
-            return detectionResults.TrySendImagePathForDetection(
+            return detectionTransport.TrySendImagePathForDetection(
                 communication,
                 data,
                 imagePath,
@@ -93,7 +104,22 @@ namespace MvcVisionSystem._1._Core
                 timeoutSeconds);
         }
 
-        private static bool ValidatePythonModelSettings(CData data, out string validationError)
+        public bool TryStartImagePathDetection(
+            LabelingProjectData data,
+            PythonModelCommunication communication,
+            DetectionResultApplicationService detectionResults,
+            string imagePath,
+            Size imageSize,
+            Func<bool> ensurePythonClientReady)
+            => TryStartImagePathDetection(
+                data,
+                communication,
+                detectionResults?.Transport,
+                imagePath,
+                imageSize,
+                ensurePythonClientReady);
+
+        private static bool ValidatePythonModelSettings(LabelingProjectData data, out string validationError)
         {
             validationError = "";
             if (data == null)

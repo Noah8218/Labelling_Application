@@ -17,13 +17,14 @@ namespace MvcVisionSystem
             savedCount = 0;
             CompleteMaskAnnotationStroke();
             FlushQueuedMaskStrokeCommits();
-            if (activeImageBitmap == null || activeImageSize.IsEmpty)
+            LabelingImageSnapshot activeImage = global.ImageWorkspace.CaptureSnapshot();
+            if (activeImage.Image == null || activeImage.ImageSize.IsEmpty)
             {
                 return false;
             }
 
             SaveTrainingEditorFields();
-            Dictionary<string, List<CRectangleObject>> roisByClass = BuildAnnotationRois();
+            Dictionary<string, List<AnnotationRectangleObject>> roisByClass = BuildAnnotationRois();
             Dictionary<string, List<LabelingSegmentationObject>> segmentsByClass = BuildAnnotationSegments();
             savedCount = CountAnnotationRois(roisByClass) + CountAnnotationSegments(segmentsByClass);
             if (savedCount == 0)
@@ -33,11 +34,11 @@ namespace MvcVisionSystem
             }
 
             bool saved = LabelingAnnotationPersistence.SaveCurrentWithAdditionalArtifacts(
-                activeImageBitmap,
+                activeImage,
                 roisByClass,
                 segmentsByClass,
                 global.Data,
-                TrySaveCurrentObjectMetadata);
+                () => TrySaveCurrentObjectMetadata(activeImage.ImageName));
 
             if (saved)
             {
@@ -53,7 +54,8 @@ namespace MvcVisionSystem
         {
             CompleteMaskAnnotationStroke();
             FlushQueuedMaskStrokeCommits();
-            if (activeImageBitmap == null || activeImageSize.IsEmpty)
+            LabelingImageSnapshot activeImage = global.ImageWorkspace.CaptureSnapshot();
+            if (activeImage.Image == null || activeImage.ImageSize.IsEmpty)
             {
                 return false;
             }
@@ -61,11 +63,11 @@ namespace MvcVisionSystem
             SaveTrainingEditorFields();
             // Object-detection datasets still need an empty label file for reviewed normal images.
             bool saved = LabelingAnnotationPersistence.SaveCurrentWithAdditionalArtifacts(
-                activeImageBitmap,
-                new Dictionary<string, List<CRectangleObject>>(StringComparer.OrdinalIgnoreCase),
+                activeImage,
+                new Dictionary<string, List<AnnotationRectangleObject>>(StringComparer.OrdinalIgnoreCase),
                 new Dictionary<string, List<LabelingSegmentationObject>>(StringComparer.OrdinalIgnoreCase),
                 global.Data,
-                TrySaveCurrentObjectMetadata);
+                () => TrySaveCurrentObjectMetadata(activeImage.ImageName));
 
             if (saved)
             {
@@ -77,7 +79,7 @@ namespace MvcVisionSystem
             return saved;
         }
 
-        private static int CountAnnotationRois(IReadOnlyDictionary<string, List<CRectangleObject>> roisByClass)
+        private static int CountAnnotationRois(IReadOnlyDictionary<string, List<AnnotationRectangleObject>> roisByClass)
         {
             return roisByClass?
                 .Values
@@ -95,9 +97,9 @@ namespace MvcVisionSystem
                 .Count(segment => segment != null && ((segment.Points != null && segment.Points.Count >= 3) || (segment.IsRasterMask && !segment.Bounds.IsEmpty))) ?? 0;
         }
 
-        private Dictionary<string, List<CRectangleObject>> BuildAnnotationRois()
+        private Dictionary<string, List<AnnotationRectangleObject>> BuildAnnotationRois()
         {
-            var roisByClass = new Dictionary<string, List<CRectangleObject>>(StringComparer.OrdinalIgnoreCase);
+            var roisByClass = new Dictionary<string, List<AnnotationRectangleObject>>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < manualRois.Count; i++)
             {
                 AddAnnotationRoi(roisByClass, GetManualRoiClassName(i), manualRois[i]);
@@ -133,7 +135,7 @@ namespace MvcVisionSystem
                     continue;
                 }
 
-                CClassItem classItem = EnsureClassItem(FirstNonEmpty(segment.ClassName, segment.ClassItem?.Text, "Defect"));
+                LabelClass classItem = EnsureClassItem(FirstNonEmpty(segment.ClassName, segment.ClassItem?.Text, "Defect"));
                 segment.ClassItem = classItem;
                 segment.ClassName = classItem?.Text ?? "Defect";
                 if (!segmentsByClass.TryGetValue(segment.ClassName, out List<LabelingSegmentationObject> segments))
@@ -162,7 +164,7 @@ namespace MvcVisionSystem
                 return;
             }
 
-            CClassItem classItem = EnsureClassItem(FirstNonEmpty(candidate.ClassName, "Defect"));
+            LabelClass classItem = EnsureClassItem(FirstNonEmpty(candidate.ClassName, "Defect"));
             List<DrawingPoint> points = SegmentationGeometry.NormalizePolygon(
                 candidate.PolygonPoints.Select(point => new DrawingPoint(
                     Math.Clamp((int)Math.Round(point.X), 0, activeImageSize.Width - 1),
@@ -189,7 +191,7 @@ namespace MvcVisionSystem
         }
 
         private void AddAnnotationRoi(
-            Dictionary<string, List<CRectangleObject>> roisByClass,
+            Dictionary<string, List<AnnotationRectangleObject>> roisByClass,
             string className,
             DrawingRectangle bounds)
         {
@@ -198,17 +200,17 @@ namespace MvcVisionSystem
                 return;
             }
 
-            CClassItem classItem = EnsureClassItem(className);
-            var roiObject = new CRectangleObject
+            LabelClass classItem = EnsureClassItem(className);
+            var roiObject = new AnnotationRectangleObject
             {
                 Roi = bounds,
                 cClassItem = classItem
             };
 
             string normalizedName = classItem?.Text ?? "Defect";
-            if (!roisByClass.TryGetValue(normalizedName, out List<CRectangleObject> rois))
+            if (!roisByClass.TryGetValue(normalizedName, out List<AnnotationRectangleObject> rois))
             {
-                rois = new List<CRectangleObject>();
+                rois = new List<AnnotationRectangleObject>();
                 roisByClass[normalizedName] = rois;
             }
 

@@ -4,23 +4,44 @@ using MvcVisionSystem.Yolo;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Threading;
-using Timer = System.Threading.Timer;
 
 namespace MvcVisionSystem._1._Core
 {
     public sealed class DetectionResultApplicationService
     {
         private readonly object sync = new object();
+        private readonly DetectionTransportService transport;
+        private readonly LabelingWorkflowService labelingWorkflow;
+        private readonly Func<LabelingProjectData> dataAccessor;
         private List<DefectInfo> lastDefects = new List<DefectInfo>();
-        private DetectionImageContext pendingDetectionContext = DetectionImageContext.Empty;
-        private DetectionImageContext lastDetectionContext = DetectionImageContext.Empty;
+        private DetectionRequestContext lastDetectionContext = DetectionRequestContext.Empty;
         private int selectedCandidateIndex;
-        private bool pendingDetectionCanceled;
-        private Timer pendingDetectionTimeoutTimer;
-        private int pendingDetectionTimeoutGeneration;
+
+        public DetectionResultApplicationService(
+            LabelingImageWorkspace imageWorkspace,
+            Func<LabelingProjectData> dataAccessor = null)
+            : this(new DetectionTransportService(
+                    dataAccessor ?? (() => null),
+                    (imageWorkspace ?? throw new ArgumentNullException(nameof(imageWorkspace))).CaptureSnapshot),
+                new LabelingWorkflowService(imageWorkspace),
+                dataAccessor ?? (() => null))
+        {
+        }
+
+        internal DetectionResultApplicationService(
+            DetectionTransportService transport,
+            LabelingWorkflowService labelingWorkflow,
+            Func<LabelingProjectData> dataAccessor)
+        {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            this.labelingWorkflow = labelingWorkflow ?? throw new ArgumentNullException(nameof(labelingWorkflow));
+            this.dataAccessor = dataAccessor ?? throw new ArgumentNullException(nameof(dataAccessor));
+            this.transport.RequestStarted = HandleDetectionRequestStarted;
+            this.transport.RequestTimedOut = HandleDetectionRequestTimedOut;
+        }
+
+        public DetectionTransportService Transport => transport;
 
         public event EventHandler<DetectionCandidatesUpdatedEventArgs> DetectionCandidatesUpdated;
 
@@ -32,7 +53,7 @@ namespace MvcVisionSystem._1._Core
             }
         }
 
-        public IReadOnlyList<DetectionCandidateReviewItem> GetLastCandidateReviewItems(CData data, float minimumConfidence = 0F)
+        public IReadOnlyList<DetectionCandidateReviewItem> GetLastCandidateReviewItems(LabelingProjectData data, float minimumConfidence = 0F)
         {
             IReadOnlyList<DefectInfo> defects = GetLastDefects();
             int selectedIndex = GetSelectedCandidateIndex();
@@ -41,15 +62,15 @@ namespace MvcVisionSystem._1._Core
                 return Array.Empty<DetectionCandidateReviewItem>();
             }
 
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             Bitmap currentImage = mainDisplay?.GetCurrentImage();
             if (currentImage == null)
             {
                 return Array.Empty<DetectionCandidateReviewItem>();
             }
 
-            DetectionImageContext activeContext = CaptureCurrentContext(data, currentImage.Size);
-            DetectionImageContext detectionContext = GetLastDetectionContext();
+            DetectionRequestContext activeContext = CaptureCurrentContext(currentImage.Size);
+            DetectionRequestContext detectionContext = GetLastDetectionContext();
             if (!detectionContext.Matches(activeContext))
             {
                 return Array.Empty<DetectionCandidateReviewItem>();
@@ -77,7 +98,7 @@ namespace MvcVisionSystem._1._Core
                 .ToList();
         }
 
-        public bool SelectDetectionCandidate(int candidateIndex, CData data)
+        public bool SelectDetectionCandidate(int candidateIndex, LabelingProjectData data)
         {
             if (candidateIndex <= 0)
             {
@@ -90,15 +111,15 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             Bitmap currentImage = mainDisplay?.GetCurrentImage();
             if (currentImage == null)
             {
                 return false;
             }
 
-            DetectionImageContext activeContext = CaptureCurrentContext(data, currentImage.Size);
-            DetectionImageContext detectionContext = GetLastDetectionContext();
+            DetectionRequestContext activeContext = CaptureCurrentContext(currentImage.Size);
+            DetectionRequestContext detectionContext = GetLastDetectionContext();
             if (!detectionContext.Matches(activeContext))
             {
                 return false;
@@ -116,172 +137,52 @@ namespace MvcVisionSystem._1._Core
             }
 
             List<DetectionOverlayItem> overlays = PythonDetectionResultProtocol.BuildDetectionOverlays(defects, ResolveClassColor, candidateIndex);
-            CDisplayManager.SetDetectionOverlays("Main", overlays);
+            DisplayManager.SetDetectionOverlays("Main", overlays);
             RaiseDetectionCandidatesUpdated(detectionContext, overlays.Count, DetectionCandidateUpdateReason.SelectionChanged);
             return true;
         }
 
-        public bool TrySendCurrentImageForDetection(CCommunicationLearning communication, int detectionTimeoutSeconds = 30)
-        {
-            if (communication == null)
-            {
-                AppLog.ABNORMAL("YOLO 검사 통신이 초기화되지 않았습니다.");
-                return false;
-            }
-
-            if (CDisplayManager.ImageSrc == null || CDisplayManager.ImageSrc.Empty())
-            {
-                const string message = "현재 이미지가 비어 있어 검사 요청을 보낼 수 없습니다.";
-                communication.SetLastError(message);
-                AppLog.COMM(message);
-                return false;
-            }
-
-            using (Bitmap bitmap = BitmapConverter.ToBitmap(CDisplayManager.ImageSrc))
-            {
-                DetectionImageContext context = CaptureCurrentContext(CGlobal.Inst.Data, bitmap.Size);
-                string requestId = Guid.NewGuid().ToString("N");
-                string imageId = BuildImageId(context);
-                RegisterPendingDetectionImage(CGlobal.Inst.Data, bitmap.Size, detectionTimeoutSeconds, requestId, imageId);
-
-                var modelSettings = CGlobal.Inst.Data?.ProjectSettings?.PythonModel;
-                bool sent = !string.IsNullOrWhiteSpace(context.ImagePath) && File.Exists(context.ImagePath)
-                    ? communication.SendDetectImage(
-                        requestId,
-                        imageId,
-                        context.ImagePath,
-                        modelSettings?.MinimumDetectionConfidence ?? 0.25F,
-                        modelSettings?.GetProtocolModelName() ?? "yolov5")
-                    : communication.SendData(CCommunicationLearning.CommandLearning.StartDefect.ToString(), bitmap);
-                if (!sent)
-                {
-                    ClearPendingDetectionContext();
-                    const string message = "Python 모델 클라이언트가 연결되지 않아 현재 검사 요청을 보내지 못했습니다.";
-                    communication.SetLastError(message);
-                    AppLog.ABNORMAL(message);
-                    return false;
-                }
-
-                communication.SetLastError("");
-            }
-
-            return true;
-        }
+        public bool TrySendCurrentImageForDetection(PythonModelCommunication communication, int detectionTimeoutSeconds = 30)
+            => transport.TrySendCurrentImageForDetection(communication, detectionTimeoutSeconds);
 
         public bool TrySendImagePathForDetection(
-            CCommunicationLearning communication,
-            CData data,
+            PythonModelCommunication communication,
+            LabelingProjectData data,
             string imagePath,
             Size imageSize,
             int detectionTimeoutSeconds = 30)
-        {
-            if (communication == null)
-            {
-                AppLog.ABNORMAL("YOLO 검사 통신이 초기화되지 않았습니다.");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
-            {
-                string message = $"검사 이미지 파일을 찾을 수 없습니다: {imagePath}";
-                communication.SetLastError(message);
-                AppLog.COMM(message);
-                return false;
-            }
-
-            if (imageSize.IsEmpty)
-            {
-                string message = $"검사 이미지 크기를 확인할 수 없습니다: {imagePath}";
-                communication.SetLastError(message);
-                AppLog.COMM(message);
-                return false;
-            }
-
-            string requestId = Guid.NewGuid().ToString("N");
-            var context = new DetectionImageContext(
-                Path.GetFileNameWithoutExtension(imagePath),
+            => transport.TrySendImagePathForDetection(
+                communication,
+                data,
                 imagePath,
                 imageSize,
-                requestId,
-                Path.GetFileNameWithoutExtension(imagePath));
-            RegisterPendingDetectionContext(context, detectionTimeoutSeconds);
-
-            bool sent = communication.SendDetectImage(
-                requestId,
-                context.ImageId,
-                imagePath,
-                data?.ProjectSettings?.PythonModel?.MinimumDetectionConfidence ?? 0.25F,
-                data?.ProjectSettings?.PythonModel?.GetProtocolModelName() ?? "yolov5");
-            if (!sent)
-            {
-                ClearPendingDetectionContext();
-                const string message = "Python 모델 클라이언트가 연결되지 않아 현재 검사 요청을 보내지 못했습니다.";
-                communication.SetLastError(message);
-                AppLog.ABNORMAL(message);
-                return false;
-            }
-
-            communication.SetLastError("");
-            return true;
-        }
+                detectionTimeoutSeconds);
 
         public void RegisterPendingDetectionImage(
-            CData data,
+            LabelingImageSnapshot image,
             Size imageSize,
             int detectionTimeoutSeconds = 30,
             string requestId = "",
             string imageId = "")
-        {
-            DetectionImageContext context = CaptureCurrentContext(data, imageSize, requestId, imageId);
-            RegisterPendingDetectionContext(context, detectionTimeoutSeconds);
-        }
-
-        private void RegisterPendingDetectionContext(
-            DetectionImageContext context,
-            int detectionTimeoutSeconds = 30)
-        {
-            int generation;
-            lock (sync)
-            {
-                pendingDetectionContext = context;
-                lastDefects = new List<DefectInfo>();
-                lastDetectionContext = DetectionImageContext.Empty;
-                selectedCandidateIndex = 0;
-                pendingDetectionCanceled = false;
-                generation = ++pendingDetectionTimeoutGeneration;
-                ResetPendingDetectionTimeoutTimerLocked();
-                int safeTimeoutSeconds = Math.Clamp(detectionTimeoutSeconds, 1, 600);
-                pendingDetectionTimeoutTimer = new Timer(
-                    _ => HandlePendingDetectionTimeout(context, generation, safeTimeoutSeconds),
-                    null,
-                    TimeSpan.FromSeconds(safeTimeoutSeconds),
-                    Timeout.InfiniteTimeSpan);
-            }
-
-            CDisplayManager.SetDetectionOverlays("Main", null);
-            RaiseDetectionCandidatesUpdated(context, 0, DetectionCandidateUpdateReason.RequestStarted);
-        }
+            => transport.RegisterPendingDetectionImage(image, imageSize, detectionTimeoutSeconds, requestId, imageId);
 
         public void CancelPendingDetection()
         {
+            transport.CancelPendingDetection();
             lock (sync)
             {
-                pendingDetectionContext = DetectionImageContext.Empty;
                 selectedCandidateIndex = 0;
-                pendingDetectionCanceled = true;
-                ++pendingDetectionTimeoutGeneration;
-                ResetPendingDetectionTimeoutTimerLocked();
             }
         }
 
         public bool ApplyToDetectLayer(IReadOnlyList<DefectInfo> defects, string requestId = "", string imageId = "")
         {
-            if (CDisplayManager.IsDisplayInvokeRequired)
+            if (DisplayManager.IsDisplayInvokeRequired)
             {
-                return CDisplayManager.InvokeOnDisplayThread(() => ApplyToDetectLayer(defects, requestId, imageId));
+                return DisplayManager.InvokeOnDisplayThread(() => ApplyToDetectLayer(defects, requestId, imageId));
             }
 
-            DetectionImageContext detectionContext = TakePendingDetectionContext();
+            DetectionRequestContext detectionContext = transport.TakePendingDetectionContext();
             if (!detectionContext.MatchesResponse(requestId, imageId))
             {
                 ClearLastResult();
@@ -289,7 +190,7 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            if (TakePendingDetectionCanceled())
+            if (transport.TakePendingDetectionCanceled())
             {
                 ClearLastResult();
                 AppLog.COMM("ResultDefect ignored because the pending detection request was cancelled.");
@@ -299,7 +200,7 @@ namespace MvcVisionSystem._1._Core
             if (defects == null || defects.Count == 0)
             {
                 SetLastResult(defects, detectionContext);
-                CDisplayManager.SetDetectionOverlays("Main", null);
+                DisplayManager.SetDetectionOverlays("Main", null);
                 AppLog.NORMAL($"YOLO detection completed with no candidates. Image:{detectionContext.DisplayName}");
                 RaiseDetectionCandidatesUpdated(detectionContext, 0, DetectionCandidateUpdateReason.ResultCompleted);
                 return false;
@@ -309,13 +210,13 @@ namespace MvcVisionSystem._1._Core
             if (reviewDefects.Count == 0)
             {
                 SetLastResult(reviewDefects, detectionContext);
-                CDisplayManager.SetDetectionOverlays("Main", null);
+                DisplayManager.SetDetectionOverlays("Main", null);
                 AppLog.NORMAL($"YOLO detection completed, but no reviewable candidates were produced. Image:{detectionContext.DisplayName}, Raw:{defects.Count}");
                 RaiseDetectionCandidatesUpdated(detectionContext, 0, DetectionCandidateUpdateReason.ResultCompleted);
                 return false;
             }
 
-            if (CDisplayManager.ImageSrc == null || CDisplayManager.ImageSrc.Empty())
+            if (DisplayManager.ImageSrc == null || DisplayManager.ImageSrc.Empty())
             {
                 SetLastResult(reviewDefects, detectionContext);
                 AppLog.NORMAL($"YOLO detection completed without active overlay source. Image:{detectionContext.DisplayName}, Candidates:{reviewDefects.Count}, Raw:{defects.Count}");
@@ -332,8 +233,8 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            var activeImageSize = new Size(CDisplayManager.ImageSrc.Width, CDisplayManager.ImageSrc.Height);
-            DetectionImageContext activeContext = CaptureCurrentContext(CGlobal.Inst.Data, activeImageSize);
+            var activeImageSize = new Size(DisplayManager.ImageSrc.Width, DisplayManager.ImageSrc.Height);
+            DetectionRequestContext activeContext = CaptureCurrentContext(activeImageSize);
             if (!detectionContext.Matches(activeContext))
             {
                 SetLastResult(reviewDefects, detectionContext);
@@ -343,28 +244,28 @@ namespace MvcVisionSystem._1._Core
             }
 
             SetLastResult(reviewDefects, detectionContext);
-            if (CDisplayManager.GetMainDisplayOrNull() == null)
+            if (DisplayManager.GetMainDisplayOrNull() == null)
             {
-                using (Bitmap source = BitmapConverter.ToBitmap(CDisplayManager.ImageSrc))
-                using (Bitmap image = CDrawBitmap.GetBitmapFormat24bppRgb(source))
+                using (Bitmap source = BitmapConverter.ToBitmap(DisplayManager.ImageSrc))
+                using (Bitmap image = BitmapDrawingUtilities.GetBitmapFormat24bppRgb(source))
                 {
-                    CDisplayManager.CreateLayerDisplay(image, "Main", false, overlays, activate: true);
+                    DisplayManager.CreateLayerDisplay(image, "Main", false, overlays, activate: true);
                 }
             }
             else
             {
-                CDisplayManager.SetDetectionOverlays("Main", overlays);
+                DisplayManager.SetDetectionOverlays("Main", overlays);
             }
 
-            CDisplayManager.ActivateLayer("Main");
+            DisplayManager.ActivateLayer("Main");
             RaiseDetectionCandidatesUpdated(detectionContext, overlays.Count, DetectionCandidateUpdateReason.ResultCompleted);
 
             return true;
         }
 
         public bool CommitLastDetectionToMainLabels(
-            CData data,
-            CSystem system,
+            LabelingProjectData data,
+            ApplicationRuntimeState system,
             float minimumConfidence = 0F,
             bool createSegmentationFromBoxes = false)
         {
@@ -375,7 +276,7 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             Bitmap currentImage = mainDisplay?.GetCurrentImage();
             if (mainDisplay == null || currentImage == null)
             {
@@ -383,8 +284,8 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            DetectionImageContext activeContext = CaptureCurrentContext(data, currentImage.Size);
-            DetectionImageContext detectionContext = GetLastDetectionContext();
+            DetectionRequestContext activeContext = CaptureCurrentContext(currentImage.Size);
+            DetectionRequestContext detectionContext = GetLastDetectionContext();
             if (!detectionContext.Matches(activeContext))
             {
                 AppLog.COMM($"Detection result cannot be confirmed because active image changed. Detection:{detectionContext.DisplayName}, Current:{activeContext.DisplayName}");
@@ -397,7 +298,7 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            data.ClassNamedList ??= new List<CClassItem>();
+            data.ClassNamedList ??= new List<LabelClass>();
 
             int selectedIndex = GetSelectedCandidateIndex();
             Rectangle imageBounds = new Rectangle(Point.Empty, currentImage.Size);
@@ -422,7 +323,7 @@ namespace MvcVisionSystem._1._Core
             foreach (IGrouping<string, ConfirmableDetectionItem> group in confirmableItems
                 .GroupBy(item => item.Defect.ClassName ?? "", System.StringComparer.OrdinalIgnoreCase))
             {
-                CClassItem classItem = data.ClassNamedList
+                LabelClass classItem = data.ClassNamedList
                     .FirstOrDefault(item => string.Equals(item.Text, group.Key, System.StringComparison.OrdinalIgnoreCase));
                 if (classItem == null)
                 {
@@ -473,7 +374,11 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            bool saved = CGlobal.Inst.LabelingWorkflow.CommitDisplayAnnotations(mainDisplay, data, system);
+            bool saved = labelingWorkflow.CommitDisplayAnnotations(
+                mainDisplay,
+                transport.CaptureCurrentImageSnapshot(),
+                data,
+                system);
             if (saved)
             {
                 UpdateDetectionStateAfterCommit(defects, confirmableItems, detectionContext);
@@ -484,8 +389,8 @@ namespace MvcVisionSystem._1._Core
         }
 
         public bool CommitSelectedDetectionToMainLabels(
-            CData data,
-            CSystem system,
+            LabelingProjectData data,
+            ApplicationRuntimeState system,
             float minimumConfidence = 0F,
             bool createSegmentationFromBoxes = false)
         {
@@ -499,8 +404,8 @@ namespace MvcVisionSystem._1._Core
         }
 
         public bool CommitAllLastDetectionToMainLabels(
-            CData data,
-            CSystem system,
+            LabelingProjectData data,
+            ApplicationRuntimeState system,
             float minimumConfidence = 0F,
             bool createSegmentationFromBoxes = false)
         {
@@ -512,17 +417,17 @@ namespace MvcVisionSystem._1._Core
             return CommitLastDetectionToMainLabels(data, system, minimumConfidence, createSegmentationFromBoxes);
         }
 
-        public bool CanCommitSelectedDetection(CData data, float minimumConfidence = 0F)
+        public bool CanCommitSelectedDetection(LabelingProjectData data, float minimumConfidence = 0F)
         {
             return GetSelectedCandidateIndex() > 0 && CanCommitLastDetection(data, minimumConfidence);
         }
 
-        public bool CanSkipSelectedDetectionCandidate(CData data)
+        public bool CanSkipSelectedDetectionCandidate(LabelingProjectData data)
         {
             return GetSelectedCandidateReviewItem(data) != null;
         }
 
-        public bool SkipSelectedDetectionCandidate(CData data)
+        public bool SkipSelectedDetectionCandidate(LabelingProjectData data)
         {
             IReadOnlyList<DefectInfo> defects = GetLastDefects();
             int selectedIndex = GetSelectedCandidateIndex();
@@ -539,7 +444,7 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            DetectionImageContext detectionContext = GetLastDetectionContext();
+            DetectionRequestContext detectionContext = GetLastDetectionContext();
             List<DefectInfo> remainingDefects = defects
                 .Select((defect, index) => new IndexedDetectionItem(index + 1, defect))
                 .Where(item => item.Index != selectedIndex)
@@ -548,7 +453,7 @@ namespace MvcVisionSystem._1._Core
 
             if (remainingDefects.Count == 0)
             {
-                CDisplayManager.SetDetectionOverlays("Main", null);
+                DisplayManager.SetDetectionOverlays("Main", null);
                 ClearLastResult();
                 RaiseDetectionCandidatesUpdated(detectionContext, 0, DetectionCandidateUpdateReason.CandidateSkipped);
                 AppLog.NORMAL($"AI 후보를 건너뛰었습니다. 후보:{selectedIndex}");
@@ -557,28 +462,28 @@ namespace MvcVisionSystem._1._Core
 
             SetLastResult(remainingDefects, detectionContext);
             List<DetectionOverlayItem> overlays = PythonDetectionResultProtocol.BuildDetectionOverlays(remainingDefects, ResolveClassColor);
-            CDisplayManager.SetDetectionOverlays("Main", overlays);
+            DisplayManager.SetDetectionOverlays("Main", overlays);
             RaiseDetectionCandidatesUpdated(detectionContext, overlays.Count, DetectionCandidateUpdateReason.CandidatesChanged);
             AppLog.NORMAL($"AI 후보를 건너뛰었습니다. 후보:{selectedIndex}");
             return true;
         }
 
-        public bool CanCommitLastDetection(CData data, float minimumConfidence = 0F)
+        public bool CanCommitLastDetection(LabelingProjectData data, float minimumConfidence = 0F)
         {
             if (GetLastDefects().Count == 0)
             {
                 return false;
             }
 
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             Bitmap currentImage = mainDisplay?.GetCurrentImage();
             if (currentImage == null)
             {
                 return false;
             }
 
-            DetectionImageContext activeContext = CaptureCurrentContext(data, currentImage.Size);
-            DetectionImageContext detectionContext = GetLastDetectionContext();
+            DetectionRequestContext activeContext = CaptureCurrentContext(currentImage.Size);
+            DetectionRequestContext detectionContext = GetLastDetectionContext();
             if (!detectionContext.Matches(activeContext))
             {
                 return false;
@@ -592,7 +497,7 @@ namespace MvcVisionSystem._1._Core
                 .Any(item => TryBuildConfirmableRectangle(item.Defect, imageBounds, minimumConfidence, out _));
         }
 
-        private DetectionCandidateReviewItem GetSelectedCandidateReviewItem(CData data)
+        private DetectionCandidateReviewItem GetSelectedCandidateReviewItem(LabelingProjectData data)
         {
             int selectedIndex = GetSelectedCandidateIndex();
             if (selectedIndex <= 0)
@@ -605,14 +510,14 @@ namespace MvcVisionSystem._1._Core
 
         private Color? ResolveClassColor(string className)
         {
-            CClassItem classItem = CGlobal.Inst.Data?.ClassNamedList?
+            LabelClass classItem = dataAccessor()?.ClassNamedList?
                 .FirstOrDefault(item => string.Equals(item.Text, className, System.StringComparison.OrdinalIgnoreCase));
             return classItem?.DrawColor;
         }
 
-        private static List<DefectInfo> NormalizeDetectionCandidates(IReadOnlyList<DefectInfo> defects)
+        private List<DefectInfo> NormalizeDetectionCandidates(IReadOnlyList<DefectInfo> defects)
         {
-            int maximumCandidates = CGlobal.Inst.Data?.ProjectSettings?.PythonModel?.MaximumDetectionCandidates ?? 20;
+            int maximumCandidates = dataAccessor()?.ProjectSettings?.PythonModel?.MaximumDetectionCandidates ?? 20;
             maximumCandidates = Math.Clamp(maximumCandidates, 1, 200);
 
             List<DefectInfo> reviewDefects = (defects ?? Array.Empty<DefectInfo>())
@@ -634,11 +539,11 @@ namespace MvcVisionSystem._1._Core
         private void UpdateDetectionStateAfterCommit(
             IReadOnlyList<DefectInfo> previousDefects,
             IReadOnlyList<ConfirmableDetectionItem> confirmedItems,
-            DetectionImageContext detectionContext)
+            DetectionRequestContext detectionContext)
         {
             if (previousDefects == null || previousDefects.Count == 0 || confirmedItems == null || confirmedItems.Count == 0)
             {
-                CDisplayManager.SetDetectionOverlays("Main", null);
+                DisplayManager.SetDetectionOverlays("Main", null);
                 ClearLastResult();
                 RaiseDetectionCandidatesUpdated(detectionContext, 0, DetectionCandidateUpdateReason.CandidatesCleared);
                 return;
@@ -656,7 +561,7 @@ namespace MvcVisionSystem._1._Core
 
             if (remainingDefects.Count == 0)
             {
-                CDisplayManager.SetDetectionOverlays("Main", null);
+                DisplayManager.SetDetectionOverlays("Main", null);
                 ClearLastResult();
                 RaiseDetectionCandidatesUpdated(detectionContext, 0, DetectionCandidateUpdateReason.CandidatesConfirmed);
                 return;
@@ -664,18 +569,17 @@ namespace MvcVisionSystem._1._Core
 
             SetLastResult(remainingDefects, detectionContext);
             List<DetectionOverlayItem> overlays = PythonDetectionResultProtocol.BuildDetectionOverlays(remainingDefects, ResolveClassColor);
-            CDisplayManager.SetDetectionOverlays("Main", overlays);
+            DisplayManager.SetDetectionOverlays("Main", overlays);
             RaiseDetectionCandidatesUpdated(detectionContext, overlays.Count, DetectionCandidateUpdateReason.CandidatesChanged);
         }
 
-        private void SetLastResult(IReadOnlyList<DefectInfo> defects, DetectionImageContext context)
+        private void SetLastResult(IReadOnlyList<DefectInfo> defects, DetectionRequestContext context)
         {
             lock (sync)
             {
                 lastDefects = defects?.ToList() ?? new List<DefectInfo>();
-                lastDetectionContext = context ?? DetectionImageContext.Empty;
+                lastDetectionContext = context ?? DetectionRequestContext.Empty;
                 selectedCandidateIndex = 0;
-                ResetPendingDetectionTimeoutTimerLocked();
             }
         }
 
@@ -684,9 +588,8 @@ namespace MvcVisionSystem._1._Core
             lock (sync)
             {
                 lastDefects = new List<DefectInfo>();
-                lastDetectionContext = DetectionImageContext.Empty;
+                lastDetectionContext = DetectionRequestContext.Empty;
                 selectedCandidateIndex = 0;
-                ResetPendingDetectionTimeoutTimerLocked();
             }
         }
 
@@ -698,75 +601,39 @@ namespace MvcVisionSystem._1._Core
             }
         }
 
-        private DetectionImageContext TakePendingDetectionContext()
+        private DetectionRequestContext GetLastDetectionContext()
         {
             lock (sync)
             {
-                DetectionImageContext context = pendingDetectionContext ?? DetectionImageContext.Empty;
-                pendingDetectionContext = DetectionImageContext.Empty;
-                ResetPendingDetectionTimeoutTimerLocked();
-                return context;
+                return lastDetectionContext ?? DetectionRequestContext.Empty;
             }
         }
 
-        private bool TakePendingDetectionCanceled()
+        private void HandleDetectionRequestStarted(DetectionRequestContext context)
         {
             lock (sync)
             {
-                bool canceled = pendingDetectionCanceled;
-                pendingDetectionCanceled = false;
-                return canceled;
-            }
-        }
-
-        private void ClearPendingDetectionContext()
-        {
-            lock (sync)
-            {
-                pendingDetectionContext = DetectionImageContext.Empty;
-                ++pendingDetectionTimeoutGeneration;
-                ResetPendingDetectionTimeoutTimerLocked();
-            }
-        }
-
-        private DetectionImageContext GetLastDetectionContext()
-        {
-            lock (sync)
-            {
-                return lastDetectionContext ?? DetectionImageContext.Empty;
-            }
-        }
-
-        private void HandlePendingDetectionTimeout(DetectionImageContext context, int generation, int timeoutSeconds)
-        {
-            DetectionImageContext timedOutContext = null;
-            lock (sync)
-            {
-                if (generation != pendingDetectionTimeoutGeneration || !ReferenceEquals(pendingDetectionContext, context))
-                {
-                    return;
-                }
-
-                pendingDetectionContext = DetectionImageContext.Empty;
                 lastDefects = new List<DefectInfo>();
-                lastDetectionContext = DetectionImageContext.Empty;
+                lastDetectionContext = DetectionRequestContext.Empty;
                 selectedCandidateIndex = 0;
-                pendingDetectionCanceled = true;
-                timedOutContext = context;
-                ++pendingDetectionTimeoutGeneration;
-                ResetPendingDetectionTimeoutTimerLocked();
             }
 
-            CDisplayManager.SetDetectionOverlays("Main", null);
-            AppLog.ABNORMAL($"YOLO 검사 시간이 초과되었습니다. 제한:{timeoutSeconds}초 / 이미지:{timedOutContext.DisplayName}");
-            RaiseDetectionCandidatesUpdated(timedOutContext, 0, DetectionCandidateUpdateReason.RequestTimedOut);
+            DisplayManager.SetDetectionOverlays("Main", null);
+            RaiseDetectionCandidatesUpdated(context, 0, DetectionCandidateUpdateReason.RequestStarted);
         }
 
-        private void ResetPendingDetectionTimeoutTimerLocked()
+        private void HandleDetectionRequestTimedOut(DetectionRequestContext context, int timeoutSeconds)
         {
-            Timer timer = pendingDetectionTimeoutTimer;
-            pendingDetectionTimeoutTimer = null;
-            timer?.Dispose();
+            lock (sync)
+            {
+                lastDefects = new List<DefectInfo>();
+                lastDetectionContext = DetectionRequestContext.Empty;
+                selectedCandidateIndex = 0;
+            }
+
+            DisplayManager.SetDetectionOverlays("Main", null);
+            AppLog.ABNORMAL($"YOLO 검사 시간이 초과되었습니다. 제한:{timeoutSeconds}초 / 이미지:{context?.DisplayName}");
+            RaiseDetectionCandidatesUpdated(context, 0, DetectionCandidateUpdateReason.RequestTimedOut);
         }
 
         private static Rectangle ToRectangle(DefectInfo defect)
@@ -810,7 +677,7 @@ namespace MvcVisionSystem._1._Core
         }
 
         private void RaiseDetectionCandidatesUpdated(
-            DetectionImageContext context,
+            DetectionRequestContext context,
             int candidateCount,
             DetectionCandidateUpdateReason reason)
         {
@@ -823,157 +690,11 @@ namespace MvcVisionSystem._1._Core
                     reason));
         }
 
-        private static DetectionImageContext CaptureCurrentContext(CData data, Size imageSize, string requestId = "", string imageId = "")
-        {
-            string imageName = FirstNonEmpty(data?.LastSelectImageName, CGlobal.Inst.ImageWorkspace.ActiveImageName);
-            string imagePath = FirstNonEmpty(data?.LastSelectImagePath, CGlobal.Inst.ImageWorkspace.ActiveImagePath);
-            return new DetectionImageContext(imageName, imagePath, imageSize, requestId, imageId);
-        }
-
-        private static string BuildImageId(DetectionImageContext context)
-        {
-            if (context == null)
-            {
-                return string.Empty;
-            }
-
-            if (!string.IsNullOrWhiteSpace(context.ImagePath))
-            {
-                return Path.GetFileNameWithoutExtension(context.ImagePath);
-            }
-
-            return Path.GetFileNameWithoutExtension(context.ImageName ?? string.Empty);
-        }
-
-        private static string FirstNonEmpty(params string[] values)
-        {
-            foreach (string value in values)
-            {
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    return value;
-                }
-            }
-
-            return string.Empty;
-        }
-
-        private sealed class DetectionImageContext
-        {
-            public static readonly DetectionImageContext Empty = new DetectionImageContext(string.Empty, string.Empty, Size.Empty);
-
-            public DetectionImageContext(string imageName, string imagePath, Size imageSize, string requestId = "", string imageId = "")
-            {
-                ImageName = imageName ?? string.Empty;
-                ImagePath = imagePath ?? string.Empty;
-                ImageSize = imageSize;
-                RequestId = requestId ?? string.Empty;
-                ImageId = imageId ?? string.Empty;
-            }
-
-            public string ImageName { get; }
-
-            public string ImagePath { get; }
-
-            public Size ImageSize { get; }
-
-            public string RequestId { get; }
-
-            public string ImageId { get; }
-
-            public string DisplayName
-            {
-                get
-                {
-                    if (!string.IsNullOrWhiteSpace(ImagePath))
-                    {
-                        return Path.GetFileName(ImagePath);
-                    }
-
-                    return !string.IsNullOrWhiteSpace(ImageName) ? ImageName : "(unknown)";
-                }
-            }
-
-            private bool HasIdentity => !string.IsNullOrWhiteSpace(ImagePath) || !string.IsNullOrWhiteSpace(ImageName);
-
-            public bool Matches(DetectionImageContext current)
-            {
-                if (ReferenceEquals(this, Empty) || IsEmpty())
-                {
-                    return true;
-                }
-
-                if (current == null || current.IsEmpty())
-                {
-                    return !HasIdentity;
-                }
-
-                if (!string.IsNullOrWhiteSpace(ImagePath) && !string.IsNullOrWhiteSpace(current.ImagePath)
-                    && !PathsEqual(ImagePath, current.ImagePath))
-                {
-                    return false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(ImageName) && !string.IsNullOrWhiteSpace(current.ImageName)
-                    && !string.Equals(ImageName, current.ImageName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return false;
-                }
-
-                if (!ImageSize.IsEmpty && !current.ImageSize.IsEmpty && ImageSize != current.ImageSize)
-                {
-                    return false;
-                }
-
-                return !HasIdentity || current.HasIdentity;
-            }
-
-            public bool MatchesResponse(string requestId, string imageId)
-            {
-                if (!string.IsNullOrWhiteSpace(RequestId)
-                    && !string.IsNullOrWhiteSpace(requestId)
-                    && !string.Equals(RequestId, requestId, StringComparison.OrdinalIgnoreCase))
-                {
-                    return false;
-                }
-
-                if (!string.IsNullOrWhiteSpace(ImageId)
-                    && !string.IsNullOrWhiteSpace(imageId)
-                    && !string.Equals(ImageId, imageId, StringComparison.OrdinalIgnoreCase))
-                {
-                    return false;
-                }
-
-                return true;
-            }
-
-            private bool IsEmpty()
-            {
-                return !HasIdentity && ImageSize.IsEmpty;
-            }
-
-            private static bool PathsEqual(string left, string right)
-            {
-                return string.Equals(NormalizePath(left), NormalizePath(right), StringComparison.OrdinalIgnoreCase);
-            }
-
-            private static string NormalizePath(string path)
-            {
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    return string.Empty;
-                }
-
-                try
-                {
-                    return Path.GetFullPath(path.Trim());
-                }
-                catch
-                {
-                    return path.Trim();
-                }
-            }
-        }
+        private DetectionRequestContext CaptureCurrentContext(
+            Size imageSize,
+            string requestId = "",
+            string imageId = "")
+            => transport.CaptureCurrentContext(imageSize, requestId, imageId);
 
         private sealed class ConfirmableDetectionItem
         {

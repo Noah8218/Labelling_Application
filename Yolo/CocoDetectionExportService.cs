@@ -10,17 +10,10 @@ namespace MvcVisionSystem.Yolo
 {
     public static class CocoDetectionExportService
     {
-        private static readonly string[] DatasetModes =
-        {
-            YoloDatasetSplitService.TrainMode,
-            YoloDatasetSplitService.ValidMode,
-            YoloDatasetSplitService.TestMode
-        };
-
         private static readonly string[] ImageExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
         public static CocoDetectionExportResult ExportDataset(
-            CData data,
+            LabelingProjectData data,
             string outputPath,
             IEnumerable<string> splits = null)
         {
@@ -47,7 +40,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         public static CocoDetectionExportResult BuildDataset(
-            CData data,
+            LabelingProjectData data,
             IEnumerable<string> splits,
             out CocoDetectionDataset dataset)
         {
@@ -136,9 +129,9 @@ namespace MvcVisionSystem.Yolo
         private static IReadOnlyList<string> NormalizeSplits(IEnumerable<string> splits)
         {
             var result = new List<string>();
-            foreach (string split in splits ?? DatasetModes)
+            foreach (string split in splits ?? YoloDatasetSplitService.StandardModes)
             {
-                string normalized = NormalizeSplit(split);
+                string normalized = YoloDatasetSplitService.NormalizeStandardSplit(split);
                 if (!string.IsNullOrWhiteSpace(normalized)
                     && !result.Contains(normalized, StringComparer.OrdinalIgnoreCase))
                 {
@@ -146,20 +139,7 @@ namespace MvcVisionSystem.Yolo
                 }
             }
 
-            return result.Count > 0 ? result : DatasetModes.ToList();
-        }
-
-        private static string NormalizeSplit(string split)
-        {
-            foreach (string mode in DatasetModes)
-            {
-                if (string.Equals(split, mode, StringComparison.OrdinalIgnoreCase))
-                {
-                    return mode;
-                }
-            }
-
-            return string.Empty;
+            return result.Count > 0 ? result : YoloDatasetSplitService.StandardModes.ToList();
         }
 
         private static IEnumerable<string> EnumerateImageFiles(string imageDirectory)

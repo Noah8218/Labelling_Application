@@ -9,6 +9,30 @@ namespace MvcVisionSystem.Yolo
         public const string ValidMode = "valid";
         public const string TestMode = "test";
 
+        private static readonly string[] StandardModeValues =
+        {
+            TrainMode,
+            ValidMode,
+            TestMode
+        };
+
+        private static readonly IReadOnlyList<string> ReadOnlyStandardModes = Array.AsReadOnly(StandardModeValues);
+
+        public static IReadOnlyList<string> StandardModes => ReadOnlyStandardModes;
+
+        public static string NormalizeStandardSplit(string split)
+        {
+            foreach (string mode in StandardModeValues)
+            {
+                if (string.Equals(split, mode, StringComparison.OrdinalIgnoreCase))
+                {
+                    return mode;
+                }
+            }
+
+            return string.Empty;
+        }
+
         public static IReadOnlyList<string> SelectModesForImage(string imageName, YoloDatasetSettings settings)
         {
             int validationPercent = Math.Clamp(settings?.ValidationPercent ?? 20, 0, 100);

@@ -8,19 +8,33 @@ namespace MvcVisionSystem
 {
     public static class WpfImageQueueDetailLoader
     {
-        public static WpfImageQueueDetail Build(string imagePath, YoloImageReviewStatusService reviewStatus, CData data)
+        public static WpfImageQueueDetail Build(
+            string imagePath,
+            WpfImageQualityReviewWorkflowService reviewWorkflow,
+            LabelingProjectData data)
         {
-            if (reviewStatus == null)
+            if (reviewWorkflow == null)
             {
-                throw new ArgumentNullException(nameof(reviewStatus));
+                throw new ArgumentNullException(nameof(reviewWorkflow));
             }
 
             using DrawingBitmap image = AppImageLoader.LoadBitmap(imagePath);
             return new WpfImageQueueDetail
             {
                 ImageSize = image.Size,
-                ReviewStatus = reviewStatus.RefreshLabelStatus(imagePath, image.Size, data)
+                ReviewStatus = reviewWorkflow.RefreshLabelStatus(imagePath, image.Size, data)
             };
+        }
+
+        public static WpfImageQueueDetail Build(
+            string imagePath,
+            YoloImageReviewStatusService reviewStatus,
+            LabelingProjectData data)
+        {
+            return Build(
+                imagePath,
+                new WpfImageQualityReviewWorkflowService(reviewStatus),
+                data);
         }
 
         public static bool TryReadImageSize(string imagePath, out DrawingSize imageSize, out string error)

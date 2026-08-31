@@ -17,7 +17,7 @@ namespace MvcVisionSystem
                 return;
             }
 
-            CData data = global.Data;
+            LabelingProjectData data = global.Data;
             string outputPath = YoloSegmentationHistoricalRemediationAuditService.ResolveDefaultOutputPath(data);
             if (string.IsNullOrWhiteSpace(outputPath))
             {

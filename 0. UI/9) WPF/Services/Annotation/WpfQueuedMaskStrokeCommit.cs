@@ -15,7 +15,7 @@ namespace MvcVisionSystem
             int radius,
             WpfAnnotationTool tool,
             string className,
-            CClassItem classItem,
+            LabelClass classItem,
             string actionName,
             bool hasActiveCandidates)
         {
@@ -46,7 +46,7 @@ namespace MvcVisionSystem
 
         public string ClassName { get; }
 
-        public CClassItem ClassItem { get; }
+        public LabelClass ClassItem { get; }
 
         public string ActionName { get; }
 

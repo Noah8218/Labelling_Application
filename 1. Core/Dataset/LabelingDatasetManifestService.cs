@@ -16,7 +16,7 @@ namespace MvcVisionSystem
             return Path.Combine(AppContext.BaseDirectory, "RECIPE", recipeName ?? string.Empty, FileName);
         }
 
-        public static void Save(CData data, string recipeName)
+        public static void Save(LabelingProjectData data, string recipeName)
         {
             if (data == null)
             {
@@ -34,7 +34,7 @@ namespace MvcVisionSystem
                 JsonConvert.SerializeObject(Build(data, recipeName, snapshot), Formatting.Indented));
         }
 
-        public static void Save(CData data, string recipeName, RecipeDatasetVersionSnapshot snapshot)
+        public static void Save(LabelingProjectData data, string recipeName, RecipeDatasetVersionSnapshot snapshot)
         {
             if (data == null)
             {
@@ -52,15 +52,15 @@ namespace MvcVisionSystem
                 JsonConvert.SerializeObject(Build(data, recipeName, stored), Formatting.Indented));
         }
 
-        public static LabelingDatasetManifest Build(CData data, string recipeName)
+        public static LabelingDatasetManifest Build(LabelingProjectData data, string recipeName)
             => Build(data, recipeName, RecipeDatasetVersionService.CreateSnapshot(data));
 
         private static LabelingDatasetManifest Build(
-            CData data,
+            LabelingProjectData data,
             string recipeName,
             RecipeDatasetVersionSnapshot datasetVersion)
         {
-            data ??= new CData();
+            data ??= new LabelingProjectData();
             LabelingProjectSettings settings = data.ProjectSettings ?? new LabelingProjectSettings();
             settings.EnsureDefaults();
             YoloDatasetStatistics statistics = YoloDatasetValidator.BuildStatistics(data);
@@ -77,7 +77,7 @@ namespace MvcVisionSystem
                 AnnotationProfile = ResolveAnnotationProfile(settings.DatasetPurpose),
                 VisibleTools = ResolveVisibleTools(settings.DatasetPurpose).ToList(),
                 OutputRootPath = data.OutputRootPath,
-                ImageRootPath = settings.PythonModel?.ImageRootPath ?? string.Empty,
+                ImageRootPath = settings.ResolveImageRootPath(),
                 DataYamlFilePath = data.DataYamlFilePath,
                 Classes = data.ClassNamedList?
                     .Select(item => item?.Text)

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 
 namespace MvcVisionSystem
 {
@@ -232,139 +231,33 @@ namespace MvcVisionSystem
 
         private string ResolveModelCenterAnomalyEvaluationSummaryPath(string outputRootPath)
         {
-            if (!string.IsNullOrWhiteSpace(manualModelCenterAnomalyEvaluationSummaryPath))
+            string preferredPath = manualModelCenterAnomalyEvaluationSummaryPath;
+            string resolvedPath = anomalyClassificationEvaluationSummaryService.ResolveSummaryPath(
+                outputRootPath,
+                preferredPath);
+            if (!string.IsNullOrWhiteSpace(preferredPath)
+                && !string.Equals(resolvedPath, preferredPath.Trim(), StringComparison.Ordinal))
             {
-                string manualPath = manualModelCenterAnomalyEvaluationSummaryPath.Trim();
-                if (File.Exists(manualPath))
-                {
-                    return manualPath;
-                }
-
                 manualModelCenterAnomalyEvaluationSummaryPath = string.Empty;
             }
 
-            return FindModelCenterAnomalyEvaluationSummaryPath(outputRootPath);
+            return resolvedPath;
         }
 
         private bool TryApplyModelCenterAnomalyEvaluationSummary(string summaryPath)
         {
-            if (string.IsNullOrWhiteSpace(summaryPath) || !File.Exists(summaryPath))
+            if (!anomalyClassificationEvaluationSummaryService.TryReadSummary(
+                    summaryPath,
+                    out WpfAnomalyClassificationEvaluationSummary summary))
             {
                 return false;
             }
 
-            try
-            {
-                AnomalyClassificationEvaluationReport report = AnomalyClassificationEvaluationService.ReadSummaryFile(summaryPath);
-                AnomalyClassificationEvaluationOptions options = ReadModelCenterAnomalyEvaluationOptions(summaryPath);
-                ShellViewModel?.SetModelCenterAnomalyEvaluationState(
-                    WpfAnomalyClassificationEvaluationPresentationService.Build(report, options));
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private static string FindModelCenterAnomalyEvaluationSummaryPath(string outputRootPath)
-        {
-            if (string.IsNullOrWhiteSpace(outputRootPath))
-            {
-                return string.Empty;
-            }
-
-            string root = outputRootPath.Trim();
-            string directPath = Path.Combine(root, "classification-evaluation-summary.json");
-            if (File.Exists(directPath))
-            {
-                return directPath;
-            }
-
-            string evaluationPath = Path.Combine(root, "classification-evaluation", "classification-evaluation-summary.json");
-            if (File.Exists(evaluationPath))
-            {
-                return evaluationPath;
-            }
-
-            try
-            {
-                if (!Directory.Exists(root))
-                {
-                    return string.Empty;
-                }
-
-                return Directory
-                    .EnumerateDirectories(root, "classification-evaluation-*", SearchOption.TopDirectoryOnly)
-                    .Select(directory => new FileInfo(Path.Combine(directory, "classification-evaluation-summary.json")))
-                    .Where(summary => summary.Exists)
-                    .OrderByDescending(summary => summary.LastWriteTimeUtc)
-                    .Select(summary => summary.FullName)
-                    .FirstOrDefault() ?? string.Empty;
-            }
-            catch
-            {
-                return string.Empty;
-            }
-        }
-
-        private static AnomalyClassificationEvaluationOptions ReadModelCenterAnomalyEvaluationOptions(string summaryPath)
-        {
-            var options = new AnomalyClassificationEvaluationOptions();
-            try
-            {
-                using JsonDocument document = JsonDocument.Parse(File.ReadAllText(summaryPath));
-                if (!document.RootElement.TryGetProperty("thresholds", out JsonElement thresholds)
-                    || thresholds.ValueKind != JsonValueKind.Object)
-                {
-                    return options;
-                }
-
-                options.MinimumTotalImageCount = ReadModelCenterThresholdInt(
-                    thresholds,
-                    "minimumTotalImageCount",
-                    options.MinimumTotalImageCount);
-                options.MinimumPerClassImageCount = ReadModelCenterThresholdInt(
-                    thresholds,
-                    "minimumPerClassImageCount",
-                    options.MinimumPerClassImageCount);
-                options.MinimumAccuracy = ReadModelCenterThresholdDouble(
-                    thresholds,
-                    "minimumAccuracy",
-                    options.MinimumAccuracy);
-                options.MinimumPerClassAccuracy = ReadModelCenterThresholdDouble(
-                    thresholds,
-                    "minimumPerClassAccuracy",
-                    options.MinimumPerClassAccuracy);
-                options.MinimumConfidence = ReadModelCenterThresholdDouble(
-                    thresholds,
-                    "minimumConfidence",
-                    options.MinimumConfidence);
-            }
-            catch
-            {
-                return options;
-            }
-
-            return options;
-        }
-
-        private static int ReadModelCenterThresholdInt(JsonElement thresholds, string propertyName, int fallback)
-        {
-            return thresholds.TryGetProperty(propertyName, out JsonElement value)
-                && value.ValueKind == JsonValueKind.Number
-                && value.TryGetInt32(out int result)
-                ? result
-                : fallback;
-        }
-
-        private static double ReadModelCenterThresholdDouble(JsonElement thresholds, string propertyName, double fallback)
-        {
-            return thresholds.TryGetProperty(propertyName, out JsonElement value)
-                && value.ValueKind == JsonValueKind.Number
-                && value.TryGetDouble(out double result)
-                ? Math.Clamp(result, 0D, 1D)
-                : fallback;
+            ShellViewModel?.SetModelCenterAnomalyEvaluationState(
+                WpfAnomalyClassificationEvaluationPresentationService.Build(
+                    summary.Report,
+                    summary.Options));
+            return true;
         }
     }
 }

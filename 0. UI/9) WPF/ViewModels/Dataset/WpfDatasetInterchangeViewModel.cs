@@ -9,8 +9,10 @@ using System.Windows.Input;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfDatasetInterchangeOption : WpfObservableViewModel
+    public sealed class WpfDatasetInterchangeOption : WpfObservableViewModel, IDisposable
     {
+        private bool disposed;
+
         public WpfDatasetInterchangeOption(DatasetExportCapability capability)
         {
             Capability = capability;
@@ -47,8 +49,24 @@ namespace MvcVisionSystem
             "pascal-voc-detection",
             StringComparison.Ordinal);
 
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
+        }
+
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             OnPropertyChanged(nameof(DisplayText));
             OnPropertyChanged(nameof(DirectionText));
             OnPropertyChanged(nameof(PurposeText));
@@ -76,10 +94,12 @@ namespace MvcVisionSystem
                 : "WpfDatasetInterchange.IssueSeverity.Warning");
     }
 
-    public sealed class WpfDatasetInterchangeViewModel : WpfObservableViewModel
+    public sealed class WpfDatasetInterchangeViewModel : WpfObservableViewModel, IDisposable
     {
         private readonly DatasetInterchangePreflightService preflightService;
-        private CData data;
+        private bool disposed;
+        private LabelingProjectData data;
+        private string recipeName = string.Empty;
         private WpfDatasetInterchangeOption selectedOperation;
         private string sourcePath = string.Empty;
         private string imageRoot = string.Empty;
@@ -101,10 +121,12 @@ namespace MvcVisionSystem
         private Func<string, string> pickImageRoot = current => current;
 
         public WpfDatasetInterchangeViewModel(
-            CData data = null,
-            DatasetInterchangePreflightService preflightService = null)
+            LabelingProjectData data = null,
+            DatasetInterchangePreflightService preflightService = null,
+            string recipeName = "")
         {
             this.preflightService = preflightService ?? new DatasetInterchangePreflightService();
+            OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
             foreach (DatasetExportCapability capability in this.preflightService.BuildSupportedCapabilities())
             {
                 Operations.Add(new WpfDatasetInterchangeOption(capability));
@@ -118,7 +140,7 @@ namespace MvcVisionSystem
             BrowseImageRootCommand = new RelayCommand(BrowseImageRoot);
             DryRunCommand = new RelayCommand(RunDryRun);
             ApplyCommand = new RelayCommand(Apply, () => CanApply);
-            Refresh(data);
+            Refresh(data, recipeName);
         }
 
         public ObservableCollection<WpfDatasetInterchangeOption> Operations { get; } =
@@ -287,9 +309,36 @@ namespace MvcVisionSystem
             pickImageRoot = imageRootPicker ?? (current => current);
         }
 
-        public void Refresh(CData sourceData)
+        public void Dispose()
         {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
+            foreach (WpfDatasetInterchangeOption operation in Operations.ToArray())
+            {
+                operation.Dispose();
+            }
+
+            Operations.Clear();
+            Findings.Clear();
+        }
+
+        public void Refresh(LabelingProjectData sourceData, string currentRecipeName = null)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
             data = sourceData;
+            if (currentRecipeName != null)
+            {
+                recipeName = currentRecipeName;
+            }
             DatasetName = WpfDatasetContextPresentationService.BuildDatasetName(
                 string.Empty,
                 data?.OutputRootPath);
@@ -356,6 +405,7 @@ namespace MvcVisionSystem
             => new DatasetInterchangeRequest
             {
                 Data = data,
+                RecipeName = recipeName,
                 FormatKey = SelectedOperation?.Capability.FormatKey ?? string.Empty,
                 SourcePath = SourcePath,
                 ImageRoot = ImageRoot,
@@ -371,6 +421,7 @@ namespace MvcVisionSystem
                 ImageRoot,
                 TargetPath,
                 TargetSplit,
+                recipeName,
                 data?.OutputRootPath ?? string.Empty);
 
         private void ResetPathsForSelection()
@@ -465,6 +516,11 @@ namespace MvcVisionSystem
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             OnPropertyChanged(nameof(SourceLabelText));
             OnPropertyChanged(nameof(TargetLabelText));
             OnPropertyChanged(nameof(OperationContractText));

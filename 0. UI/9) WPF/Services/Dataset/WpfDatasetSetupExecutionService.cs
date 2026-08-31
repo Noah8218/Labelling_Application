@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using MvcVisionSystem._1._Core;
 
 namespace MvcVisionSystem
 {
@@ -8,7 +9,8 @@ namespace MvcVisionSystem
         None,
         InvalidRecipeName,
         DuplicateOutputRoot,
-        SamplePreset
+        SamplePreset,
+        RecipePersistence
     }
 
     public sealed class WpfDatasetSetupExecutionResult
@@ -29,16 +31,18 @@ namespace MvcVisionSystem
 
         public string SampleError { get; set; } = string.Empty;
 
+        public string PersistenceError { get; set; } = string.Empty;
+
         public string ManifestPath { get; set; } = string.Empty;
 
         public WpfDatasetSamplePresetApplyResult SampleResult { get; set; }
 
-        public CData Data { get; set; }
+        public LabelingProjectData Data { get; set; }
     }
 
     /// <summary>
     /// Creates the persisted dataset contract from a validated wizard request.
-    /// It deliberately has no WPF window, view-model, or CGlobal dependency so
+    /// It deliberately has no WPF window, view-model, or LabelingApplicationState dependency so
     /// the shell can remain an adapter for UI state and navigation.
     /// </summary>
     public sealed class WpfDatasetSetupExecutionService
@@ -88,8 +92,9 @@ namespace MvcVisionSystem
                 return result;
             }
 
-            var data = new CData();
+            var data = new LabelingProjectData();
             data.ProjectSettings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(data.ProjectSettings);
             data.ProjectSettings.DatasetPurpose = request.Purpose;
             data.ProjectSettings.PythonModel.ModelEngine = PythonModelSettings.NormalizeModelEngine(request.ModelEngine);
             data.ProjectSettings.PythonModel.WeightsPath = request.WeightsPath?.Trim() ?? string.Empty;
@@ -112,9 +117,15 @@ namespace MvcVisionSystem
                 : sampleResult?.Applied == true && Directory.Exists(sampleResult.ImageRootPath)
                     ? sampleResult.ImageRootPath
                     : data.TrainImagesPath;
-            data.ProjectSettings.PythonModel.ImageRootPath = imageRootPath;
-            data.SaveYoloDataYaml();
-            data.SaveConfig(recipeName);
+            data.ProjectSettings.ImageRootPath = imageRootPath;
+            PythonModelRuntimePathResolver.ApplyDefaults(data.ProjectSettings);
+            RecipeConfigurationSaveResult saveResult = data.SaveConfigAndYoloDataYaml(recipeName);
+            if (!saveResult.IsSuccess)
+            {
+                result.Failure = WpfDatasetSetupExecutionFailure.RecipePersistence;
+                result.PersistenceError = saveResult.ErrorMessage;
+                return result;
+            }
 
             result.RecipeName = recipeName;
             result.OutputRootPath = data.OutputRootPath;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 using OpenVisionLab;
 using OpenVisionLab.Wpf.MessageDialogs;
 using System.Windows.Threading;
@@ -202,6 +203,10 @@ namespace MvcVisionSystem
 
         private void ExecuteClosedCommand()
         {
+            // Invalidate queued queue-status workers before disposing the Shell-owned state.
+            // A worker may still finish its label scan, but it must not persist or marshal
+            // its result after the owning Shell has closed.
+            Interlocked.Increment(ref queuedActiveImageQueueStatusRefreshVersion);
             viewModels.LanguageViewModel.LanguageChanged -= LanguageViewModel_LanguageChanged;
             DiscardCrashRecoveryJournal();
             SaveWorkspaceLayoutSettings();
@@ -213,6 +218,12 @@ namespace MvcVisionSystem
             inferenceStatusPulseTimer.Tick -= InferenceStatusPulseTimer_Tick;
             StopTrainingStatusPolling();
             trainingStatusPollTimer.Tick -= TrainingStatusPollTimer_Tick;
+            maskStrokePreviewCommitSwapTimer.Stop();
+            maskStrokePreviewCommitSwapTimer.Tick -= MaskStrokePreviewCommitSwapTimer_Tick;
+            maskStrokeCommitQueueTimer.Stop();
+            maskStrokeCommitQueueTimer.Tick -= MaskStrokeCommitQueueTimer_Tick;
+            displayAdjustmentRefreshTimer.Stop();
+            displayAdjustmentRefreshTimer.Tick -= DisplayAdjustmentRefreshTimer_Tick;
             imageDecodePreloadService.CancelAndWait(TimeSpan.FromSeconds(2));
             CancelImageQueueCatalogLoad(waitForCompletion: true);
             CancelImageQueueDetailRefresh(waitForCompletion: true);
@@ -228,6 +239,7 @@ namespace MvcVisionSystem
             imageDecodeCacheService.Clear();
             activeImageBitmap?.Dispose();
             activeImageBitmap = null;
+            viewModels.Dispose();
         }
     }
 }

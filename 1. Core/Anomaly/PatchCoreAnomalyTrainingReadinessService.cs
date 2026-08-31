@@ -27,7 +27,7 @@ namespace MvcVisionSystem._1._Core
         public const string NeedsReviewedNormalError = "PatchCore training needs at least two reviewed normal train images";
         public const string NoIndependentCalibrationWarning = "PatchCore threshold will use train-normal fallback because no reviewed normal validation image exists";
 
-        public static PatchCoreAnomalyTrainingReadinessReport Build(CData data)
+        public static PatchCoreAnomalyTrainingReadinessReport Build(LabelingProjectData data)
         {
             string[] sourceImages = EnumerateSourceImages(data).ToArray();
             var errors = new List<string>();
@@ -111,7 +111,7 @@ namespace MvcVisionSystem._1._Core
             };
         }
 
-        private static IEnumerable<string> EnumerateSourceImages(CData data)
+        private static IEnumerable<string> EnumerateSourceImages(LabelingProjectData data)
         {
             return new[]
                 {

@@ -51,7 +51,7 @@ namespace MvcVisionSystem
             IEnumerable<Point> centers,
             int radius,
             Size imageSize,
-            CClassItem classItem,
+            LabelClass classItem,
             out LabelingSegmentationObject changedSegment,
             out Rectangle changedBounds,
             Func<LabelingSegmentationObject, bool> canEdit = null)
@@ -69,7 +69,7 @@ namespace MvcVisionSystem
                 return false;
             }
 
-            CClassItem targetClass = ResolveClass(classItem);
+            LabelClass targetClass = ResolveClass(classItem);
             LabelingSegmentationObject segment = GetOrCreateRasterSegment(
                 segments,
                 imageSize,
@@ -230,7 +230,7 @@ namespace MvcVisionSystem
         private static LabelingSegmentationObject GetOrCreateRasterSegment(
             IList<LabelingSegmentationObject> segments,
             Size imageSize,
-            CClassItem classItem,
+            LabelClass classItem,
             Func<LabelingSegmentationObject, bool> canEdit)
         {
             string className = classItem?.Text ?? "Defect";
@@ -724,14 +724,14 @@ namespace MvcVisionSystem
             segment.RenderVersion++;
         }
 
-        private static CClassItem ResolveClass(CClassItem classItem)
+        private static LabelClass ResolveClass(LabelClass classItem)
         {
             if (classItem != null && !string.IsNullOrWhiteSpace(classItem.Text))
             {
                 return classItem;
             }
 
-            return new CClassItem
+            return new LabelClass
             {
                 Text = "Defect",
                 DrawColor = Color.DeepSkyBlue

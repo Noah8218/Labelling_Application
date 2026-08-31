@@ -8,7 +8,7 @@ namespace MvcVisionSystem._1._Core
 {
     public sealed class DisplayLayerDocument : IDisposable
     {
-        private readonly CViewer viewer = new CViewer();
+        private readonly AnnotationViewer viewer = new AnnotationViewer();
         private bool disposed;
 
         public DisplayLayerDocument(Bitmap imageSource, int index, string title)
@@ -126,7 +126,7 @@ namespace MvcVisionSystem._1._Core
             RefreshViewer();
         }
 
-        public int AddAutoSegmentationFromRois(Yolo.CClassItem classItem = null, bool onlySelected = true)
+        public int AddAutoSegmentationFromRois(Yolo.LabelClass classItem = null, bool onlySelected = true)
         {
             return disposed ? 0 : viewer.AddAutoSegmentationFromRois(classItem, onlySelected);
         }
@@ -156,7 +156,7 @@ namespace MvcVisionSystem._1._Core
             return !disposed && viewer.SelectAnnotationListItem(listIndex);
         }
 
-        public void SetSelectedClass(Yolo.CClassItem classItem)
+        public void SetSelectedClass(Yolo.LabelClass classItem)
         {
             if (!disposed)
             {
@@ -164,7 +164,7 @@ namespace MvcVisionSystem._1._Core
             }
         }
 
-        public void SetRoiRectangles(IEnumerable<Rectangle> rectangles, Yolo.CClassItem classItem = null, bool reset = true)
+        public void SetRoiRectangles(IEnumerable<Rectangle> rectangles, Yolo.LabelClass classItem = null, bool reset = true)
         {
             ThrowIfDisposed();
             viewer.SetRoiRectangles(rectangles, classItem, reset);
@@ -172,7 +172,7 @@ namespace MvcVisionSystem._1._Core
 
         public void SetSegmentationPolygons(
             IReadOnlyDictionary<string, List<List<Point>>> polygonsByClass,
-            IReadOnlyList<Yolo.CClassItem> classes,
+            IReadOnlyList<Yolo.LabelClass> classes,
             bool reset = true)
         {
             ThrowIfDisposed();
@@ -181,21 +181,21 @@ namespace MvcVisionSystem._1._Core
 
         public void SetSegmentationObjects(
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segmentsByClass,
-            IReadOnlyList<Yolo.CClassItem> classes,
+            IReadOnlyList<Yolo.LabelClass> classes,
             bool reset = true)
         {
             ThrowIfDisposed();
             viewer.SetSegmentationObjects(segmentsByClass, classes, reset);
         }
 
-        public int AddSegmentationRectangles(IEnumerable<Rectangle> rectangles, Yolo.CClassItem classItem = null, bool reset = false)
+        public int AddSegmentationRectangles(IEnumerable<Rectangle> rectangles, Yolo.LabelClass classItem = null, bool reset = false)
         {
             return disposed ? 0 : viewer.AddSegmentationRectangles(rectangles, classItem, reset);
         }
 
         public bool AddSegmentationPolygon(
             IEnumerable<Point> polygon,
-            Yolo.CClassItem classItem = null,
+            Yolo.LabelClass classItem = null,
             bool refresh = true,
             bool select = true,
             bool recordUndo = true)
@@ -208,10 +208,10 @@ namespace MvcVisionSystem._1._Core
             return disposed ? Array.Empty<LabelingRoiListItem>() : viewer.GetRoiListItems();
         }
 
-        public IReadOnlyDictionary<string, List<CRectangleObject>> GetRoiByClass()
+        public IReadOnlyDictionary<string, List<AnnotationRectangleObject>> GetRoiByClass()
         {
             return disposed
-                ? new Dictionary<string, List<CRectangleObject>>()
+                ? new Dictionary<string, List<AnnotationRectangleObject>>()
                 : viewer.RoiByClass;
         }
 
@@ -241,7 +241,7 @@ namespace MvcVisionSystem._1._Core
 
         private void Viewer_AnnotationSelectionChanged(object sender, LabelingAnnotationSelectionChangedEventArgs e)
         {
-            CDisplayManager.NotifyAnnotationSelectionChanged(this, e);
+            DisplayManager.NotifyAnnotationSelectionChanged(this, e);
         }
 
         private void ThrowIfDisposed()

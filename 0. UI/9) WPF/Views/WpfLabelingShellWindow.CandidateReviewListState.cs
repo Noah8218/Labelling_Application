@@ -15,11 +15,21 @@ namespace MvcVisionSystem
         // Candidate list state is split from overlay geometry so selection UX changes remain local.
         private void RefreshCandidateList()
         {
+            if (!viewModels.IsModelWorkflowCreated)
+            {
+                return;
+            }
+
             RefreshCandidateListViewModel(null);
         }
 
         private void RefreshCandidateListWithPreferred(YoloWorkerSmokeCandidate preferredCandidate)
         {
+            if (!viewModels.IsModelWorkflowCreated)
+            {
+                return;
+            }
+
             RefreshCandidateListViewModel(preferredCandidate);
         }
 
@@ -55,6 +65,11 @@ namespace MvcVisionSystem
 
         private void UpdateCandidateActionState()
         {
+            if (!viewModels.IsModelWorkflowCreated)
+            {
+                return;
+            }
+
             IReadOnlyList<YoloWorkerSmokeCandidate> visibleCandidates = GetVisibleCandidateList();
             bool hasVisibleCandidates = visibleCandidates.Count > 0 && !isDetecting;
             YoloWorkerSmokeCandidate selectedCandidate = GetSelectedCandidate();

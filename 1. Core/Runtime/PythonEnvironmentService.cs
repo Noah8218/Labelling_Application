@@ -20,7 +20,7 @@ namespace MvcVisionSystem._1._Core
             CancellationToken cancellationToken = default)
         {
             settings ??= new PythonModelSettings();
-            settings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(settings);
 
             var errors = new List<string>();
             var warnings = new List<string>();
@@ -76,7 +76,7 @@ namespace MvcVisionSystem._1._Core
             CancellationToken cancellationToken = default)
         {
             settings ??= new PythonModelSettings();
-            settings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(settings);
             string pythonExecutablePath = PythonModelSettingsValidator.ResolvePythonExecutable(settings);
             string requirementsPath = settings.GetRequirementsPath();
             string commandLine = $"{pythonExecutablePath} -m pip install -r \"{requirementsPath}\"";
@@ -258,7 +258,7 @@ namespace MvcVisionSystem._1._Core
             CancellationToken cancellationToken)
         {
             settings ??= new PythonModelSettings();
-            settings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(settings);
             string trimmedPackage = packageName?.Trim() ?? string.Empty;
             string pythonExecutablePath = PythonModelSettingsValidator.ResolvePythonExecutable(settings);
             string commandLine = $"{pythonExecutablePath} {string.Join(" ", arguments ?? Array.Empty<string>())}";

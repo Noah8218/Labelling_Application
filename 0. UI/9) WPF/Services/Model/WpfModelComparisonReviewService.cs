@@ -1211,26 +1211,7 @@ namespace MvcVisionSystem
         }
 
         private static string FindRepositoryRoot()
-        {
-            foreach (string startPath in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
-            {
-                string current = startPath;
-                while (!string.IsNullOrWhiteSpace(current))
-                {
-                    if (File.Exists(Path.Combine(current, "OpenVisionLab.LabelingStudio.sln"))
-                        || File.Exists(Path.Combine(current, "OpenVisionLab.LabelingStudio.csproj"))
-                        || File.Exists(Path.Combine(current, "MvcVisionSystem.sln"))
-                        || File.Exists(Path.Combine(current, "MvcVisionSystem.csproj")))
-                    {
-                        return current;
-                    }
-
-                    current = Directory.GetParent(current)?.FullName;
-                }
-            }
-
-            return Directory.GetCurrentDirectory();
-        }
+            => WpfRepositoryRootResolver.FindRepositoryRoot();
 
         private readonly struct YoloLabelDetection
         {

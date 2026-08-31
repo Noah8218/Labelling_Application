@@ -61,7 +61,7 @@ namespace MvcVisionSystem
             }
 
             string className = FirstNonEmpty(GetSelectedClassName(), "Defect");
-            CClassItem existing = global.Data.ClassNamedList?
+            LabelClass existing = global.Data.ClassNamedList?
                 .FirstOrDefault(item => string.Equals(item?.Text, className, StringComparison.OrdinalIgnoreCase));
             return existing?.DrawColor ?? System.Drawing.Color.FromArgb(44, 210, 110);
         }

@@ -145,14 +145,16 @@ namespace MvcVisionSystem
                 request.CancellationToken);
 
             var reviewStatus = new YoloImageReviewStatusService();
-            reviewStatus.SetImages(imagePaths);
-            reviewStatus.LoadReviewStatus(request.Data, imagePaths);
+            var reviewWorkflow = new WpfImageQualityReviewWorkflowService(reviewStatus);
+            reviewWorkflow.SetImages(imagePaths);
+            reviewWorkflow.LoadReviewStatus(request.Data, imagePaths);
 
             var anomalyReviewStatus = new AnomalyImageReviewStatusService();
-            anomalyReviewStatus.SetImages(imagePaths);
-            anomalyReviewStatus.LoadReviewStatus(request.Data, imagePaths);
+            var anomalyReviewWorkflow = new WpfAnomalyImageReviewWorkflowService(anomalyReviewStatus);
+            anomalyReviewWorkflow.SetImages(imagePaths);
+            anomalyReviewWorkflow.LoadReviewStatus(request.Data, imagePaths);
             AnomalyImageReviewFolderImportResult anomalyFolderStateSuggestion = request.IsAnomalyPurpose
-                ? anomalyReviewStatus.PreviewUnreviewedStatesFromParentFolders()
+                ? anomalyReviewWorkflow.PreviewUnreviewedStatesFromParentFolders()
                 : null;
             request.CancellationToken.ThrowIfCancellationRequested();
 
@@ -161,6 +163,8 @@ namespace MvcVisionSystem
                 catalogEntries,
                 reviewStatus,
                 anomalyReviewStatus,
+                reviewWorkflow,
+                anomalyReviewWorkflow,
                 anomalyFolderStateSuggestion);
         }
 
@@ -175,6 +179,8 @@ namespace MvcVisionSystem
 
             imageReviewStatus = snapshot.ReviewStatus;
             anomalyImageReviewStatus = snapshot.AnomalyReviewStatus;
+            imageQualityReviewWorkflowService = snapshot.ReviewWorkflow;
+            anomalyImageReviewWorkflowService = snapshot.AnomalyReviewWorkflow;
             UpdateAnomalyFolderStateSuggestion(request, snapshot.AnomalyFolderStateSuggestion);
 
             suppressImageQueueSelection = true;
@@ -185,7 +191,7 @@ namespace MvcVisionSystem
                 {
                     foreach (WpfImageQueueItem item in items)
                     {
-                        ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewStatus.GetOrCreate(item.ImagePath));
+                        ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewWorkflowService.GetOrCreate(item.ImagePath));
                     }
                 }
                 imageQueueItems.ReplaceAll(items);
@@ -205,7 +211,7 @@ namespace MvcVisionSystem
                 imageQueueDetailLoadTask = StartImageQueueDetailRefreshAsync(
                     snapshot.ImagePaths,
                     new Dictionary<string, WpfImageQueueItem>(imageQueueItemsByPath, StringComparer.OrdinalIgnoreCase),
-                    imageReviewStatus,
+                    imageQualityReviewWorkflowService,
                     request.Data,
                     imageQueueDetailLoadCts.Token);
             }
@@ -292,7 +298,7 @@ namespace MvcVisionSystem
                 return;
             }
 
-            AnomalyImageReviewFolderImportResult result = anomalyImageReviewStatus.ImportUnreviewedStatesFromParentFolders();
+            AnomalyImageReviewFolderImportResult result = anomalyImageReviewWorkflowService.ImportUnreviewedStatesFromParentFolders();
             dismissedAnomalyFolderStateSuggestionRoot = currentImageRoot;
             ImageQueueViewModel?.ClearAnomalyFolderStateSuggestion();
             if (!result.HasChanges)
@@ -303,7 +309,7 @@ namespace MvcVisionSystem
             SaveAnomalyImageReviewStatus();
             foreach (WpfImageQueueItem item in imageQueueItems)
             {
-                ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewStatus.GetOrCreate(item.ImagePath));
+                ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewWorkflowService.GetOrCreate(item.ImagePath));
             }
             imageQueueView?.Refresh();
             UpdateImageQueueStatusText();
@@ -326,7 +332,7 @@ namespace MvcVisionSystem
                 string selectedImagePath,
                 bool loadFirstImage,
                 bool refreshDetails,
-                CData data,
+                LabelingProjectData data,
                 bool isAnomalyPurpose,
                 int version,
                 CancellationTokenSource cancellation)
@@ -349,7 +355,7 @@ namespace MvcVisionSystem
 
             public bool RefreshDetails { get; }
 
-            public CData Data { get; }
+            public LabelingProjectData Data { get; }
 
             public bool IsAnomalyPurpose { get; }
 
@@ -367,12 +373,16 @@ namespace MvcVisionSystem
                 IReadOnlyList<WpfImageQueueCatalogEntry> catalogEntries,
                 YoloImageReviewStatusService reviewStatus,
                 AnomalyImageReviewStatusService anomalyReviewStatus,
+                WpfImageQualityReviewWorkflowService reviewWorkflow,
+                WpfAnomalyImageReviewWorkflowService anomalyReviewWorkflow,
                 AnomalyImageReviewFolderImportResult anomalyFolderStateSuggestion)
             {
                 ImagePaths = imagePaths ?? Array.Empty<string>();
                 CatalogEntries = catalogEntries ?? Array.Empty<WpfImageQueueCatalogEntry>();
                 ReviewStatus = reviewStatus ?? new YoloImageReviewStatusService();
                 AnomalyReviewStatus = anomalyReviewStatus ?? new AnomalyImageReviewStatusService();
+                ReviewWorkflow = reviewWorkflow ?? new WpfImageQualityReviewWorkflowService(ReviewStatus);
+                AnomalyReviewWorkflow = anomalyReviewWorkflow ?? new WpfAnomalyImageReviewWorkflowService(AnomalyReviewStatus);
                 AnomalyFolderStateSuggestion = anomalyFolderStateSuggestion;
             }
 
@@ -383,6 +393,10 @@ namespace MvcVisionSystem
             public YoloImageReviewStatusService ReviewStatus { get; }
 
             public AnomalyImageReviewStatusService AnomalyReviewStatus { get; }
+
+            public WpfImageQualityReviewWorkflowService ReviewWorkflow { get; }
+
+            public WpfAnomalyImageReviewWorkflowService AnomalyReviewWorkflow { get; }
 
             public AnomalyImageReviewFolderImportResult AnomalyFolderStateSuggestion { get; }
         }

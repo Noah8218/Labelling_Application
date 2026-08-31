@@ -97,6 +97,12 @@ namespace MvcVisionSystem
             }
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            ViewModel?.Dispose();
+            base.OnClosed(e);
+        }
+
         private void OnLanguageChanged(object sender, EventArgs e)
         {
             Dispatcher.BeginInvoke(

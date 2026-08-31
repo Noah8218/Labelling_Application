@@ -140,15 +140,14 @@ namespace MvcVisionSystem
                 canvasRefreshMilliseconds = WpfImageLoadDiagnosticsService.TakeElapsedMilliseconds(loadStopwatch, ref stepStartTicks);
 
                 activeImageBitmap?.Dispose();
-                activeImageBitmap = workspaceBitmap;
+                global.ImageWorkspace.SetActiveImage(imageName, imagePath, workspaceBitmap);
+                LabelingImageSnapshot activeImage = global.ImageWorkspace.CaptureSnapshot();
+                activeImageBitmap = activeImage.Image;
                 workspaceBitmap = null;
-                activeImagePath = imagePath;
-                activeImageSize = activeImageBitmap.Size;
+                activeImagePath = activeImage.ImagePath;
+                activeImageSize = activeImage.ImageSize;
 
-                global.Data.LastSelectImageName = imageName;
-                global.Data.LastSelectImagePath = imagePath;
-                global.ImageWorkspace.SetActiveImage(imageName, imagePath, activeImageBitmap);
-                CDisplayManager.ImageSrc = imageMat;
+                DisplayManager.ImageSrc = imageMat;
                 imageMat = null;
                 stateTransferMilliseconds = WpfImageLoadDiagnosticsService.TakeElapsedMilliseconds(loadStopwatch, ref stepStartTicks);
 
@@ -271,13 +270,12 @@ namespace MvcVisionSystem
             objectSessionStateService.Clear();
             objectMetadataStateService.Clear();
             activeImageBitmap?.Dispose();
-            activeImageBitmap = null;
-            activeImagePath = string.Empty;
-            activeImageSize = System.Drawing.Size.Empty;
-            global.Data.LastSelectImageName = string.Empty;
-            global.Data.LastSelectImagePath = string.Empty;
             global.ImageWorkspace.SetActiveImage(string.Empty, string.Empty, null);
-            CDisplayManager.ImageSrc = null;
+            LabelingImageSnapshot activeImage = global.ImageWorkspace.CaptureSnapshot();
+            activeImageBitmap = activeImage.Image;
+            activeImagePath = activeImage.ImagePath;
+            activeImageSize = activeImage.ImageSize;
+            DisplayManager.ImageSrc = null;
 
             manualRois.Clear();
             manualRoiClassNames.Clear();
@@ -322,7 +320,8 @@ namespace MvcVisionSystem
             Dispatcher.BeginInvoke(
                 new Action(() =>
                 {
-                    if (!string.Equals(activeImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
+                    if (isApplicationCloseApproved
+                        || !string.Equals(activeImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
                     {
                         return;
                     }

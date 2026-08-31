@@ -709,6 +709,7 @@
                         </Popup>
                         <ui:Button x:Name="FocusCandidateCanvasButton"
                                    Style="{StaticResource CanvasCommandButtonStyle}"
+                                   Visibility="Collapsed"
                                    ToolTip="선택한 AI 후보 위치로 이동합니다."
                                    IsEnabled="{Binding IsFocusCandidateEnabled}"
                                    Command="{Binding FocusCandidateCommand}">
@@ -719,6 +720,7 @@
                         </ui:Button>
                         <ui:Button x:Name="ResetAiOverlayCanvasButton"
                                    Style="{StaticResource CanvasCommandButtonStyle}"
+                                   Visibility="Collapsed"
                                    ToolTip="수동 라벨은 유지하고 AI 후보 표시만 지웁니다."
                                    IsEnabled="{Binding IsResetAiOverlayEnabled}"
                                    Command="{Binding ResetAiOverlayCommand}">
@@ -903,6 +905,7 @@
                     </Border>
                     <Border x:Name="CanvasInferenceLayerChip"
                             Grid.Column="3"
+                            Visibility="Collapsed"
                             Background="{DynamicResource CanvasBrush}"
                             BorderBrush="{DynamicResource ToolbarButtonBorderBrush}"
                             BorderThickness="1"

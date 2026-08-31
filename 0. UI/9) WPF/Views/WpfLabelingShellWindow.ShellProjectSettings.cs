@@ -48,7 +48,8 @@ namespace MvcVisionSystem
         // Project settings helpers are shared by detection, training, and save flows.
         private string BuildLabelPathSummary()
         {
-            IReadOnlyList<string> labelPaths = YoloAnnotationService.GetTargetLabelPaths(global.Data.LastSelectImageName, global.Data);
+            LabelingImageSnapshot activeImage = global.ImageWorkspace.CaptureSnapshot();
+            IReadOnlyList<string> labelPaths = YoloAnnotationService.GetTargetLabelPaths(activeImage.ImageName, global.Data);
             return labelPaths.Count == 0
                 ? "라벨 경로: 확인 안 됨"
                 : $"라벨: {labelPaths[0]}";
@@ -57,7 +58,7 @@ namespace MvcVisionSystem
         private void EnsureProjectSettings()
         {
             global.Data.ProjectSettings ??= new LabelingProjectSettings();
-            global.Data.ProjectSettings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(global.Data.ProjectSettings);
         }
 
         private void ApplyProjectDatasetPurposeToWorkflow()
@@ -71,7 +72,11 @@ namespace MvcVisionSystem
             ApplyAnnotationToolSelection(LearningWorkflowViewModel?.SelectedTool);
             RefreshCanvasWorkflowContext();
             RefreshAnnotationVisibilityForDatasetPurpose();
-            RefreshTrainingReadinessPanel(refreshYaml: false);
+            // Purpose synchronization is also called while the shell is being
+            // constructed.  Keep that lifecycle path presentation-only; the
+            // explicit recipe-apply flow refreshes readiness after the new
+            // project has been committed, while a fresh shell retains the
+            // dashboard/checklist "before check" state.
             RefreshYoloTrainingStepCompletion();
         }
 
@@ -98,16 +103,23 @@ namespace MvcVisionSystem
         {
             SynchronizeDatasetPurposeToCurrentProject(purpose);
             string recipeName = global.Recipe.Name;
+            var recipeSessionCancellationToken = projectRecipeSessionCts.Token;
 
-            // CRecipe.Name replaces Data synchronously, but the previous
-            // ListBox selection can still raise a queued WPF SelectionChanged
-            // callback afterwards. Apply the same canonical recipe purpose once
-            // bindings have settled so a previous recipe cannot repaint the new
-            // recipe as segmentation/anomaly by mistake.
+            // The Recipe session commits Data before it publishes the selected
+            // Recipe identity, but the previous ListBox selection can still
+            // raise a queued WPF SelectionChanged callback afterwards. Apply
+            // the same canonical recipe purpose once bindings have settled so
+            // a previous recipe cannot repaint the new recipe as
+            // segmentation/anomaly by mistake.
             Dispatcher.BeginInvoke(
                 System.Windows.Threading.DispatcherPriority.ContextIdle,
                 new Action(() =>
                 {
+                    if (recipeSessionCancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
                     if (GetCurrentDatasetPurpose() != purpose)
                     {
                         SynchronizeDatasetPurposeToCurrentProject(purpose);
@@ -117,7 +129,11 @@ namespace MvcVisionSystem
                         && string.Equals(global.Recipe.Name, recipeName, StringComparison.Ordinal)
                         && !string.IsNullOrWhiteSpace(recipeName))
                     {
-                        global.Data.SaveConfig(recipeName);
+                        RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName);
+                        if (!saveResult.IsSuccess)
+                        {
+                            AppendLog($"\uB370\uC774\uD130\uC14B \uC6A9\uB3C4 \uC800\uC7A5 \uC2E4\uD328: {saveResult.ErrorMessage}");
+                        }
                     }
                 }));
         }

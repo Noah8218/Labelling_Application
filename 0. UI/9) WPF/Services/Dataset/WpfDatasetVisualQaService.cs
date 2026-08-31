@@ -29,7 +29,7 @@ namespace MvcVisionSystem
         private static readonly HashSet<string> ImageExtensions =
             new HashSet<string>(new[] { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" }, StringComparer.OrdinalIgnoreCase);
 
-        public WpfDatasetVisualQaCatalog BuildCatalog(CData data, int? classIndex = null)
+        public WpfDatasetVisualQaCatalog BuildCatalog(LabelingProjectData data, int? classIndex = null)
         {
             if (data == null)
             {
@@ -42,7 +42,7 @@ namespace MvcVisionSystem
                 : BuildYoloCatalog(data, NormalizeClassIndex(data, classIndex));
         }
 
-        private static WpfDatasetVisualQaCatalog BuildYoloCatalog(CData data, int? classIndex)
+        private static WpfDatasetVisualQaCatalog BuildYoloCatalog(LabelingProjectData data, int? classIndex)
         {
             var problems = new List<WpfDatasetVisualQaItem>();
             var samplesBySplit = Splits.ToDictionary(
@@ -131,7 +131,7 @@ namespace MvcVisionSystem
             return selected;
         }
 
-        private static WpfDatasetVisualQaItem BuildYoloItem(CData data, string split, string imagePath)
+        private static WpfDatasetVisualQaItem BuildYoloItem(LabelingProjectData data, string split, string imagePath)
         {
             try
             {
@@ -262,9 +262,9 @@ namespace MvcVisionSystem
             }
         }
 
-        private static WpfDatasetVisualQaCatalog BuildAnomalyCatalog(CData data)
+        private static WpfDatasetVisualQaCatalog BuildAnomalyCatalog(LabelingProjectData data)
         {
-            string root = data.ProjectSettings?.PythonModel?.ImageRootPath;
+            string root = data.ProjectSettings?.ResolveImageRootPath();
             string[] imagePaths = EnumerateImages(root, SearchOption.AllDirectories).ToArray();
             var review = new AnomalyImageReviewStatusService();
             review.LoadReviewStatus(data, imagePaths);
@@ -293,7 +293,7 @@ namespace MvcVisionSystem
         }
 
         private static WpfDatasetVisualQaItem CreateItem(
-            CData data,
+            LabelingProjectData data,
             string imagePath,
             string split,
             string status,
@@ -311,7 +311,7 @@ namespace MvcVisionSystem
                 classIndexes,
                 () => CreatePreview(imagePath, data));
 
-        private static int? NormalizeClassIndex(CData data, int? classIndex)
+        private static int? NormalizeClassIndex(LabelingProjectData data, int? classIndex)
         {
             int classCount = data?.ClassNamedList?.Count ?? 0;
             return classIndex.HasValue
@@ -321,7 +321,7 @@ namespace MvcVisionSystem
                     : null;
         }
 
-        internal static ImageSource CreatePreview(string imagePath, CData data)
+        internal static ImageSource CreatePreview(string imagePath, LabelingProjectData data)
         {
             if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
             {
@@ -379,7 +379,7 @@ namespace MvcVisionSystem
             DrawingGroup drawing,
             string imagePath,
             DrawingSize imageSize,
-            CData data,
+            LabelingProjectData data,
             double scaleX,
             double scaleY)
         {
@@ -404,7 +404,7 @@ namespace MvcVisionSystem
             DrawingGroup drawing,
             string imagePath,
             DrawingSize imageSize,
-            CData data,
+            LabelingProjectData data,
             double scaleX,
             double scaleY)
         {
@@ -495,7 +495,7 @@ namespace MvcVisionSystem
             return pen;
         }
 
-        private static MediaColor ResolveColor(CData data, int classIndex)
+        private static MediaColor ResolveColor(LabelingProjectData data, int classIndex)
         {
             DrawingColor color = classIndex >= 0 && classIndex < (data?.ClassNamedList?.Count ?? 0)
                 ? data.ClassNamedList[classIndex]?.DrawColor ?? DrawingColor.LimeGreen

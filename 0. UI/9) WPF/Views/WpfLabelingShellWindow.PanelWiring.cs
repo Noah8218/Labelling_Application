@@ -20,14 +20,31 @@ namespace MvcVisionSystem
             ImageQueuePanelControl.DataContext = ImageQueueViewModel;
             CanvasPanelControl.DataContext = CanvasPanelViewModel;
             ObjectReviewPanelControl.DataContext = ObjectReviewViewModel;
-            CandidateReviewPanelControl.DataContext = CandidateReviewViewModel;
             ClassCatalogPanelControl.DataContext = ClassCatalogViewModel;
-            YoloStatusPanelControl.DataContext = YoloStatusViewModel;
             ProjectConfigPanelControl.DataContext = ProjectConfigViewModel;
-            YoloModelSettingsPanelControl.DataContext = YoloModelSettingsViewModel;
-            TrainingSettingsPanelControl.DataContext = TrainingSettingsViewModel;
             StatusBarPanelControl.DataContext = StatusBarViewModel;
             ShellLogPanelControl.DataContext = ShellLogViewModel;
+            EnsureModelWorkflowPanelsComposed();
+        }
+
+        private void EnsureModelWorkflowPanelsComposed()
+        {
+            if (modelWorkflowPanelsComposed)
+            {
+                return;
+            }
+
+            modelWorkflowPanelsComposed = true;
+            CandidateReviewPanelControl.DataContext = viewModels.ModelWorkflowViewModels.CandidateReviewViewModel;
+            YoloStatusPanelControl.DataContext = viewModels.ModelWorkflowViewModels.YoloStatusViewModel;
+            YoloModelSettingsPanelControl.DataContext = viewModels.ModelWorkflowViewModels.YoloModelSettingsViewModel;
+            TrainingSettingsPanelControl.DataContext = viewModels.ModelWorkflowViewModels.TrainingSettingsViewModel;
+
+            InitializeYoloEditorPanel();
+            RegisterCandidateReviewPanelNames();
+            RegisterYoloStatusPanelNames();
+            RegisterYoloModelSettingsPanelNames();
+            RegisterTrainingSettingsPanelNames();
         }
 
         private static void RefreshAttachedCommandBindings(DependencyObject target, params DependencyProperty[] properties)
@@ -178,6 +195,14 @@ namespace MvcVisionSystem
                 return;
             }
 
+            // The tab control raises SelectionChanged while InitializeComponent
+            // is still constructing the hidden model center. Do not compose the
+            // model workflow as a side effect of that startup event.
+            if (!modelWorkflowPanelsComposed)
+            {
+                return;
+            }
+
             YoloSettingsScrollViewer?.ScrollToTop();
             if (YoloModelCenterOverviewTaskTab?.IsSelected == true)
             {
@@ -291,6 +316,11 @@ namespace MvcVisionSystem
 
         private void InitializeYoloEditorPanel()
         {
+            if (!modelWorkflowPanelsComposed)
+            {
+                return;
+            }
+
             EnsureProjectSettings();
             PopulateProjectConfigPanelFields();
             PopulateYoloEditorFields();
@@ -357,10 +387,18 @@ namespace MvcVisionSystem
                 WindowLifecycleCommandBehavior.LoadedCommandProperty,
                 WindowLifecycleCommandBehavior.ClosedCommandProperty,
                 InputCommandBehaviors.PreviewKeyInputCommandProperty);
+            // XAML bindings can keep the same command reference while the shell
+            // replaces its configured delegates. Reattach the lifecycle handlers
+            // so the first Loaded/Closed event cannot be missed.
+            WindowLifecycleCommandBehavior.RefreshLoadedCommand(this);
+            WindowLifecycleCommandBehavior.RefreshClosedCommand(this);
             RefreshAttachedCommandBindings(DatasetHomeStageButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
             RefreshAttachedCommandBindings(LabelingWorkbenchStageButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
             RefreshAttachedCommandBindings(InferenceReviewStageButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
             RefreshAttachedCommandBindings(TrainingModelStageButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(WorkflowStageReviewCandidateModelButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(WorkflowStageSaveModelSettingsButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
+            RefreshAttachedCommandBindings(WorkflowStageInspectCurrentImageButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
             RefreshAttachedCommandBindings(RightWorkflowDockToggleButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
             RefreshAttachedCommandBindings(RightWorkflowDatasetHomeButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);
             RefreshAttachedCommandBindings(RightWorkflowSavedLabelsButton, System.Windows.Controls.Primitives.ButtonBase.CommandProperty);

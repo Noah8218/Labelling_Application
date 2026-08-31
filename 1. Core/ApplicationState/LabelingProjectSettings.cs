@@ -29,19 +29,74 @@ namespace MvcVisionSystem
 
         public YoloDatasetSettings YoloDataset { get; set; } = new YoloDatasetSettings();
 
+        // Model-oriented settings remain reachable through the old public
+        // property names for source and VISION.xml compatibility, but their
+        // state is owned by one explicit compatibility aggregate.
+        [System.Xml.Serialization.XmlIgnore]
+        public LegacyModelProjectSettings LegacyModel { get; set; } = new LegacyModelProjectSettings();
+
         // Native YOLO data.yaml inputs stay separate from the recipe-owned export root.
         // Selecting one never rewrites the current labeling dataset paths or annotations.
-        public ExternalYoloDatasetSettings ExternalYoloDataset { get; set; } = new ExternalYoloDatasetSettings();
+        [System.Xml.Serialization.XmlElement("ExternalYoloDataset")]
+        public ExternalYoloDatasetSettings ExternalYoloDataset
+        {
+            get => EnsureLegacyModel().ExternalYoloDataset;
+            set => EnsureLegacyModel().ExternalYoloDataset = value ?? new ExternalYoloDatasetSettings();
+        }
 
-        public TrainingSettings Training { get; set; } = new TrainingSettings();
+        [System.Xml.Serialization.XmlElement("Training")]
+        public TrainingSettings Training
+        {
+            get => EnsureLegacyModel().Training;
+            set => EnsureLegacyModel().Training = value ?? new TrainingSettings();
+        }
 
-        public PythonModelSettings PythonModel { get; set; } = new PythonModelSettings();
+        [System.Xml.Serialization.XmlElement("PythonModel")]
+        public PythonModelSettings PythonModel
+        {
+            get => EnsureLegacyModel().PythonModel;
+            set => EnsureLegacyModel().PythonModel = value ?? new PythonModelSettings();
+        }
 
-        public YoloTrainingGuideHistory TrainingGuide { get; set; } = new YoloTrainingGuideHistory();
+        // Canonical source-image folder for the labeling workflow. The legacy
+        // PythonModel field remains synchronized so older Recipes stay readable.
+        private string imageRootPath = string.Empty;
 
-        public ModelRegistrySettings ModelRegistry { get; set; } = new ModelRegistrySettings();
+        public string ImageRootPath
+        {
+            get => imageRootPath;
+            set
+            {
+                imageRootPath = value ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(imageRootPath)
+                    && PythonModel != null
+                    && !string.Equals(PythonModel.ImageRootPath, imageRootPath, StringComparison.Ordinal))
+                {
+                    PythonModel.ImageRootPath = imageRootPath;
+                }
+            }
+        }
 
-        public AnomalyClassificationSettings AnomalyClassification { get; set; } = new AnomalyClassificationSettings();
+        [System.Xml.Serialization.XmlElement("TrainingGuide")]
+        public YoloTrainingGuideHistory TrainingGuide
+        {
+            get => EnsureLegacyModel().TrainingGuide;
+            set => EnsureLegacyModel().TrainingGuide = value ?? new YoloTrainingGuideHistory();
+        }
+
+        [System.Xml.Serialization.XmlElement("ModelRegistry")]
+        public ModelRegistrySettings ModelRegistry
+        {
+            get => EnsureLegacyModel().ModelRegistry;
+            set => EnsureLegacyModel().ModelRegistry = value ?? new ModelRegistrySettings();
+        }
+
+        [System.Xml.Serialization.XmlElement("AnomalyClassification")]
+        public AnomalyClassificationSettings AnomalyClassification
+        {
+            get => EnsureLegacyModel().AnomalyClassification;
+            set => EnsureLegacyModel().AnomalyClassification = value ?? new AnomalyClassificationSettings();
+        }
 
         public void EnsureDefaults()
         {
@@ -64,17 +119,25 @@ namespace MvcVisionSystem
                 .ToList();
 
             YoloDataset ??= new YoloDatasetSettings();
-            ExternalYoloDataset ??= new ExternalYoloDatasetSettings();
-            Training ??= new TrainingSettings();
-            PythonModel ??= new PythonModelSettings();
-            TrainingGuide ??= new YoloTrainingGuideHistory();
-            ModelRegistry ??= new ModelRegistrySettings();
-            AnomalyClassification ??= new AnomalyClassificationSettings();
-            TrainingGuide.EnsureDefaults();
-            ModelRegistry.EnsureDefaults();
-            PythonModel.EnsureDefaults();
-            AnomalyClassification.EnsureDefaults();
-            ExternalYoloDataset.EnsureDefaults();
+            LegacyModelProjectSettings legacyModel = EnsureLegacyModel();
+            legacyModel.EnsureDefaults();
+            if (!string.IsNullOrWhiteSpace(ImageRootPath)
+                && !string.Equals(PythonModel.ImageRootPath, ImageRootPath, StringComparison.Ordinal))
+            {
+                PythonModel.ImageRootPath = ImageRootPath;
+            }
+        }
+
+        public string ResolveImageRootPath()
+        {
+            return !string.IsNullOrWhiteSpace(ImageRootPath)
+                ? ImageRootPath
+                : PythonModel?.ImageRootPath ?? string.Empty;
+        }
+
+        private LegacyModelProjectSettings EnsureLegacyModel()
+        {
+            return LegacyModel ??= new LegacyModelProjectSettings();
         }
     }
 }

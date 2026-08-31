@@ -181,7 +181,7 @@ WpfBatch.Model	{0} · {1} · 신뢰도 {2}\n{3}	{0} · {1} · confidence {2}\n{3
 WpfBatch.ClassContract.Empty	클래스 매핑 없음	No class mapping
 WpfBatch.ClassContract.Count	Recipe 클래스 {0}개 · worker className을 대소문자 구분 없이 동일 이름으로 해석	{0} Recipe class(es) · worker className maps to the same name without case sensitivity
 WpfBatch.DestinationPolicy	결과는 Candidate Review 대기 후보로만 전달됩니다. 자동 승인·자동 저장하지 않습니다.	Results are sent only to Candidate Review as pending candidates. They are not auto-approved or auto-saved.
-WpfBatch.Policy.Skip.Display	기존 라벨 이미지 제외 (권장)	Exclude images with existing labels (Recommended)
+WpfBatch.Policy.Skip.Display	기존 라벨 이미지 제외 (권장)	Skip labeled images (Recommended)
 WpfBatch.Policy.Skip.Detail	저장된 라벨이 있는 이미지는 실행 대상에서 제외합니다.	Images with saved labels are excluded from the run.
 WpfBatch.Policy.Include.Display	포함하되 기존 라벨 보존	Include but preserve existing labels
 WpfBatch.Policy.Include.Detail	모든 이미지를 검사하고 AI 결과만 후보로 쌓습니다.	Inspect all images and add only AI results as candidates.
@@ -191,6 +191,10 @@ WpfBatch.Finding.NoImages	사전검사할 이미지가 없습니다.	There are n
 WpfBatch.Finding.MissingImages	파일을 열 수 없는 이미지 {0}개가 포함되었습니다.	{0} image(s) could not be opened.
 WpfBatch.Finding.NoRunnable	현재 기존 라벨 처리 정책으로 실행할 이미지가 없습니다.	No images can run under the current existing-label policy.
 WpfBatch.Finding.MissingWeights	검사 가중치 파일이 선택되지 않았습니다.	No inspection weights file is selected.
+WpfBatch.Finding.ProjectFolderNotFound	YOLO 프로젝트 폴더를 찾을 수 없습니다: {0}	The YOLO project folder was not found: {0}
+WpfBatch.Finding.ClientScriptNotFound	YOLO TCP 클라이언트 스크립트을 찾을 수 없습니다: {0}	The YOLO TCP client script was not found: {0}
+WpfBatch.Finding.PythonExecutableNotFound	Python 실행 파일을 찾을 수 없습니다: {0}	The Python executable was not found: {0}
+WpfBatch.Finding.WeightsFileNotFound	YOLO 가중치 파일을 찾을 수 없습니다: {0}	The YOLO weights file was not found: {0}
 WpfBatch.Finding.MappingWarning	가중치 클래스 목록은 사전 추출하지 않습니다. worker className을 Recipe의 동일 이름에 매핑하며 모든 결과는 Candidate Review에서 확인합니다.	The weights class list is not extracted during preflight. worker className is mapped to the same Recipe name, and all results are reviewed in Candidate Review.
 WpfBatch.Finding.IncludeExisting	기존 라벨이 있는 {0}개 이미지도 검사합니다. 기존 라벨은 보존됩니다.	The {0} image(s) with existing labels will also be inspected. Existing labels are preserved.
 WpfBatch.Finding.NoClasses	현재 Recipe에 등록된 클래스가 없습니다.	No classes are registered in the current Recipe.
@@ -232,6 +236,84 @@ WpfLearningWorkflow.YoloDatasetStructureSummary	설정 파일이 이미지 폴�
 WpfLearningWorkflow.YoloDatasetPairSummary	예: image_001.jpg ↔ image_001.txt / txt=클래스+박스	Example: image_001.jpg ↔ image_001.txt / txt=class+box
 WpfLearningWorkflow.GroundTruthChip	정답 라벨	Ground truth label
 WpfLearningWorkflow.PredictionChip	검출 결과	Detection result
+WpfLearningWorkflow.TrainingChecklist.Status.Initial	데이터셋: 점검 전	Dataset: check not run
+WpfLearningWorkflow.TrainingChecklist.Detail.Initial	라벨을 저장한 뒤 학습/모델 센터에서 새로고침하면 학습 가능 여부를 확인합니다.	Save labels, then refresh Training/Model Center to check whether training is available.
+WpfLearningWorkflow.TrainingChecklist.Action.Initial	필요한 항목이 보이면 아래 해결 버튼으로 바로 이동합니다.	When an item needs attention, use the action below to go straight to the fix.
+WpfLearningWorkflow.TrainingChecklist.State.Ready	학습 가능	ready for training
+WpfLearningWorkflow.TrainingChecklist.State.Warning	주의 후 학습 가능	ready after reviewing warnings
+WpfLearningWorkflow.TrainingChecklist.Label.Segments	세그 라벨 {0}	segment labels {0}
+WpfLearningWorkflow.TrainingChecklist.Label.Masks	마스크 {0}파일	masks {0} files
+WpfLearningWorkflow.TrainingChecklist.Purpose.ObjectDetection	객체 탐지	object detection
+WpfLearningWorkflow.TrainingChecklist.Purpose.Segmentation	세그멘테이션	segmentation
+WpfLearningWorkflow.TrainingChecklist.Purpose.Anomaly	이상 탐지	anomaly detection
+WpfLearningWorkflow.TrainingChecklist.Status.ObjectDetection	데이터셋: 객체 탐지 {0} / 이미지 {1} / 박스 라벨 {2} / 세그 라벨 {3} 제외	Dataset: object detection {0} / images {1} / box labels {2} / segment labels {3} excluded
+WpfLearningWorkflow.TrainingChecklist.Status.Segmentation	데이터셋: 세그멘테이션 {0} / 이미지 {1} / {2} / 박스 라벨 {3} 보조	Dataset: segmentation {0} / images {1} / {2} / box labels {3} secondary
+WpfLearningWorkflow.TrainingChecklist.Status.Anomaly	데이터셋: 이상 탐지 {0} / 이미지 {1} / 정상 {2} / 이상 {3} / 미판정 {4}	Dataset: anomaly detection {0} / images {1} / normal {2} / abnormal {3} / unreviewed {4}
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.Classes	데이터셋: 학습 불가 / 클래스 등록 필요	Dataset: training blocked / classes need to be registered
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.Labels	데이터셋: 학습 불가 / 라벨 저장 필요	Dataset: training blocked / labels need to be saved
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.SegmentationPolicy	데이터셋: 세그먼트 저장됨 / 박스 라벨 필요	Dataset: segments saved / box labels required
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.SegmentationLabels	데이터셋: 세그멘테이션 준비 불가 / 마스크 라벨 필요	Dataset: segmentation blocked / mask labels required
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.ValidImages	데이터셋: 학습 불가 / 검증 이미지 필요	Dataset: training blocked / validation images required
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.Split	데이터셋: 학습 불가 / train-valid-test 중복 분리 필요	Dataset: training blocked / train-valid-test separation needs review
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.DataYaml	데이터셋: 학습 불가 / 학습 설정 확인 필요	Dataset: training blocked / training settings need review
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.LabelFormat	데이터셋: 학습 불가 / 라벨 형식 오류	Dataset: training blocked / label format error
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.OutputRoot	데이터셋: 학습 불가 / 저장 경로 확인 필요	Dataset: training blocked / output path needs review
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.Images	데이터셋: 학습 불가 / 이미지 폴더 확인 필요	Dataset: training blocked / image folder needs review
+WpfLearningWorkflow.TrainingChecklist.Status.Failure.Unknown	데이터셋: 학습 불가 / 확인 필요	Dataset: training blocked / review required
+WpfLearningWorkflow.TrainingChecklist.Issue.Unknown	원인 미확인	unknown cause
+WpfLearningWorkflow.TrainingChecklist.Detail.Ready.Standard	purpose {0}, train {1}, valid {2}, test {3}, box labels {4} ({5}개 파일), segment labels {6} ({7}개 파일), masks {8}, 클래스 {9}	purpose {0}, train {1}, valid {2}, test {3}, box labels {4} ({5} files), segment labels {6} ({7} files), masks {8}, classes {9}
+WpfLearningWorkflow.TrainingChecklist.Detail.Ready.Anomaly	purpose {0}, train {1}, valid {2}, test {3}, normal {4}, abnormal {5}, unreviewed {6}	purpose {0}, train {1}, valid {2}, test {3}, normal {4}, abnormal {5}, unreviewed {6}
+WpfLearningWorkflow.TrainingChecklist.Detail.Failure	purpose {0}, issue {1} / train {2}, valid {3}, test {4}, box labels {5}, segment labels {6}, masks {7}	purpose {0}, issue {1} / train {2}, valid {3}, test {4}, box labels {5}, segment labels {6}, masks {7}
+WpfLearningWorkflow.ModelReplacement.Status.Initial	모델 교체: 데이터셋 점검 전	Model replacement: dataset check pending
+WpfLearningWorkflow.ModelReplacement.Status.Unavailable	모델 교체: 불가	Model replacement: unavailable
+WpfLearningWorkflow.ModelReplacement.Status.Available	모델 교체: 가능	Model replacement: possible
+WpfLearningWorkflow.ModelReplacement.Status.EvidenceInsufficient	모델 교체: 근거 부족	Model replacement: evidence insufficient
+WpfLearningWorkflow.ModelReplacement.Status.Hold	모델 교체: 보류	Model replacement: on hold
+WpfLearningWorkflow.ModelReplacement.Detail.Initial	학습 후 최종 검증 이미지 결과로 기존 모델 교체 여부를 판단합니다.	Decide whether to replace the existing model using final-validation image results after training.
+WpfLearningWorkflow.ModelReplacement.Detail.Unavailable	먼저 학습 불가 항목을 해결해야 모델 교체를 판단할 수 있습니다.	Resolve blocked training items before deciding whether to replace the model.
+WpfLearningWorkflow.ModelReplacement.Detail.NoLabels	최종 검증 이미지는 있지만 정답 라벨 파일이 없습니다. 모델 비교 전 최종 검증 라벨을 저장하세요.	Final-validation images exist, but no ground-truth label files are available. Save final-validation labels before comparing models.
+WpfLearningWorkflow.ModelReplacement.Detail.WeakEvidence	최종 검증 라벨 {0}장으로 비교는 가능하지만 교체 근거가 약합니다. 권장 {1}장까지 {2}장을 더 확보하세요.	Comparison is possible with {0} final-validation labels, but replacement evidence is weak. Collect {2} more to reach the recommended {1}.
+WpfLearningWorkflow.ModelReplacement.Detail.Available	최종 검증 라벨 {0}장으로 기존 모델과 비교 후 교체를 판단하세요.	Compare the existing model with {0} final-validation labels, then decide whether to replace it.
+WpfLearningWorkflow.ModelReplacement.Detail.NoTest	학습/검증 이미지로 학습은 가능하지만 최종 검증 이미지가 0장이므로 기존 모델 교체는 보류하세요.	Training is possible with train/validation images, but hold model replacement because there are 0 final-validation images.
+WpfLearningWorkflow.TrainingModelLifecycle.Current.Initial	없음	None
+WpfLearningWorkflow.TrainingModelLifecycle.Current.Value	{0}	{0}
+WpfLearningWorkflow.TrainingModelLifecycle.Candidate.Initial	학습 결과 없음	No training result
+WpfLearningWorkflow.TrainingModelLifecycle.Candidate.None	없음	None
+WpfLearningWorkflow.TrainingModelLifecycle.Candidate.Same	현재 검사 모델과 같음	Same as current inspection model
+WpfLearningWorkflow.TrainingModelLifecycle.Candidate.Value	{0}	{0}
+WpfLearningWorkflow.TrainingModelLifecycle.Decision.Initial	학습 결과 비교 전	Before comparing training results
+WpfLearningWorkflow.TrainingModelLifecycle.Decision.Pending	후보 선택됨 - 설정 저장 필요	Candidate selected - save settings
+WpfLearningWorkflow.TrainingModelLifecycle.Decision.NoResult	학습 결과 없음	No training result
+WpfLearningWorkflow.TrainingModelLifecycle.Decision.Current	현재 검사 모델로 사용 중	In use as current inspection model
+WpfLearningWorkflow.TrainingModelLifecycle.Decision.Review	새 후보 검토 필요	Review new candidate
+WpfLearningWorkflow.TrainingModelLifecycle.Decision.Keep	현재 모델 유지 권장	Keep current model recommended
+WpfLearningWorkflow.TrainingModelLifecycle.Decision.Value	{0}	{0}
+WpfLearningWorkflow.TrainingModelLifecycle.Next.Initial	데이터셋 점검 후 학습을 시작하세요.	Run Dataset Health, then start training.
+WpfLearningWorkflow.TrainingModelLifecycle.Next.Pending	검사 모델로 저장을 눌러 recipe에 저장하세요. 다음 추론부터 이 모델을 사용합니다.	Click Save as inspection model to store it in the recipe. This model will be used from the next inference.
+WpfLearningWorkflow.TrainingModelLifecycle.Next.CurrentOnly	필요하면 새 학습을 시작하거나 현재 모델로 검사하세요.	Start a new training run if needed, or inspect with the current model.
+WpfLearningWorkflow.TrainingModelLifecycle.Next.Same	현재 검사 버튼으로 추론 검토를 진행하세요.	Use Inspect current model to review inference results.
+WpfLearningWorkflow.TrainingModelLifecycle.Next.Review	후보 모델의 최종 검증 결과를 비교한 뒤 저장하세요.	Compare the candidate's final-validation results, then save it.
+WpfLearningWorkflow.TrainingModelLifecycle.Next.Value	{0}	{0}
+WpfLearningWorkflow.TrainingModelLifecycle.Title	모델 확인	Model review
+WpfLearningWorkflow.TrainingModelLifecycle.Label.Current	검사 모델	Inspection model
+WpfLearningWorkflow.TrainingModelLifecycle.Label.Candidate	학습 후보	Training candidate
+WpfLearningWorkflow.TrainingModelLifecycle.Label.Decision	판단	Decision
+WpfLearningWorkflow.TrainingModelLifecycle.Label.NextAction	다음	Next
+WpfLearningWorkflow.TrainingComparison.Title	학습 결과 비교	Training result comparison
+WpfLearningWorkflow.TrainingComparison.History.Initial	최근 학습 이력: 아직 없습니다.	No recent training history.
+WpfLearningWorkflow.TrainingComparison.History.Value	{0}	{0}
+WpfLearningWorkflow.TrainingComparison.Summary.Initial	학습 결과 비교: 아직 비교할 학습 결과가 없습니다.	Training result comparison: no training result has been compared yet.
+WpfLearningWorkflow.TrainingComparison.Summary.Value	{0}	{0}
+WpfLearningWorkflow.TrainingComparison.Comparison.Initial	학습 결과 비교: 아직 비교할 학습 결과가 없습니다.	Training result comparison: no training result has been compared yet.
+WpfLearningWorkflow.TrainingComparison.Comparison.Value	{0}	{0}
+WpfLearningWorkflow.TrainingComparison.Adoption.Initial	교체 판단: 학습 결과 비교 전	Adoption decision: before comparing training results
+WpfLearningWorkflow.TrainingComparison.Adoption.Value	{0}	{0}
+WpfLearningWorkflow.TrainingComparison.Run.Action.Initial	모델 비교	Compare models
+WpfLearningWorkflow.TrainingComparison.Run.Action.Value	{0}	{0}
+WpfLearningWorkflow.TrainingComparison.Run.Tooltip.Initial	최종 검증 이미지로 기존 모델과 새 학습 모델을 비교	Compare the current and new training models on final-validation images
+WpfLearningWorkflow.TrainingComparison.Run.Tooltip.Value	{0}	{0}
+WpfLearningWorkflow.TrainingComparison.Basis.Initial	비교 기준: 데이터셋 점검 후 표시됩니다.	Comparison basis: shown after Dataset Health.
+WpfLearningWorkflow.TrainingComparison.Basis.Value	{0}	{0}
 WpfLearningWorkflow.DatasetPurpose.ObjectDetection	객체 탐지 데이터셋: 박스 라벨로 위치를 학습하고 여러 객체탐지 모델에서 재사용할 수 있습니다.	Object-detection dataset: learn object locations from box labels and reuse them with multiple object-detection models.
 WpfLearningWorkflow.DatasetPurpose.Segmentation	세그멘테이션 데이터셋: 폴리곤, 브러시, 지우개로 픽셀 마스크를 만듭니다. 모델 학습/검사는 세그멘테이션 실행기 연결 후 진행합니다.	Segmentation dataset: create pixel masks with polygons, the brush, and the eraser. Training and inspection run after a segmentation runtime is connected.
 WpfLearningWorkflow.DatasetPurpose.AnomalyDetection	이상 탐지 데이터셋: 이미지를 그리지 않고 전체 화면을 정상(OK) 또는 이상(NG)으로 판정합니다. 모델 학습/검사는 이미지 분류 실행기 연결 후 진행합니다.	Anomaly-detection dataset: classify each whole image as normal (OK) or abnormal (NG) without drawing regions. Training and inspection run after an image-classification runtime is connected.
@@ -260,6 +342,121 @@ WpfLearningWorkflow.ObjectDetectionMvpNextAction.SplitGuidance	객체탐지 MVP 
 WpfLearningWorkflow.ObjectDetectionMvpNextAction.ValidationGuidance	객체탐지 MVP 완료까지: 데이터셋 점검으로 이동해 train/valid 분리와 validation 비율을 다시 확인하세요.	Object-detection MVP next step: open Dataset Health and review the train/valid split and validation ratio.
 WpfLearningWorkflow.ObjectDetectionMvpNextAction.Empty	객체탐지 MVP: 점검 결과 확인 전	Object-detection MVP: waiting for the dataset check result
 WpfLearningWorkflow.ObjectDetectionMvpNextAction.Complete	객체탐지 MVP: 완료 - 학습과 최종 검증으로 이동	Object-detection MVP: complete - continue to training and final validation
+WpfLearningWorkflow.ObjectDetectionMvpNextAction.Dynamic	객체탐지 MVP 완료까지: {0}	Object-detection MVP next step: {0}
+WpfLearningWorkflow.DatasetDashboardAction.Initial	먼저 라벨을 저장한 뒤 데이터셋 점검을 누르세요.	Save a label first, then open Dataset Health.
+WpfLearningWorkflow.DatasetDashboard.Action.Ready.ObjectDetection	이제 5단계 모델 학습에서 설정을 확인하고 시작하세요.	Review the settings in step 5, Model Training, and start training.
+WpfLearningWorkflow.DatasetDashboard.Action.Ready.Segmentation	이제 세그멘테이션 학습/export 설정을 확인하고 시작하세요.	Review the segmentation training/export settings and start the next step.
+WpfLearningWorkflow.DatasetDashboard.Action.Ready.Anomaly	이제 이상 탐지 학습 설정을 확인하고 시작하세요.	Review the anomaly-detection training settings and start the next step.
+WpfLearningWorkflow.DatasetDashboard.Action.Warning.TestSplitEmpty	최종 검증 이미지가 없습니다. 모델 교체 판단 전 1장 이상 확보하세요.	The final-validation split is empty. Add at least one image before judging model replacement.
+WpfLearningWorkflow.DatasetDashboard.Action.Warning.SplitGuide	검증과 최종 검증 분할 기준을 확인하세요.	Review the validation and final-validation split guidance.
+WpfLearningWorkflow.DatasetDashboard.Action.Warning.Raw	주의: {0}	Warning: {0}
+WpfLearningWorkflow.DatasetDashboard.Action.Warning.Unknown	확인이 필요한 데이터셋 경고가 있습니다.	A dataset warning needs your review.
+WpfLearningWorkflow.TrainingChecklist.Action.Warning.Raw	{0}	{0}
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.Classes	클래스 등록 버튼으로 이동해 모델이 배울 이름을 먼저 등록하세요.	Open the Classes action and register the names the model will learn first.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.Labels	라벨링 시작 버튼으로 이동해 박스를 그리고 저장한 뒤 다시 점검하세요.	Open labeling, draw and save boxes, then run the check again.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.SegmentationPolicy	현재 객체탐지 학습은 박스 라벨 파일이 필요합니다. 박스 라벨을 추가하거나 segmentation 학습/export 정책을 선택하세요.	Object-detection training currently requires box-label files. Add box labels or choose the segmentation training/export policy.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.SegmentationLabels	세그멘테이션 목적에서는 브러시나 폴리곤으로 마스크를 저장한 뒤 다시 데이터셋 점검을 실행하세요.	For a segmentation dataset, save masks with the brush or polygon tool and run Dataset Health again.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.ValidImages	데이터셋 점검으로 이동해 train/valid 분리와 validation 비율을 다시 확인하세요.	Open Dataset Health and review the train/valid split and validation ratio.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.Split	검증/테스트 이미지는 학습 이미지와 달라야 합니다. 이미지 폴더를 다시 나누거나 split 비율과 샘플 구성을 점검하세요.	Validation and test images must differ from training images. Re-separate the folders or review split ratios and samples.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.DataYaml	데이터셋 점검 버튼으로 학습 설정을 다시 생성하고 저장 경로를 확인하세요.	Regenerate the training settings with Dataset Health and confirm the save path.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.LabelFormat	문제가 있는 txt 라벨을 다시 저장하거나 해당 이미지를 다시 라벨링하세요.	Save the problematic txt labels again or relabel those images.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.OutputRoot	데이터셋 홈에서 저장 폴더를 확인하고 설정을 저장하세요.	Open Dataset Home, confirm the save folder, and save the settings.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.Images	1단계에서 학습 이미지 폴더를 다시 열고, 지원되는 이미지가 있는지 확인하세요.	Reopen the training-image folder in step 1 and confirm that supported images are present.
+WpfLearningWorkflow.DatasetDashboard.Action.Failure.Unknown	원인을 확인한 뒤 클래스, 라벨링, 데이터셋 점검 중 맞는 항목으로 이동하세요.	Review the cause, then open the matching Classes, Labeling, or Dataset Health action.
+WpfLearningWorkflow.DatasetDashboard.Status.Before	데이터셋 상태: 점검 전	Dataset status: check not run
+WpfLearningWorkflow.DatasetDashboard.Status.Ready	데이터셋 상태: 학습 가능	Dataset status: ready for training
+WpfLearningWorkflow.DatasetDashboard.Status.ReadyWithWarnings	데이터셋 상태: 주의 후 학습 가능	Dataset status: ready with warnings
+WpfLearningWorkflow.DatasetDashboard.Status.NotReady	데이터셋 상태: 학습 불가	Dataset status: training blocked
+WpfLearningWorkflow.DatasetDashboard.Summary.Before	데이터셋 점검을 실행하면 이미지, 라벨, 분할, 클래스 상태가 표시됩니다.	Run Dataset Health to see image, label, split, and class status.
+WpfLearningWorkflow.DatasetDashboard.Summary.Standard	purpose {0}, images {1}, train {2}, valid {3}, test {4}, classes {5}, quality missing {6}, invalid {7}, empty {8}	purpose {0}, images {1}, train {2}, valid {3}, test {4}, classes {5}, quality missing {6}, invalid {7}, empty {8}
+WpfLearningWorkflow.DatasetDashboard.Summary.Anomaly	purpose {0}, images {1}, train {2}, valid {3}, test {4}, classes {5}, anomaly normal {6}, abnormal {7}, unreviewed {8}, quality missing {9}, invalid {10}, empty {11}	purpose {0}, images {1}, train {2}, valid {3}, test {4}, classes {5}, anomaly normal {6}, abnormal {7}, unreviewed {8}, quality missing {9}, invalid {10}, empty {11}
+WpfLearningWorkflow.DatasetDashboard.Issue.Before	점검 전: 데이터셋 점검을 실행하면 문제 항목이 표시됩니다.	Check first: run Dataset Health to see any issues.
+WpfLearningWorkflow.DatasetDashboard.Issue.NoIssues	문제 없음: 학습 설정으로 이동해도 됩니다.	No issues: you can continue to training settings.
+WpfLearningWorkflow.DatasetDashboard.Issue.Quality	다음: 누락 라벨 {0}장, invalid 라벨 {1}줄을 정리하세요.	Next: resolve {0} missing labels and {1} invalid label lines.
+WpfLearningWorkflow.DatasetDashboard.Issue.Anomaly.Unreviewed	다음: anomaly 미검토 {0}장을 정상/이상으로 분류하세요.	Next: classify {0} unreviewed anomaly images as normal or abnormal.
+WpfLearningWorkflow.DatasetDashboard.Issue.Anomaly.Complete	문제 없음: anomaly 정상/이상 분류가 완료됐습니다.	No issues: anomaly normal/abnormal classification is complete.
+WpfLearningWorkflow.DatasetDashboard.Issue.Warning.TestSplitEmpty	최종 검증 이미지가 없습니다. 모델 교체 판단 전 1장 이상 확보하세요.	The final-validation split is empty. Add at least one image before judging model replacement.
+WpfLearningWorkflow.DatasetDashboard.Issue.Warning.SplitGuide	검증과 최종 검증 분할 기준을 확인하세요.	Review the validation and final-validation split guidance.
+WpfLearningWorkflow.DatasetDashboard.Issue.Warning.Raw	주의: {0}	Warning: {0}
+WpfLearningWorkflow.DatasetDashboard.Issue.Detail	세부: {0}	Detail: {0}
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.Images	다음: 이미지 폴더를 열어 객체탐지 데이터셋을 시작하세요.	Next: open the image folder to start the object-detection dataset.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.Classes	다음: 클래스 탭에서 모델이 배울 이름을 등록하세요.	Next: register the names the model will learn in the Classes tab.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.Labels	다음: 박스 도구로 첫 객체를 라벨링하고 저장하세요.	Next: label and save the first object with the box tool.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.Remaining	다음: 미완료 {0}장에 박스를 저장하거나 빈 정상 이미지로 완료 처리하세요.	Next: save boxes for the remaining {0} images or mark blank normal images complete.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.SplitOverlap	다음: 학습/검증/최종 검증에 같은 이미지가 섞이지 않도록 분리하세요.	Next: keep the training, validation, and final-validation images separate.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.ValidImages	다음: 검증 이미지를 1장 이상 확보해 학습 검증이 가능하게 만드세요.	Next: add at least one validation image so training can be checked.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.TestImages	다음: 모델 교체 판단 전 최종 검증 이미지를 1장 이상 확보하세요.	Next: add at least one final-validation image before judging model replacement.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.TestLabels	다음: 최종 검증 이미지에 정답 라벨을 저장하세요.	Next: save ground-truth labels for the final-validation images.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.MoreFinalVerification	다음: 모델 교체 근거를 높이려면 최종 검증 라벨을 {0}장 더 확보하세요.	Next: add {0} more final-validation labels to strengthen model-replacement evidence.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.Complete	완료: 객체탐지 라벨링 MVP가 준비되었습니다. 학습 후 최종 검증 비교로 모델 교체를 판단하세요.	Complete: the object-detection labeling MVP is ready. Compare final validation after training before replacing the model.
+WpfLearningWorkflow.DatasetDashboard.Issue.Next.ObjectDetection.FixDetails	다음: 데이터셋 점검 결과의 세부 오류를 먼저 해결하세요.	Next: resolve the detailed dataset-check errors first.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.Classes	클래스 등록이 필요합니다. 모델이 배울 이름을 먼저 만드세요.	Classes are required. Add the names the model will learn first.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.Labels	라벨 저장이 필요합니다. 박스를 그리고 저장한 뒤 다시 점검하세요.	Labels must be saved. Draw boxes, save them, and run the check again.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.SegmentationPolicy	객체 탐지는 박스 txt 라벨이 필요합니다.	Object detection requires box txt labels.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.SegmentationLabels	세그멘테이션은 브러시/폴리곤 라벨이 필요합니다.	Segmentation requires brush or polygon labels.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.ValidImages	검증 이미지가 필요합니다. 분할 설정을 확인하세요.	Validation images are required. Check the split settings.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.Split	학습/검증/최종 검증에 같은 이미지가 섞여 있습니다. 학습과 검증은 다른 이미지로 분리하세요.	The same images are mixed across training, validation, and final validation. Separate training and validation images.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.DataYaml	학습 설정이 현재 프로젝트와 맞지 않습니다. 데이터셋 점검을 다시 실행하세요.	The training configuration does not match this project. Run Dataset Health again.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.LabelFormat	박스 라벨 파일 형식이 잘못된 파일이 있습니다.	Some box-label files have an invalid format.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.OutputRoot	데이터셋 저장 경로를 확인하세요.	Check the dataset output path.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.Images	학습할 이미지 폴더를 다시 선택하세요.	Select the image folder to train again.
+WpfLearningWorkflow.DatasetDashboard.Issue.Friendly.Unknown	데이터셋 점검 결과를 확인하고 필요한 항목을 수정하세요.	Review the dataset-check result and fix the required items.
+WpfLearningWorkflow.DatasetDashboard.Metric.Images.Title	이미지	Images
+WpfLearningWorkflow.DatasetDashboard.Metric.Images.Detail	train {0}, valid {1}, test {2}	train {0}, valid {1}, test {2}
+WpfLearningWorkflow.DatasetDashboard.Metric.Progress.Title	진행	Progress
+WpfLearningWorkflow.DatasetDashboard.Metric.Progress.Detail	검토된 라벨 파일 {0}개, 진행률 {1}%	Reviewed label files {0}, progress {1}%
+WpfLearningWorkflow.DatasetDashboard.Metric.Split.Title	분할	Split
+WpfLearningWorkflow.DatasetDashboard.Metric.Split.Detail	학습 / 검증 / 최종 검증	Train / validation / final validation
+WpfLearningWorkflow.DatasetDashboard.Metric.Initial.Labels.Title	라벨	Labels
+WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Title	교체	Replacement
+WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Value.Available	가능	Available
+WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Value.Caution	주의	Caution
+WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Value.Hold	보류	On hold
+WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Value.Unavailable	불가	Unavailable
+WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Detail.Evidence	최종 검증 라벨 {0}장	Final-validation labels {0}
+WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Detail.Weak	최종 검증 라벨 {0}장 / 권장 {1}장 이상	Final-validation labels {0} / recommended at least {1}
+WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Detail.NoLabels	최종 검증 라벨 0장: 정답 라벨 필요	No final-validation labels: ground-truth labels required
+WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Detail.NoTest	최종 검증 0장: 학습/검증만 있음	No final-validation images: training/validation only
+WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Anomaly.Title	판정	Review
+WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Anomaly.Detail	정상 {0}장, 이상 {1}장	Normal {0}, abnormal {1}
+WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Detection.Title	박스	Boxes
+WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Detection.Detail	박스 {0}개, 라벨 파일 {1}개	Boxes {0}, label files {1}
+WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Segmentation.Title	세그	Segments
+WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Segmentation.Detail	세그먼트 {0}개, 마스크 {1}개	Segments {0}, masks {1}
+WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Anomaly.Title	판정 이미지	Decision images
+WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Anomaly.Detail	학습 {0}장, 검증 {1}장, 최종 {2}장	Train {0}, validation {1}, final validation {2}
+WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Detection.Title	라벨 파일	Label files
+WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Detection.Detail	학습 {0}개, 검증 {1}개, 최종 {2}개	Train {0}, validation {1}, final validation {2}
+WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Segmentation.Title	SEG 검토	SEG review
+WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Segmentation.Detail	세그먼트 {0}개, 마스크 {1}개 / 클릭: 기존 마스크 보정 드릴다운 보고서	Segments {0}, masks {1} / click to save the existing-mask correction drill-down report
+WpfLearningWorkflow.DatasetDashboard.Metric.Class.Title	클래스	Classes
+WpfLearningWorkflow.DatasetDashboard.Metric.Class.Detail	모델이 배울 이름	Names the model learns
+WpfLearningWorkflow.DatasetDashboard.Metric.Duplicate.Title	중복	Duplicates
+WpfLearningWorkflow.DatasetDashboard.Metric.Duplicate.Detail.NoExample	분할 중복	Split overlap
+WpfLearningWorkflow.DatasetDashboard.Metric.Duplicate.Detail.Example	{0}	{0}
+WpfLearningWorkflow.DatasetDashboard.Metric.Quality.Title	품질 보고서	Quality report
+WpfLearningWorkflow.DatasetDashboard.Metric.Quality.Detail.NoClasses	누락 {0}장, invalid {1}줄, 빈 정상 {2}장 / 클릭하면 현재 상태를 Markdown 보고서로 저장합니다.	Missing {0}, invalid {1} lines, empty normal {2} / click to save the current state as a Markdown report.
+WpfLearningWorkflow.DatasetDashboard.Metric.Quality.Detail.Classes	누락 {0}장, invalid {1}줄, 빈 정상 {2}장, 클래스 {3} / 클릭하면 현재 상태를 Markdown 보고서로 저장합니다.	Missing {0}, invalid {1} lines, empty normal {2}, classes {3} / click to save the current state as a Markdown report.
+WpfLearningWorkflow.DatasetDashboard.Metric.AnomalyReview.Title	정상/이상	Normal/abnormal
+WpfLearningWorkflow.DatasetDashboard.Metric.AnomalyReview.Detail	정상 {0}장, 이상 {1}장, 미검토 {2}장	Normal {0}, abnormal {1}, unreviewed {2}
+WpfLearningWorkflow.DatasetDashboard.Metric.State.Before	점검 전	Not checked
+WpfLearningWorkflow.DatasetDashboard.Metric.State.Complete	완료	Complete
+WpfLearningWorkflow.DatasetDashboard.Metric.State.Needed	필요	Needed
+WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting	대기	Waiting
+WpfLearningWorkflow.DatasetDashboard.Metric.State.Progress	진행	In progress
+WpfLearningWorkflow.DatasetDashboard.Metric.State.Check	확인	Check
+WpfLearningWorkflow.DatasetDashboard.Metric.State.NoTest	테스트 없음	No test split
+WpfLearningWorkflow.DatasetDashboard.Metric.State.EvidenceInsufficient	근거 부족	Evidence insufficient
+WpfLearningWorkflow.DatasetDashboard.Metric.State.FinalLabelsNeeded	최종 라벨 필요	Final labels needed
+WpfLearningWorkflow.DatasetDashboard.Metric.State.TrainFirst	학습 먼저	Train first
+WpfLearningWorkflow.DatasetDashboard.Metric.State.Exists	있음	Present
+WpfLearningWorkflow.DatasetDashboard.Metric.State.Review	검토	Review
+WpfLearningWorkflow.DatasetDashboard.Metric.State.SeparateNeeded	분리 필요	Separation needed
+WpfLearningWorkflow.DatasetDashboard.Metric.State.None	없음	None
+WpfLearningWorkflow.DatasetDashboard.Metric.State.CleanupNeeded	정리 필요	Cleanup needed
+WpfLearningWorkflow.DatasetDashboard.Metric.State.ReviewNeeded	검토 필요	Review needed
+WpfLearningWorkflow.DatasetDashboard.Metric.State.Classified	분류 완료	Classified
+WpfLearningWorkflow.DatasetDashboard.Metric.State.NormalComplete	정상 완료	Normal complete
 전체	전체	All
 모델, 런타임, 보고서 검색	모델, 런타임, 보고서 검색	Search models, runtimes, and reports
 작업 종류 필터	작업 종류 필터	Task type filter
@@ -1759,6 +1956,9 @@ WpfShell.Status.DatasetLoaded	데이터셋: {0}  {1}x{2}	Dataset: {0}  {1}x{2}
 WpfShell.Status.DatasetFilter	 / 필터 {0}	 / Filter: {0}
 WpfShell.Status.DatasetLoading	 / 로드 {0}/{1}	 / Loading {0}/{1}
 WpfShell.Status.Model	모델: {0}	Model: {0}
+WpfShell.Status.ModelCapability	모델 기능: {0}	Model capability: {0}
+WpfShell.Status.ModelState.NotInstalled	미설치	Not installed
+WpfShell.Status.ModelState.ConfigurationRequired	설정 확인 필요	Configuration required
 WpfShell.Status.ToolSelected	도구: 선택	Tool: selected
 WpfShell.Status.InspectionModel	검사 모델: {0} / {1}	Inspection model: {0} / {1}
 WpfShell.Status.InspectionCandidate	검사 후보: {0} / {1}	Inspection candidate: {0} / {1}
@@ -1853,9 +2053,12 @@ WpfClassCatalog.ClassName.ToolTip	클래스 이름	Class name
 WpfClassCatalog.Add.Name	클래스 추가	Add class
 WpfClassCatalog.Add.ToolTip	클래스 추가	Add a class
 WpfClassCatalog.Add.Text	추가	Add
-WpfClassCatalog.Remove.Name	클래스 삭제	Remove class
-WpfClassCatalog.Remove.ToolTip	선택한 클래스 삭제	Remove the selected class
-WpfClassCatalog.Remove.Text	삭제	Remove
+WpfClassCatalog.Archive.Name	선택한 클래스 보관	Archive selected class
+WpfClassCatalog.Archive.ToolTip	선택한 클래스는 보관하지만 기존 YOLO 번호와 라벨 의미는 유지합니다.	Archive the selected class while keeping existing YOLO indices and label meaning.
+WpfClassCatalog.Archive.Text	보관	Archive
+WpfClassCatalog.Restore.Name	보관 클래스 복원	Restore archived class
+WpfClassCatalog.Restore.ToolTip	보관한 클래스를 새 라벨 선택에 다시 표시합니다.	Restore this archived class to new-label selection.
+WpfClassCatalog.Restore.Text	복원	Restore
 WpfClassCatalog.Rename.Name	선택한 클래스 이름 변경	Rename selected class
 WpfClassCatalog.Rename.ToolTip	선택한 클래스 이름 변경	Rename the selected class
 WpfClassCatalog.Rename.Text	변경	Rename
@@ -1866,17 +2069,18 @@ WpfClassCatalog.Color.Apply.Name	선택한 클래스 색상 적용	Apply selecte
 WpfClassCatalog.Color.Apply.ToolTip	선택한 클래스 색상 적용	Apply the selected class color
 WpfClassCatalog.Color.Apply.Text	색 적용	Apply color
 WpfClassCatalog.Guide.Title	클래스 관리	Class management
-WpfClassCatalog.Guide.Detail	레시피의 클래스 이름/색상만 관리합니다. 저장 폴더는 데이터셋 홈에서 확인하세요.	Manage only the recipe class names and colors. Check the storage folder in Dataset Home.
+WpfClassCatalog.Guide.Detail	레시피의 클래스 이름/색상과 보관 상태를 관리합니다. 보관해도 기존 YOLO 번호는 유지됩니다. 저장 폴더는 데이터셋 홈에서 확인하세요.	Manage recipe class names, colors, and archive state. Archiving keeps existing YOLO indices. Check the storage folder in Dataset Home.
 WpfClassCatalog.Summary	등록 클래스 {0}개 / 선택: {1}	{0} registered classes / Selected: {1}
 WpfClassCatalog.Selection.None	없음	None
 WpfClassCatalog.Current.Title	현재 그릴 클래스	Current drawing class
 WpfClassCatalog.Current.EmptyDetail	선택된 클래스가 없습니다. OK, NG처럼 모델이 배울 클래스를 먼저 추가하세요.	No class is selected. Add the classes the model should learn, such as OK and NG.
 WpfClassCatalog.Current.SelectedDetail	{0} - 캔버스에서 새 박스를 그리면 이 클래스가 기본 적용됩니다.	{0} - New boxes drawn on the canvas use this class by default.
+WpfClassCatalog.Current.ArchivedDetail	보관된 클래스는 새 라벨에 사용하지 않습니다. 필요하면 복원하세요.	Archived classes are not used for new labels. Restore one when needed.
 WpfClassCatalog.Action.Empty	먼저 OK, NG처럼 모델이 배울 클래스를 추가하세요.	First add the classes the model should learn, such as OK and NG.
-WpfClassCatalog.Action.Populated	이름 추가/변경이 주 작업입니다. 색상은 필요할 때만 펼치세요.	Adding or renaming is the main task. Expand colors only when needed.
+WpfClassCatalog.Action.Populated	이름 추가/변경과 보관/복원이 주 작업입니다. 색상은 필요할 때만 펼치세요.	Adding, renaming, archiving, and restoring are the main tasks. Expand colors only when needed.
 WpfClassCatalog.Recipe.Title	레시피 클래스 (YOLO 인덱스)	Recipe classes (YOLO indices)
 WpfClassCatalog.Recipe.Guide	이 목록 순서가 data.yaml, YOLO 라벨, 학습, AI 결과 매핑의 클래스 인덱스입니다.	This order is the class index used by data.yaml, YOLO labels, training, and AI-result mapping.
-WpfClassCatalog.IndexContract	숫자는 저장·학습에 쓰는 YOLO 인덱스입니다. 이름 변경은 번호를 유지하고, 추가·삭제는 스키마를 바꿉니다. 캔버스 1~9는 그릴 클래스 선택 단축키입니다.	The number is the YOLO index used for storage and training. Renaming keeps the number; adding or removing changes the schema. Canvas keys 1–9 select the drawing class.
+WpfClassCatalog.IndexContract	숫자는 저장·학습에 쓰는 YOLO 인덱스입니다. 이름 변경·보관·복원은 번호를 유지합니다. 보관 클래스는 새 라벨 선택에서 숨기지만 기존 라벨과 data.yaml에는 남습니다. 캔버스 1~9는 그릴 활성 클래스 선택 단축키입니다.	The number is the YOLO index used for storage and training. Renaming, archiving, and restoring keep the number. Archived classes are hidden from new-label selection but remain in existing labels and data.yaml. Canvas keys 1–9 select active drawing classes.
 WpfClassCatalog.ColorPreset.Normal	정상	Normal
 WpfClassCatalog.ColorPreset.Defect	불량	Defect
 WpfClassCatalog.ColorPreset.Warning	주의	Warning
@@ -1884,6 +2088,8 @@ WpfClassCatalog.ColorPreset.Review	검토	Review
 WpfClassCatalog.ColorPreset.Segmentation	세그	Segmentation
 WpfClassCatalog.ColorPreset.ForeignMaterial	이물	Foreign material
 WpfClassCatalog.Item.ToolTip	YOLO 인덱스 {0}: {1}\n이 숫자가 저장·학습·AI 결과 매핑에 사용됩니다.	YOLO index {0}: {1}\nThis number is used for storage, training, and AI-result mapping.
+WpfClassCatalog.Item.Archived	보관됨	Archived
+WpfClassCatalog.Item.ArchivedToolTip	YOLO 인덱스 {0}: {1}\n보관됨: 기존 라벨·data.yaml·학습 매핑에는 유지되고 새 라벨 선택에서는 숨깁니다.	YOLO index {0}: {1}\nArchived: kept for existing labels, data.yaml, and training mapping; hidden from new-label selection.
 WpfClassCatalog.Status.Initial	클래스 이름을 입력하고 추가를 누르세요.	Enter a class name and press Add.
 WpfImageQueue.Panel.Title	이미지 큐	Image Queue
 WpfImageQueue.LoadConfigured.Name	설정 폴더	Configured folder

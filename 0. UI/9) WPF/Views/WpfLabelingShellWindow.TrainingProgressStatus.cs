@@ -160,7 +160,7 @@ namespace MvcVisionSystem
                 return;
             }
 
-            global.DeepLearning?.SendModelStatus(CreateRequestId(), ensureLoaded: false);
+            global.ModelRuntime.DeepLearning?.SendModelStatus(CreateRequestId(), ensureLoaded: false);
         }
 
         private void UpdateYoloTrainingRecoveryStatus(PythonCommunicationStatus status)

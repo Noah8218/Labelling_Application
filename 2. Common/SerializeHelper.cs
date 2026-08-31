@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -110,7 +110,7 @@ namespace MvcVisionSystem
                 //VTS.Logger.Error(ex, string.Format(
                 //    "[VTS.MySerialize.FromXmlFile] error. type({0}), path={1}",
                 //    typeof(T).ToString(), path));
-                CCommon.ShowMessageBox("EXCEPTION", string.Format($"[{MethodBase.GetCurrentMethod().ReflectedType.Name}]==>{MethodBase.GetCurrentMethod().Name}], type({typeof(T).ToString()}), path={path}, Ex = {Desc.Message}"), CCommon.MessageBoxType.Warning);
+                MessageDialogService.ShowMessageBox("EXCEPTION", string.Format($"[{MethodBase.GetCurrentMethod().ReflectedType.Name}]==>{MethodBase.GetCurrentMethod().Name}], type({typeof(T).ToString()}), path={path}, Ex = {Desc.Message}"), MessageDialogService.MessageBoxType.Warning);
             }
 
             return default(T);
@@ -131,7 +131,7 @@ namespace MvcVisionSystem
             {                
                 AppLog.ABNORMAL( $"[{MethodBase.GetCurrentMethod().ReflectedType.Name}]==>{MethodBase.GetCurrentMethod().Name}], type({typeof(T).ToString()}), path={path}, Ex = {Desc.Message}");
 
-                //CCommon.ShowMessageBox("EXCEPTION", string.Format($"[{MethodBase.GetCurrentMethod().ReflectedType.Name}]==>{MethodBase.GetCurrentMethod().Name}], type({typeof(T).ToString()}), path={path}, Ex = {Desc.Message}"), CCommon.MessageBoxType.Warning);
+                //MessageDialogService.ShowMessageBox("EXCEPTION", string.Format($"[{MethodBase.GetCurrentMethod().ReflectedType.Name}]==>{MethodBase.GetCurrentMethod().Name}], type({typeof(T).ToString()}), path={path}, Ex = {Desc.Message}"), MessageDialogService.MessageBoxType.Warning);
                 //VTS.Logger.Error(ex, string.Format(
                 //    "[VTS.MySerialize.ToXmlFile] error. type({0}), path={1}",
                 //    typeof(T).ToString(), path));

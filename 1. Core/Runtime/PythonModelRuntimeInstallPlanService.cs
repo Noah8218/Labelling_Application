@@ -9,6 +9,7 @@ namespace MvcVisionSystem._1._Core
         public static PythonModelRuntimeInstallPlan BuildPlan(PythonModelSettings settings)
         {
             settings ??= new PythonModelSettings();
+            PythonModelRuntimePathResolver.ApplyPathDefaults(settings);
             string engine = PythonModelSettings.NormalizeModelEngine(settings.ModelEngine);
             if (string.Equals(engine, PythonModelSettings.EngineUnet, StringComparison.Ordinal))
             {

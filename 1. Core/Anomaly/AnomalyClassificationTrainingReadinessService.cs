@@ -74,7 +74,7 @@ namespace MvcVisionSystem._1._Core
         public const string NeedsReviewedNormalAndAbnormalError = "anomaly classification training needs reviewed normal and abnormal images";
         public const string NeedsTrainNormalAndAbnormalError = "anomaly classification training needs train split normal and abnormal images";
 
-        public static AnomalyClassificationTrainingReadinessReport Build(CData data)
+        public static AnomalyClassificationTrainingReadinessReport Build(LabelingProjectData data)
         {
             string[] sourceImagePaths = EnumerateSourceImages(data).ToArray();
             var errors = new List<string>();
@@ -151,7 +151,7 @@ namespace MvcVisionSystem._1._Core
                 testAbnormalCount);
         }
 
-        private static IEnumerable<string> EnumerateSourceImages(CData data)
+        private static IEnumerable<string> EnumerateSourceImages(LabelingProjectData data)
         {
             var roots = new[]
             {

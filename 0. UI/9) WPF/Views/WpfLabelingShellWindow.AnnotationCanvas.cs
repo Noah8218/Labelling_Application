@@ -40,7 +40,7 @@ namespace MvcVisionSystem
 
         private DrawingColor GetClassDrawColor(string className)
         {
-            CClassItem classItem = EnsureClassItem(FirstNonEmpty(className, "Defect"));
+            LabelClass classItem = EnsureClassItem(FirstNonEmpty(className, "Defect"));
             return classItem?.DrawColor ?? DrawingColor.FromArgb(34, 197, 94);
         }
 

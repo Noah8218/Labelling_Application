@@ -12,12 +12,12 @@ namespace MvcVisionSystem._1._Core
 
         public string LastPreparationFailureMessage { get; private set; } = string.Empty;
 
-        public bool TryPrepare(CData data)
+        public bool TryPrepare(LabelingProjectData data)
         {
             return TryPrepare(data, out _);
         }
 
-        internal bool TryPrepare(CData data, out YoloTrainingDatasetRequest trainingRequest)
+        internal bool TryPrepare(LabelingProjectData data, out YoloTrainingDatasetRequest trainingRequest)
         {
             LastPreparationFailureMessage = string.Empty;
             trainingRequest = new YoloTrainingDatasetRequest
@@ -100,7 +100,7 @@ namespace MvcVisionSystem._1._Core
         }
 
         private bool TryPrepareExternalYoloTrainingDataset(
-            CData data,
+            LabelingProjectData data,
             ExternalYoloDatasetSettings externalDataset,
             out YoloTrainingDatasetRequest trainingRequest)
         {
@@ -164,7 +164,7 @@ namespace MvcVisionSystem._1._Core
         }
 
         private bool TryPrepareAnomalyClassificationTrainingDataset(
-            CData data,
+            LabelingProjectData data,
             out YoloTrainingDatasetRequest trainingRequest)
         {
             trainingRequest = new YoloTrainingDatasetRequest
@@ -220,7 +220,7 @@ namespace MvcVisionSystem._1._Core
         }
 
         private bool TryPreparePatchCoreAnomalyTrainingDataset(
-            CData data,
+            LabelingProjectData data,
             out YoloTrainingDatasetRequest trainingRequest)
         {
             trainingRequest = new YoloTrainingDatasetRequest
@@ -279,7 +279,7 @@ namespace MvcVisionSystem._1._Core
         }
 
         private bool TryPrepareUnetSegmentationTrainingDataset(
-            CData data,
+            LabelingProjectData data,
             ExternalYoloDatasetSettings externalDataset,
             out YoloTrainingDatasetRequest trainingRequest)
         {
@@ -327,7 +327,7 @@ namespace MvcVisionSystem._1._Core
         }
 
         private bool TryPrepareExternalUnetSegmentationTrainingDataset(
-            CData data,
+            LabelingProjectData data,
             ExternalYoloDatasetSettings externalDataset,
             out YoloTrainingDatasetRequest trainingRequest)
         {

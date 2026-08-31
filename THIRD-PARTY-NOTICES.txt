@@ -17,16 +17,19 @@ Apache-2.0:
 MIT:
 - MahApps.Metro.IconPacks.Core 6.2.1
 - MahApps.Metro.IconPacks.Material 6.2.1
+- Microsoft.NETCore.Platforms 2.0.0
 - Microsoft.Win32.SystemEvents 8.0.0
 - Newtonsoft.Json 13.0.3
 - System.Buffers 4.5.1
-- System.Configuration.ConfigurationManager 10.0.8
-- System.Diagnostics.EventLog 10.0.8
+- System.Configuration.ConfigurationManager 4.5.0
 - System.Drawing.Common 8.0.27
 - System.Memory 4.5.5
 - System.Numerics.Vectors 4.5.0
 - System.Runtime.CompilerServices.Unsafe 6.0.0
-- System.Security.Cryptography.ProtectedData 10.0.8
+- System.Security.AccessControl 4.5.0
+- System.Security.Cryptography.ProtectedData 4.5.0
+- System.Security.Permissions 4.5.0
+- System.Security.Principal.Windows 4.5.0
 - System.Text.Json 8.0.5
 - System.Threading.Tasks.Extensions 4.5.4
 - WPF-UI 4.3.0
@@ -37,12 +40,6 @@ Checked-in and native redistributed binaries
 --------------------------------------------
 
 MIT:
-- CircularProgressBar.dll 2.8.0.16
-  Copyright (c) 2016-2020 Soroush Falahati
-  https://github.com/falahati/CircularProgressBar
-- WinFormAnimation.dll 1.6.0.4
-  Copyright (c) 2019 Soroush Falahati
-  https://github.com/falahati/WinFormAnimation
 - SharpGL.dll 3.1.1
 - SharpGL.WinForms.dll 3.1.1
   Copyright (c) 2014 Dave Kerr
@@ -60,6 +57,9 @@ MIT project components:
 - OpenVisionLab.Vision2D.dll 3.0.0.0
   Copyright (c) 2026 최노아(Noah-Choi)
   https://github.com/Noah8218/OpenVisionLab-Vision-SDK
+- OpenVisionLab.Integration.Contracts.dll 0.2.0-alpha.1
+  Copyright (c) 2026 최노아(Noah-Choi)
+  https://github.com/Noah8218/OpenVisionLab-Integration-Contracts
 - OpenVisionLab.* assemblies built from this repository
 
 Bundled .NET runtime

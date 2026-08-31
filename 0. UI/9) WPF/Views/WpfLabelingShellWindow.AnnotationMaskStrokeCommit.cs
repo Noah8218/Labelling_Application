@@ -51,7 +51,7 @@ namespace MvcVisionSystem
             }
 
             string className = FirstNonEmpty(activeMaskStrokeCommitSession.ClassName, GetSelectedClassName(), "Defect");
-            CClassItem classItem = tool == WpfAnnotationTool.Brush
+            LabelClass classItem = tool == WpfAnnotationTool.Brush
                 ? CloneClassItemForQueuedMaskCommit(EnsureClassItem(className))
                 : null;
             var command = new WpfQueuedMaskStrokeCommit(
@@ -589,10 +589,10 @@ namespace MvcVisionSystem
             }
         }
 
-        private static CClassItem CloneClassItemForQueuedMaskCommit(CClassItem source)
+        private static LabelClass CloneClassItemForQueuedMaskCommit(LabelClass source)
             => source == null
                 ? null
-                : new CClassItem
+                : new LabelClass
                 {
                     Text = source.Text ?? string.Empty,
                     DrawColor = source.DrawColor

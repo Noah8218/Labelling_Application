@@ -72,6 +72,7 @@ namespace MvcVisionSystem
             if (DataContext is WpfBatchDetectionPreflightViewModel viewModel)
             {
                 viewModel.StartRequested -= ViewModel_StartRequested;
+                viewModel.Dispose();
             }
 
             Closed -= Window_Closed;

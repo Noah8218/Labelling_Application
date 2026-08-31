@@ -11,15 +11,8 @@ namespace MvcVisionSystem.Yolo
 {
     public static class CvatDetectionImportService
     {
-        private static readonly string[] DatasetModes =
-        {
-            YoloDatasetSplitService.TrainMode,
-            YoloDatasetSplitService.ValidMode,
-            YoloDatasetSplitService.TestMode
-        };
-
         public static CvatDetectionImportResult ImportArchive(
-            CData data,
+            LabelingProjectData data,
             string archivePath,
             string targetSplit = YoloDatasetSplitService.TrainMode)
         {
@@ -38,7 +31,7 @@ namespace MvcVisionSystem.Yolo
                 throw new FileNotFoundException("CVAT archive was not found.", archivePath);
             }
 
-            string split = NormalizeSplit(targetSplit);
+            string split = YoloDatasetSplitService.NormalizeStandardSplit(targetSplit);
             if (string.IsNullOrWhiteSpace(split))
             {
                 throw new ArgumentException("Target split must be train, valid, or test.", nameof(targetSplit));
@@ -87,7 +80,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static bool TryImportImage(
-            CData data,
+            LabelingProjectData data,
             ZipArchive archive,
             XElement imageElement,
             string imageDirectory,
@@ -142,7 +135,7 @@ namespace MvcVisionSystem.Yolo
             return true;
         }
 
-        private static bool TryBuildLabelLine(CData data, XElement boxElement, Size imageSize, out string line)
+        private static bool TryBuildLabelLine(LabelingProjectData data, XElement boxElement, Size imageSize, out string line)
         {
             line = string.Empty;
             string className = ClassCatalogService.NormalizeClassName(boxElement?.Attribute("label")?.Value);
@@ -157,7 +150,7 @@ namespace MvcVisionSystem.Yolo
                 return false;
             }
 
-            int classIndex = FindOrAddClass(data, className);
+            int classIndex = ClassCatalogService.FindOrAddClass(data, className);
             Rectangle rectangle = Rectangle.Intersect(
                 Rectangle.FromLTRB(
                     (int)Math.Round(xtl),
@@ -174,31 +167,6 @@ namespace MvcVisionSystem.Yolo
             return !string.IsNullOrWhiteSpace(line);
         }
 
-        private static int FindOrAddClass(CData data, string className)
-        {
-            int classIndex = FindClassIndex(data, className);
-            if (classIndex >= 0)
-            {
-                return classIndex;
-            }
-
-            ClassCatalogService.TryAddClass(data, className, out _);
-            return FindClassIndex(data, className);
-        }
-
-        private static int FindClassIndex(CData data, string className)
-        {
-            for (int index = 0; index < (data.ClassNamedList?.Count ?? 0); index++)
-            {
-                if (string.Equals(data.ClassNamedList[index]?.Text, className, StringComparison.OrdinalIgnoreCase))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
-        }
-
         private static bool TryReadInt(XElement element, string attributeName, out int value)
         {
             value = 0;
@@ -211,18 +179,6 @@ namespace MvcVisionSystem.Yolo
             return double.TryParse(element?.Attribute(attributeName)?.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
         }
 
-        private static string NormalizeSplit(string split)
-        {
-            foreach (string mode in DatasetModes)
-            {
-                if (string.Equals(split, mode, StringComparison.OrdinalIgnoreCase))
-                {
-                    return mode;
-                }
-            }
-
-            return string.Empty;
-        }
     }
 
 }

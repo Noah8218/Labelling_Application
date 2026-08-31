@@ -147,7 +147,7 @@ namespace MvcVisionSystem._1._Core
             error = "";
 
             settings ??= new PythonModelSettings();
-            settings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(settings);
 
             PythonModelValidationResult validation = PythonModelSettingsValidator.Validate(settings, requireWeights: false);
             if (!validation.IsValid)

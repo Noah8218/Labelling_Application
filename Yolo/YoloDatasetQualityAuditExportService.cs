@@ -10,7 +10,7 @@ namespace MvcVisionSystem.Yolo
     {
         public const string DefaultFileName = "dataset-quality-audit.md";
 
-        public static string ResolveDefaultOutputPath(CData data)
+        public static string ResolveDefaultOutputPath(LabelingProjectData data)
         {
             string outputRootPath = data?.OutputRootPath;
             return string.IsNullOrWhiteSpace(outputRootPath)

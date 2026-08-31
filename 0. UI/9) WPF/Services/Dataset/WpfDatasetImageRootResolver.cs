@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using MvcVisionSystem.Yolo;
 
 namespace MvcVisionSystem
 {
     public sealed class WpfDatasetImageRootResolver
     {
-        public string Resolve(CData data, string configuredRoot, Func<string, bool> hasQueueImages)
+        public string Resolve(LabelingProjectData data, string configuredRoot, Func<string, bool> hasQueueImages)
         {
             configuredRoot ??= string.Empty;
             if (Directory.Exists(configuredRoot) && !IsImplicitDefaultImageRoot(configuredRoot))
@@ -32,7 +31,7 @@ namespace MvcVisionSystem
             return EnumerateDatasetImageRoots(data).FirstOrDefault(Directory.Exists) ?? configuredRoot;
         }
 
-        public IEnumerable<string> EnumerateDatasetImageRoots(CData data)
+        public IEnumerable<string> EnumerateDatasetImageRoots(LabelingProjectData data)
         {
             if (data == null)
             {
@@ -56,7 +55,7 @@ namespace MvcVisionSystem
 
         public bool IsImplicitDefaultImageRoot(string imageRoot)
         {
-            string defaultRoot = PythonModelSettings.GetDefaultImageRootPath();
+            string defaultRoot = _1._Core.PythonModelRuntimePathResolver.GetDefaultImageRootPath();
             if (string.IsNullOrWhiteSpace(imageRoot) || string.IsNullOrWhiteSpace(defaultRoot))
             {
                 return false;

@@ -20,11 +20,11 @@ namespace MvcVisionSystem
         private async Task StartImageQueueDetailRefreshAsync(
             IReadOnlyList<string> imagePaths,
             IReadOnlyDictionary<string, WpfImageQueueItem> itemLookup,
-            YoloImageReviewStatusService reviewStatus,
-            CData data,
+            WpfImageQualityReviewWorkflowService reviewWorkflow,
+            LabelingProjectData data,
             CancellationToken token)
         {
-            if (imagePaths == null || imagePaths.Count == 0 || itemLookup == null || reviewStatus == null)
+            if (imagePaths == null || imagePaths.Count == 0 || itemLookup == null || reviewWorkflow == null)
             {
                 return;
             }
@@ -46,7 +46,7 @@ namespace MvcVisionSystem
                             continue;
                         }
 
-                        detailTasks.Add(BuildImageQueueDetailResultAsync(imagePath, item, reviewStatus, data, token));
+                        detailTasks.Add(BuildImageQueueDetailResultAsync(imagePath, item, reviewWorkflow, data, token));
                     }
 
                     if (detailTasks.Count > 0)
@@ -90,15 +90,15 @@ namespace MvcVisionSystem
         private Task<ImageQueueDetailLoadResult> BuildImageQueueDetailResultAsync(
             string imagePath,
             WpfImageQueueItem item,
-            YoloImageReviewStatusService reviewStatus,
-            CData data,
+            WpfImageQualityReviewWorkflowService reviewWorkflow,
+            LabelingProjectData data,
             CancellationToken token)
         {
             return Task.Run(() =>
             {
                 try
                 {
-                    return ImageQueueDetailLoadResult.Success(item, BuildImageQueueDetail(imagePath, reviewStatus, data));
+                    return ImageQueueDetailLoadResult.Success(item, BuildImageQueueDetail(imagePath, reviewWorkflow, data));
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException))
                 {
@@ -193,10 +193,10 @@ namespace MvcVisionSystem
 
         private WpfImageQueueDetail BuildImageQueueDetail(
             string imagePath,
-            YoloImageReviewStatusService reviewStatus,
-            CData data)
+            WpfImageQualityReviewWorkflowService reviewWorkflow,
+            LabelingProjectData data)
         {
-            return WpfImageQueueDetailLoader.Build(imagePath, reviewStatus, data);
+            return WpfImageQueueDetailLoader.Build(imagePath, reviewWorkflow, data);
         }
 
         private void ApplyImageQueueDetail(WpfImageQueueItem item, WpfImageQueueDetail detail)
@@ -209,7 +209,7 @@ namespace MvcVisionSystem
             item.Dimensions = WpfImageQueueDetailLoader.FormatImageSize(detail.ImageSize);
             if (IsAnomalyDatasetPurpose())
             {
-                ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewStatus.GetOrCreate(item.ImagePath));
+                ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewWorkflowService.GetOrCreate(item.ImagePath));
                 return;
             }
             ApplyReviewStatusToItemCore(item, detail.ReviewStatus, refreshTrainingStepCompletion: false);

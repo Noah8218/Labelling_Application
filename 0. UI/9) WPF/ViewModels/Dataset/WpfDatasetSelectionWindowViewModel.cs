@@ -12,7 +12,7 @@ using System.Windows.Input;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfDatasetSelectionWindowViewModel : WpfObservableViewModel
+    public sealed class WpfDatasetSelectionWindowViewModel : WpfObservableViewModel, IDisposable
     {
         private static readonly Action NoOpCommand = () => { };
         private WpfDatasetSelectionItem selectedDataset;
@@ -22,6 +22,7 @@ namespace MvcVisionSystem
         private ICommand createNewCommand = new RelayCommand(NoOpCommand);
         private ICommand refreshCommand = new RelayCommand(NoOpCommand);
         private ICommand cancelCommand = new RelayCommand(NoOpCommand);
+        private bool disposed;
 
         public WpfDatasetSelectionWindowViewModel()
         {
@@ -107,6 +108,11 @@ namespace MvcVisionSystem
 
         public void ConfigureCommands(Action open, Action createNew, Action refresh, Action cancel)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             OpenCommand = new RelayCommand(open ?? NoOpCommand);
             CreateNewCommand = new RelayCommand(createNew ?? NoOpCommand);
             RefreshCommand = new RelayCommand(refresh ?? NoOpCommand);
@@ -115,7 +121,12 @@ namespace MvcVisionSystem
 
         public void LoadDatasets(string recipeRootPath, string currentRecipeName)
         {
-            Datasets.Clear();
+            if (disposed)
+            {
+                return;
+            }
+
+            ReleaseDatasetItems();
             IReadOnlyList<string> recipeNames = WpfProjectRecipeService.ListRecipeNames(recipeRootPath);
             foreach (string recipeName in recipeNames)
             {
@@ -130,6 +141,11 @@ namespace MvcVisionSystem
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             OnPropertyChanged(nameof(WindowTitleText));
             OnPropertyChanged(nameof(DatasetSourceRuleTitleText));
             OnPropertyChanged(nameof(DatasetSourceRuleDetailText));
@@ -148,6 +164,29 @@ namespace MvcVisionSystem
             RefreshStatusText();
         }
 
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
+            ReleaseDatasetItems();
+        }
+
+        private void ReleaseDatasetItems()
+        {
+            foreach (WpfDatasetSelectionItem item in Datasets)
+            {
+                item?.Dispose();
+            }
+
+            SelectedDataset = null;
+            Datasets.Clear();
+        }
+
         private void RefreshStatusText()
         {
             StatusText = Datasets.Count > 0
@@ -160,10 +199,10 @@ namespace MvcVisionSystem
             string manifestPath = WpfProjectRecipeService.BuildManifestPath(recipeRootPath, recipeName);
             string configPath = WpfProjectRecipeService.BuildConfigPath(recipeRootPath, recipeName);
             LabelingDatasetManifest manifest = TryReadManifest(manifestPath);
-            CData recipeData = TryReadRecipeConfig(configPath);
+            LabelingProjectData recipeData = TryReadRecipeConfig(configPath);
             string purposeKey = GetDatasetPurposeKey(manifest?.DatasetPurpose);
             string outputRootPath = FirstNonEmpty(manifest?.OutputRootPath, recipeData?.OutputRootPath);
-            string imageRootPath = FirstNonEmpty(manifest?.ImageRootPath, recipeData?.ProjectSettings?.PythonModel?.ImageRootPath);
+            string imageRootPath = FirstNonEmpty(manifest?.ImageRootPath, recipeData?.ProjectSettings?.ResolveImageRootPath());
             List<string> configClasses = recipeData?.ClassNamedList?
                 .Select(item => item?.Text)
                 .Where(name => !string.IsNullOrWhiteSpace(name))
@@ -207,7 +246,7 @@ namespace MvcVisionSystem
             }
         }
 
-        private static CData TryReadRecipeConfig(string configPath)
+        private static LabelingProjectData TryReadRecipeConfig(string configPath)
         {
             if (string.IsNullOrWhiteSpace(configPath) || !File.Exists(configPath))
             {
@@ -216,7 +255,7 @@ namespace MvcVisionSystem
 
             try
             {
-                CData data = SerializeHelper.FromXmlFile<CData>(configPath);
+                LabelingProjectData data = SerializeHelper.FromXmlFile<LabelingProjectData>(configPath);
                 data?.NormalizeOutputPaths();
                 return data;
             }
@@ -252,8 +291,10 @@ namespace MvcVisionSystem
             => string.Format(System.Globalization.CultureInfo.CurrentCulture, T(key), values ?? Array.Empty<object>());
     }
 
-    public sealed class WpfDatasetSelectionItem : WpfObservableViewModel
+    public sealed class WpfDatasetSelectionItem : WpfObservableViewModel, IDisposable
     {
+        private bool disposed;
+
         public WpfDatasetSelectionItem(
             string recipeName,
             string purposeKey,
@@ -332,6 +373,11 @@ namespace MvcVisionSystem
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             OnPropertyChanged(nameof(PurposeText));
             OnPropertyChanged(nameof(ToolTipText));
             OnPropertyChanged(nameof(StoragePathText));
@@ -340,6 +386,17 @@ namespace MvcVisionSystem
             OnPropertyChanged(nameof(OpenActionText));
             OnPropertyChanged(nameof(StatusText));
             OnPropertyChanged(nameof(CountText));
+        }
+
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
         }
 
         private static string T(string key) => OpenVisionLanguageService.T(key);

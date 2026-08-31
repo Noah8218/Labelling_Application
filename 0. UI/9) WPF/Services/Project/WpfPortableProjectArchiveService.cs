@@ -6,7 +6,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 
@@ -114,7 +113,7 @@ namespace MvcVisionSystem
                 throw new InvalidDataException("The Recipe does not contain VISION.xml.");
             }
 
-            CData data = SerializeHelper.FromXmlFile<CData>(configPath)
+            LabelingProjectData data = SerializeHelper.FromXmlFile<LabelingProjectData>(configPath)
                 ?? throw new InvalidDataException("VISION.xml could not be read.");
             string configuredDatasetRoot = Path.GetFullPath(data.OutputRootPath);
             if (!PathsEqual(configuredDatasetRoot, normalizedDatasetRoot))
@@ -245,7 +244,7 @@ namespace MvcVisionSystem
                     stagedDatasetRoot,
                     manifest.SourceDatasetRoot,
                     targetDatasetRoot);
-                CData importedData = ValidateImportedRecipe(
+                LabelingProjectData importedData = ValidateImportedRecipe(
                     stagedRecipeDirectory,
                     targetDatasetRoot,
                     manifest);
@@ -340,7 +339,7 @@ namespace MvcVisionSystem
                 }
 
                 using Stream stream = entry.Open();
-                string actualSha256 = ComputeSha256(stream);
+                string actualSha256 = HashingService.ComputeStreamSha256(stream, lowerCase: true);
                 if (!string.Equals(actualSha256, record.Sha256, StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidDataException("Project archive checksum mismatch: " + entryName);
@@ -388,7 +387,7 @@ namespace MvcVisionSystem
             }
         }
 
-        private static CData ValidateImportedRecipe(
+        private static LabelingProjectData ValidateImportedRecipe(
             string stagedRecipeDirectory,
             string targetDatasetRoot,
             WpfProjectArchiveManifest manifest)
@@ -399,7 +398,7 @@ namespace MvcVisionSystem
                 throw new InvalidDataException("Imported Recipe is missing VISION.xml.");
             }
 
-            CData data = SerializeHelper.FromXmlFile<CData>(configPath)
+            LabelingProjectData data = SerializeHelper.FromXmlFile<LabelingProjectData>(configPath)
                 ?? throw new InvalidDataException("Imported VISION.xml could not be deserialized.");
             if (!PathsEqual(data.OutputRootPath, targetDatasetRoot))
             {
@@ -540,7 +539,7 @@ namespace MvcVisionSystem
             string manifestPath,
             string recipeName,
             string datasetRoot,
-            CData data)
+            LabelingProjectData data)
         {
             if (!File.Exists(manifestPath))
             {
@@ -550,7 +549,7 @@ namespace MvcVisionSystem
             JObject document = JObject.Parse(File.ReadAllText(manifestPath));
             document["recipeName"] = recipeName;
             document["outputRootPath"] = datasetRoot;
-            document["imageRootPath"] = data.ProjectSettings?.PythonModel?.ImageRootPath ?? string.Empty;
+            document["imageRootPath"] = data.ProjectSettings?.ResolveImageRootPath() ?? string.Empty;
             document["dataYamlFilePath"] = data.DataYamlFilePath;
             File.WriteAllText(manifestPath, document.ToString(Formatting.Indented));
         }
@@ -690,7 +689,7 @@ namespace MvcVisionSystem
                 Kind = source.Kind,
                 Split = source.Split,
                 Length = info.Length,
-                Sha256 = ComputeSha256(stream)
+                Sha256 = HashingService.ComputeStreamSha256(stream, lowerCase: true)
             };
         }
 
@@ -710,7 +709,7 @@ namespace MvcVisionSystem
         }
 
         private static List<WpfProjectArchiveExternalReference> BuildExternalReferences(
-            CData data,
+            LabelingProjectData data,
             string datasetRoot)
         {
             var references = new List<WpfProjectArchiveExternalReference>();
@@ -720,7 +719,11 @@ namespace MvcVisionSystem
             AddExternalReference(references, "modelProjectRoot", python?.ProjectRootPath, datasetRoot);
             AddExternalReference(references, "modelClientScript", python?.ClientScriptPath, datasetRoot);
             AddExternalReference(references, "modelWeights", python?.WeightsPath, datasetRoot);
-            AddExternalReference(references, "imageRoot", python?.ImageRootPath, datasetRoot);
+            AddExternalReference(
+                references,
+                "imageRoot",
+                data.ProjectSettings?.ResolveImageRootPath(),
+                datasetRoot);
             AddExternalReference(references, "externalYoloDataYaml", external?.DataYamlFilePath, datasetRoot);
             return references;
         }
@@ -874,12 +877,6 @@ namespace MvcVisionSystem
             {
                 return false;
             }
-        }
-
-        private static string ComputeSha256(Stream stream)
-        {
-            using SHA256 sha = SHA256.Create();
-            return Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
         }
 
         private static string ResolveApplicationVersion()

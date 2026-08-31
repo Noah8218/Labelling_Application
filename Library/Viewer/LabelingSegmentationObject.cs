@@ -11,7 +11,7 @@ namespace MvcVisionSystem
         {
         }
 
-        public LabelingSegmentationObject(IEnumerable<Point> points, CClassItem classItem)
+        public LabelingSegmentationObject(IEnumerable<Point> points, LabelClass classItem)
         {
             Points = points?.ToList() ?? new List<Point>();
             ClassItem = classItem;
@@ -20,7 +20,7 @@ namespace MvcVisionSystem
 
         public string ClassName { get; set; } = string.Empty;
 
-        public CClassItem ClassItem { get; set; }
+        public LabelClass ClassItem { get; set; }
 
         public string ObjectId { get; set; } = string.Empty;
 

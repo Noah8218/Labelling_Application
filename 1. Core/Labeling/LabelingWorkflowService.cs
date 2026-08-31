@@ -10,107 +10,127 @@ namespace MvcVisionSystem._1._Core
 {
     public sealed class LabelingWorkflowService
     {
-        public void ApplySelectedClass(CClassItem classItem)
+        private readonly LabelingImageWorkspace imageWorkspace;
+
+        public LabelingWorkflowService(LabelingImageWorkspace imageWorkspace)
         {
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            this.imageWorkspace = imageWorkspace ?? throw new ArgumentNullException(nameof(imageWorkspace));
+        }
+
+        public void ApplySelectedClass(LabelClass classItem)
+        {
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             mainDisplay?.SetSelectedClass(classItem);
         }
 
         public IReadOnlyList<LabelingRoiListItem> GetMainRoiItems()
         {
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             return mainDisplay?.GetRoiListItems() ?? new List<LabelingRoiListItem>();
         }
 
         public int GetMainSelectedRoiListIndex()
         {
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             return mainDisplay?.SelectedAnnotationListIndex ?? -1;
         }
 
         public bool SelectMainRoiItem(int listIndex)
         {
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             return mainDisplay?.SelectAnnotationListItem(listIndex) == true;
         }
 
         public bool DeleteMainSelectedAnnotation()
         {
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             return mainDisplay?.DeleteSelectedAnnotation() == true;
         }
 
-        public bool CommitCurrentAnnotations(CViewer viewer, CData data, CSystem system)
+        public bool CommitCurrentAnnotations(AnnotationViewer viewer, LabelingProjectData data, ApplicationRuntimeState system)
+            => CommitCurrentAnnotations(viewer, CaptureCurrentImage(), data, system);
+
+        public bool CommitCurrentAnnotations(
+            AnnotationViewer viewer,
+            LabelingImageSnapshot activeImage,
+            LabelingProjectData data,
+            ApplicationRuntimeState system)
         {
             if (viewer == null)
             {
                 return false;
             }
 
-            bool saved = LabelingAnnotationPersistence.SaveCurrent(viewer.CurrentImage, viewer.RoiByClass, viewer.SegmentsByClass, data);
+            bool saved = LabelingAnnotationPersistence.SaveCurrent(
+                activeImage,
+                viewer.RoiByClass,
+                viewer.SegmentsByClass,
+                data);
             if (saved)
             {
-                LogAnnotationSaveReadable(data, CountRoiObjects(viewer.RoiByClass) + CountSegmentObjects(viewer.SegmentsByClass));
+                LogAnnotationSave(
+                    activeImage,
+                    data,
+                    CountRoiObjects(viewer.RoiByClass) + CountSegmentObjects(viewer.SegmentsByClass));
                 system?.UpdateData();
             }
 
             return saved;
         }
 
-        public bool CommitMainAnnotations(CData data, CSystem system)
+        public bool CommitMainAnnotations(LabelingProjectData data, ApplicationRuntimeState system)
         {
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
-            return CommitDisplayAnnotations(mainDisplay, data, system);
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
+            return CommitDisplayAnnotations(mainDisplay, CaptureCurrentImage(), data, system);
         }
 
-        public bool CommitDisplayAnnotations(DisplayLayerDocument display, CData data, CSystem system)
+        public bool CommitDisplayAnnotations(DisplayLayerDocument display, LabelingProjectData data, ApplicationRuntimeState system)
+            => CommitDisplayAnnotations(display, CaptureCurrentImage(), data, system);
+
+        public bool CommitDisplayAnnotations(
+            DisplayLayerDocument display,
+            LabelingImageSnapshot activeImage,
+            LabelingProjectData data,
+            ApplicationRuntimeState system)
         {
             if (display == null)
             {
                 return false;
             }
 
-            IReadOnlyDictionary<string, List<CRectangleObject>> rois = display.GetRoiByClass();
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> rois = display.GetRoiByClass();
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments = display.GetSegmentsByClass();
-            bool saved = LabelingAnnotationPersistence.SaveCurrent(display.GetCurrentImage(), rois, segments, data);
+            bool saved = LabelingAnnotationPersistence.SaveCurrent(activeImage, rois, segments, data);
             if (saved)
             {
-                LogAnnotationSaveReadable(data, CountRoiObjects(rois) + CountSegmentObjects(segments));
+                LogAnnotationSave(activeImage, data, CountRoiObjects(rois) + CountSegmentObjects(segments));
                 system?.UpdateData();
             }
 
             return saved;
         }
 
-        private static void LogAnnotationSave(CData data, int objectCount)
+        private static void LogAnnotationSave(
+            LabelingImageSnapshot activeImage,
+            LabelingProjectData data,
+            int objectCount)
         {
-            if (data == null)
+            if (activeImage == null || data == null)
             {
                 return;
             }
 
-            IReadOnlyList<string> labelPaths = YoloAnnotationService.GetTargetLabelPaths(data.LastSelectImageName, data);
+            IReadOnlyList<string> labelPaths = YoloAnnotationService.GetTargetLabelPaths(activeImage.ImageName, data);
             string pathText = labelPaths.Count == 0
                 ? "(저장 경로 없음)"
                 : string.Join(", ", labelPaths.Select(path => Path.GetFileName(path)));
-            AppLog.NORMAL($"라벨 저장 완료. 이미지:{data.LastSelectImageName}, 객체:{Math.Max(0, objectCount)}, 파일:{pathText}");
+            AppLog.NORMAL($"라벨 저장 완료. 이미지:{activeImage.ImageName}, 객체:{Math.Max(0, objectCount)}, 파일:{pathText}");
         }
 
-        private static void LogAnnotationSaveReadable(CData data, int objectCount)
-        {
-            if (data == null)
-            {
-                return;
-            }
+        private LabelingImageSnapshot CaptureCurrentImage()
+            => imageWorkspace.CaptureSnapshot();
 
-            IReadOnlyList<string> labelPaths = YoloAnnotationService.GetTargetLabelPaths(data.LastSelectImageName, data);
-            string pathText = labelPaths.Count == 0
-                ? "(저장 경로 없음)"
-                : string.Join(", ", labelPaths.Select(path => Path.GetFileName(path)));
-            AppLog.NORMAL($"라벨 저장 완료. 이미지:{data.LastSelectImageName}, 객체:{Math.Max(0, objectCount)}, 파일:{pathText}");
-        }
-
-        private static int CountRoiObjects(IReadOnlyDictionary<string, List<CRectangleObject>> rois)
+        private static int CountRoiObjects(IReadOnlyDictionary<string, List<AnnotationRectangleObject>> rois)
         {
             if (rois == null)
             {
@@ -136,14 +156,14 @@ namespace MvcVisionSystem._1._Core
                 .Count(item => item?.Points != null && item.Points.Count >= 3);
         }
 
-        public bool LoadSavedAnnotationsToMainDisplay(string imagePath, Size imageSize, CData data)
+        public bool LoadSavedAnnotationsToMainDisplay(string imagePath, Size imageSize, LabelingProjectData data)
         {
             if (data == null)
             {
                 return false;
             }
 
-            DisplayLayerDocument mainDisplay = CDisplayManager.GetMainDisplayOrNull();
+            DisplayLayerDocument mainDisplay = DisplayManager.GetMainDisplayOrNull();
             if (mainDisplay == null)
             {
                 return false;
@@ -168,9 +188,9 @@ namespace MvcVisionSystem._1._Core
 
             foreach (KeyValuePair<string, List<Rectangle>> annotation in annotations)
             {
-                CClassItem classItem = data.ClassNamedList
+                LabelClass classItem = data.ClassNamedList
                     .FirstOrDefault(item => string.Equals(item.Text, annotation.Key, System.StringComparison.OrdinalIgnoreCase))
-                    ?? new CClassItem { Text = annotation.Key, DrawColor = Color.LimeGreen };
+                    ?? new LabelClass { Text = annotation.Key, DrawColor = Color.LimeGreen };
 
                 mainDisplay.SetRoiRectangles(annotation.Value, classItem, reset: false);
             }

@@ -15,7 +15,7 @@ namespace MvcVisionSystem
         // Polygon completion and overlay refresh are grouped away from ROI rectangle synchronization.
         private void CompletePolygonAnnotation()
         {
-            CClassItem classItem = EnsureClassItem(FirstNonEmpty(GetSelectedClassName(), "Defect"));
+            LabelClass classItem = EnsureClassItem(FirstNonEmpty(GetSelectedClassName(), "Defect"));
             if (!polygonAnnotationService.TryComplete(classItem, activeImageSize, out LabelingSegmentationObject annotation, out string message))
             {
                 SetYoloCommandStatus(message, isBusy: false);

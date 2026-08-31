@@ -16,6 +16,7 @@ namespace MvcVisionSystem._1._Core
             IEnumerable<string> detectionModels)
         {
             settings ??= new PythonModelSettings();
+            PythonModelRuntimePathResolver.ApplyPathDefaults(settings);
             string engine = PythonModelSettings.NormalizeModelEngine(settings.ModelEngine);
             string engineText = FormatEngineName(engine);
             string adapterKey = settings.GetProtocolModelName();

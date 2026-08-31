@@ -42,7 +42,7 @@ namespace MvcVisionSystem
             IList<YoloWorkerSmokeCandidate> confirmedCandidates,
             string className,
             out string normalizedClassName,
-            CClassItem classItem = null)
+            LabelClass classItem = null)
         {
             normalizedClassName = NormalizeClassName(className);
             if (item == null)
@@ -81,7 +81,7 @@ namespace MvcVisionSystem
 
                     if (segment.ClassItem == null)
                     {
-                        segment.ClassItem = new CClassItem();
+                        segment.ClassItem = new LabelClass();
                     }
 
                     segment.ClassItem.Text = normalizedClassName;

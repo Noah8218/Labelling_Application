@@ -59,6 +59,24 @@ namespace OpenVisionLab
                 new DefaultCatalogMigration(
                     "동작: 열기 + Preview는 이 이미지와 레시피를 불러온 뒤 Pipeline에서 Preview를 실행합니다.",
                     "Action: Open + Preview loads this image and recipe, then runs preview in Pipeline.")
+            },
+            {
+                "WpfClassCatalog.Guide.Detail",
+                new DefaultCatalogMigration(
+                    "레시피의 클래스 이름/색상만 관리합니다. 저장 폴더는 데이터셋 홈에서 확인하세요.",
+                    "Manage only the recipe class names and colors. Check the storage folder in Dataset Home.")
+            },
+            {
+                "WpfClassCatalog.Action.Populated",
+                new DefaultCatalogMigration(
+                    "이름 추가/변경이 주 작업입니다. 색상은 필요할 때만 펼치세요.",
+                    "Adding or renaming is the main task. Expand colors only when needed.")
+            },
+            {
+                "WpfClassCatalog.IndexContract",
+                new DefaultCatalogMigration(
+                    "숫자는 저장·학습에 쓰는 YOLO 인덱스입니다. 이름 변경은 번호를 유지하고, 추가·삭제는 스키마를 바꿉니다. 캔버스 1~9는 그릴 클래스 선택 단축키입니다.",
+                    "The number is the YOLO index used for storage and training. Renaming keeps the number; adding or removing changes the schema. Canvas keys 1–9 select the drawing class.")
             }
         };
         private static bool loaded;

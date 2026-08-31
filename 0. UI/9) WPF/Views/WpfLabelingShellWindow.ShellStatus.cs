@@ -184,7 +184,6 @@ namespace MvcVisionSystem
             SetThemeBrush("DetectionOverlaySelectedTextBrush", "#FFFFFF");
             SetThemeBrush("DetectionOverlayDetailTextBrush", "#C9D4E2");
 
-            ThemeToggleText.Text = theme == ShellTheme.Dark ? "테마: 다크" : "테마: 라이트";
             if (FindResource("AppBackgroundBrush") is MediaBrush backgroundBrush)
             {
                 Background = backgroundBrush;

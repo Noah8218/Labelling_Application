@@ -93,7 +93,7 @@ namespace MvcVisionSystem
             }
 
             string className = WpfObjectReviewEditService.NormalizeClassName(ObjectReviewViewModel?.SelectedClassName);
-            CClassItem classItem = EnsureClassItem(className);
+            LabelClass classItem = EnsureClassItem(className);
             WpfAnnotationHistorySnapshot beforeChange = CaptureAnnotationHistory("Change object class");
             if (!WpfObjectReviewEditService.TryApplyClass(
                 item,

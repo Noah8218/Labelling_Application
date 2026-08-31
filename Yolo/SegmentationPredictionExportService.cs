@@ -21,6 +21,7 @@ namespace MvcVisionSystem.Yolo
             string split = "test")
         {
             settings ??= new PythonModelSettings();
+            PythonModelRuntimePathResolver.ApplyPathDefaults(settings);
             string normalizedAdapter = NormalizeAdapterKey(adapterKey);
             return new SegmentationPredictionExportRequest
             {

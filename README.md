@@ -117,10 +117,18 @@ flowchart LR
 제품 버전의 단일 기준은 저장소 루트 `Directory.Build.props`의
 `VersionPrefix`입니다. 이 값에서 제품 버전, 어셈블리/파일 버전, self-contained
 패키지 폴더, release manifest, CI artifact 이름을 일관되게 생성하고,
-사용자에게 영향을 주는 변경은 `RELEASE_NOTES.md`에 기록합니다.
+사용자에게 영향을 주는 변경은 `RELEASE_NOTES.md`에 기록합니다. 이 저장소는
+실제 검증된 변경을 버전별 checkpoint로 계속 갱신합니다.
 
-- 현재 소스 버전: `0.2.1` 패치 후보
-- 이전 Public 버전: `0.2.0`
+- 현재 소스 버전: `0.3.0` MINOR 후보 (2026-08-31)
+- 이전 Public 버전: `0.2.1`
+- 최근 버전 기록:
+  - `0.3.0` (2026-08-31): 통합 Studio workflow와 WPF review owner 구조를
+    정리하고 저장·검수 동작을 보존했습니다.
+  - `0.2.1` (2026-08-25): 최소 WPF workspace와 기존 annotation 동작을
+    호환 가능한 PATCH 후보로 정리했습니다.
+  - `0.2.0` (2026-08-24): bounded WPF presentation과 localization 후보를
+    Public source에 반영했습니다.
 - 일반 커밋은 버전을 올리지 않으며, 호환 가능한 버그 수정은 PATCH, 호환 가능한
   기능 추가는 MINOR, 호환성을 깨는 변경은 MAJOR로 관리합니다.
 - 이미 공개된 버전의 내용은 수정하지 않고 다음 버전으로 기록합니다. GitHub의
@@ -153,7 +161,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x6
 .\scripts\start-labeling-workbench.ps1 -AppMode Publish
 ```
 
-기본 릴리스는 `artifacts\publish\Release\win-x64\0.2.1`에 생성되는
+기본 릴리스는 `artifacts\publish\Release\win-x64\0.3.0`에 생성되는
 self-contained Windows x64 번들입니다. `release-manifest.json`과
 `publish-manifest.txt`에는 소스 커밋, 빌드 식별 정보, 전체 payload의
 SHA-256이 기록됩니다. 기존 패키지는 다음 명령으로 변경 없이 다시 검증할 수 있습니다.
@@ -163,7 +171,7 @@ SHA-256이 기록됩니다. 기존 패키지는 다음 명령으로 변경 없�
 `OpenVisionLab.LabelingStudio.exe`를 실행합니다.
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release -ReleaseVersion 0.2.1 -VerifyOnly
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\publish-win-x64.ps1 -Configuration Release -ReleaseVersion 0.3.0 -VerifyOnly
 ```
 
 ## 샘플 데이터
@@ -191,7 +199,7 @@ dotnet build .\OpenVisionLab.LabelingStudio.csproj -c Release
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\scripts\publish-win-x64.ps1 -Configuration Release
-& .\artifacts\publish\Release\win-x64\0.2.1\OpenVisionLab.LabelingStudio.exe `
+& .\artifacts\publish\Release\win-x64\0.3.0\OpenVisionLab.LabelingStudio.exe `
   --environment-self-test --json
 ```
 
@@ -221,7 +229,7 @@ GitHub Actions의 `.github/workflows/ci.yml`은 다음을 확인합니다.
 - README 필수 섹션
 - .NET Release 제품 빌드
 - versioned self-contained `win-x64` publish와 payload 검증
-- `openvisionlab-labeling-studio-0.2.1-win-x64` artifact 업로드
+- `openvisionlab-labeling-studio-0.3.0-win-x64` artifact 업로드
 - `git diff --check`
 
 ## 문서
@@ -239,7 +247,7 @@ GitHub Actions의 `.github/workflows/ci.yml`은 다음을 확인합니다.
 ## Roadmap
 
 1. 현재 소스의 빌드·260개 전체 회귀·framework-dependent/self-contained Release 게시·첫 실행 감사가 완료됐습니다. 로컬 게시 가능성은 확인됐지만 상용 릴리스 준비 완료를 의미하지 않습니다.
-2. SDK `8.0.421`, 제품 `0.2.1` 패치 후보, 결정적 self-contained 패키지, 전체 payload SHA-256, LICENSE·NOTICE·제3자 고지를 포함한 P0-B1은 완료됐습니다.
+2. SDK `8.0.421`, 제품 `0.2.1`에서 완료된 P0-B1 계약을 보존하며, 결정적 self-contained 패키지·전체 payload SHA-256·LICENSE·NOTICE·제3자 고지를 유지합니다.
 3. P0-B2의 명시적 환경 self-test, 구조화된 시작 진단, 제한된 로그 보존, 개인정보 안전 support bundle export는 완료됐습니다.
 4. 이식 가능한 프로젝트 아카이브와 한 이미지 제한형 비정상 종료 복구 저널은 구현 완료됐습니다. 승인된 깨끗한 Windows 환경과 설치/서명 결정이 제공되면 설치·업그레이드·제거를 검증합니다.
 5. 승인된 생산 데이터와 목표 하드웨어가 제공되면 정확도·장기 안정성·takt time을 별도 현장 채택 기준으로 검증합니다.

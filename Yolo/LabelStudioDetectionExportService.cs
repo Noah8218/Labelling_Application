@@ -12,17 +12,10 @@ namespace MvcVisionSystem.Yolo
     {
         private const string FromName = "bbox";
         private const string ToName = "image";
-        private static readonly string[] DatasetModes =
-        {
-            YoloDatasetSplitService.TrainMode,
-            YoloDatasetSplitService.ValidMode,
-            YoloDatasetSplitService.TestMode
-        };
-
         private static readonly string[] ImageExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
         public static LabelStudioDetectionExportResult ExportDataset(
-            CData data,
+            LabelingProjectData data,
             string outputPath,
             IEnumerable<string> splits = null)
         {
@@ -49,7 +42,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         public static LabelStudioDetectionExportResult BuildTasks(
-            CData data,
+            LabelingProjectData data,
             IEnumerable<string> splits,
             out List<LabelStudioDetectionTask> tasks)
         {
@@ -116,7 +109,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static List<LabelStudioDetectionResult> LoadResults(
-            CData data,
+            LabelingProjectData data,
             string labelPath,
             Size imageSize,
             int taskId,
@@ -171,16 +164,16 @@ namespace MvcVisionSystem.Yolo
             return Math.Round(pixels / (double)totalPixels * 100D, 6);
         }
 
-        private static int CountExportableClasses(CData data)
+        private static int CountExportableClasses(LabelingProjectData data)
             => data.ClassNamedList?
                 .Count(item => !string.IsNullOrWhiteSpace(item?.Text)) ?? 0;
 
         private static IReadOnlyList<string> NormalizeSplits(IEnumerable<string> splits)
         {
             var result = new List<string>();
-            foreach (string split in splits ?? DatasetModes)
+            foreach (string split in splits ?? YoloDatasetSplitService.StandardModes)
             {
-                string normalized = NormalizeSplit(split);
+                string normalized = YoloDatasetSplitService.NormalizeStandardSplit(split);
                 if (!string.IsNullOrWhiteSpace(normalized)
                     && !result.Contains(normalized, StringComparer.OrdinalIgnoreCase))
                 {
@@ -188,20 +181,7 @@ namespace MvcVisionSystem.Yolo
                 }
             }
 
-            return result.Count > 0 ? result : DatasetModes.ToList();
-        }
-
-        private static string NormalizeSplit(string split)
-        {
-            foreach (string mode in DatasetModes)
-            {
-                if (string.Equals(split, mode, StringComparison.OrdinalIgnoreCase))
-                {
-                    return mode;
-                }
-            }
-
-            return string.Empty;
+            return result.Count > 0 ? result : YoloDatasetSplitService.StandardModes.ToList();
         }
 
         private static IEnumerable<string> EnumerateImageFiles(string imageDirectory)

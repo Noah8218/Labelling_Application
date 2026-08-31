@@ -10,23 +10,26 @@ namespace MvcVisionSystem
             summary ??= new AnomalyImageReviewSummary();
             bool hasImages = summary.TotalImageCount > 0;
             bool hasUnreviewed = summary.UnreviewedImageCount > 0;
-            string status = !hasImages
-                ? "\uB300\uAE30"
+            string statusKey = !hasImages
+                ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting"
                 : hasUnreviewed
-                    ? "\uAC80\uD1A0 \uD544\uC694"
+                    ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.ReviewNeeded"
                     : summary.AbnormalImageCount > 0
-                        ? "\uBD84\uB958 \uC644\uB8CC"
-                        : "\uC815\uC0C1 \uC644\uB8CC";
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Classified"
+                        : "WpfLearningWorkflow.DatasetDashboard.Metric.State.NormalComplete";
 
-            return new WpfDatasetDashboardMetricItem(
-                "\uC815\uC0C1/\uC774\uC0C1",
+            return WpfDatasetDashboardLocalizationService.CreateMetric(
+                "WpfLearningWorkflow.DatasetDashboard.Metric.AnomalyReview.Title",
                 $"{summary.NormalImageCount}/{summary.AbnormalImageCount}/{summary.UnreviewedImageCount}",
-                $"\uC815\uC0C1 {summary.NormalImageCount}\uC7A5, \uC774\uC0C1 {summary.AbnormalImageCount}\uC7A5, \uBBF8\uAC80\uD1A0 {summary.UnreviewedImageCount}\uC7A5",
-                status,
+                "WpfLearningWorkflow.DatasetDashboard.Metric.AnomalyReview.Detail",
+                statusKey,
                 hasUnreviewed ? PackIconMaterialKind.AlertCircleOutline : PackIconMaterialKind.CheckCircleOutline,
                 isProblem: hasImages && hasUnreviewed,
                 isWarning: false,
-                actionKind: WpfDatasetDashboardActionKind.OpenLabelingProgress);
+                actionKind: WpfDatasetDashboardActionKind.OpenLabelingProgress,
+                summary.NormalImageCount,
+                summary.AbnormalImageCount,
+                summary.UnreviewedImageCount);
         }
 
         public static string BuildReviewStateIssue(AnomalyImageReviewSummary summary)

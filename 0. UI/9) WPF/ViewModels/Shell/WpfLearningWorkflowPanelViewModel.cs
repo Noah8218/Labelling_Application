@@ -4,22 +4,29 @@ using OpenVisionLab.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfLearningWorkflowPanelViewModel : WpfObservableViewModel
+    public sealed class WpfLearningWorkflowPanelViewModel : WpfObservableViewModel, IDisposable
     {
         private static readonly Action NoOpCommand = () => { };
         private static readonly Action<object> NoOpSelectionCommand = _ => { };
         private static readonly Action<WpfYoloTrainingWorkflowStepItem> NoOpTrainingStepCommand = _ => { };
         private static readonly Action<WpfFirstRunChecklistItem> NoOpFirstRunSamplePathCommand = _ => { };
         private static readonly Action<WpfDatasetDashboardMetricItem> NoOpDatasetDashboardMetricCommand = _ => { };
-        private const string DefaultTrainingResultComparisonText = "\uD559\uC2B5 \uACB0\uACFC \uBE44\uAD50: \uC544\uC9C1 \uBE44\uAD50\uD560 \uD559\uC2B5 \uACB0\uACFC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.";
-
         private static string T(string key) => OpenVisionLanguageService.T(key);
+
+        private static string Format(string key, params object[] arguments)
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                T(key),
+                arguments ?? Array.Empty<object>());
+        }
 
         private WpfLearningModeItem selectedMode;
         private WpfLearningModeItem selectedDatasetPurposeMode;
@@ -43,12 +50,12 @@ namespace MvcVisionSystem
         private string modeDetailText = string.Empty;
         private string stepDetailText = string.Empty;
         private string toolDetailText = string.Empty;
-        private string trainingChecklistStatusText = "\uB370\uC774\uD130\uC14B: \uC810\uAC80 \uC804";
-        private string trainingChecklistDetailText = "\uB77C\uBCA8\uC744 \uC800\uC7A5\uD55C \uB4A4 \uD559\uC2B5/\uBAA8\uB378 \uC13C\uD130\uC5D0\uC11C \uC0C8\uB85C\uACE0\uCE68\uD558\uBA74 \uD559\uC2B5 \uAC00\uB2A5 \uC5EC\uBD80\uB97C \uD655\uC778\uD569\uB2C8\uB2E4.";
-        private string trainingChecklistActionText = "\uD544\uC694\uD55C \uD56D\uBAA9\uC774 \uBCF4\uC774\uBA74 \uC544\uB798 \uD574\uACB0 \uBC84\uD2BC\uC73C\uB85C \uBC14\uB85C \uC774\uB3D9\uD569\uB2C8\uB2E4.";
-        private string datasetDashboardStatusText = "\uB370\uC774\uD130\uC14B \uC0C1\uD0DC: \uC810\uAC80 \uC804";
-        private string datasetDashboardSummaryText = "\uB370\uC774\uD130\uC14B \uC810\uAC80\uC744 \uC2E4\uD589\uD558\uBA74 \uC774\uBBF8\uC9C0, \uB77C\uBCA8, \uBD84\uD560, \uD074\uB798\uC2A4 \uC0C1\uD0DC\uAC00 \uD45C\uC2DC\uB429\uB2C8\uB2E4.";
-        private string datasetDashboardActionText = "\uBA3C\uC800 \uB77C\uBCA8\uC744 \uC800\uC7A5\uD55C \uB4A4 \uB370\uC774\uD130\uC14B \uC810\uAC80\uC744 \uB204\uB974\uC138\uC694.";
+        private string trainingChecklistStatusText = T("WpfLearningWorkflow.TrainingChecklist.Status.Initial");
+        private string trainingChecklistDetailText = T("WpfLearningWorkflow.TrainingChecklist.Detail.Initial");
+        private string trainingChecklistActionText = WpfTrainingChecklistLocalizationService.CreateInitialAction().ActionText;
+        private string datasetDashboardStatusText = T("WpfLearningWorkflow.DatasetDashboard.Status.Before");
+        private string datasetDashboardSummaryText = T("WpfLearningWorkflow.DatasetDashboard.Summary.Before");
+        private string datasetDashboardActionText = T("WpfLearningWorkflow.DatasetDashboardAction.Initial");
         private string externalEvaluationDataAuditStatusText = "\uC678\uBD80 \uD3C9\uAC00 \uD3F4\uB354\uB97C \uB300\uC870\uD558\uBA74 \uD559\uC2B5 \uB370\uC774\uD130\uC640\uC758 \uC911\uBCF5\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.";
         private string externalEvaluationDataAuditDetailText = string.Empty;
         private string externalEvaluationDataAuditPathText = string.Empty;
@@ -56,20 +63,27 @@ namespace MvcVisionSystem
         private string externalYoloDatasetIntakeStatusText = "\uC678\uBD80 YOLO data.yaml: \uC120\uD0DD \uC548 \uD568";
         private string externalYoloDatasetIntakeDetailText = "\uB0B4\uBD80 \uB77C\uBCA8\uB9C1 \uB370\uC774\uD130\uC640 \uBD84\uB9AC\uB41C \uC6D0\uBCF8 YOLO \uB370\uC774\uD130\uC14B\uC744 \uAC80\uC99D\uD55C \uB4A4 \uB2E4\uC74C \uD559\uC2B5\uC5D0\uB9CC \uC0AC\uC6A9\uD569\uB2C8\uB2E4.";
         private string externalYoloDatasetIntakePathText = string.Empty;
-        private string objectDetectionMvpNextActionText = "\uAC1D\uCCB4\uD0D0\uC9C0 MVP: \uB370\uC774\uD130\uC14B \uC810\uAC80 \uC804";
-        private string modelReplacementStatusText = "\uBAA8\uB378 \uAD50\uCCB4: \uB370\uC774\uD130\uC14B \uC810\uAC80 \uC804";
-        private string modelReplacementDetailText = "\uD559\uC2B5 \uD6C4 \uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0 \uACB0\uACFC\uB85C \uAE30\uC874 \uBAA8\uB378 \uAD50\uCCB4 \uC5EC\uBD80\uB97C \uD310\uB2E8\uD569\uB2C8\uB2E4.";
-        private string trainingHistoryText = "\uCD5C\uADFC \uD559\uC2B5 \uC774\uB825: \uC544\uC9C1 \uC5C6\uC2B5\uB2C8\uB2E4.";
-        private string trainingResultComparisonSummaryText = DefaultTrainingResultComparisonText;
-        private string trainingResultComparisonText = DefaultTrainingResultComparisonText;
-        private string trainingModelAdoptionDecisionText = "\uAD50\uCCB4 \uD310\uB2E8: \uD559\uC2B5 \uACB0\uACFC \uBE44\uAD50 \uC804";
-        private string trainingModelLifecycleCurrentText = "\uC5C6\uC74C";
-        private string trainingModelLifecycleCandidateText = "\uD559\uC2B5 \uACB0\uACFC \uC5C6\uC74C";
-        private string trainingModelLifecycleDecisionText = "\uD559\uC2B5 \uACB0\uACFC \uBE44\uAD50 \uC804";
-        private string trainingModelLifecycleNextActionText = "\uB370\uC774\uD130\uC14B \uC810\uAC80 \uD6C4 \uD559\uC2B5\uC744 \uC2DC\uC791\uD558\uC138\uC694.";
-        private string runModelComparisonActionText = "\uBAA8\uB378 \uBE44\uAD50";
-        private string runModelComparisonToolTipText = "\uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0\uB85C \uAE30\uC874 \uBAA8\uB378\uACFC \uC0C8 \uD559\uC2B5 \uBAA8\uB378\uC744 \uBE44\uAD50";
-        private string modelComparisonBasisText = "\uBE44\uAD50 \uAE30\uC900: \uB370\uC774\uD130\uC14B \uC810\uAC80 \uD6C4 \uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0 \uC218\uAC00 \uD45C\uC2DC\uB429\uB2C8\uB2E4.";
+        private string objectDetectionMvpNextActionText = T("WpfLearningWorkflow.ObjectDetectionMvpNextAction.Empty");
+        private string modelReplacementStatusText = WpfModelReplacementLocalizationService.CreateInitial().StatusText;
+        private string modelReplacementDetailText = WpfModelReplacementLocalizationService.CreateInitial().DetailText;
+        private string trainingHistoryText = string.Empty;
+        private string trainingResultComparisonSummaryText = string.Empty;
+        private string trainingResultComparisonText = string.Empty;
+        private string trainingModelAdoptionDecisionText = string.Empty;
+        private string trainingModelLifecycleCurrentText = T("WpfLearningWorkflow.TrainingModelLifecycle.Current.Initial");
+        private string trainingModelLifecycleCandidateText = T("WpfLearningWorkflow.TrainingModelLifecycle.Candidate.Initial");
+        private string trainingModelLifecycleDecisionText = T("WpfLearningWorkflow.TrainingModelLifecycle.Decision.Initial");
+        private string trainingModelLifecycleNextActionText = T("WpfLearningWorkflow.TrainingModelLifecycle.Next.Initial");
+        private string runModelComparisonActionText = string.Empty;
+        private string runModelComparisonToolTipText = string.Empty;
+        private string modelComparisonBasisText = string.Empty;
+        private string trainingHistorySourceText = string.Empty;
+        private string trainingResultComparisonSummarySourceText = string.Empty;
+        private string trainingResultComparisonSourceText = string.Empty;
+        private string trainingModelAdoptionDecisionSourceText = string.Empty;
+        private string runModelComparisonActionSourceText = string.Empty;
+        private string runModelComparisonToolTipSourceText = string.Empty;
+        private string modelComparisonBasisSourceText = string.Empty;
         private bool isRunModelComparisonEnabled = true;
         private WpfYoloTrainingWorkflowStepItem currentYoloTrainingStep;
         private string currentYoloTrainingStepTitleText = string.Empty;
@@ -101,10 +115,26 @@ namespace MvcVisionSystem
         private ICommand clearExternalYoloDatasetCommand = new RelayCommand(NoOpCommand);
         private ICommand templateCurrentImageCommand = new RelayCommand(NoOpCommand);
         private ICommand templateBatchCommand = new RelayCommand(NoOpCommand);
+        private WpfTrainingChecklistLocalizationSnapshot trainingChecklistLocalizationSnapshot;
+        private WpfTrainingChecklistActionLocalizationSnapshot trainingChecklistActionLocalizationSnapshot;
+        private WpfModelReplacementLocalizationSnapshot modelReplacementLocalizationSnapshot;
+        private WpfTrainingModelLifecycleLocalizationSnapshot trainingModelLifecycleLocalizationSnapshot;
+        private WpfTrainingComparisonLocalizationSnapshot trainingComparisonLocalizationSnapshot;
+        private WpfDatasetDashboardLocalizationSnapshot datasetDashboardLocalizationSnapshot;
+        private bool refreshingTrainingChecklistLocalization;
+        private bool refreshingModelReplacementLocalization;
+        private bool refreshingTrainingModelLifecycleLocalization;
+        private bool refreshingTrainingComparisonLocalization;
+        private bool disposed;
 
         public WpfLearningWorkflowPanelViewModel()
         {
+            modelReplacementLocalizationSnapshot = WpfModelReplacementLocalizationService.CreateInitial();
+            trainingModelLifecycleLocalizationSnapshot = WpfTrainingModelLifecycleLocalizationService.CreateInitial();
+            trainingComparisonLocalizationSnapshot = WpfTrainingComparisonLocalizationService.CreateInitial();
             OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
+
+            SetTrainingComparisonLocalization(trainingComparisonLocalizationSnapshot);
 
             LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.LabelingBasics, "\uB77C\uBCA8\uB9C1", PackIconMaterialKind.SchoolOutline, "\uC815\uB2F5 \uB77C\uBCA8\uC744 \uADF8\uB9AC\uB294 \uD750\uB984"));
             LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.ObjectDetection, "\uAC1D\uCCB4 \uD0D0\uC9C0", PackIconMaterialKind.ShapeSquareRoundedPlus, "\uBC15\uC2A4 \uB77C\uBCA8\uACFC \uBAA8\uB378 \uD6C4\uBCF4 \uAC80\uD1A0"));
@@ -300,12 +330,16 @@ namespace MvcVisionSystem
             SelectedTool = SelectableAnnotationTools.FirstOrDefault();
             SelectedStep = LearningSteps.FirstOrDefault();
             SetAnnotationHistoryState(canUndo: false, canRedo: false, undoActionName: string.Empty, redoActionName: string.Empty);
+            SetTrainingChecklistLocalization(WpfTrainingChecklistLocalizationService.CreateInitial());
+            SetTrainingChecklistActionLocalization(WpfTrainingChecklistLocalizationService.CreateInitialAction());
+            WpfDatasetDashboardLocalizationSnapshot initialDashboard = WpfDatasetDashboardLocalizationService.CreateInitial();
             SetDatasetDashboard(
-                datasetDashboardStatusText,
-                datasetDashboardSummaryText,
+                initialDashboard.StatusText,
+                initialDashboard.SummaryText,
                 datasetDashboardActionText,
                 BuildInitialDatasetDashboardMetrics(),
-                new[] { "\uC810\uAC80 \uC804: \uB370\uC774\uD130\uC14B \uC810\uAC80\uC744 \uC2E4\uD589\uD558\uBA74 \uBB38\uC81C \uD56D\uBAA9\uC774 \uD45C\uC2DC\uB429\uB2C8\uB2E4." });
+                initialDashboard.IssueItems,
+                initialDashboard);
         }
 
         public string ViewName => nameof(WpfLearningWorkflowPanel);
@@ -519,19 +553,43 @@ namespace MvcVisionSystem
         public string TrainingChecklistStatusText
         {
             get => trainingChecklistStatusText;
-            set => SetProperty(ref trainingChecklistStatusText, value ?? string.Empty);
+            set
+            {
+                if (!refreshingTrainingChecklistLocalization)
+                {
+                    trainingChecklistLocalizationSnapshot = null;
+                }
+
+                SetProperty(ref trainingChecklistStatusText, value ?? string.Empty);
+            }
         }
 
         public string TrainingChecklistDetailText
         {
             get => trainingChecklistDetailText;
-            set => SetProperty(ref trainingChecklistDetailText, value ?? string.Empty);
+            set
+            {
+                if (!refreshingTrainingChecklistLocalization)
+                {
+                    trainingChecklistLocalizationSnapshot = null;
+                }
+
+                SetProperty(ref trainingChecklistDetailText, value ?? string.Empty);
+            }
         }
 
         public string TrainingChecklistActionText
         {
             get => trainingChecklistActionText;
-            set => SetProperty(ref trainingChecklistActionText, value ?? string.Empty);
+            set
+            {
+                if (!refreshingTrainingChecklistLocalization)
+                {
+                    trainingChecklistActionLocalizationSnapshot = null;
+                }
+
+                SetProperty(ref trainingChecklistActionText, value ?? string.Empty);
+            }
         }
 
         public string DatasetDashboardStatusText
@@ -550,6 +608,39 @@ namespace MvcVisionSystem
         {
             get => datasetDashboardActionText;
             set => SetProperty(ref datasetDashboardActionText, value ?? string.Empty);
+        }
+
+        public void SetTrainingChecklistLocalization(WpfTrainingChecklistLocalizationSnapshot localization)
+        {
+            trainingChecklistLocalizationSnapshot = localization;
+            refreshingTrainingChecklistLocalization = true;
+            try
+            {
+                TrainingChecklistStatusText = localization?.StatusText ?? string.Empty;
+                TrainingChecklistDetailText = localization?.DetailText ?? string.Empty;
+            }
+            finally
+            {
+                refreshingTrainingChecklistLocalization = false;
+            }
+
+            trainingChecklistLocalizationSnapshot = localization;
+        }
+
+        public void SetTrainingChecklistActionLocalization(WpfTrainingChecklistActionLocalizationSnapshot localization)
+        {
+            trainingChecklistActionLocalizationSnapshot = localization;
+            refreshingTrainingChecklistLocalization = true;
+            try
+            {
+                TrainingChecklistActionText = localization?.ActionText ?? string.Empty;
+            }
+            finally
+            {
+                refreshingTrainingChecklistLocalization = false;
+            }
+
+            trainingChecklistActionLocalizationSnapshot = localization;
         }
 
         public string ExternalEvaluationDataAuditStatusText
@@ -597,79 +688,230 @@ namespace MvcVisionSystem
         public string ModelReplacementStatusText
         {
             get => modelReplacementStatusText;
-            set => SetProperty(ref modelReplacementStatusText, value ?? string.Empty);
+            set
+            {
+                if (!refreshingModelReplacementLocalization)
+                {
+                    modelReplacementLocalizationSnapshot = null;
+                }
+
+                SetProperty(ref modelReplacementStatusText, value ?? string.Empty);
+            }
         }
 
         public string ModelReplacementDetailText
         {
             get => modelReplacementDetailText;
-            set => SetProperty(ref modelReplacementDetailText, value ?? string.Empty);
+            set
+            {
+                if (!refreshingModelReplacementLocalization)
+                {
+                    modelReplacementLocalizationSnapshot = null;
+                }
+
+                SetProperty(ref modelReplacementDetailText, value ?? string.Empty);
+            }
         }
 
         public string TrainingHistoryText
         {
             get => trainingHistoryText;
-            set => SetProperty(ref trainingHistoryText, value ?? string.Empty);
+            set
+            {
+                if (!refreshingTrainingComparisonLocalization)
+                {
+                    trainingHistorySourceText = value ?? string.Empty;
+                    trainingComparisonLocalizationSnapshot = null;
+                }
+
+                SetProperty(
+                    ref trainingHistoryText,
+                    string.IsNullOrWhiteSpace(value)
+                        ? WpfTrainingComparisonLocalizationService.CreateInitial().HistoryText
+                        : value);
+            }
         }
 
         public string TrainingResultComparisonText
         {
             get => trainingResultComparisonText;
-            set => SetProperty(ref trainingResultComparisonText, string.IsNullOrWhiteSpace(value) ? DefaultTrainingResultComparisonText : value);
+            set
+            {
+                if (!refreshingTrainingComparisonLocalization)
+                {
+                    trainingResultComparisonSourceText = value ?? string.Empty;
+                    trainingComparisonLocalizationSnapshot = null;
+                }
+
+                SetProperty(
+                    ref trainingResultComparisonText,
+                    string.IsNullOrWhiteSpace(value)
+                        ? WpfTrainingComparisonLocalizationService.CreateInitial().ComparisonText
+                        : value);
+            }
         }
 
         public string TrainingResultComparisonSummaryText
         {
             get => trainingResultComparisonSummaryText;
-            set => SetProperty(ref trainingResultComparisonSummaryText, string.IsNullOrWhiteSpace(value) ? DefaultTrainingResultComparisonText : value);
+            set
+            {
+                if (!refreshingTrainingComparisonLocalization)
+                {
+                    trainingResultComparisonSummarySourceText = value ?? string.Empty;
+                    trainingComparisonLocalizationSnapshot = null;
+                }
+
+                SetProperty(
+                    ref trainingResultComparisonSummaryText,
+                    string.IsNullOrWhiteSpace(value)
+                        ? WpfTrainingComparisonLocalizationService.CreateInitial().SummaryText
+                        : value);
+            }
         }
 
         public string TrainingModelAdoptionDecisionText
         {
             get => trainingModelAdoptionDecisionText;
-            set => SetProperty(ref trainingModelAdoptionDecisionText, string.IsNullOrWhiteSpace(value) ? "\uAD50\uCCB4 \uD310\uB2E8: \uD559\uC2B5 \uACB0\uACFC \uBE44\uAD50 \uC804" : value);
+            set
+            {
+                if (!refreshingTrainingComparisonLocalization)
+                {
+                    trainingModelAdoptionDecisionSourceText = value ?? string.Empty;
+                    trainingComparisonLocalizationSnapshot = null;
+                }
+
+                SetProperty(
+                    ref trainingModelAdoptionDecisionText,
+                    string.IsNullOrWhiteSpace(value)
+                        ? WpfTrainingComparisonLocalizationService.CreateInitial().AdoptionDecisionText
+                        : value);
+            }
         }
 
         public string TrainingModelLifecycleCurrentText
         {
             get => trainingModelLifecycleCurrentText;
-            private set => SetProperty(ref trainingModelLifecycleCurrentText, string.IsNullOrWhiteSpace(value) ? "\uC5C6\uC74C" : value);
+            private set
+            {
+                if (!refreshingTrainingModelLifecycleLocalization)
+                {
+                    trainingModelLifecycleLocalizationSnapshot = null;
+                }
+
+                SetProperty(ref trainingModelLifecycleCurrentText, string.IsNullOrWhiteSpace(value) ? T("WpfLearningWorkflow.TrainingModelLifecycle.Current.Initial") : value);
+            }
         }
 
         public string TrainingModelLifecycleCandidateText
         {
             get => trainingModelLifecycleCandidateText;
-            private set => SetProperty(ref trainingModelLifecycleCandidateText, string.IsNullOrWhiteSpace(value) ? "\uD559\uC2B5 \uACB0\uACFC \uC5C6\uC74C" : value);
+            private set
+            {
+                if (!refreshingTrainingModelLifecycleLocalization)
+                {
+                    trainingModelLifecycleLocalizationSnapshot = null;
+                }
+
+                SetProperty(ref trainingModelLifecycleCandidateText, string.IsNullOrWhiteSpace(value) ? T("WpfLearningWorkflow.TrainingModelLifecycle.Candidate.Initial") : value);
+            }
         }
 
         public string TrainingModelLifecycleDecisionText
         {
             get => trainingModelLifecycleDecisionText;
-            private set => SetProperty(ref trainingModelLifecycleDecisionText, string.IsNullOrWhiteSpace(value) ? "\uD559\uC2B5 \uACB0\uACFC \uBE44\uAD50 \uC804" : value);
+            private set
+            {
+                if (!refreshingTrainingModelLifecycleLocalization)
+                {
+                    trainingModelLifecycleLocalizationSnapshot = null;
+                }
+
+                SetProperty(ref trainingModelLifecycleDecisionText, string.IsNullOrWhiteSpace(value) ? T("WpfLearningWorkflow.TrainingModelLifecycle.Decision.Initial") : value);
+            }
         }
 
         public string TrainingModelLifecycleNextActionText
         {
             get => trainingModelLifecycleNextActionText;
-            private set => SetProperty(ref trainingModelLifecycleNextActionText, string.IsNullOrWhiteSpace(value) ? "\uB370\uC774\uD130\uC14B \uC810\uAC80 \uD6C4 \uD559\uC2B5\uC744 \uC2DC\uC791\uD558\uC138\uC694." : value);
+            private set
+            {
+                if (!refreshingTrainingModelLifecycleLocalization)
+                {
+                    trainingModelLifecycleLocalizationSnapshot = null;
+                }
+
+                SetProperty(ref trainingModelLifecycleNextActionText, string.IsNullOrWhiteSpace(value) ? T("WpfLearningWorkflow.TrainingModelLifecycle.Next.Initial") : value);
+            }
         }
+
+        public string TrainingModelLifecycleSummaryTitleText => T("WpfLearningWorkflow.TrainingModelLifecycle.Title");
+
+        public string TrainingModelLifecycleCurrentCaptionText => T("WpfLearningWorkflow.TrainingModelLifecycle.Label.Current");
+
+        public string TrainingModelLifecycleCandidateCaptionText => T("WpfLearningWorkflow.TrainingModelLifecycle.Label.Candidate");
+
+        public string TrainingModelLifecycleDecisionCaptionText => T("WpfLearningWorkflow.TrainingModelLifecycle.Label.Decision");
+
+        public string TrainingModelLifecycleNextActionCaptionText => T("WpfLearningWorkflow.TrainingModelLifecycle.Label.NextAction");
+
+        public string TrainingResultComparisonTitleText => T("WpfLearningWorkflow.TrainingComparison.Title");
 
         public string RunModelComparisonActionText
         {
             get => runModelComparisonActionText;
-            private set => SetProperty(ref runModelComparisonActionText, string.IsNullOrWhiteSpace(value) ? "\uBAA8\uB378 \uBE44\uAD50" : value);
+            private set
+            {
+                if (!refreshingTrainingComparisonLocalization)
+                {
+                    runModelComparisonActionSourceText = value ?? string.Empty;
+                    trainingComparisonLocalizationSnapshot = null;
+                }
+
+                SetProperty(
+                    ref runModelComparisonActionText,
+                    string.IsNullOrWhiteSpace(value)
+                        ? WpfTrainingComparisonLocalizationService.CreateInitial().RunActionText
+                        : value);
+            }
         }
 
         public string RunModelComparisonToolTipText
         {
             get => runModelComparisonToolTipText;
-            private set => SetProperty(ref runModelComparisonToolTipText, string.IsNullOrWhiteSpace(value) ? "\uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0\uB85C \uAE30\uC874 \uBAA8\uB378\uACFC \uC0C8 \uD559\uC2B5 \uBAA8\uB378\uC744 \uBE44\uAD50" : value);
+            private set
+            {
+                if (!refreshingTrainingComparisonLocalization)
+                {
+                    runModelComparisonToolTipSourceText = value ?? string.Empty;
+                    trainingComparisonLocalizationSnapshot = null;
+                }
+
+                SetProperty(
+                    ref runModelComparisonToolTipText,
+                    string.IsNullOrWhiteSpace(value)
+                        ? WpfTrainingComparisonLocalizationService.CreateInitial().RunToolTipText
+                        : value);
+            }
         }
 
         public string ModelComparisonBasisText
         {
             get => modelComparisonBasisText;
-            private set => SetProperty(ref modelComparisonBasisText, string.IsNullOrWhiteSpace(value) ? "\uBE44\uAD50 \uAE30\uC900: \uB370\uC774\uD130\uC14B \uC810\uAC80 \uD6C4 \uD45C\uC2DC\uB429\uB2C8\uB2E4." : value);
+            private set
+            {
+                if (!refreshingTrainingComparisonLocalization)
+                {
+                    modelComparisonBasisSourceText = value ?? string.Empty;
+                    trainingComparisonLocalizationSnapshot = null;
+                }
+
+                SetProperty(
+                    ref modelComparisonBasisText,
+                    string.IsNullOrWhiteSpace(value)
+                        ? WpfTrainingComparisonLocalizationService.CreateInitial().ComparisonBasisText
+                        : value);
+            }
         }
 
         public bool IsRunModelComparisonEnabled
@@ -963,6 +1205,69 @@ namespace MvcVisionSystem
             }
         }
 
+        public void SetTrainingHistoryText(string historyText)
+        {
+            trainingHistorySourceText = historyText ?? string.Empty;
+            RefreshTrainingComparisonLocalization();
+        }
+
+        public void SetTrainingComparisonResultTexts(
+            string summaryText = null,
+            string comparisonText = null,
+            string adoptionDecisionText = null)
+        {
+            if (summaryText != null)
+            {
+                trainingResultComparisonSummarySourceText = summaryText;
+            }
+
+            if (comparisonText != null)
+            {
+                trainingResultComparisonSourceText = comparisonText;
+            }
+
+            if (adoptionDecisionText != null)
+            {
+                trainingModelAdoptionDecisionSourceText = adoptionDecisionText;
+            }
+
+            RefreshTrainingComparisonLocalization();
+        }
+
+        public void SetTrainingComparisonLocalization(WpfTrainingComparisonLocalizationSnapshot localization)
+        {
+            localization ??= WpfTrainingComparisonLocalizationService.CreateInitial();
+            trainingComparisonLocalizationSnapshot = localization;
+            refreshingTrainingComparisonLocalization = true;
+            try
+            {
+                TrainingHistoryText = localization.HistoryText;
+                TrainingResultComparisonSummaryText = localization.SummaryText;
+                TrainingResultComparisonText = localization.ComparisonText;
+                TrainingModelAdoptionDecisionText = localization.AdoptionDecisionText;
+                RunModelComparisonActionText = localization.RunActionText;
+                RunModelComparisonToolTipText = localization.RunToolTipText;
+                ModelComparisonBasisText = localization.ComparisonBasisText;
+            }
+            finally
+            {
+                refreshingTrainingComparisonLocalization = false;
+            }
+        }
+
+        private void RefreshTrainingComparisonLocalization()
+        {
+            SetTrainingComparisonLocalization(
+                WpfTrainingComparisonLocalizationService.Build(
+                    trainingHistorySourceText,
+                    trainingResultComparisonSummarySourceText,
+                    trainingResultComparisonSourceText,
+                    trainingModelAdoptionDecisionSourceText,
+                    runModelComparisonActionSourceText,
+                    runModelComparisonToolTipSourceText,
+                    modelComparisonBasisSourceText));
+        }
+
         public void SetModelComparisonRunState(bool enabled, string actionText)
             => SetModelComparisonRunState(enabled, actionText, string.Empty);
 
@@ -972,9 +1277,10 @@ namespace MvcVisionSystem
         public void SetModelComparisonRunState(bool enabled, string actionText, string toolTipText, string basisText)
         {
             IsRunModelComparisonEnabled = enabled;
-            RunModelComparisonActionText = actionText;
-            RunModelComparisonToolTipText = toolTipText;
-            ModelComparisonBasisText = basisText;
+            runModelComparisonActionSourceText = actionText ?? string.Empty;
+            runModelComparisonToolTipSourceText = toolTipText ?? string.Empty;
+            modelComparisonBasisSourceText = basisText ?? string.Empty;
+            RefreshTrainingComparisonLocalization();
         }
 
         public void SetModelReplacementReadiness(string statusText, string detailText)
@@ -982,12 +1288,29 @@ namespace MvcVisionSystem
             // Training readiness and model replacement are intentionally separate:
             // Keep replacement stricter than training readiness: users may train with learning/validation data only,
             // but switching the active model needs a separate final-verification set.
+            modelReplacementLocalizationSnapshot = null;
             ModelReplacementStatusText = string.IsNullOrWhiteSpace(statusText)
-                ? "\uBAA8\uB378 \uAD50\uCCB4: \uB370\uC774\uD130\uC14B \uC810\uAC80 \uC804"
+                ? T("WpfLearningWorkflow.ModelReplacement.Status.Initial")
                 : statusText;
             ModelReplacementDetailText = string.IsNullOrWhiteSpace(detailText)
-                ? "\uD559\uC2B5 \uD6C4 \uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0 \uACB0\uACFC\uB85C \uAE30\uC874 \uBAA8\uB378 \uAD50\uCCB4 \uC5EC\uBD80\uB97C \uD310\uB2E8\uD569\uB2C8\uB2E4."
+                ? T("WpfLearningWorkflow.ModelReplacement.Detail.Initial")
                 : detailText;
+        }
+
+        public void SetModelReplacementLocalization(WpfModelReplacementLocalizationSnapshot localization)
+        {
+            localization ??= WpfModelReplacementLocalizationService.CreateInitial();
+            modelReplacementLocalizationSnapshot = localization;
+            refreshingModelReplacementLocalization = true;
+            try
+            {
+                ModelReplacementStatusText = localization.StatusText;
+                ModelReplacementDetailText = localization.DetailText;
+            }
+            finally
+            {
+                refreshingModelReplacementLocalization = false;
+            }
         }
 
         public void SetTrainingModelLifecycleState(
@@ -996,19 +1319,31 @@ namespace MvcVisionSystem
             string decisionText,
             string nextActionText)
         {
-            TrainingModelLifecycleCurrentText = StripTrainingModelLifecyclePrefix(
-                currentModelText,
-                "\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378:",
-                "\uAC80\uC0AC \uBAA8\uB378 \uD6C4\uBCF4:");
-            TrainingModelLifecycleCandidateText = StripTrainingModelLifecyclePrefix(
-                candidateModelText,
-                "\uC0C8 \uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4:");
-            TrainingModelLifecycleDecisionText = StripTrainingModelLifecyclePrefix(
-                decisionText,
-                "\uBAA8\uB378 \uC801\uC6A9:");
-            TrainingModelLifecycleNextActionText = StripTrainingModelLifecyclePrefix(
-                nextActionText,
-                "\uB2E4\uC74C:");
+            SetTrainingModelLifecycleLocalization(
+                WpfTrainingModelLifecycleLocalizationService.Build(
+                    currentModelText,
+                    candidateModelText,
+                    decisionText,
+                    nextActionText));
+        }
+
+        public void SetTrainingModelLifecycleLocalization(
+            WpfTrainingModelLifecycleLocalizationSnapshot localization)
+        {
+            localization ??= WpfTrainingModelLifecycleLocalizationService.CreateInitial();
+            trainingModelLifecycleLocalizationSnapshot = localization;
+            refreshingTrainingModelLifecycleLocalization = true;
+            try
+            {
+                TrainingModelLifecycleCurrentText = localization.CurrentText;
+                TrainingModelLifecycleCandidateText = localization.CandidateText;
+                TrainingModelLifecycleDecisionText = localization.DecisionText;
+                TrainingModelLifecycleNextActionText = localization.NextActionText;
+            }
+            finally
+            {
+                refreshingTrainingModelLifecycleLocalization = false;
+            }
         }
 
         public void SetDatasetDashboard(
@@ -1016,24 +1351,38 @@ namespace MvcVisionSystem
             string summaryText,
             string actionText,
             IEnumerable<WpfDatasetDashboardMetricItem> metrics,
-            IEnumerable<string> issues)
+            IEnumerable<string> issues,
+            WpfDatasetDashboardLocalizationSnapshot localization = null)
         {
-            DatasetDashboardStatusText = string.IsNullOrWhiteSpace(statusText) ? "\uB370\uC774\uD130\uC14B \uC0C1\uD0DC: \uC810\uAC80 \uC804" : statusText;
-            DatasetDashboardSummaryText = string.IsNullOrWhiteSpace(summaryText) ? string.Empty : summaryText;
-            DatasetDashboardActionText = string.IsNullOrWhiteSpace(actionText) ? string.Empty : actionText;
+            List<WpfDatasetDashboardMetricItem> metricItems = (metrics ?? Enumerable.Empty<WpfDatasetDashboardMetricItem>())
+                .Where(item => item != null)
+                .ToList();
+            datasetDashboardLocalizationSnapshot = localization?.WithMetricItems(metricItems);
+            DatasetDashboardStatusText = datasetDashboardLocalizationSnapshot?.StatusText
+                ?? (string.IsNullOrWhiteSpace(statusText)
+                    ? T("WpfLearningWorkflow.DatasetDashboard.Status.Before")
+                    : statusText);
+            DatasetDashboardSummaryText = datasetDashboardLocalizationSnapshot?.SummaryText
+                ?? (string.IsNullOrWhiteSpace(summaryText) ? string.Empty : summaryText);
+            string localizedActionText = datasetDashboardLocalizationSnapshot?.ActionText;
+            DatasetDashboardActionText = string.IsNullOrWhiteSpace(localizedActionText)
+                ? (string.IsNullOrWhiteSpace(actionText) ? string.Empty : actionText)
+                : localizedActionText;
             ObjectDetectionMvpNextActionText = BuildObjectDetectionMvpNextActionText(DatasetDashboardActionText);
 
             DatasetDashboardMetrics.Clear();
-            foreach (WpfDatasetDashboardMetricItem item in metrics ?? Enumerable.Empty<WpfDatasetDashboardMetricItem>())
+            IEnumerable<WpfDatasetDashboardMetricItem> localizedMetrics = datasetDashboardLocalizationSnapshot?.MetricItems
+                ?? metricItems;
+            foreach (WpfDatasetDashboardMetricItem item in localizedMetrics)
             {
-                if (item != null)
-                {
-                    DatasetDashboardMetrics.Add(item);
-                }
+                DatasetDashboardMetrics.Add(item);
             }
 
+            IEnumerable<string> localizedIssues = datasetDashboardLocalizationSnapshot?.IssueItems
+                ?? issues
+                ?? Enumerable.Empty<string>();
             DatasetDashboardIssueItems.Clear();
-            foreach (string issue in issues ?? Enumerable.Empty<string>())
+            foreach (string issue in localizedIssues)
             {
                 if (!string.IsNullOrWhiteSpace(issue))
                 {
@@ -1043,7 +1392,7 @@ namespace MvcVisionSystem
 
             if (DatasetDashboardIssueItems.Count == 0)
             {
-                DatasetDashboardIssueItems.Add("\uBB38\uC81C \uC5C6\uC74C: \uB2E4\uC74C \uB2E8\uACC4\uB85C \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.");
+                DatasetDashboardIssueItems.Add(T("WpfLearningWorkflow.DatasetDashboard.Issue.NoIssues"));
             }
         }
 
@@ -1079,13 +1428,13 @@ namespace MvcVisionSystem
         {
             if (string.IsNullOrWhiteSpace(actionText))
             {
-                return WpfLocalizationTextRuntimeService.Translate("\uAC1D\uCCB4\uD0D0\uC9C0 MVP: \uC810\uAC80 \uACB0\uACFC \uD655\uC778 \uC804");
+                return T("WpfLearningWorkflow.ObjectDetectionMvpNextAction.Empty");
             }
 
             string normalized = actionText.Trim();
             if (normalized.StartsWith("\uC644\uB8CC:", StringComparison.Ordinal))
             {
-                return WpfLocalizationTextRuntimeService.Translate("\uAC1D\uCCB4\uD0D0\uC9C0 MVP: \uC644\uB8CC - \uD559\uC2B5\uACFC \uCD5C\uC885 \uAC80\uC99D\uC73C\uB85C \uC774\uB3D9");
+                return T("WpfLearningWorkflow.ObjectDetectionMvpNextAction.Complete");
             }
 
             const string nextPrefix = "\uB2E4\uC74C:";
@@ -1094,31 +1443,58 @@ namespace MvcVisionSystem
                 normalized = normalized.Substring(nextPrefix.Length).Trim();
             }
 
-            return WpfLocalizationTextRuntimeService.Translate("\uAC1D\uCCB4\uD0D0\uC9C0 MVP \uC644\uB8CC\uAE4C\uC9C0: " + normalized);
-        }
-
-        private static string StripTrainingModelLifecyclePrefix(string text, params string[] prefixes)
-        {
-            string normalized = (text ?? string.Empty).Trim();
-            foreach (string prefix in prefixes ?? Array.Empty<string>())
-            {
-                if (!string.IsNullOrWhiteSpace(prefix)
-                    && normalized.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    return normalized.Substring(prefix.Length).Trim();
-                }
-            }
-
-            return normalized;
+            return Format(
+                "WpfLearningWorkflow.ObjectDetectionMvpNextAction.Dynamic",
+                WpfLocalizationTextRuntimeService.Translate(normalized));
         }
 
         private static IEnumerable<WpfDatasetDashboardMetricItem> BuildInitialDatasetDashboardMetrics()
         {
-            yield return new WpfDatasetDashboardMetricItem("\uC774\uBBF8\uC9C0", "-", "\uC810\uAC80 \uC804", "\uB300\uAE30", PackIconMaterialKind.FolderImage, isProblem: false, isWarning: false, actionKind: WpfDatasetDashboardActionKind.OpenImages);
-            yield return new WpfDatasetDashboardMetricItem("\uC9C4\uD589", "-", "\uC810\uAC80 \uC804", "\uB300\uAE30", PackIconMaterialKind.ProgressClock, isProblem: false, isWarning: false, actionKind: WpfDatasetDashboardActionKind.OpenLabelingProgress);
-            yield return new WpfDatasetDashboardMetricItem("\uB77C\uBCA8", "-", "\uC810\uAC80 \uC804", "\uB300\uAE30", PackIconMaterialKind.ShapeSquareRoundedPlus, isProblem: false, isWarning: false, actionKind: WpfDatasetDashboardActionKind.OpenLabelingTool);
-            yield return new WpfDatasetDashboardMetricItem("\uBD84\uD560", "-", "\uC810\uAC80 \uC804", "\uB300\uAE30", PackIconMaterialKind.CheckAll, isProblem: false, isWarning: false, actionKind: WpfDatasetDashboardActionKind.OpenDatasetSettings);
-            yield return new WpfDatasetDashboardMetricItem("\uD074\uB798\uC2A4", "-", "\uC810\uAC80 \uC804", "\uB300\uAE30", PackIconMaterialKind.TagMultipleOutline, isProblem: false, isWarning: false, actionKind: WpfDatasetDashboardActionKind.OpenClassCatalog);
+            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
+                "WpfLearningWorkflow.DatasetDashboard.Metric.Images.Title",
+                "-",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
+                PackIconMaterialKind.FolderImage,
+                isProblem: false,
+                isWarning: false,
+                actionKind: WpfDatasetDashboardActionKind.OpenImages);
+            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
+                "WpfLearningWorkflow.DatasetDashboard.Metric.Progress.Title",
+                "-",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
+                PackIconMaterialKind.ProgressClock,
+                isProblem: false,
+                isWarning: false,
+                actionKind: WpfDatasetDashboardActionKind.OpenLabelingProgress);
+            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
+                "WpfLearningWorkflow.DatasetDashboard.Metric.Initial.Labels.Title",
+                "-",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
+                PackIconMaterialKind.ShapeSquareRoundedPlus,
+                isProblem: false,
+                isWarning: false,
+                actionKind: WpfDatasetDashboardActionKind.OpenLabelingTool);
+            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
+                "WpfLearningWorkflow.DatasetDashboard.Metric.Split.Title",
+                "-",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
+                PackIconMaterialKind.CheckAll,
+                isProblem: false,
+                isWarning: false,
+                actionKind: WpfDatasetDashboardActionKind.OpenDatasetSettings);
+            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
+                "WpfLearningWorkflow.DatasetDashboard.Metric.Class.Title",
+                "-",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
+                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
+                PackIconMaterialKind.TagMultipleOutline,
+                isProblem: false,
+                isWarning: false,
+                actionKind: WpfDatasetDashboardActionKind.OpenClassCatalog);
         }
 
         public void SetYoloTrainingStepState(int order, bool isCompleted, string stateText)
@@ -1644,6 +2020,17 @@ namespace MvcVisionSystem
             };
         }
 
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
+        }
+
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
             bool isDefaultDatasetSetupStatus = string.Equals(
@@ -1661,6 +2048,57 @@ namespace MvcVisionSystem
             {
                 DatasetSetupStatusText = T("WpfLearningWorkflow.DatasetSetupStatus.Before");
             }
+
+            if (trainingChecklistLocalizationSnapshot != null)
+            {
+                SetTrainingChecklistLocalization(trainingChecklistLocalizationSnapshot);
+            }
+
+            if (trainingChecklistActionLocalizationSnapshot != null)
+            {
+                SetTrainingChecklistActionLocalization(trainingChecklistActionLocalizationSnapshot);
+            }
+
+            if (modelReplacementLocalizationSnapshot != null)
+            {
+                SetModelReplacementLocalization(modelReplacementLocalizationSnapshot);
+            }
+
+            if (trainingModelLifecycleLocalizationSnapshot != null)
+            {
+                SetTrainingModelLifecycleLocalization(trainingModelLifecycleLocalizationSnapshot);
+            }
+
+            if (trainingComparisonLocalizationSnapshot != null)
+            {
+                SetTrainingComparisonLocalization(trainingComparisonLocalizationSnapshot);
+            }
+
+            if (datasetDashboardLocalizationSnapshot != null)
+            {
+                DatasetDashboardStatusText = datasetDashboardLocalizationSnapshot.StatusText;
+                DatasetDashboardSummaryText = datasetDashboardLocalizationSnapshot.SummaryText;
+                string localizedActionText = datasetDashboardLocalizationSnapshot.ActionText;
+                if (!string.IsNullOrWhiteSpace(localizedActionText))
+                {
+                    DatasetDashboardActionText = localizedActionText;
+                }
+                DatasetDashboardMetrics.Clear();
+                foreach (WpfDatasetDashboardMetricItem metric in datasetDashboardLocalizationSnapshot.MetricItems)
+                {
+                    DatasetDashboardMetrics.Add(metric);
+                }
+                DatasetDashboardIssueItems.Clear();
+                foreach (string issue in datasetDashboardLocalizationSnapshot.IssueItems)
+                {
+                    if (!string.IsNullOrWhiteSpace(issue))
+                    {
+                        DatasetDashboardIssueItems.Add(issue);
+                    }
+                }
+            }
+
+            ObjectDetectionMvpNextActionText = BuildObjectDetectionMvpNextActionText(DatasetDashboardActionText);
 
             // The remaining panel captions are expression-backed so one owner-level
             // notification refreshes them without a visual-tree string rewrite.

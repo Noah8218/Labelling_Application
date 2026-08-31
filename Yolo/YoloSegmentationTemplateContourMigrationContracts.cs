@@ -29,7 +29,7 @@ namespace MvcVisionSystem.Yolo
 
         public bool CanApply => Errors.Count == 0 && Items.Count > 0;
 
-        internal CData Data { get; set; }
+        internal LabelingProjectData Data { get; set; }
 
         internal byte[] SourceMaskData { get; set; }
 

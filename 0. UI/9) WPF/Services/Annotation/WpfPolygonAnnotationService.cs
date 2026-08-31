@@ -56,7 +56,7 @@ namespace MvcVisionSystem
             return true;
         }
 
-        public bool TryComplete(CClassItem classItem, Size imageSize, out LabelingSegmentationObject annotation, out string message)
+        public bool TryComplete(LabelClass classItem, Size imageSize, out LabelingSegmentationObject annotation, out string message)
         {
             annotation = null;
             message = string.Empty;
@@ -357,7 +357,7 @@ namespace MvcVisionSystem
 
         public static bool TryCreateObject(
             IEnumerable<Point> rawPoints,
-            CClassItem classItem,
+            LabelClass classItem,
             Size imageSize,
             out LabelingSegmentationObject annotation)
         {

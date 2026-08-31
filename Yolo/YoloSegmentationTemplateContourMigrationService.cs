@@ -6,24 +6,16 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace MvcVisionSystem.Yolo
 {
     public static class YoloSegmentationTemplateContourMigrationService
     {
-        private static readonly string[] DatasetModes =
-        {
-            YoloDatasetSplitService.TrainMode,
-            YoloDatasetSplitService.ValidMode,
-            YoloDatasetSplitService.TestMode
-        };
-
         private static readonly string[] ImageExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
         public static YoloSegmentationTemplateContourMigrationPlan BuildPlan(
-            CData data,
+            LabelingProjectData data,
             string sourceImagePath,
             string sourceClassName,
             string backupRootPath)
@@ -69,7 +61,7 @@ namespace MvcVisionSystem.Yolo
                 return plan;
             }
 
-            plan.SourceClassIndex = FindClassIndex(sourceClassName, data.ClassNamedList);
+            plan.SourceClassIndex = ClassCatalogService.FindClassIndex(data, sourceClassName);
             if (plan.SourceClassIndex < 0)
             {
                 plan.Errors.Add("The requested source class does not exist in the active dataset class catalog: " + sourceClassName);
@@ -613,7 +605,7 @@ namespace MvcVisionSystem.Yolo
 
         private static IEnumerable<DatasetArtifact> EnumerateDatasetArtifacts(string outputRootPath)
         {
-            foreach (string split in DatasetModes)
+            foreach (string split in YoloDatasetSplitService.StandardModes)
             {
                 string splitRoot = Path.Combine(outputRootPath, "data", split);
                 string segmentDirectory = Path.Combine(splitRoot, "segments");
@@ -772,32 +764,14 @@ namespace MvcVisionSystem.Yolo
             return false;
         }
 
-        private static int ResolveClassIndex(SegmentationPolygonRecord record, IReadOnlyList<CClassItem> classes)
+        private static int ResolveClassIndex(SegmentationPolygonRecord record, IReadOnlyList<LabelClass> classes)
         {
             if (record != null && record.ClassIndex >= 0 && record.ClassIndex < (classes?.Count ?? 0))
             {
                 return record.ClassIndex;
             }
 
-            return FindClassIndex(record?.ClassName, classes);
-        }
-
-        private static int FindClassIndex(string className, IReadOnlyList<CClassItem> classes)
-        {
-            if (string.IsNullOrWhiteSpace(className) || classes == null)
-            {
-                return -1;
-            }
-
-            for (int index = 0; index < classes.Count; index++)
-            {
-                if (string.Equals(classes[index]?.Text, className.Trim(), StringComparison.OrdinalIgnoreCase))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
+            return ClassCatalogService.FindClassIndex(classes, record?.ClassName);
         }
 
         private static byte GetMaskClassValue(int classIndex)
@@ -816,9 +790,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static string ComputeSha256(string path)
-        {
-            return Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
-        }
+            => HashingService.ComputeFileSha256(path);
 
         private static bool PathsEqual(string left, string right)
         {

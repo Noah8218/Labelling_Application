@@ -54,7 +54,7 @@ namespace MvcVisionSystem
         public string ToolTip { get; }
     }
 
-    public sealed class WpfCanvasPanelViewModel : WpfObservableViewModel
+    public sealed class WpfCanvasPanelViewModel : WpfObservableViewModel, IDisposable
     {
         private static readonly Action NoOpCommand = () => { };
         private static readonly Action<object> NoOpSelectionCommand = _ => { };
@@ -196,6 +196,7 @@ namespace MvcVisionSystem
         private WpfSmartMaskDetailItem selectedSmartMaskDetail;
         private Action<bool> smartMaskAutoContourChanged = _ => { };
         private Action<WpfSmartMaskPolygonDetail> smartMaskDetailChanged = _ => { };
+        private bool disposed;
 
         public WpfCanvasPanelViewModel()
         {
@@ -1468,6 +1469,17 @@ namespace MvcVisionSystem
             OnPropertyChanged(nameof(ActiveLabelClassActionToolTip));
         }
 
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
+        }
+
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
             RefreshLocalizedPresentation();
@@ -1491,7 +1503,7 @@ namespace MvcVisionSystem
             return WpfLocalizationTextRuntimeService.Translate(value);
         }
 
-        public void SetLabelClasses(IEnumerable<CClassItem> classItems, string selectedName = "")
+        public void SetLabelClasses(IEnumerable<LabelClass> classItems, string selectedName = "")
         {
             string normalizedSelectedName = ClassCatalogService.NormalizeClassName(selectedName);
             WpfCanvasLabelClassItem selectedItem = null;
@@ -1499,10 +1511,10 @@ namespace MvcVisionSystem
             LabelClasses.Clear();
             int shortcutIndex = 1;
             int canonicalIndex = 0;
-            foreach (CClassItem classItem in classItems ?? Enumerable.Empty<CClassItem>())
+            foreach (LabelClass classItem in classItems ?? Enumerable.Empty<LabelClass>())
             {
                 int currentIndex = canonicalIndex++;
-                if (classItem == null || string.IsNullOrWhiteSpace(classItem.Text))
+                if (!ClassCatalogService.IsActiveClass(classItem))
                 {
                     continue;
                 }
@@ -1798,7 +1810,7 @@ namespace MvcVisionSystem
 
     public sealed class WpfCanvasLabelClassItem
     {
-        public WpfCanvasLabelClassItem(CClassItem classItem, int canonicalIndex = 0, int shortcutIndex = 0)
+        public WpfCanvasLabelClassItem(LabelClass classItem, int canonicalIndex = 0, int shortcutIndex = 0)
         {
             Text = ClassCatalogService.NormalizeClassName(classItem?.Text);
             CanonicalIndex = Math.Max(0, canonicalIndex);

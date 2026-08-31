@@ -1,6 +1,5 @@
 ﻿using OpenVisionLab.ImageCanvas.OpenCVSharp;
 using OpenVisionLab.ImageCanvas.OpenGLRendering;
-using Emgu.CV.CvEnum;
 using OpenCvSharp;
 using System;
 using System.Drawing;

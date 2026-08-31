@@ -23,9 +23,9 @@ namespace MvcVisionSystem.Yolo
         public static void SaveAnnotations(
             string imageName,
             Image image,
-            IReadOnlyDictionary<string, List<CRectangleObject>> roiByClass,
-            IReadOnlyList<CClassItem> classes,
-            CData data,
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> roiByClass,
+            IReadOnlyList<LabelClass> classes,
+            LabelingProjectData data,
             string sourceImagePath = "")
         {
             if (string.IsNullOrWhiteSpace(imageName) || image == null || data == null)
@@ -42,9 +42,9 @@ namespace MvcVisionSystem.Yolo
         private static void SaveAnnotationsCore(
             string imageName,
             Image image,
-            IReadOnlyDictionary<string, List<CRectangleObject>> roiByClass,
-            IReadOnlyList<CClassItem> classes,
-            CData data,
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> roiByClass,
+            IReadOnlyList<LabelClass> classes,
+            LabelingProjectData data,
             string sourceImagePath)
         {
             data.NormalizeOutputPaths();
@@ -87,7 +87,7 @@ namespace MvcVisionSystem.Yolo
             data.SaveYoloDataYaml();
         }
 
-        public static void DeleteAnnotations(string imageName, CData data)
+        public static void DeleteAnnotations(string imageName, LabelingProjectData data)
         {
             if (string.IsNullOrWhiteSpace(imageName) || data == null)
             {
@@ -108,8 +108,8 @@ namespace MvcVisionSystem.Yolo
         }
 
         public static List<string> BuildAnnotationLines(
-            IReadOnlyDictionary<string, List<CRectangleObject>> roiByClass,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> roiByClass,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize)
         {
             var lines = new List<string>();
@@ -121,12 +121,12 @@ namespace MvcVisionSystem.Yolo
             for (int classIndex = 0; classIndex < classes.Count; classIndex++)
             {
                 string className = classes[classIndex]?.Text ?? "";
-                if (string.IsNullOrWhiteSpace(className) || !roiByClass.TryGetValue(className, out List<CRectangleObject> rois))
+                if (string.IsNullOrWhiteSpace(className) || !roiByClass.TryGetValue(className, out List<AnnotationRectangleObject> rois))
                 {
                     continue;
                 }
 
-                foreach (CRectangleObject roiObject in rois.Where(item => item != null))
+                foreach (AnnotationRectangleObject roiObject in rois.Where(item => item != null))
                 {
                     string line = TryCreateYoloLine(classIndex, roiObject.Roi, imageSize);
                     if (!string.IsNullOrWhiteSpace(line))
@@ -141,8 +141,8 @@ namespace MvcVisionSystem.Yolo
 
         public static IReadOnlyDictionary<string, List<Rectangle>> LoadAnnotationRectanglesForImage(
             string imagePath,
-            IReadOnlyList<CClassItem> classes,
-            CData data,
+            IReadOnlyList<LabelClass> classes,
+            LabelingProjectData data,
             Size imageSize)
         {
             foreach (string labelPath in GetCandidateLabelPaths(imagePath, data))
@@ -159,7 +159,7 @@ namespace MvcVisionSystem.Yolo
 
         public static IReadOnlyDictionary<string, List<Rectangle>> LoadAnnotationRectangles(
             string labelPath,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize)
         {
             var result = new Dictionary<string, List<Rectangle>>(StringComparer.OrdinalIgnoreCase);
@@ -276,7 +276,7 @@ namespace MvcVisionSystem.Yolo
                 && ratio <= 1;
         }
 
-        public static IEnumerable<string> GetCandidateLabelPaths(string imagePath, CData data)
+        public static IEnumerable<string> GetCandidateLabelPaths(string imagePath, LabelingProjectData data)
         {
             if (string.IsNullOrWhiteSpace(imagePath))
             {
@@ -378,7 +378,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        public static IReadOnlyList<string> GetTargetLabelPaths(string imageName, CData data)
+        public static IReadOnlyList<string> GetTargetLabelPaths(string imageName, LabelingProjectData data)
         {
             if (string.IsNullOrWhiteSpace(imageName) || data == null)
             {
@@ -401,7 +401,7 @@ namespace MvcVisionSystem.Yolo
         internal static void EnsureImageIdentity(
             string imageName,
             Image image,
-            CData data,
+            LabelingProjectData data,
             string sourceImagePath = "")
         {
             if (string.IsNullOrWhiteSpace(imageName) || image == null || data == null)
@@ -416,9 +416,7 @@ namespace MvcVisionSystem.Yolo
                 return;
             }
 
-            string resolvedSourcePath = string.IsNullOrWhiteSpace(sourceImagePath)
-                ? data.LastSelectImagePath
-                : sourceImagePath;
+            string resolvedSourcePath = sourceImagePath ?? string.Empty;
             List<string> storedImagePaths = DatasetModes
                 .SelectMany(mode => EnumerateImageFilesForStem(
                     Path.Combine(data.OutputRootPath, "data", mode, "images"),
@@ -573,11 +571,9 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static string ResolveSourceImageExtension(string fileStem, CData data, string sourceImagePath)
+        private static string ResolveSourceImageExtension(string fileStem, LabelingProjectData data, string sourceImagePath)
         {
-            string sourcePath = string.IsNullOrWhiteSpace(sourceImagePath)
-                ? data?.LastSelectImagePath
-                : sourceImagePath;
+            string sourcePath = sourceImagePath ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(sourcePath)
                 && string.Equals(Path.GetFileNameWithoutExtension(sourcePath), fileStem, StringComparison.OrdinalIgnoreCase)
                 && IsSupportedImageExtension(Path.GetExtension(sourcePath)))

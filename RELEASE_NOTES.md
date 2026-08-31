@@ -1,5 +1,20 @@
 # Release Notes
 
+## 0.3.0 — 2026-08-31
+
+- Restored and versioned the integrated OpenVisionLab Labeling Studio workflow
+  across dataset setup, labeling, candidate review, training, and model
+  comparison while keeping the existing save and explicit-action boundaries.
+- Completed the WPF review ownership wave: image quality, anomaly review, and
+  Object Review now have concrete domain workflow owners; the queue presenter
+  retains row icon/color/text decisions and the Shell retains UI and async
+  orchestration.
+- Preserved the existing annotation/Recipe persistence contracts, queue and
+  anomaly transitions, close guards, and the protected `301/301` local
+  regression baseline. This is a compatible MINOR candidate; production
+  field-quality, GPU-target, installer/signing, tag, Release, and deployment
+  evidence remain separate gates.
+
 ## 0.2.1 — 2026-08-25
 
 - Fixed the supported Minimum `1100x720` WPF workspace so the image queue

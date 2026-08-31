@@ -229,7 +229,7 @@ namespace MvcVisionSystem
 
         private void ExecuteConnectUnetRuntime()
         {
-            string projectRootPath = PythonModelSettings.GetDefaultUnetProjectRootPath();
+            string projectRootPath = PythonModelRuntimePathResolver.GetDefaultUnetProjectRootPath();
             PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildUnetFolderConnection(
                 CreateYoloModelSettingsSnapshot(),
                 projectRootPath);
@@ -242,7 +242,7 @@ namespace MvcVisionSystem
 
         private void ExecuteConnectPatchCoreRuntime()
         {
-            string projectRootPath = PythonModelSettings.GetDefaultPatchCoreProjectRootPath();
+            string projectRootPath = PythonModelRuntimePathResolver.GetDefaultPatchCoreProjectRootPath();
             Directory.CreateDirectory(projectRootPath);
             PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildPatchCoreConnection(
                 CreateYoloModelSettingsSnapshot(),

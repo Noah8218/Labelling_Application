@@ -16,21 +16,28 @@ namespace MvcVisionSystem
             string value = problemCount > 0
                 ? problemCount.ToString()
                 : hasArtifacts ? "OK" : "-";
-            string status = !hasArtifacts
-                ? "\uB300\uAE30"
+            string statusKey = !hasArtifacts
+                ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting"
                 : problemCount > 0
-                    ? "\uC815\uB9AC \uD544\uC694"
-                    : "\uD655\uC778";
+                    ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.CleanupNeeded"
+                    : "WpfLearningWorkflow.DatasetDashboard.Metric.State.Check";
+            string classSummary = BuildClassDistributionSummary(report.ObjectCountByClass);
+            string detailKey = string.IsNullOrWhiteSpace(classSummary)
+                ? "WpfLearningWorkflow.DatasetDashboard.Metric.Quality.Detail.NoClasses"
+                : "WpfLearningWorkflow.DatasetDashboard.Metric.Quality.Detail.Classes";
 
-            return new WpfDatasetDashboardMetricItem(
-                "\uD488\uC9C8 \uBCF4\uACE0\uC11C",
+            return WpfDatasetDashboardLocalizationService.CreateMetric(
+                "WpfLearningWorkflow.DatasetDashboard.Metric.Quality.Title",
                 value,
-                BuildQualityMetricDetail(report) + " / \uD074\uB9AD\uD558\uBA74 \uD604\uC7AC \uC0C1\uD0DC\uB97C Markdown \uBCF4\uACE0\uC11C\uB85C \uC800\uC7A5\uD569\uB2C8\uB2E4.",
-                status,
+                detailKey,
+                statusKey,
                 problemCount > 0 ? PackIconMaterialKind.AlertCircleOutline : PackIconMaterialKind.CheckCircleOutline,
                 isProblem: problemCount > 0,
                 isWarning: false,
-                actionKind: WpfDatasetDashboardActionKind.ExportQualityAudit);
+                actionKind: WpfDatasetDashboardActionKind.ExportQualityAudit,
+                string.IsNullOrWhiteSpace(classSummary)
+                    ? new object[] { report.TotalMissingLabelCount, report.TotalInvalidLabelLineCount, report.TotalEmptyLabelCount }
+                    : new object[] { report.TotalMissingLabelCount, report.TotalInvalidLabelLineCount, report.TotalEmptyLabelCount, classSummary });
         }
 
         public static string BuildQualityIssue(YoloDatasetQualityAuditReport report)
@@ -44,15 +51,6 @@ namespace MvcVisionSystem
             return $"\uB2E4\uC74C: \uB204\uB77D \uB77C\uBCA8 {report.TotalMissingLabelCount}\uC7A5, invalid \uB77C\uBCA8 {report.TotalInvalidLabelLineCount}\uC904\uC744 \uC815\uB9AC\uD558\uC138\uC694.";
         }
 
-        private static string BuildQualityMetricDetail(YoloDatasetQualityAuditReport report)
-        {
-            string classSummary = BuildClassDistributionSummary(report?.ObjectCountByClass);
-            string qualitySummary = $"\uB204\uB77D {report?.TotalMissingLabelCount ?? 0}\uC7A5, invalid {report?.TotalInvalidLabelLineCount ?? 0}\uC904, \uBE48 \uC815\uC0C1 {report?.TotalEmptyLabelCount ?? 0}\uC7A5";
-            return string.IsNullOrWhiteSpace(classSummary)
-                ? qualitySummary
-                : qualitySummary + ", " + classSummary;
-        }
-
         private static string BuildClassDistributionSummary(IReadOnlyDictionary<string, int> classCounts)
         {
             if (classCounts == null || classCounts.Count == 0)
@@ -60,7 +58,7 @@ namespace MvcVisionSystem
                 return string.Empty;
             }
 
-            return "\uD074\uB798\uC2A4 " + string.Join(
+            return string.Join(
                 ", ",
                 classCounts
                     .OrderByDescending(item => item.Value)

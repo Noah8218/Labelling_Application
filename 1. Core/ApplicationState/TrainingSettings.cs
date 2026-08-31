@@ -11,11 +11,11 @@ namespace MvcVisionSystem
 
         public int Epoch { get; set; } = 50;
 
-        public string Cfg { get; set; } = CYolov5TrainingParam.Cfg.yolov5x.ToString();
+        public string Cfg { get; set; } = YoloV5TrainingParameters.Cfg.yolov5x.ToString();
 
-        public string Weight { get; set; } = CYolov5TrainingParam.Weight.yolov5x.ToString();
+        public string Weight { get; set; } = YoloV5TrainingParameters.Weight.yolov5x.ToString();
 
-        public void CopyFrom(CYolov5TrainingParam trainingParam)
+        public void CopyFrom(YoloV5TrainingParameters trainingParam)
         {
             if (trainingParam == null)
             {
@@ -29,7 +29,7 @@ namespace MvcVisionSystem
             Weight = trainingParam.weight.ToString();
         }
 
-        public void ApplyTo(CYolov5TrainingParam trainingParam)
+        public void ApplyTo(YoloV5TrainingParameters trainingParam)
         {
             if (trainingParam == null)
             {
@@ -40,12 +40,12 @@ namespace MvcVisionSystem
             trainingParam.batch = Batch;
             trainingParam.epoch = Epoch;
 
-            if (Enum.TryParse(Cfg, out CYolov5TrainingParam.Cfg cfg))
+            if (Enum.TryParse(Cfg, out YoloV5TrainingParameters.Cfg cfg))
             {
                 trainingParam.cfg = cfg;
             }
 
-            if (Enum.TryParse(Weight, out CYolov5TrainingParam.Weight weight))
+            if (Enum.TryParse(Weight, out YoloV5TrainingParameters.Weight weight))
             {
                 trainingParam.weight = weight;
             }

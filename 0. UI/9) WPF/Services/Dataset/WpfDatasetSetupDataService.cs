@@ -7,7 +7,7 @@ namespace MvcVisionSystem
 {
     public sealed class WpfDatasetSetupDataService
     {
-        public string ApplyOutputRootAndClasses(CData data, string outputRootPath, IEnumerable<string> classNames)
+        public string ApplyOutputRootAndClasses(LabelingProjectData data, string outputRootPath, IEnumerable<string> classNames)
         {
             if (data == null)
             {
@@ -23,7 +23,7 @@ namespace MvcVisionSystem
                 if (!ClassCatalogService.TryAddClass(data, className, out _)
                     && !data.ClassNamedList.Any(item => string.Equals(item?.Text, className, StringComparison.OrdinalIgnoreCase)))
                 {
-                    data.ClassNamedList.Add(new CClassItem
+                    data.ClassNamedList.Add(new LabelClass
                     {
                         Text = className,
                         DrawColor = System.Drawing.Color.FromArgb(34, 197, 94)

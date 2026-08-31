@@ -11,7 +11,7 @@ using System.Windows.Input;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfDatasetHealthViewModel : WpfObservableViewModel
+    public sealed class WpfDatasetHealthViewModel : WpfObservableViewModel, IDisposable
     {
         public const string AllVisualQaSplits = "전체";
         public const string AllVisualQaClasses = "전체";
@@ -19,7 +19,8 @@ namespace MvcVisionSystem
         private static readonly string[] VisualQaSplitOrder = { "train", "valid", "test" };
         private readonly WpfDatasetVisualQaService visualQaService = new WpfDatasetVisualQaService();
         private readonly List<WpfDatasetVisualQaItem> visualQaCatalogItems = new List<WpfDatasetVisualQaItem>();
-        private CData data;
+        private bool disposed;
+        private LabelingProjectData data;
         private Action<string> openVisualQaImage = _ => { };
         private string datasetName = "데이터셋 미선택";
         private string purposeText = "목적 미확인";
@@ -47,7 +48,7 @@ namespace MvcVisionSystem
         private ICommand refreshCommand = new RelayCommand(NoOpCommand);
         private ICommand openSelectedVisualQaImageCommand = new RelayCommand(NoOpCommand);
 
-        public WpfDatasetHealthViewModel(CData data = null)
+        public WpfDatasetHealthViewModel(LabelingProjectData data = null)
         {
             this.data = data;
             RefreshCommand = new RelayCommand(() => Refresh(this.data));
@@ -243,8 +244,24 @@ namespace MvcVisionSystem
             openVisualQaImage = openImage ?? (_ => { });
         }
 
-        public void Refresh(CData sourceData)
+        public void Dispose()
         {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
+        }
+
+        public void Refresh(LabelingProjectData sourceData)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
             bool reloadVisualQa = isVisualQaLoaded;
             isVisualQaLoaded = false;
             data = sourceData;
@@ -641,6 +658,11 @@ namespace MvcVisionSystem
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             Refresh(data);
             OnPropertyChanged(nameof(DataScopeText));
             OnPropertyChanged(nameof(EvidenceBoundaryText));

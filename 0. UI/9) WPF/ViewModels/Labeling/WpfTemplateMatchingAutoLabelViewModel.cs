@@ -19,13 +19,13 @@ namespace MvcVisionSystem
         bool HasActiveAutoLabelImage { get; }
         Bitmap ActiveAutoLabelImage { get; }
         string ActiveAutoLabelImagePath { get; }
-        CData AutoLabelData { get; }
+        LabelingProjectData AutoLabelData { get; }
         int MaximumTemplateMatchingCandidateCount { get; }
 
         bool TryResolveTemplateMatchingSource(out Rectangle templateBounds, out string className);
         bool TryResolveTemplateMatchingSourceSegment(out IReadOnlyList<Point> points, out IReadOnlyList<IReadOnlyList<Point>> cutouts);
         bool TryResolveTemplateMatchingSourceMask(out byte[] maskData, out Size maskSize, out Rectangle maskBounds);
-        CClassItem EnsureAutoLabelClassItem(string className);
+        LabelClass EnsureAutoLabelClassItem(string className);
         IReadOnlyList<WpfImageQueueItem> GetVisibleAutoLabelQueueItems();
         IReadOnlyList<WpfImageQueueItem> GetAllAutoLabelQueueItems();
         IReadOnlyList<WpfImageQueueItem> BuildAutoLabelBatchQueue(IEnumerable<WpfImageQueueItem> items);
@@ -276,7 +276,7 @@ namespace MvcVisionSystem
                 return;
             }
 
-            CClassItem classItem = currentHost.EnsureAutoLabelClassItem(className);
+            LabelClass classItem = currentHost.EnsureAutoLabelClassItem(className);
             string normalizedClassName = classItem?.Text ?? className;
             IReadOnlyList<WpfImageQueueItem> queue = BuildBatchQueue(currentHost);
             currentHost.TryResolveTemplateMatchingSourceSegment(
@@ -312,7 +312,7 @@ namespace MvcVisionSystem
             }
 
             using Bitmap templateImage = (Bitmap)registeredTemplateImage.Clone();
-            CClassItem classItem = currentHost.EnsureAutoLabelClassItem(registeredTemplateClassName);
+            LabelClass classItem = currentHost.EnsureAutoLabelClassItem(registeredTemplateClassName);
             string normalizedClassName = classItem?.Text ?? registeredTemplateClassName;
             IReadOnlyList<WpfImageQueueItem> queue = BuildRegisteredTemplateBatchQueue(currentHost);
             await RunBatchAsync(
@@ -333,7 +333,7 @@ namespace MvcVisionSystem
             IWpfTemplateMatchingAutoLabelHost currentHost,
             IReadOnlyList<WpfImageQueueItem> queue,
             Bitmap templateImage,
-            CClassItem classItem,
+            LabelClass classItem,
             string className,
             Rectangle sourceBounds,
             IReadOnlyList<Point> sourceSegmentPoints,

@@ -40,7 +40,7 @@ namespace MvcVisionSystem
             }
         }
 
-        public static string ResolveReviewStatusFilePath(CData data)
+        public static string ResolveReviewStatusFilePath(LabelingProjectData data)
         {
             string outputRootPath = data?.OutputRootPath;
             if (string.IsNullOrWhiteSpace(outputRootPath))
@@ -51,7 +51,7 @@ namespace MvcVisionSystem
             return Path.Combine(outputRootPath, FileName);
         }
 
-        public void LoadReviewStatus(CData data, IEnumerable<string> imagePaths)
+        public void LoadReviewStatus(LabelingProjectData data, IEnumerable<string> imagePaths)
         {
             lock (syncRoot)
             {
@@ -88,7 +88,7 @@ namespace MvcVisionSystem
             }
         }
 
-        public void SaveReviewStatus(CData data)
+        public void SaveReviewStatus(LabelingProjectData data)
         {
             string filePath = ResolveReviewStatusFilePath(data);
             if (string.IsNullOrWhiteSpace(filePath))
@@ -253,7 +253,7 @@ namespace MvcVisionSystem
             }
         }
 
-        public static AnomalyImageReviewSummary LoadPersistedSummary(CData data, int totalImageCount = 0)
+        public static AnomalyImageReviewSummary LoadPersistedSummary(LabelingProjectData data, int totalImageCount = 0)
         {
             string filePath = ResolveReviewStatusFilePath(data);
             if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))

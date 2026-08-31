@@ -1,4 +1,3 @@
-using MahApps.Metro.IconPacks;
 using MvcVisionSystem._1._Core;
 using MvcVisionSystem.Yolo;
 using System;
@@ -9,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using DrawingSize = System.Drawing.Size;
-using MediaBrush = System.Windows.Media.Brush;
 
 namespace MvcVisionSystem
 {
@@ -26,7 +24,7 @@ namespace MvcVisionSystem
             WpfImageQueueItem item = FindImageQueueItem(activeImagePath);
             if (IsAnomalyDatasetPurpose())
             {
-                ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewStatus.GetOrCreate(activeImagePath));
+                ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewWorkflowService.GetOrCreate(activeImagePath));
                 RefreshImageQueueViewAfterItemStateChange();
                 UpdateImageQueueStatusText();
                 return;
@@ -36,6 +34,7 @@ namespace MvcVisionSystem
                 activeImageSize,
                 global.Data,
                 hasActiveCandidates);
+            imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
             ApplyReviewStatusToItem(item, status);
             RefreshImageQueueViewAfterItemStateChange();
             UpdateImageQueueStatusText();
@@ -43,7 +42,9 @@ namespace MvcVisionSystem
 
         private void QueueActiveImageQueueStatusRefresh(bool hasActiveCandidates)
         {
-            if (string.IsNullOrWhiteSpace(activeImagePath) || activeImageSize.IsEmpty)
+            if (isApplicationCloseApproved
+                || string.IsNullOrWhiteSpace(activeImagePath)
+                || activeImageSize.IsEmpty)
             {
                 return;
             }
@@ -52,7 +53,7 @@ namespace MvcVisionSystem
             {
                 ApplyAnomalyReviewStatusToItem(
                     FindImageQueueItem(activeImagePath),
-                    anomalyImageReviewStatus.GetOrCreate(activeImagePath));
+                    anomalyImageReviewWorkflowService.GetOrCreate(activeImagePath));
                 RefreshImageQueueViewAfterItemStateChange();
                 UpdateImageQueueStatusText();
                 return;
@@ -60,16 +61,31 @@ namespace MvcVisionSystem
 
             string imagePath = activeImagePath;
             DrawingSize imageSize = activeImageSize;
-            CData data = global.Data;
+            LabelingProjectData data = global.Data;
             int refreshVersion = Interlocked.Increment(ref queuedActiveImageQueueStatusRefreshVersion);
 
             // Delete must feel immediate. Label-file recount and review-state JSON writes are
             // background bookkeeping; only the latest completed result returns to the UI thread.
-            Task.Run(() => RefreshActiveImageQueueStatusCore(
-                    imagePath,
-                    imageSize,
-                    data,
-                    hasActiveCandidates))
+            Task.Run(() =>
+                {
+                    if (refreshVersion != Volatile.Read(ref queuedActiveImageQueueStatusRefreshVersion))
+                    {
+                        return null;
+                    }
+
+                    YoloImageReviewStatus status = RefreshActiveImageQueueStatusCore(
+                        imagePath,
+                        imageSize,
+                        data,
+                        hasActiveCandidates);
+                    if (refreshVersion != Volatile.Read(ref queuedActiveImageQueueStatusRefreshVersion))
+                    {
+                        return null;
+                    }
+
+                    imageQualityReviewWorkflowService.SaveReviewStatus(data);
+                    return status;
+                })
                 .ContinueWith(
                     task => ApplyQueuedActiveImageQueueStatusRefresh(refreshVersion, imagePath, task),
                     TaskScheduler.Default);
@@ -78,15 +94,14 @@ namespace MvcVisionSystem
         private YoloImageReviewStatus RefreshActiveImageQueueStatusCore(
             string imagePath,
             DrawingSize imageSize,
-            CData data,
+            LabelingProjectData data,
             bool hasActiveCandidates)
         {
-            YoloImageReviewStatus status = imageReviewStatus.RefreshLabelStatusAndReviewState(
+            YoloImageReviewStatus status = imageQualityReviewWorkflowService.RefreshLabelStatusAndReviewState(
                 imagePath,
                 imageSize,
                 data,
                 hasActiveCandidates);
-            imageReviewStatus.SaveReviewStatus(data);
             return status;
         }
 
@@ -100,7 +115,8 @@ namespace MvcVisionSystem
                 Dispatcher.BeginInvoke(
                     new Action(() =>
                     {
-                        if (refreshVersion != Volatile.Read(ref queuedActiveImageQueueStatusRefreshVersion)
+                        if (isApplicationCloseApproved
+                            || refreshVersion != Volatile.Read(ref queuedActiveImageQueueStatusRefreshVersion)
                             || !string.Equals(activeImagePath, imagePath, StringComparison.OrdinalIgnoreCase)
                             || refreshTask.IsCanceled)
                         {
@@ -110,6 +126,11 @@ namespace MvcVisionSystem
                         if (refreshTask.IsFaulted)
                         {
                             AppendLog($"Image queue status refresh failed after delete: {refreshTask.Exception?.GetBaseException().Message}");
+                            return;
+                        }
+
+                        if (refreshTask.Result == null)
+                        {
                             return;
                         }
 
@@ -145,21 +166,7 @@ namespace MvcVisionSystem
 
         private static void ApplySaveRequiredStatusToQueueItem(WpfImageQueueItem item, string reason)
         {
-            if (item == null)
-            {
-                return;
-            }
-
-            string displayReason = string.IsNullOrWhiteSpace(reason) ? "\uB77C\uBCA8 \uD3B8\uC9D1" : reason.Trim();
-            item.IsSaveRequired = true;
-            item.LabelStatus = "\uC800\uC7A5 \uD544\uC694";
-            item.QueueIconKind = PackIconMaterialKind.AlertCircleOutline;
-            item.QueueIconBrush = WpfImageQueueItem.WarningBrush;
-            item.QueueBadgeBackgroundBrush = WpfImageQueueItem.WarningBadgeBrush;
-            item.QueueRowAccentBrush = WpfImageQueueItem.WarningBrush;
-            item.QueueBadgeText = "\uC800\uC7A5 \uD544\uC694";
-            item.QueueStatusSummary = $"\uB77C\uBCA8 \uC800\uC7A5 \uD544\uC694: {displayReason}";
-            item.Detail = $"{item.FileName}{Environment.NewLine}\uD30C\uC77C\uC5D0 \uBC18\uC601\uD558\uB824\uBA74 \uB77C\uBCA8 \uC800\uC7A5\uC744 \uB20C\uB7EC\uC57C \uD569\uB2C8\uB2E4.{Environment.NewLine}{displayReason}";
+            WpfImageQueuePresenter.ApplySaveRequiredStatusToItem(item, reason);
         }
 
         private void SetActiveImageDetectionStatus(int candidateCount, bool succeeded)
@@ -172,15 +179,15 @@ namespace MvcVisionSystem
             string imageName = Path.GetFileNameWithoutExtension(activeImagePath);
             YoloImageReviewStatus status = succeeded
                 ? candidateCount > 0
-                    ? imageReviewStatus.SetDetectionCandidates(activeImagePath, imageName, candidateCount)
-                    : imageReviewStatus.SetDetectionNoCandidates(activeImagePath, imageName)
-                : imageReviewStatus.SetDetectionFailed(activeImagePath, imageName, "Detection failed.");
-            imageReviewStatus.SaveReviewStatus(global.Data);
+                    ? imageQualityReviewWorkflowService.SetDetectionCandidates(activeImagePath, imageName, candidateCount)
+                    : imageQualityReviewWorkflowService.SetDetectionNoCandidates(activeImagePath, imageName)
+                : imageQualityReviewWorkflowService.SetDetectionFailed(activeImagePath, imageName, "Detection failed.");
+            imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
             if (IsAnomalyDatasetPurpose())
             {
                 ApplyAnomalyReviewStatusToItem(
                     FindImageQueueItem(activeImagePath),
-                    anomalyImageReviewStatus.GetOrCreate(activeImagePath));
+                    anomalyImageReviewWorkflowService.GetOrCreate(activeImagePath));
             }
             else
             {
@@ -210,15 +217,22 @@ namespace MvcVisionSystem
                 return false;
             }
 
-            AnomalyClassificationDecision decision = AnomalyClassificationDecisionService.Build(
-                candidates,
-                global.Data.ProjectSettings.AnomalyClassification.ToDecisionOptions());
-            if (!decision.IsMapped)
+            WpfAnomalyClassificationResult result = anomalyImageReviewWorkflowService.ApplyClassification(
+                new WpfAnomalyClassificationRequest(
+                    imagePath,
+                    imageName,
+                    candidates,
+                    WpfAnomalyClassificationOptionsSnapshot.From(
+                        global.Data.ProjectSettings.AnomalyClassification.ToDecisionOptions()),
+                    saveReviewStatus),
+                global.Data);
+            if (!result.IsMapped)
             {
                 return false;
             }
 
-            MarkAnomalyImageReviewState(imagePath, imageName, decision.ReviewState, saveReviewStatus);
+            ApplyAnomalyReviewStatusToItem(FindImageQueueItem(imagePath), result.Status);
+            UpdateImageQueueStatusText();
             return true;
         }
 
@@ -229,14 +243,14 @@ namespace MvcVisionSystem
                 return;
             }
 
-            YoloImageReviewStatus status = imageReviewStatus.MarkConfirmed(activeImagePath, Path.GetFileNameWithoutExtension(activeImagePath));
+            YoloImageReviewStatus status = imageQualityReviewWorkflowService.MarkConfirmed(activeImagePath, Path.GetFileNameWithoutExtension(activeImagePath));
             if (!activeImageSize.IsEmpty)
             {
-                status = imageReviewStatus.RefreshLabelStatusAndReviewState(activeImagePath, activeImageSize, global.Data, hasActiveCandidates: false) ?? status;
+                status = imageQualityReviewWorkflowService.RefreshLabelStatusAndReviewState(activeImagePath, activeImageSize, global.Data, hasActiveCandidates: false) ?? status;
             }
 
             ApplyReviewStatusToItem(FindImageQueueItem(activeImagePath), status);
-            imageReviewStatus.SaveReviewStatus(global.Data);
+            imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
             MarkActiveAnomalyImageAbnormal();
             // Live filtering observes the row properties above; a full Refresh resets and redraws the entire queue.
             UpdateImageQueueStatusText();
@@ -250,14 +264,14 @@ namespace MvcVisionSystem
             }
 
             string imageName = Path.GetFileNameWithoutExtension(activeImagePath);
-            YoloImageReviewStatus status = imageReviewStatus.SetDetectionNoCandidates(activeImagePath, imageName);
+            YoloImageReviewStatus status = imageQualityReviewWorkflowService.SetDetectionNoCandidates(activeImagePath, imageName);
             if (!activeImageSize.IsEmpty)
             {
-                status = imageReviewStatus.RefreshLabelStatusAndReviewState(activeImagePath, activeImageSize, global.Data, hasActiveCandidates: false) ?? status;
+                status = imageQualityReviewWorkflowService.RefreshLabelStatusAndReviewState(activeImagePath, activeImageSize, global.Data, hasActiveCandidates: false) ?? status;
             }
 
             ApplyReviewStatusToItem(FindImageQueueItem(activeImagePath), status);
-            imageReviewStatus.SaveReviewStatus(global.Data);
+            imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
             MarkActiveAnomalyImageNormal();
             RefreshImageQueueViewAfterItemStateChange();
             UpdateImageQueueStatusText();
@@ -272,10 +286,10 @@ namespace MvcVisionSystem
 
             string imageName = Path.GetFileNameWithoutExtension(activeImagePath);
             YoloImageReviewStatus status = pendingDetectionCandidates.Count > 0
-                ? imageReviewStatus.SetDetectionCandidates(activeImagePath, imageName, pendingDetectionCandidates.Count)
-                : imageReviewStatus.MarkSkipped(activeImagePath, imageName);
+                ? imageQualityReviewWorkflowService.SetDetectionCandidates(activeImagePath, imageName, pendingDetectionCandidates.Count)
+                : imageQualityReviewWorkflowService.MarkSkipped(activeImagePath, imageName);
             ApplyReviewStatusToItem(FindImageQueueItem(activeImagePath), status);
-            imageReviewStatus.SaveReviewStatus(global.Data);
+            imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
             RefreshImageQueueViewAfterItemStateChange();
             UpdateImageQueueStatusText();
         }
@@ -303,20 +317,17 @@ namespace MvcVisionSystem
                 return;
             }
 
-            string outputPath = YoloImageQualityReviewReportExportService.ResolveDefaultOutputPath(global.Data);
-            if (string.IsNullOrWhiteSpace(outputPath))
-            {
-                SetModelStatus("QA 보고서 저장 실패: 데이터셋 저장 폴더를 먼저 지정하세요.");
-                return;
-            }
-
             try
             {
-                YoloImageQualityReviewReportExportResult result = YoloImageQualityReviewReportExportService.ExportMarkdown(
-                    imageReviewStatus.GetItems(),
-                    outputPath);
-                SetModelStatus($"QA 보고서 저장: {Path.GetFileName(result.OutputPath)} / 수정 필요 {result.NeedsFixCount}");
-                AppendLog($"QA 보고서 저장: {Path.GetFileName(result.OutputPath)} / 전체 {result.TotalImageCount} / 수정 필요 {result.NeedsFixCount} / 검수 완료 {result.ReviewedCount}");
+                WpfImageQualityReviewReportResult report = imageQualityReviewWorkflowService.ExportQualityReviewReport(global.Data);
+                if (!report.HasOutputPath)
+                {
+                    SetModelStatus("QA 보고서 저장 실패: 데이터셋 저장 폴더를 먼저 지정하세요.");
+                    return;
+                }
+
+                SetModelStatus($"QA 보고서 저장: {Path.GetFileName(report.OutputPath)} / 수정 필요 {report.NeedsFixCount}");
+                AppendLog($"QA 보고서 저장: {Path.GetFileName(report.OutputPath)} / 전체 {report.TotalImageCount} / 수정 필요 {report.NeedsFixCount} / 검수 완료 {report.ReviewedCount}");
             }
             catch (Exception exception)
             {
@@ -334,29 +345,33 @@ namespace MvcVisionSystem
             }
 
             WpfImageQueueItem item = FindImageQueueItem(activeImagePath);
-            if (state == YoloImageQualityReviewState.Reviewed
-                && (item == null
-                    || item.IsSaveRequired
-                    || !string.IsNullOrWhiteSpace(annotationDirtyReason)
-                    || !WpfImageQueueFilterService.HasCompletedLabelWork(item)))
+            string imageName = Path.GetFileNameWithoutExtension(activeImagePath);
+            WpfImageQualityReviewResult result = imageQualityReviewWorkflowService.ApplyQualityReview(
+                new WpfImageQualityReviewRequest(
+                    activeImagePath,
+                    imageName,
+                    state,
+                    IsLabelQualityReviewPurpose(),
+                    item?.IsSaveRequired == true,
+                    !string.IsNullOrWhiteSpace(annotationDirtyReason),
+                    WpfImageQueueFilterService.HasCompletedLabelWork(item),
+                    ObjectReviewViewModel?.QualityReviewNoteText),
+                global.Data);
+            if (!result.IsApplicable)
             {
-                SetModelStatus("검수 완료 불가: 라벨 저장 또는 객체 없음 완료 후 다시 선택하세요.");
-                RefreshActiveImageQualityReviewPresentation(item, imageReviewStatus.GetOrCreate(activeImagePath));
+                AppendLog("품질 검수 상태를 변경할 Detection/Segmentation 이미지를 먼저 여세요.");
                 return;
             }
 
-            string imageName = Path.GetFileNameWithoutExtension(activeImagePath);
-            YoloImageReviewStatus status = state switch
+            if (!result.IsAccepted)
             {
-                YoloImageQualityReviewState.NeedsFix => imageReviewStatus.MarkQualityNeedsFix(
-                    activeImagePath,
-                    imageName,
-                    ObjectReviewViewModel?.QualityReviewNoteText),
-                YoloImageQualityReviewState.Reviewed => imageReviewStatus.MarkQualityReviewed(activeImagePath, imageName),
-                _ => imageReviewStatus.ClearQualityReview(activeImagePath, imageName)
-            };
+                SetModelStatus("검수 완료 불가: 라벨 저장 또는 객체 없음 완료 후 다시 선택하세요.");
+                RefreshActiveImageQualityReviewPresentation(item, result.Status);
+                return;
+            }
+
+            YoloImageReviewStatus status = result.Status;
             ApplyReviewStatusToItem(item, status);
-            imageReviewStatus.SaveReviewStatus(global.Data);
             RefreshImageQueueViewAfterItemStateChange();
             UpdateImageQueueStatusText();
 
@@ -372,24 +387,24 @@ namespace MvcVisionSystem
                 return;
             }
 
-            YoloImageReviewStatus before = imageReviewStatus.GetOrCreate(activeImagePath);
+            YoloImageReviewStatus before = imageQualityReviewWorkflowService.GetOrCreate(activeImagePath);
             if (before?.QualityReviewState != YoloImageQualityReviewState.Reviewed)
             {
                 RefreshActiveImageQualityReviewPresentation(FindImageQueueItem(activeImagePath), before);
                 return;
             }
 
-            YoloImageReviewStatus status = imageReviewStatus.InvalidateQualityReviewAfterEdit(
+            YoloImageReviewStatus status = imageQualityReviewWorkflowService.InvalidateQualityReviewAfterEdit(
                 activeImagePath,
                 Path.GetFileNameWithoutExtension(activeImagePath));
             ApplyReviewStatusToItem(FindImageQueueItem(activeImagePath), status);
-            imageReviewStatus.SaveReviewStatus(global.Data);
+            imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
         }
 
         private void RefreshActiveImageQualityReviewPresentation()
         {
             WpfImageQueueItem item = FindImageQueueItem(activeImagePath);
-            RefreshActiveImageQualityReviewPresentation(item, imageReviewStatus.GetOrCreate(activeImagePath));
+            RefreshActiveImageQualityReviewPresentation(item, imageQualityReviewWorkflowService.GetOrCreate(activeImagePath));
         }
 
         private void RefreshActiveImageQualityReviewPresentation(
@@ -493,71 +508,22 @@ namespace MvcVisionSystem
                 return;
             }
 
-            AnomalyImageReviewStatus status;
-            if (state == AnomalyImageReviewState.Normal)
+            WpfAnomalyImageReviewResult result = anomalyImageReviewWorkflowService.ApplyReviewState(
+                new WpfAnomalyImageReviewRequest(imagePath, imageName, state, saveReviewStatus),
+                global.Data);
+            if (!result.IsApplicable)
             {
-                status = anomalyImageReviewStatus.MarkNormal(imagePath, imageName);
-            }
-            else if (state == AnomalyImageReviewState.Abnormal)
-            {
-                status = anomalyImageReviewStatus.MarkAbnormal(imagePath, imageName);
-            }
-            else
-            {
-                status = anomalyImageReviewStatus.ClearReviewState(imagePath, imageName);
+                return;
             }
 
-            if (saveReviewStatus)
-            {
-                SaveAnomalyImageReviewStatus();
-            }
-
-            ApplyAnomalyReviewStatusToItem(FindImageQueueItem(imagePath), status);
+            ApplyAnomalyReviewStatusToItem(FindImageQueueItem(imagePath), result.Status);
             // Live filtering observes AnomalyReviewState/IsLabeled. Refresh() would reset and redraw every row.
             UpdateImageQueueStatusText();
         }
 
         private void ApplyAnomalyReviewStatusToItem(WpfImageQueueItem item, AnomalyImageReviewStatus status)
         {
-            if (item == null || status == null)
-            {
-                return;
-            }
-
-            item.AnomalyReviewState = status.ReviewState;
-            item.IsLabeled = status.IsReviewed;
-            item.IsSaveRequired = false;
-            item.DetectStatus = status.IsReviewed ? "완료" : "확인 필요";
-            switch (status.ReviewState)
-            {
-                case AnomalyImageReviewState.Normal:
-                    item.LabelStatus = "OK";
-                    item.QueueStatusSummary = "정상(OK) 판정 완료";
-                    item.QueueBadgeText = "OK";
-                    item.QueueIconKind = MahApps.Metro.IconPacks.PackIconMaterialKind.CheckboxMarkedCircleOutline;
-                    item.QueueIconBrush = WpfImageQueueItem.SuccessBrush;
-                    item.QueueBadgeBackgroundBrush = WpfImageQueueItem.SuccessBadgeBrush;
-                    item.QueueRowAccentBrush = WpfImageQueueItem.SuccessBrush;
-                    break;
-                case AnomalyImageReviewState.Abnormal:
-                    item.LabelStatus = "NG";
-                    item.QueueStatusSummary = "이상(NG) 판정 완료";
-                    item.QueueBadgeText = "NG";
-                    item.QueueIconKind = MahApps.Metro.IconPacks.PackIconMaterialKind.AlertCircleOutline;
-                    item.QueueIconBrush = WpfImageQueueItem.ErrorBrush;
-                    item.QueueBadgeBackgroundBrush = WpfImageQueueItem.ErrorBadgeBrush;
-                    item.QueueRowAccentBrush = WpfImageQueueItem.ErrorBrush;
-                    break;
-                default:
-                    item.LabelStatus = "미판정";
-                    item.QueueStatusSummary = "정상(OK) 또는 이상(NG) 판정 필요";
-                    item.QueueBadgeText = "미판정";
-                    item.QueueIconKind = MahApps.Metro.IconPacks.PackIconMaterialKind.ImageOutline;
-                    item.QueueIconBrush = WpfImageQueueItem.MutedBrush;
-                    item.QueueBadgeBackgroundBrush = WpfImageQueueItem.MutedBadgeBrush;
-                    item.QueueRowAccentBrush = WpfImageQueueItem.TransparentBrush;
-                    break;
-            }
+            WpfImageQueuePresenter.ApplyAnomalyReviewStatusToItem(item, status);
         }
 
         private void RefreshImageQueuePurposePresentation()
@@ -567,13 +533,13 @@ namespace MvcVisionSystem
             {
                 if (isAnomalyPurpose)
                 {
-                    ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewStatus.GetOrCreate(item.ImagePath));
+                    ApplyAnomalyReviewStatusToItem(item, anomalyImageReviewWorkflowService.GetOrCreate(item.ImagePath));
                 }
                 else
                 {
                     ApplyReviewStatusToItemCore(
                         item,
-                        imageReviewStatus.GetOrCreate(item.ImagePath),
+                        imageQualityReviewWorkflowService.GetOrCreate(item.ImagePath),
                         refreshTrainingStepCompletion: false);
                 }
             }
@@ -584,8 +550,8 @@ namespace MvcVisionSystem
 
         private void SaveAnomalyImageReviewStatus()
         {
-            anomalyImageReviewStatus.SaveReviewStatus(global.Data);
-            // The manifest is derived and is rebuilt by CData.SaveConfig. Keep the primary review state durable
+            anomalyImageReviewWorkflowService.SaveReviewStatus(global.Data);
+            // The manifest is derived and is rebuilt by LabelingProjectData.SaveConfig. Keep the primary review state durable
             // without rescanning the full dataset on every OK/NG decision.
         }
     }

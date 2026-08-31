@@ -232,6 +232,8 @@ namespace MvcVisionSystem
 
     public sealed class WpfDatasetDashboardMetricItem
     {
+        private readonly WpfDatasetDashboardMetricLocalizationDescriptor localization;
+
         public WpfDatasetDashboardMetricItem(
             string title,
             string value,
@@ -241,6 +243,29 @@ namespace MvcVisionSystem
             bool isProblem,
             bool isWarning,
             WpfDatasetDashboardActionKind actionKind = WpfDatasetDashboardActionKind.None)
+            : this(
+                title,
+                value,
+                detail,
+                stateText,
+                iconKind,
+                isProblem,
+                isWarning,
+                actionKind,
+                localization: null)
+        {
+        }
+
+        private WpfDatasetDashboardMetricItem(
+            string title,
+            string value,
+            string detail,
+            string stateText,
+            PackIconMaterialKind iconKind,
+            bool isProblem,
+            bool isWarning,
+            WpfDatasetDashboardActionKind actionKind,
+            WpfDatasetDashboardMetricLocalizationDescriptor localization)
         {
             Title = title ?? string.Empty;
             Value = value ?? string.Empty;
@@ -250,6 +275,48 @@ namespace MvcVisionSystem
             IsProblem = isProblem;
             IsWarning = isWarning;
             ActionKind = actionKind;
+            this.localization = localization;
+        }
+
+        internal static WpfDatasetDashboardMetricItem CreateLocalized(
+            WpfDatasetDashboardMetricLocalizationDescriptor localization,
+            string fallbackValue,
+            PackIconMaterialKind iconKind,
+            bool isProblem,
+            bool isWarning,
+            WpfDatasetDashboardActionKind actionKind)
+        {
+            if (localization == null)
+            {
+                throw new ArgumentNullException(nameof(localization));
+            }
+
+            return new WpfDatasetDashboardMetricItem(
+                localization.RenderTitle(),
+                localization.RenderValue(fallbackValue),
+                localization.RenderDetail(),
+                localization.RenderState(),
+                iconKind,
+                isProblem,
+                isWarning,
+                actionKind,
+                localization);
+        }
+
+        internal WpfDatasetDashboardMetricItem Localize()
+        {
+            return localization == null
+                ? this
+                : new WpfDatasetDashboardMetricItem(
+                    localization.RenderTitle(),
+                    localization.RenderValue(Value),
+                    localization.RenderDetail(),
+                    localization.RenderState(),
+                    IconKind,
+                    IsProblem,
+                    IsWarning,
+                    ActionKind,
+                    localization);
         }
 
         public string Title { get; }

@@ -10,15 +10,8 @@ namespace MvcVisionSystem.Yolo
 {
     public static class PascalVocDetectionImportService
     {
-        private static readonly string[] DatasetModes =
-        {
-            YoloDatasetSplitService.TrainMode,
-            YoloDatasetSplitService.ValidMode,
-            YoloDatasetSplitService.TestMode
-        };
-
         public static PascalVocDetectionImportResult ImportDirectory(
-            CData data,
+            LabelingProjectData data,
             string annotationDirectory,
             string imageRoot,
             string targetSplit = YoloDatasetSplitService.TrainMode)
@@ -38,7 +31,7 @@ namespace MvcVisionSystem.Yolo
                 throw new DirectoryNotFoundException($"Pascal VOC annotation directory was not found: {annotationDirectory}");
             }
 
-            string split = NormalizeSplit(targetSplit);
+            string split = YoloDatasetSplitService.NormalizeStandardSplit(targetSplit);
             if (string.IsNullOrWhiteSpace(split))
             {
                 throw new ArgumentException("Target split must be train, valid, or test.", nameof(targetSplit));
@@ -74,7 +67,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static bool TryImportXml(
-            CData data,
+            LabelingProjectData data,
             string xmlPath,
             string imageDirectory,
             string labelDirectory,
@@ -134,7 +127,7 @@ namespace MvcVisionSystem.Yolo
             return true;
         }
 
-        private static bool TryBuildLabelLine(CData data, XElement objectElement, Size imageSize, out string line)
+        private static bool TryBuildLabelLine(LabelingProjectData data, XElement objectElement, Size imageSize, out string line)
         {
             line = string.Empty;
             string className = ClassCatalogService.NormalizeClassName(objectElement?.Element("name")?.Value);
@@ -149,7 +142,7 @@ namespace MvcVisionSystem.Yolo
                 return false;
             }
 
-            int classIndex = FindOrAddClass(data, className);
+            int classIndex = ClassCatalogService.FindOrAddClass(data, className);
             if (classIndex < 0)
             {
                 return false;
@@ -165,31 +158,6 @@ namespace MvcVisionSystem.Yolo
 
             line = YoloAnnotationService.TryCreateYoloLine(classIndex, rectangle, imageSize);
             return !string.IsNullOrWhiteSpace(line);
-        }
-
-        private static int FindOrAddClass(CData data, string className)
-        {
-            int classIndex = FindClassIndex(data, className);
-            if (classIndex >= 0)
-            {
-                return classIndex;
-            }
-
-            ClassCatalogService.TryAddClass(data, className, out _);
-            return FindClassIndex(data, className);
-        }
-
-        private static int FindClassIndex(CData data, string className)
-        {
-            for (int index = 0; index < (data.ClassNamedList?.Count ?? 0); index++)
-            {
-                if (string.Equals(data.ClassNamedList[index]?.Text, className, StringComparison.OrdinalIgnoreCase))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
         }
 
         private static bool TryReadInt(XElement parent, string name, out int value)
@@ -225,18 +193,6 @@ namespace MvcVisionSystem.Yolo
             return Path.Combine(imageRoot ?? string.Empty, fileName);
         }
 
-        private static string NormalizeSplit(string split)
-        {
-            foreach (string mode in DatasetModes)
-            {
-                if (string.Equals(split, mode, StringComparison.OrdinalIgnoreCase))
-                {
-                    return mode;
-                }
-            }
-
-            return string.Empty;
-        }
     }
 
 }

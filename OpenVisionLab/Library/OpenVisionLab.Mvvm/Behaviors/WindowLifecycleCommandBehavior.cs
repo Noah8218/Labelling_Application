@@ -42,6 +42,34 @@ namespace OpenVisionLab.Mvvm.Behaviors
             target.SetValue(ClosedCommandProperty, value);
         }
 
+        public static void RefreshLoadedCommand(DependencyObject target)
+        {
+            if (target is not FrameworkElement element)
+            {
+                return;
+            }
+
+            element.Loaded -= OnLoaded;
+            if (GetLoadedCommand(target) != null)
+            {
+                element.Loaded += OnLoaded;
+            }
+        }
+
+        public static void RefreshClosedCommand(DependencyObject target)
+        {
+            if (target is not Window window)
+            {
+                return;
+            }
+
+            window.Closed -= OnClosed;
+            if (GetClosedCommand(target) != null)
+            {
+                window.Closed += OnClosed;
+            }
+        }
+
         private static void OnLoadedCommandChanged(DependencyObject target, DependencyPropertyChangedEventArgs e)
         {
             if (target is not FrameworkElement element)

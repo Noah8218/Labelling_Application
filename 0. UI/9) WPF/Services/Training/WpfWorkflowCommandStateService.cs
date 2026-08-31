@@ -37,7 +37,9 @@
                 ? OpenVisionLab.OpenVisionLanguageService.T("WpfShell.Command.Unavailable.Busy")
                 : OpenVisionLab.OpenVisionLanguageService.T("WpfShell.Command.Unavailable.InferenceMode");
 
-            if (!canRunModelInference && !string.IsNullOrWhiteSpace(modelRuntimeUnavailableHint))
+            if (isInferenceMode
+                && !canRunModelInference
+                && !string.IsNullOrWhiteSpace(modelRuntimeUnavailableHint))
             {
                 unavailableHint = OpenVisionLab.OpenVisionLanguageService.CurrentLanguage == OpenVisionLab.OpenVisionLanguage.English
                     ? OpenVisionLab.OpenVisionLanguageService.T("WpfShell.Command.Unavailable.ModelRuntime")

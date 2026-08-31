@@ -59,100 +59,175 @@ namespace MvcVisionSystem
             bool isLabelingComplete = hasImages && completedImageLabelCount >= statistics.TotalImageCount;
             bool hasAnyCompletedImageLabel = completedImageLabelCount > 0;
 
+            string replacementValueKey = report?.IsReady == true
+                ? hasReplacementEvidence
+                    ? hasStrongReplacementEvidence
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Value.Available"
+                        : "WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Value.Caution"
+                    : "WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Value.Hold"
+                : "WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Value.Unavailable";
+            string replacementValueFallback = string.Empty;
+            string replacementDetailKey = hasReplacementEvidence
+                ? hasStrongReplacementEvidence
+                    ? "WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Detail.Evidence"
+                    : "WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Detail.Weak"
+                : hasTest
+                    ? "WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Detail.NoLabels"
+                    : "WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Detail.NoTest";
+            object[] replacementDetailArguments = hasReplacementEvidence
+                ? hasStrongReplacementEvidence
+                    ? new object[] { finalVerificationCount }
+                    : new object[] { finalVerificationCount, RecommendedModelReplacementTestImageCount }
+                : Array.Empty<object>();
+            string replacementStateKey = report?.IsReady == true
+                ? hasReplacementEvidence
+                    ? hasStrongReplacementEvidence
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Complete"
+                        : "WpfLearningWorkflow.DatasetDashboard.Metric.State.EvidenceInsufficient"
+                    : "WpfLearningWorkflow.DatasetDashboard.Metric.State.FinalLabelsNeeded"
+                : "WpfLearningWorkflow.DatasetDashboard.Metric.State.TrainFirst";
+            string duplicateOverlapExample = FirstNonEmpty(
+                statistics.TrainValidImageOverlapExample,
+                statistics.SplitImageOverlapExample);
+
             var metrics = new List<WpfDatasetDashboardMetricItem>
             {
-                new WpfDatasetDashboardMetricItem(
-                    "\uC774\uBBF8\uC9C0",
+                WpfDatasetDashboardLocalizationService.CreateMetric(
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Images.Title",
                     statistics.TotalImageCount.ToString(),
-                    $"train {statistics.TrainImageCount}, valid {statistics.ValidImageCount}, test {statistics.TestImageCount}",
-                    hasImages ? "\uC644\uB8CC" : "\uD544\uC694",
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Images.Detail",
+                    hasImages
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Complete"
+                        : "WpfLearningWorkflow.DatasetDashboard.Metric.State.Needed",
                     PackIconMaterialKind.FolderImage,
                     isProblem: !hasImages,
                     isWarning: false,
-                    actionKind: WpfDatasetDashboardActionKind.OpenImages),
-                new WpfDatasetDashboardMetricItem(
-                    "\uC9C4\uD589",
+                    actionKind: WpfDatasetDashboardActionKind.OpenImages,
+                    statistics.TrainImageCount,
+                    statistics.ValidImageCount,
+                    statistics.TestImageCount),
+                WpfDatasetDashboardLocalizationService.CreateMetric(
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Progress.Title",
                     $"{visibleCompletedImageLabelCount}/{statistics.TotalImageCount}",
-                    $"\uAC80\uD1A0\uB41C \uB77C\uBCA8 \uD30C\uC77C {completedImageLabelCount}\uAC1C, \uC9C4\uD589\uB960 {progressPercent}%",
-                    !hasImages ? "\uB300\uAE30" : isLabelingComplete ? "\uC644\uB8CC" : hasAnyCompletedImageLabel ? "\uC9C4\uD589" : "\uD544\uC694",
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Progress.Detail",
+                    !hasImages
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting"
+                        : isLabelingComplete
+                            ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Complete"
+                            : hasAnyCompletedImageLabel
+                                ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Progress"
+                                : "WpfLearningWorkflow.DatasetDashboard.Metric.State.Needed",
                     PackIconMaterialKind.ProgressClock,
                     isProblem: hasImages && !isLabelingComplete,
                     isWarning: false,
-                    actionKind: WpfDatasetDashboardActionKind.OpenLabelingProgress),
-                new WpfDatasetDashboardMetricItem(
-                    "\uBD84\uD560",
+                    actionKind: WpfDatasetDashboardActionKind.OpenLabelingProgress,
+                    completedImageLabelCount,
+                    progressPercent),
+                WpfDatasetDashboardLocalizationService.CreateMetric(
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Split.Title",
                     $"{statistics.TrainImageCount}/{statistics.ValidImageCount}/{statistics.TestImageCount}",
-                    "\uD559\uC2B5 / \uAC80\uC99D / \uCD5C\uC885 \uAC80\uC99D",
-                    !hasTrain || !hasValid ? "\uD655\uC778" : hasTest ? "\uC644\uB8CC" : "\uD14C\uC2A4\uD2B8 \uC5C6\uC74C",
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Split.Detail",
+                    !hasTrain || !hasValid
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Check"
+                        : hasTest
+                            ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Complete"
+                            : "WpfLearningWorkflow.DatasetDashboard.Metric.State.NoTest",
                     PackIconMaterialKind.CheckAll,
                     isProblem: !hasTrain || !hasValid,
                     isWarning: hasTrain && hasValid && !hasTest,
                     actionKind: WpfDatasetDashboardActionKind.OpenDatasetSettings),
-                new WpfDatasetDashboardMetricItem(
-                    "\uAD50\uCCB4",
-                    report?.IsReady == true
-                        ? hasReplacementEvidence ? hasStrongReplacementEvidence ? "\uAC00\uB2A5" : "\uC8FC\uC758" : "\uBCF4\uB958"
-                        : "\uBD88\uAC00",
-                    hasReplacementEvidence
-                        ? hasStrongReplacementEvidence
-                            ? $"\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5"
-                            : $"\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5 / \uAD8C\uC7A5 {RecommendedModelReplacementTestImageCount}\uC7A5 \uC774\uC0C1"
-                        : hasTest
-                            ? "\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 0\uC7A5: \uC815\uB2F5 \uB77C\uBCA8 \uD544\uC694"
-                            : "\uCD5C\uC885 \uAC80\uC99D 0\uC7A5: \uD559\uC2B5/\uAC80\uC99D\uB9CC \uC788\uC74C",
-                    report?.IsReady == true
-                        ? hasReplacementEvidence ? hasStrongReplacementEvidence ? "\uC644\uB8CC" : "\uADFC\uAC70 \uBD80\uC871" : "\uCD5C\uC885 \uB77C\uBCA8 \uD544\uC694"
-                        : "\uD559\uC2B5 \uBA3C\uC800",
+                WpfDatasetDashboardLocalizationService.CreateMetricWithValue(
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Replacement.Title",
+                    replacementValueKey,
+                    replacementValueFallback,
+                    replacementDetailKey,
+                    replacementStateKey,
                     hasStrongReplacementEvidence ? PackIconMaterialKind.CheckCircleOutline : PackIconMaterialKind.AlertCircleOutline,
                     isProblem: report?.IsReady != true,
                     isWarning: report?.IsReady == true && !hasStrongReplacementEvidence,
-                    actionKind: WpfDatasetDashboardActionKind.OpenDatasetSettings),
-                new WpfDatasetDashboardMetricItem(
-                    isAnomaly ? "판정" : needsBoxLabels ? "\uBC15\uC2A4" : "\uC138\uADF8",
+                    actionKind: WpfDatasetDashboardActionKind.OpenDatasetSettings,
+                    replacementDetailArguments),
+                WpfDatasetDashboardLocalizationService.CreateMetric(
+                    isAnomaly
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Anomaly.Title"
+                        : needsBoxLabels
+                            ? "WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Detection.Title"
+                            : "WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Segmentation.Title",
                     primaryLabelValue.ToString(),
                     isAnomaly
-                        ? $"정상 {statistics.AnomalyNormalImageCount}장, 이상 {statistics.AnomalyAbnormalImageCount}장"
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Anomaly.Detail"
                         : needsBoxLabels
-                        ? $"\uBC15\uC2A4 {statistics.TotalObjectCount}\uAC1C, \uB77C\uBCA8 \uD30C\uC77C {statistics.TotalLabelFileCount}\uAC1C"
-                        : $"\uC138\uADF8\uBA58\uD2B8 {statistics.TotalSegmentationObjectCount}\uAC1C, \uB9C8\uC2A4\uD06C {statistics.TotalMaskFileCount}\uAC1C",
-                    hasPrimaryLabels ? "\uC644\uB8CC" : "\uD544\uC694",
+                            ? "WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Detection.Detail"
+                            : "WpfLearningWorkflow.DatasetDashboard.Metric.Primary.Segmentation.Detail",
+                    hasPrimaryLabels
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Complete"
+                        : "WpfLearningWorkflow.DatasetDashboard.Metric.State.Needed",
                     isAnomaly ? PackIconMaterialKind.CheckCircleOutline : needsBoxLabels ? PackIconMaterialKind.ShapeSquareRoundedPlus : PackIconMaterialKind.ViewListOutline,
                     isProblem: !hasPrimaryLabels,
                     isWarning: false,
-                    actionKind: WpfDatasetDashboardActionKind.OpenLabelingTool),
-                new WpfDatasetDashboardMetricItem(
-                    isAnomaly ? "판정 이미지" : needsBoxLabels ? "\uB77C\uBCA8 \uD30C\uC77C" : "SEG \uAC80\uD1A0",
+                    actionKind: WpfDatasetDashboardActionKind.OpenLabelingTool,
+                    isAnomaly
+                        ? new object[] { statistics.AnomalyNormalImageCount, statistics.AnomalyAbnormalImageCount }
+                        : needsBoxLabels
+                            ? new object[] { statistics.TotalObjectCount, statistics.TotalLabelFileCount }
+                            : new object[] { statistics.TotalSegmentationObjectCount, statistics.TotalMaskFileCount }),
+                WpfDatasetDashboardLocalizationService.CreateMetric(
+                    isAnomaly
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Anomaly.Title"
+                        : needsBoxLabels
+                            ? "WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Detection.Title"
+                            : "WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Segmentation.Title",
                     artifactFileCount.ToString(),
                     isAnomaly
-                        ? $"학습 {statistics.TrainImageCount}장, 검증 {statistics.ValidImageCount}장, 최종 {statistics.TestImageCount}장"
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Anomaly.Detail"
                         : needsBoxLabels
-                        ? $"\uD559\uC2B5 {statistics.TrainLabelCount}\uAC1C, \uAC80\uC99D {statistics.ValidLabelCount}\uAC1C, \uCD5C\uC885 {statistics.TestLabelCount}\uAC1C"
-                        : $"\uC138\uADF8\uBA58\uD2B8 {statistics.TotalSegmentFileCount}\uAC1C, \uB9C8\uC2A4\uD06C {statistics.TotalMaskFileCount}\uAC1C / \uD074\uB9AD: \uAE30\uC874 \uB9C8\uC2A4\uD06C \uBCF4\uC815 \uB4DC\uB77C\uC774\uB7F0 \uBCF4\uACE0\uC11C",
-                    artifactFileCount > 0 ? isAnomaly ? "완료" : needsBoxLabels ? "\uC788\uC74C" : "\uAC80\uD1A0" : "\uD544\uC694",
+                            ? "WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Detection.Detail"
+                            : "WpfLearningWorkflow.DatasetDashboard.Metric.Artifacts.Segmentation.Detail",
+                    artifactFileCount > 0
+                        ? isAnomaly
+                            ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Complete"
+                            : needsBoxLabels
+                                ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Exists"
+                                : "WpfLearningWorkflow.DatasetDashboard.Metric.State.Review"
+                        : "WpfLearningWorkflow.DatasetDashboard.Metric.State.Needed",
                     PackIconMaterialKind.FileDocumentOutline,
                     isProblem: artifactFileCount == 0,
                     isWarning: false,
                     actionKind: isAnomaly || needsBoxLabels
                         ? WpfDatasetDashboardActionKind.CheckDataset
-                        : WpfDatasetDashboardActionKind.ExportHistoricalSegmentationRemediationAudit),
-                new WpfDatasetDashboardMetricItem(
-                    "\uD074\uB798\uC2A4",
+                        : WpfDatasetDashboardActionKind.ExportHistoricalSegmentationRemediationAudit,
+                    isAnomaly
+                        ? new object[] { statistics.TrainImageCount, statistics.ValidImageCount, statistics.TestImageCount }
+                        : needsBoxLabels
+                            ? new object[] { statistics.TrainLabelCount, statistics.ValidLabelCount, statistics.TestLabelCount }
+                            : new object[] { statistics.TotalSegmentFileCount, statistics.TotalMaskFileCount }),
+                WpfDatasetDashboardLocalizationService.CreateMetric(
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Class.Title",
                     classCount.ToString(),
-                    "\uBAA8\uB378\uC774 \uBC30\uC6B8 \uC774\uB984",
-                    classCount > 0 ? "\uC644\uB8CC" : "\uD544\uC694",
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Class.Detail",
+                    classCount > 0
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.Complete"
+                        : "WpfLearningWorkflow.DatasetDashboard.Metric.State.Needed",
                     PackIconMaterialKind.TagMultipleOutline,
                     isProblem: classCount == 0,
                     isWarning: false,
                     actionKind: WpfDatasetDashboardActionKind.OpenClassCatalog),
-                new WpfDatasetDashboardMetricItem(
-                    "\uC911\uBCF5",
+                WpfDatasetDashboardLocalizationService.CreateMetric(
+                    "WpfLearningWorkflow.DatasetDashboard.Metric.Duplicate.Title",
                     (statistics.TrainValidImageContentOverlapCount + statistics.SplitImageContentOverlapCount).ToString(),
-                    FirstNonEmpty(statistics.TrainValidImageOverlapExample, statistics.SplitImageOverlapExample, "\uBD84\uD560 \uC911\uBCF5"),
-                    hasSplitOverlap ? "\uBD84\uB9AC \uD544\uC694" : "\uC5C6\uC74C",
+                    string.IsNullOrWhiteSpace(duplicateOverlapExample)
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.Duplicate.Detail.NoExample"
+                        : "WpfLearningWorkflow.DatasetDashboard.Metric.Duplicate.Detail.Example",
+                    hasSplitOverlap
+                        ? "WpfLearningWorkflow.DatasetDashboard.Metric.State.SeparateNeeded"
+                        : "WpfLearningWorkflow.DatasetDashboard.Metric.State.None",
                     PackIconMaterialKind.AlertCircleOutline,
                     isProblem: hasSplitOverlap,
                     isWarning: false,
-                    actionKind: WpfDatasetDashboardActionKind.OpenDatasetSettings)
+                    actionKind: WpfDatasetDashboardActionKind.OpenDatasetSettings,
+                    string.IsNullOrWhiteSpace(duplicateOverlapExample)
+                        ? Array.Empty<object>()
+                        : new object[] { duplicateOverlapExample })
             };
 
             if (purpose == LabelingDatasetPurpose.AnomalyDetection)
@@ -167,6 +242,7 @@ namespace MvcVisionSystem
 
             return metrics;
         }
+
         private static string FirstNonEmpty(params string[] values)
         {
             return values?.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;

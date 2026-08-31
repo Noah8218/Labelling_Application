@@ -12,41 +12,41 @@ namespace MvcVisionSystem
     internal static class LabelingAnnotationPersistence
     {
         public static bool SaveCurrent(
-            Image image,
-            IReadOnlyDictionary<string, List<CRectangleObject>> rois,
-            CData data)
+            LabelingImageSnapshot activeImage,
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> rois,
+            LabelingProjectData data)
         {
-            return SaveCurrent(image, rois, null, data);
+            return SaveCurrent(activeImage, rois, null, data);
         }
 
         public static bool SaveCurrent(
-            Image image,
-            IReadOnlyDictionary<string, List<CRectangleObject>> rois,
+            LabelingImageSnapshot activeImage,
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> rois,
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments,
-            CData data)
-            => SaveCurrentWithAdditionalArtifacts(image, rois, segments, data, null);
+            LabelingProjectData data)
+            => SaveCurrentWithAdditionalArtifacts(activeImage, rois, segments, data, null);
 
         internal static bool SaveCurrentWithAdditionalArtifacts(
-            Image image,
-            IReadOnlyDictionary<string, List<CRectangleObject>> rois,
+            LabelingImageSnapshot activeImage,
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> rois,
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments,
-            CData data,
+            LabelingProjectData data,
             Func<bool> saveAdditionalArtifacts)
             => SaveImageAnnotations(
-                data?.LastSelectImageName,
-                image,
+                activeImage?.ImageName,
+                activeImage?.Image,
                 rois,
                 segments,
                 data,
-                sourceImagePath: string.Empty,
+                sourceImagePath: activeImage?.ImagePath ?? string.Empty,
                 saveAdditionalArtifacts: saveAdditionalArtifacts);
 
         internal static bool SaveImageAnnotations(
             string imageName,
             Image image,
-            IReadOnlyDictionary<string, List<CRectangleObject>> rois,
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> rois,
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments,
-            CData data,
+            LabelingProjectData data,
             string sourceImagePath,
             Func<bool> saveAdditionalArtifacts = null)
         {
@@ -55,7 +55,7 @@ namespace MvcVisionSystem
                 return false;
             }
 
-            IReadOnlyDictionary<string, List<CRectangleObject>> normalizedRois = NormalizeRoisByClass(rois);
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> normalizedRois = NormalizeRoisByClass(rois);
             EnsureRoiClasses(data, normalizedRois);
             EnsureSegmentationClasses(data, segments);
             try
@@ -88,13 +88,13 @@ namespace MvcVisionSystem
             }
         }
 
-        private static IReadOnlyDictionary<string, List<CRectangleObject>> NormalizeRoisByClass(
-            IReadOnlyDictionary<string, List<CRectangleObject>> rois)
+        private static IReadOnlyDictionary<string, List<AnnotationRectangleObject>> NormalizeRoisByClass(
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> rois)
         {
-            var result = new Dictionary<string, List<CRectangleObject>>(System.StringComparer.OrdinalIgnoreCase);
-            foreach (KeyValuePair<string, List<CRectangleObject>> group in rois ?? new Dictionary<string, List<CRectangleObject>>())
+            var result = new Dictionary<string, List<AnnotationRectangleObject>>(System.StringComparer.OrdinalIgnoreCase);
+            foreach (KeyValuePair<string, List<AnnotationRectangleObject>> group in rois ?? new Dictionary<string, List<AnnotationRectangleObject>>())
             {
-                foreach (CRectangleObject roi in group.Value ?? new List<CRectangleObject>())
+                foreach (AnnotationRectangleObject roi in group.Value ?? new List<AnnotationRectangleObject>())
                 {
                     if (roi == null || roi.Roi.IsEmpty)
                     {
@@ -110,12 +110,12 @@ namespace MvcVisionSystem
                     className = string.IsNullOrWhiteSpace(className)
                         ? "Defect"
                         : ClassCatalogService.NormalizeClassName(className);
-                    roi.cClassItem ??= new CClassItem();
+                    roi.cClassItem ??= new LabelClass();
                     roi.cClassItem.Text = className;
 
-                    if (!result.TryGetValue(className, out List<CRectangleObject> list))
+                    if (!result.TryGetValue(className, out List<AnnotationRectangleObject> list))
                     {
-                        list = new List<CRectangleObject>();
+                        list = new List<AnnotationRectangleObject>();
                         result[className] = list;
                     }
 
@@ -127,7 +127,7 @@ namespace MvcVisionSystem
         }
 
         private static void EnsureSegmentationClasses(
-            CData data,
+            LabelingProjectData data,
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segments)
         {
             if (data == null || segments == null)
@@ -135,7 +135,7 @@ namespace MvcVisionSystem
                 return;
             }
 
-            data.ClassNamedList ??= new List<CClassItem>();
+            data.ClassNamedList ??= new List<LabelClass>();
             foreach (string className in segments
                 .SelectMany(group => new[] { group.Key }
                     .Concat(group.Value?.Select(segment => segment?.ClassItem?.Text ?? segment?.ClassName ?? string.Empty)
@@ -154,15 +154,15 @@ namespace MvcVisionSystem
         }
 
         private static void EnsureRoiClasses(
-            CData data,
-            IReadOnlyDictionary<string, List<CRectangleObject>> rois)
+            LabelingProjectData data,
+            IReadOnlyDictionary<string, List<AnnotationRectangleObject>> rois)
         {
             if (data == null || rois == null)
             {
                 return;
             }
 
-            data.ClassNamedList ??= new List<CClassItem>();
+            data.ClassNamedList ??= new List<LabelClass>();
             foreach (string className in rois
                 .SelectMany(group => new[] { group.Key }
                     .Concat(group.Value?.Select(roi => roi?.cClassItem?.Text ?? string.Empty)

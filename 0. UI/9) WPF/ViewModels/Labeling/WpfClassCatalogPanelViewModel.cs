@@ -27,7 +27,7 @@ namespace MvcVisionSystem
         private ICommand classNamePreviewKeyDownCommand = new RelayCommand<KeyInputCommandArgs>(NoOpKeyCommand);
         private ICommand addClassCommand = new RelayCommand(NoOpCommand);
         private ICommand renameClassCommand = new RelayCommand(NoOpCommand);
-        private ICommand removeClassCommand = new RelayCommand(NoOpCommand);
+        private ICommand archiveClassCommand = new RelayCommand(NoOpCommand);
         private ICommand applyClassColorCommand = new RelayCommand(NoOpCommand);
         private ICommand classSelectionChangedCommand = new RelayCommand<object>(NoOpSelectionCommand);
         private WpfClassCatalogColorPreset selectedColorPreset;
@@ -57,11 +57,22 @@ namespace MvcVisionSystem
 
         public string AddClassButtonText => T("WpfClassCatalog.Add.Text");
 
-        public string RemoveClassAutomationNameText => T("WpfClassCatalog.Remove.Name");
+        public string ArchiveClassAutomationNameText => T(SelectedClass?.IsArchived == true
+            ? "WpfClassCatalog.Restore.Name"
+            : "WpfClassCatalog.Archive.Name");
 
-        public string RemoveClassToolTipText => T("WpfClassCatalog.Remove.ToolTip");
+        public string ArchiveClassToolTipText => T(SelectedClass?.IsArchived == true
+            ? "WpfClassCatalog.Restore.ToolTip"
+            : "WpfClassCatalog.Archive.ToolTip");
 
-        public string RemoveClassButtonText => T("WpfClassCatalog.Remove.Text");
+        public string ArchiveClassButtonText => T(SelectedClass?.IsArchived == true
+            ? "WpfClassCatalog.Restore.Text"
+            : "WpfClassCatalog.Archive.Text");
+
+        public bool IsArchiveClassEnabled => SelectedClass != null
+            && (SelectedClass.IsArchived || Classes.Count(item => !item.IsArchived) > 1);
+
+        public bool IsRenameClassEnabled => SelectedClass != null && !SelectedClass.IsArchived;
 
         public string RenameClassAutomationNameText => T("WpfClassCatalog.Rename.Name");
 
@@ -103,6 +114,11 @@ namespace MvcVisionSystem
         {
             get
             {
+                if (SelectedClass?.IsArchived == true)
+                {
+                    return T("WpfClassCatalog.Current.ArchivedDetail");
+                }
+
                 string selected = SelectedClass?.CanonicalDisplayText;
                 return string.IsNullOrWhiteSpace(selected)
                     ? T("WpfClassCatalog.Current.EmptyDetail")
@@ -150,10 +166,10 @@ namespace MvcVisionSystem
             private set => SetProperty(ref renameClassCommand, value);
         }
 
-        public ICommand RemoveClassCommand
+        public ICommand ArchiveClassCommand
         {
-            get => removeClassCommand;
-            private set => SetProperty(ref removeClassCommand, value);
+            get => archiveClassCommand;
+            private set => SetProperty(ref archiveClassCommand, value);
         }
 
         public ICommand ApplyClassColorCommand
@@ -218,7 +234,7 @@ namespace MvcVisionSystem
             Action<KeyInputCommandArgs> classNamePreviewKeyDown,
             Action addClass,
             Action renameClass,
-            Action removeClass,
+            Action archiveClass,
             Action applyClassColor,
             Action<object> classSelectionChanged)
         {
@@ -226,7 +242,7 @@ namespace MvcVisionSystem
             ClassNamePreviewKeyDownCommand = new RelayCommand<KeyInputCommandArgs>(classNamePreviewKeyDown ?? NoOpKeyCommand);
             AddClassCommand = new RelayCommand(addClass ?? NoOpCommand);
             RenameClassCommand = new RelayCommand(renameClass ?? NoOpCommand);
-            RemoveClassCommand = new RelayCommand(removeClass ?? NoOpCommand);
+            ArchiveClassCommand = new RelayCommand(archiveClass ?? NoOpCommand);
             ApplyClassColorCommand = new RelayCommand(applyClassColor ?? NoOpCommand);
             ClassSelectionChangedCommand = new RelayCommand<object>(classSelectionChanged ?? NoOpSelectionCommand);
         }
@@ -236,7 +252,7 @@ namespace MvcVisionSystem
             OutputRootPath = path ?? string.Empty;
         }
 
-        public void SetClasses(IEnumerable<CClassItem> classItems, string selectedName = "")
+        public void SetClasses(IEnumerable<LabelClass> classItems, string selectedName = "")
         {
             string normalizedSelectedName = ClassCatalogService.NormalizeClassName(selectedName);
             WpfClassCatalogListItem selectedItem = null;
@@ -245,7 +261,7 @@ namespace MvcVisionSystem
             Classes.Clear();
 
             int canonicalIndex = 0;
-            foreach (CClassItem classItem in classItems ?? Array.Empty<CClassItem>())
+            foreach (LabelClass classItem in classItems ?? Array.Empty<LabelClass>())
             {
                 int currentIndex = canonicalIndex++;
                 if (classItem == null || string.IsNullOrWhiteSpace(classItem.Text))
@@ -334,6 +350,11 @@ namespace MvcVisionSystem
             OnPropertyChanged(nameof(ClassCatalogSummaryText));
             OnPropertyChanged(nameof(CurrentDrawingClassDetailText));
             OnPropertyChanged(nameof(ClassCatalogActionText));
+            OnPropertyChanged(nameof(ArchiveClassAutomationNameText));
+            OnPropertyChanged(nameof(ArchiveClassToolTipText));
+            OnPropertyChanged(nameof(ArchiveClassButtonText));
+            OnPropertyChanged(nameof(IsArchiveClassEnabled));
+            OnPropertyChanged(nameof(IsRenameClassEnabled));
         }
 
         private static string T(string key) => OpenVisionLanguageService.T(key);
@@ -349,10 +370,11 @@ namespace MvcVisionSystem
 
     public sealed class WpfClassCatalogListItem : INotifyPropertyChanged
     {
-        public WpfClassCatalogListItem(CClassItem classItem, int canonicalIndex = 0)
+        public WpfClassCatalogListItem(LabelClass classItem, int canonicalIndex = 0)
         {
             Text = ClassCatalogService.NormalizeClassName(classItem?.Text);
             CanonicalIndex = Math.Max(0, canonicalIndex);
+            IsArchived = classItem?.IsArchived == true;
             DrawColor = classItem?.DrawColor ?? DrawingColor.LimeGreen;
             var brush = new MediaSolidColorBrush(MediaColor.FromRgb(DrawColor.R, DrawColor.G, DrawColor.B));
             brush.Freeze();
@@ -365,13 +387,19 @@ namespace MvcVisionSystem
 
         public int CanonicalIndex { get; }
 
+        public bool IsArchived { get; }
+
         public string CanonicalDisplayText => $"{CanonicalIndex} \u00B7 {Text}";
 
-        public string DisplayText => CanonicalDisplayText;
+        public string DisplayText => IsArchived
+            ? $"{CanonicalDisplayText} \u00B7 {OpenVisionLanguageService.T("WpfClassCatalog.Item.Archived")}"
+            : CanonicalDisplayText;
 
         public string ToolTip => string.Format(
             System.Globalization.CultureInfo.InvariantCulture,
-            OpenVisionLanguageService.T("WpfClassCatalog.Item.ToolTip"),
+            OpenVisionLanguageService.T(IsArchived
+                ? "WpfClassCatalog.Item.ArchivedToolTip"
+                : "WpfClassCatalog.Item.ToolTip"),
             CanonicalIndex,
             Text);
 
@@ -381,6 +409,7 @@ namespace MvcVisionSystem
 
         internal void RefreshLocalizedPresentation()
         {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayText)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ToolTip)));
         }
     }

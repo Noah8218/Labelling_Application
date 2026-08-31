@@ -648,6 +648,8 @@ namespace MvcVisionSystem
                 return;
             }
 
+            PythonModelRuntimePathResolver.ApplyDefaults(settings);
+
             loadingAppliedSettings = true;
             try
             {
@@ -684,7 +686,7 @@ namespace MvcVisionSystem
         public void LoadDraftDefaults()
         {
             var defaults = new PythonModelSettings();
-            defaults.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(defaults);
             loadingAppliedSettings = true;
             try
             {
@@ -737,7 +739,7 @@ namespace MvcVisionSystem
             settings.MaximumDetectionCandidates = Math.Clamp(maximumCandidates, 1, 200);
             settings.InferenceImageSize = Math.Clamp(inferenceImageSize, 64, 2048);
             settings.DetectionTimeoutSeconds = Math.Clamp(timeoutSeconds, 1, 600);
-            settings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(settings);
         }
 
         public void ApplyTo(AnomalyClassificationSettings settings)
@@ -839,7 +841,7 @@ namespace MvcVisionSystem
             {
                 PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildUnetFolderConnection(
                     CreateCurrentSettingsSnapshot(),
-                    PythonModelSettings.GetDefaultUnetProjectRootPath());
+                    PythonModelRuntimePathResolver.GetDefaultUnetProjectRootPath());
                 PythonExecutablePath = result.Settings.PythonExecutablePath ?? string.Empty;
                 ProjectRootPath = result.Settings.ProjectRootPath ?? string.Empty;
                 ClientScriptPath = result.Settings.ClientScriptPath ?? string.Empty;
@@ -978,7 +980,7 @@ namespace MvcVisionSystem
                 DetectionTimeoutSeconds = source.DetectionTimeoutSeconds,
                 AutoStartClient = source.AutoStartClient
             };
-            clone.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(clone);
             return clone;
         }
 

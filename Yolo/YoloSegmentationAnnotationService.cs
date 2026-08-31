@@ -27,8 +27,8 @@ namespace MvcVisionSystem.Yolo
             string imageName,
             Image image,
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segmentsByClass,
-            IReadOnlyList<CClassItem> classes,
-            CData data)
+            IReadOnlyList<LabelClass> classes,
+            LabelingProjectData data)
         {
             if (string.IsNullOrWhiteSpace(imageName) || image == null || data == null)
             {
@@ -50,8 +50,8 @@ namespace MvcVisionSystem.Yolo
         private static void EnsureExistingAnnotationsAreReadable(
             string imageName,
             Size imageSize,
-            IReadOnlyList<CClassItem> classes,
-            CData data)
+            IReadOnlyList<LabelClass> classes,
+            LabelingProjectData data)
         {
             foreach (string segmentPath in GetCandidateSegmentPaths(imageName, data).Where(File.Exists))
             {
@@ -67,8 +67,8 @@ namespace MvcVisionSystem.Yolo
             string imageName,
             Image image,
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segmentsByClass,
-            IReadOnlyList<CClassItem> classes,
-            CData data)
+            IReadOnlyList<LabelClass> classes,
+            LabelingProjectData data)
         {
             data.NormalizeOutputPaths();
             data.EnsureYoloOutputDirectories();
@@ -106,8 +106,8 @@ namespace MvcVisionSystem.Yolo
 
         public static IReadOnlyDictionary<string, List<List<Point>>> LoadSegmentationPolygonsForImage(
             string imagePath,
-            IReadOnlyList<CClassItem> classes,
-            CData data,
+            IReadOnlyList<LabelClass> classes,
+            LabelingProjectData data,
             Size imageSize)
         {
             foreach (string segmentPath in GetCandidateSegmentPaths(imagePath, data))
@@ -124,8 +124,8 @@ namespace MvcVisionSystem.Yolo
 
         public static IReadOnlyDictionary<string, List<LabelingSegmentationObject>> LoadSegmentationObjectsForImage(
             string imagePath,
-            IReadOnlyList<CClassItem> classes,
-            CData data,
+            IReadOnlyList<LabelClass> classes,
+            LabelingProjectData data,
             Size imageSize)
         {
             foreach (string segmentPath in GetCandidateSegmentPaths(imagePath, data))
@@ -146,7 +146,7 @@ namespace MvcVisionSystem.Yolo
 
         public static IReadOnlyDictionary<string, List<List<Point>>> LoadSegmentationPolygons(
             string segmentPath,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize)
         {
             return LoadSegmentationObjects(segmentPath, string.Empty, classes, imageSize)
@@ -158,14 +158,14 @@ namespace MvcVisionSystem.Yolo
 
         public static IReadOnlyDictionary<string, List<LabelingSegmentationObject>> LoadSegmentationObjects(
             string segmentPath,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize)
             => LoadSegmentationObjects(segmentPath, ResolveSiblingMaskPath(segmentPath), classes, imageSize);
 
         public static IReadOnlyDictionary<string, List<LabelingSegmentationObject>> LoadSegmentationObjects(
             string segmentPath,
             string maskPath,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize)
         {
             var result = new Dictionary<string, List<LabelingSegmentationObject>>(StringComparer.OrdinalIgnoreCase);
@@ -286,7 +286,7 @@ namespace MvcVisionSystem.Yolo
                     result.Add(className, new List<LabelingSegmentationObject>());
                 }
 
-                CClassItem classItem = ResolveClassItem(className, classes);
+                LabelClass classItem = ResolveClassItem(className, classes);
                 bool isExplicitRaster = string.Equals(
                     record.GeometryType,
                     RasterMaskGeometryType,
@@ -367,7 +367,7 @@ namespace MvcVisionSystem.Yolo
         internal static bool TryBuildLegacyRasterMaskSegment(
             SegmentationPolygonRecord record,
             string maskPath,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize,
             out LabelingSegmentationObject segment)
         {
@@ -405,7 +405,7 @@ namespace MvcVisionSystem.Yolo
 
         public static IReadOnlyList<SegmentationPolygonRecord> BuildPolygonRecords(
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segmentsByClass,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize)
         {
             var records = new List<SegmentationPolygonRecord>();
@@ -556,7 +556,7 @@ namespace MvcVisionSystem.Yolo
         private static bool TryBuildRasterMaskSegment(
             SegmentationPolygonRecord record,
             IReadOnlyList<Point> points,
-            CClassItem classItem,
+            LabelClass classItem,
             Size imageSize,
             byte[] maskClassValues,
             out LabelingSegmentationObject segment)
@@ -758,7 +758,7 @@ namespace MvcVisionSystem.Yolo
                 : Path.Combine(segmentDirectory.Parent.FullName, "masks", $"{fileStem}.png");
         }
 
-        public static IEnumerable<string> GetCandidateSegmentPaths(string imagePath, CData data)
+        public static IEnumerable<string> GetCandidateSegmentPaths(string imagePath, LabelingProjectData data)
         {
             if (string.IsNullOrWhiteSpace(imagePath))
             {
@@ -901,7 +901,7 @@ namespace MvcVisionSystem.Yolo
             string maskPath,
             Size imageSize,
             IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segmentsByClass,
-            IReadOnlyList<CClassItem> classes)
+            IReadOnlyList<LabelClass> classes)
         {
             using (var mask = new Bitmap(imageSize.Width, imageSize.Height, PixelFormat.Format24bppRgb))
             {
@@ -1036,7 +1036,7 @@ namespace MvcVisionSystem.Yolo
                     JsonConvert.SerializeObject(annotation, Formatting.Indented)));
         }
 
-        private static string ResolveClassName(SegmentationPolygonRecord record, IReadOnlyList<CClassItem> classes)
+        private static string ResolveClassName(SegmentationPolygonRecord record, IReadOnlyList<LabelClass> classes)
         {
             if (!string.IsNullOrWhiteSpace(record.ClassName))
             {
@@ -1048,10 +1048,10 @@ namespace MvcVisionSystem.Yolo
                 : string.Empty;
         }
 
-        private static CClassItem ResolveClassItem(string className, IReadOnlyList<CClassItem> classes)
+        private static LabelClass ResolveClassItem(string className, IReadOnlyList<LabelClass> classes)
         {
             return classes?.FirstOrDefault(item => string.Equals(item?.Text, className, StringComparison.OrdinalIgnoreCase))
-                ?? new CClassItem { Text = className, DrawColor = Color.LimeGreen };
+                ?? new LabelClass { Text = className, DrawColor = Color.LimeGreen };
         }
 
         private static IReadOnlyList<List<Point>> NormalizeCutouts(IEnumerable<IEnumerable<Point>> cutouts, Size imageSize)

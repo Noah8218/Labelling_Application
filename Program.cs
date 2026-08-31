@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using OpenVisionLab;
 
@@ -20,11 +20,11 @@ namespace MvcVisionSystem
 
             WpfRuntimeDiagnosticsService.ConfigureApplicationStartup();
             OpenVisionLanguageService.Load();
-            using (Mutex mutex = new Mutex(true, "MvcVisionSystem", out bool bNew))
+            using (Mutex mutex = new Mutex(true, "OpenVisionLab.LabelingStudio", out bool bNew))
             {
                 if (!bNew)
                 {
-                    CCommon.ShowdialogMessageBox("Program Already Running", "Check Job Process");
+                    MessageDialogService.ShowdialogMessageBox("Program Already Running", "Check Job Process");
                     return;
                 }
 
@@ -59,7 +59,7 @@ namespace MvcVisionSystem
             }
             finally
             {
-                CGlobal.Inst.StopPythonModelClientConnection();
+                LabelingApplicationState.Inst.StopPythonModelClientConnection();
             }
         }
     }

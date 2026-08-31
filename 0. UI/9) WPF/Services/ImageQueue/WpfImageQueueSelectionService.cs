@@ -196,7 +196,7 @@ namespace MvcVisionSystem
                 && File.Exists(item.ImagePath);
         }
 
-        public bool TryResolveOpenImagePath(WpfImageQueueItem item, CData data, out string imagePath)
+        public bool TryResolveOpenImagePath(WpfImageQueueItem item, LabelingProjectData data, out string imagePath)
         {
             imagePath = item?.ImagePath ?? string.Empty;
             if (CanOpen(item))
@@ -216,7 +216,7 @@ namespace MvcVisionSystem
             return false;
         }
 
-        public WpfImageQueueOpenSelection ResolveOpenSelection(IEnumerable<WpfImageQueueItem> candidates, CData data)
+        public WpfImageQueueOpenSelection ResolveOpenSelection(IEnumerable<WpfImageQueueItem> candidates, LabelingProjectData data)
         {
             foreach (WpfImageQueueItem candidate in candidates ?? Array.Empty<WpfImageQueueItem>())
             {
@@ -233,7 +233,7 @@ namespace MvcVisionSystem
             return new WpfImageQueueOpenSelection();
         }
 
-        private IEnumerable<string> EnumerateSavedDatasetImageCandidates(WpfImageQueueItem item, CData data)
+        private IEnumerable<string> EnumerateSavedDatasetImageCandidates(WpfImageQueueItem item, LabelingProjectData data)
         {
             string fileStem = Path.GetFileNameWithoutExtension(item?.ImagePath);
             if (string.IsNullOrWhiteSpace(fileStem))

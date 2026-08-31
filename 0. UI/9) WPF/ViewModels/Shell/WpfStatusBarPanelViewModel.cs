@@ -4,7 +4,7 @@ using OpenVisionLab;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfStatusBarPanelViewModel : WpfObservableViewModel
+    public sealed class WpfStatusBarPanelViewModel : WpfObservableViewModel, IDisposable
     {
         private string datasetStatusText = "Dataset: waiting";
         private string workflowStageText = "단계: 준비";
@@ -15,6 +15,7 @@ namespace MvcVisionSystem
         private string inspectionModelStatusToolTip = "\uD604\uC7AC \uCD94\uB860\uC5D0 \uC0AC\uC6A9\uD560 \uBAA8\uB378\uC744 \uD45C\uC2DC\uD569\uB2C8\uB2E4.";
         private string modelStatusText = "Model: waiting";
         private string modelStatusAutomationText = string.Empty;
+        private bool disposed;
         private bool isAnnotationDirty;
         private string annotationSaveStatusText = "\uB77C\uBCA8 \uB300\uAE30";
         private string annotationSaveStatusToolTip = "\uC774\uBBF8\uC9C0\uB97C \uC5F4\uBA74 \uB77C\uBCA8 \uC800\uC7A5 \uC0C1\uD0DC\uB97C \uD45C\uC2DC\uD569\uB2C8\uB2E4.";
@@ -124,12 +125,13 @@ namespace MvcVisionSystem
 
         public void SetInspectionModelStatus(string text, string toolTip)
         {
-            InspectionModelStatusText = string.IsNullOrWhiteSpace(text)
+            string statusText = string.IsNullOrWhiteSpace(text)
                 ? "\uAC80\uC0AC \uBAA8\uB378: \uC5C6\uC74C"
                 : text.Trim();
+            InspectionModelStatusText = LocalizeInspectionModelStatus(statusText);
             InspectionModelStatusToolTip = string.IsNullOrWhiteSpace(toolTip)
                 ? InspectionModelStatusText
-                : toolTip.Trim();
+                : WpfLocalizationTextRuntimeService.Translate(toolTip.Trim());
         }
 
         public void SetModelStatus(string text)
@@ -152,6 +154,17 @@ namespace MvcVisionSystem
             ModelStatusText = LocalizeModelStatus(ModelStatusText);
             AnnotationSaveStatusText = WpfLocalizationTextRuntimeService.Translate(AnnotationSaveStatusText);
             AnnotationSaveStatusToolTip = WpfLocalizationTextRuntimeService.Translate(AnnotationSaveStatusToolTip);
+        }
+
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
         }
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
@@ -179,12 +192,12 @@ namespace MvcVisionSystem
             const string englishPrefix = "Model: ";
             if (value.StartsWith(koreanPrefix, StringComparison.Ordinal))
             {
-                return Format("WpfShell.Status.Model", value.Substring(koreanPrefix.Length));
+                return Format("WpfShell.Status.Model", LocalizeModelState(value.Substring(koreanPrefix.Length)));
             }
 
             if (value.StartsWith(englishPrefix, StringComparison.Ordinal))
             {
-                return Format("WpfShell.Status.Model", value.Substring(englishPrefix.Length));
+                return Format("WpfShell.Status.Model", LocalizeModelState(value.Substring(englishPrefix.Length)));
             }
 
             if (string.Equals(value, "\uB3C4\uAD6C: \uC120\uD0DD", StringComparison.Ordinal)
@@ -208,6 +221,22 @@ namespace MvcVisionSystem
                 || string.Equals(value, "Inspection model: none", StringComparison.Ordinal))
             {
                 return OpenVisionLanguageService.T("WpfShell.Status.ModelNone");
+            }
+
+            const string koreanCapabilityPrefix = "모델 기능: ";
+            const string englishCapabilityPrefix = "Model capability: ";
+            if (value.StartsWith(koreanCapabilityPrefix, StringComparison.Ordinal))
+            {
+                return Format(
+                    "WpfShell.Status.ModelCapability",
+                    LocalizeModelState(value.Substring(koreanCapabilityPrefix.Length)));
+            }
+
+            if (value.StartsWith(englishCapabilityPrefix, StringComparison.Ordinal))
+            {
+                return Format(
+                    "WpfShell.Status.ModelCapability",
+                    LocalizeModelState(value.Substring(englishCapabilityPrefix.Length)));
             }
 
             string key;
@@ -241,6 +270,16 @@ namespace MvcVisionSystem
             return parts.Length == 2
                 ? Format(key, parts[0], parts[1])
                 : WpfLocalizationTextRuntimeService.Translate(text);
+        }
+
+        private static string LocalizeModelState(string value)
+        {
+            return value?.Trim() switch
+            {
+                "미설치" or "Not installed" => OpenVisionLanguageService.T("WpfShell.Status.ModelState.NotInstalled"),
+                "설정 확인 필요" or "Configuration required" => OpenVisionLanguageService.T("WpfShell.Status.ModelState.ConfigurationRequired"),
+                _ => WpfLocalizationTextRuntimeService.Translate(value)
+            };
         }
 
         private static string Format(string key, params object[] arguments)

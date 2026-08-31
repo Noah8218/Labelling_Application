@@ -21,7 +21,43 @@ namespace MvcVisionSystem.Yolo
 
         public static IReadOnlyList<Color> DefaultPalette => Palette;
 
-        public static bool TryAddClass(CData data, string className, out CClassItem classItem)
+        public static int FindClassIndex(LabelingProjectData data, string className)
+        {
+            return FindClassIndex(data?.ClassNamedList, className);
+        }
+
+        public static int FindClassIndex(IReadOnlyList<LabelClass> classes, string className)
+        {
+            string normalizedName = NormalizeClassName(className);
+            if (classes == null || string.IsNullOrWhiteSpace(normalizedName))
+            {
+                return -1;
+            }
+
+            for (int index = 0; index < classes.Count; index++)
+            {
+                if (string.Equals(classes[index]?.Text, normalizedName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        public static int FindOrAddClass(LabelingProjectData data, string className)
+        {
+            int classIndex = FindClassIndex(data, className);
+            if (classIndex >= 0)
+            {
+                return classIndex;
+            }
+
+            TryAddClass(data, className, out _);
+            return FindClassIndex(data, className);
+        }
+
+        public static bool TryAddClass(LabelingProjectData data, string className, out LabelClass classItem)
         {
             classItem = null;
             if (data == null)
@@ -29,7 +65,7 @@ namespace MvcVisionSystem.Yolo
                 return false;
             }
 
-            data.ClassNamedList ??= new List<CClassItem>();
+            data.ClassNamedList ??= new List<LabelClass>();
 
             string normalizedName = NormalizeClassName(className);
             if (string.IsNullOrWhiteSpace(normalizedName))
@@ -37,12 +73,13 @@ namespace MvcVisionSystem.Yolo
                 return false;
             }
 
-            if (data.ClassNamedList.Any(item => string.Equals(item.Text, normalizedName, StringComparison.OrdinalIgnoreCase)))
+            if (data.ClassNamedList.Any(item =>
+                    string.Equals(item?.Text, normalizedName, StringComparison.OrdinalIgnoreCase)))
             {
                 return false;
             }
 
-            classItem = new CClassItem
+            classItem = new LabelClass
             {
                 Text = normalizedName,
                 DrawColor = GetNextColor(data)
@@ -52,21 +89,7 @@ namespace MvcVisionSystem.Yolo
             return true;
         }
 
-        public static bool RemoveClass(CData data, string className)
-        {
-            if (data == null)
-            {
-                return false;
-            }
-
-            data.ClassNamedList ??= new List<CClassItem>();
-
-            string normalizedName = NormalizeClassName(className);
-            int removed = data.ClassNamedList.RemoveAll(item => string.Equals(item.Text, normalizedName, StringComparison.OrdinalIgnoreCase));
-            return removed > 0;
-        }
-
-        public static bool TryRenameClass(CData data, string currentName, string newName, out CClassItem classItem)
+        public static bool TryArchiveClass(LabelingProjectData data, string className, out LabelClass classItem)
         {
             classItem = null;
             if (data == null)
@@ -74,7 +97,68 @@ namespace MvcVisionSystem.Yolo
                 return false;
             }
 
-            data.ClassNamedList ??= new List<CClassItem>();
+            data.ClassNamedList ??= new List<LabelClass>();
+
+            string normalizedName = NormalizeClassName(className);
+            classItem = data.ClassNamedList.FirstOrDefault(item =>
+                string.Equals(item?.Text, normalizedName, StringComparison.OrdinalIgnoreCase));
+            if (classItem == null || classItem.IsArchived)
+            {
+                return false;
+            }
+
+            if (data.ClassNamedList.Count(item => IsActiveClass(item)) <= 1)
+            {
+                classItem = null;
+                return false;
+            }
+
+            classItem.IsArchived = true;
+            return true;
+        }
+
+        public static bool TryRestoreClass(LabelingProjectData data, string className, out LabelClass classItem)
+        {
+            classItem = null;
+            if (data == null)
+            {
+                return false;
+            }
+
+            data.ClassNamedList ??= new List<LabelClass>();
+            string normalizedName = NormalizeClassName(className);
+            classItem = data.ClassNamedList.FirstOrDefault(item =>
+                string.Equals(item?.Text, normalizedName, StringComparison.OrdinalIgnoreCase));
+            if (classItem == null || !classItem.IsArchived)
+            {
+                return false;
+            }
+
+            classItem.IsArchived = false;
+            return true;
+        }
+
+        public static bool RemoveClass(LabelingProjectData data, string className)
+        {
+            return TryArchiveClass(data, className, out _);
+        }
+
+        public static bool IsActiveClass(LabelClass classItem)
+        {
+            return classItem != null
+                && !classItem.IsArchived
+                && !string.IsNullOrWhiteSpace(classItem.Text);
+        }
+
+        public static bool TryRenameClass(LabelingProjectData data, string currentName, string newName, out LabelClass classItem)
+        {
+            classItem = null;
+            if (data == null)
+            {
+                return false;
+            }
+
+            data.ClassNamedList ??= new List<LabelClass>();
 
             string normalizedCurrentName = NormalizeClassName(currentName);
             string normalizedNewName = NormalizeClassName(newName);
@@ -86,12 +170,12 @@ namespace MvcVisionSystem.Yolo
 
             classItem = data.ClassNamedList.FirstOrDefault(item =>
                 string.Equals(item?.Text, normalizedCurrentName, StringComparison.OrdinalIgnoreCase));
-            if (classItem == null)
+            if (classItem == null || classItem.IsArchived)
             {
                 return false;
             }
 
-            CClassItem targetItem = classItem;
+            LabelClass targetItem = classItem;
             if (data.ClassNamedList.Any(item =>
                     !ReferenceEquals(item, targetItem)
                     && string.Equals(item?.Text, normalizedNewName, StringComparison.OrdinalIgnoreCase)))
@@ -103,7 +187,7 @@ namespace MvcVisionSystem.Yolo
             return true;
         }
 
-        public static bool TrySetClassColor(CData data, string className, Color color, out CClassItem classItem)
+        public static bool TrySetClassColor(LabelingProjectData data, string className, Color color, out LabelClass classItem)
         {
             classItem = null;
             if (data == null)
@@ -111,7 +195,7 @@ namespace MvcVisionSystem.Yolo
                 return false;
             }
 
-            data.ClassNamedList ??= new List<CClassItem>();
+            data.ClassNamedList ??= new List<LabelClass>();
 
             string normalizedName = NormalizeClassName(className);
             if (string.IsNullOrWhiteSpace(normalizedName))
@@ -135,7 +219,7 @@ namespace MvcVisionSystem.Yolo
             return (className ?? string.Empty).Trim();
         }
 
-        private static Color GetNextColor(CData data)
+        private static Color GetNextColor(LabelingProjectData data)
         {
             foreach (Color color in Palette)
             {

@@ -28,7 +28,7 @@ namespace MvcVisionSystem._1._Core
             CancellationToken cancellationToken = default)
         {
             settings ??= new PythonModelSettings();
-            settings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(settings);
 
             string pythonExecutablePath = PythonModelSettingsValidator.ResolvePythonExecutable(settings);
             string projectRootPath = settings.ProjectRootPath?.Trim() ?? string.Empty;
@@ -95,7 +95,7 @@ namespace MvcVisionSystem._1._Core
         public static string ResolveSmokeImagePath(PythonModelSettings settings)
         {
             settings ??= new PythonModelSettings();
-            settings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(settings);
 
             foreach (string root in BuildImageRootCandidates(settings))
             {
@@ -118,7 +118,7 @@ namespace MvcVisionSystem._1._Core
                 Path.Combine(projectRootPath, "data", "train", "images"),
                 Path.Combine(projectRootPath, "data", "valid", "images"),
                 Path.Combine(projectRootPath, "data", "images"),
-                PythonModelSettings.GetDefaultImageRootPath()
+                PythonModelRuntimePathResolver.GetDefaultImageRootPath()
             }
             .Where(path => !string.IsNullOrWhiteSpace(path))
             .Distinct(StringComparer.OrdinalIgnoreCase)

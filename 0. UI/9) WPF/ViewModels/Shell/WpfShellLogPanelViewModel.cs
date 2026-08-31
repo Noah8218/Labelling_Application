@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfShellLogPanelViewModel : WpfObservableViewModel
+    public sealed class WpfShellLogPanelViewModel : WpfObservableViewModel, IDisposable
     {
         private static readonly GridLength ExpandedLogPaneGridLengthValue = new GridLength(180D);
         private static readonly GridLength CollapsedLogPaneGridLengthValue = new GridLength(42D);
@@ -26,6 +26,7 @@ namespace MvcVisionSystem
         private GridLength logPaneGridLength = CollapsedLogPaneGridLengthValue;
         private GridLength logPaneSeparatorGridLength = CollapsedSeparatorGridLengthValue;
         private ICommand toggleLogPaneCommand;
+        private bool disposed;
 
         public WpfShellLogPanelViewModel()
         {
@@ -144,6 +145,17 @@ namespace MvcVisionSystem
             LogPaneToggleToolTip = IsLogPaneExpanded
                 ? T("WpfShell.Log.Toggle.Close.ToolTip")
                 : T("WpfShell.Log.Toggle.Open.ToolTip");
+        }
+
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
         }
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)

@@ -15,7 +15,7 @@ using System.Windows.Media.Imaging;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfModelBenchmarkViewModel : WpfObservableViewModel
+    public sealed class WpfModelBenchmarkViewModel : WpfObservableViewModel, IDisposable
     {
         public const int MaximumSelectedRunCount = 6;
 
@@ -51,6 +51,7 @@ namespace MvcVisionSystem
         private bool hasThresholdReviewRows;
         private int dashboardRevision;
         private bool suppressSelectionRefresh;
+        private bool disposed;
 
         public WpfModelBenchmarkViewModel(
             WpfModelBenchmarkCatalogService catalogService = null,
@@ -63,9 +64,9 @@ namespace MvcVisionSystem
             TaskFilters.Add("\uC804\uCCB4");
             filteredRuns = CollectionViewSource.GetDefaultView(CatalogRuns);
             filteredRuns.Filter = MatchesFilter;
-            RefreshCommand = new RelayCommand(() => Refresh());
-            ClearSelectionCommand = new RelayCommand(ClearSelection);
-            SetBaselineCommand = new RelayCommand<WpfModelBenchmarkRunItemViewModel>(SetBaseline);
+            RefreshCommand = new RelayCommand(() => Refresh(), () => !disposed);
+            ClearSelectionCommand = new RelayCommand(ClearSelection, () => !disposed);
+            SetBaselineCommand = new RelayCommand<WpfModelBenchmarkRunItemViewModel>(SetBaseline, _ => !disposed);
             Refresh(preferredSourcePath);
         }
 
@@ -313,8 +314,25 @@ namespace MvcVisionSystem
             private set => SetProperty(ref isSelectionEmpty, value);
         }
 
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
+            CommandManager.InvalidateRequerySuggested();
+        }
+
         public void Refresh(string preferredSourcePath = "")
         {
+            if (disposed)
+            {
+                return;
+            }
+
             if (!string.IsNullOrWhiteSpace(preferredSourcePath))
             {
                 this.preferredSourcePath = preferredSourcePath;
@@ -494,7 +512,7 @@ namespace MvcVisionSystem
 
         private void SetBaseline(WpfModelBenchmarkRunItemViewModel item)
         {
-            if (item == null)
+            if (disposed || item == null)
             {
                 return;
             }
@@ -514,6 +532,11 @@ namespace MvcVisionSystem
 
         private void ClearSelection()
         {
+            if (disposed)
+            {
+                return;
+            }
+
             suppressSelectionRefresh = true;
             try
             {
@@ -534,7 +557,7 @@ namespace MvcVisionSystem
 
         private void RefreshComparison()
         {
-            if (suppressSelectionRefresh)
+            if (disposed || suppressSelectionRefresh)
             {
                 return;
             }
@@ -966,6 +989,11 @@ namespace MvcVisionSystem
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             OnPropertyChanged(nameof(SummaryTabText));
             OnPropertyChanged(nameof(MetricsTabText));
             OnPropertyChanged(nameof(ClassErrorsTabText));

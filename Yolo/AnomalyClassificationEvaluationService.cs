@@ -12,17 +12,28 @@ namespace MvcVisionSystem.Yolo
         public const string AbnormalClassName = "abnormal";
 
         public static AnomalyClassificationEvaluationReport ReadSummaryFile(string summaryPath)
+            => ReadSummaryFile(summaryPath, out _);
+
+        public static AnomalyClassificationEvaluationReport ReadSummaryFile(
+            string summaryPath,
+            out AnomalyClassificationEvaluationOptions options)
         {
             if (string.IsNullOrWhiteSpace(summaryPath) || !File.Exists(summaryPath))
             {
                 throw new FileNotFoundException("Anomaly classification evaluation summary was not found.", summaryPath);
             }
 
-            return ParseSummaryJson(File.ReadAllText(summaryPath));
+            return ParseSummaryJson(File.ReadAllText(summaryPath), out options);
         }
 
         public static AnomalyClassificationEvaluationReport ParseSummaryJson(string summaryJson)
+            => ParseSummaryJson(summaryJson, out _);
+
+        public static AnomalyClassificationEvaluationReport ParseSummaryJson(
+            string summaryJson,
+            out AnomalyClassificationEvaluationOptions options)
         {
+            options = new AnomalyClassificationEvaluationOptions();
             if (string.IsNullOrWhiteSpace(summaryJson))
             {
                 return new AnomalyClassificationEvaluationReport();
@@ -33,6 +44,28 @@ namespace MvcVisionSystem.Yolo
             JsonElement metrics = TryGetProperty(root, "metrics");
             JsonElement promotion = TryGetProperty(root, "promotion");
             JsonElement localization = TryGetProperty(root, "localization");
+            JsonElement thresholds = TryGetProperty(root, "thresholds");
+
+            options.MinimumTotalImageCount = ReadInt(
+                thresholds,
+                "minimumTotalImageCount",
+                options.MinimumTotalImageCount);
+            options.MinimumPerClassImageCount = ReadInt(
+                thresholds,
+                "minimumPerClassImageCount",
+                options.MinimumPerClassImageCount);
+            options.MinimumAccuracy = ReadDouble(
+                thresholds,
+                "minimumAccuracy",
+                options.MinimumAccuracy);
+            options.MinimumPerClassAccuracy = ReadDouble(
+                thresholds,
+                "minimumPerClassAccuracy",
+                options.MinimumPerClassAccuracy);
+            options.MinimumConfidence = ReadDouble(
+                thresholds,
+                "minimumConfidence",
+                options.MinimumConfidence);
 
             var report = new AnomalyClassificationEvaluationReport
             {
@@ -164,23 +197,29 @@ namespace MvcVisionSystem.Yolo
             => element.ValueKind == JsonValueKind.Object && element.TryGetProperty(propertyName, out _);
 
         private static int ReadInt(JsonElement element, string propertyName)
+            => ReadInt(element, propertyName, 0);
+
+        private static int ReadInt(JsonElement element, string propertyName, int fallback)
         {
             if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(propertyName, out JsonElement value))
             {
-                return 0;
+                return fallback;
             }
 
-            return value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int result) ? result : 0;
+            return value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int result) ? result : fallback;
         }
 
         private static double ReadDouble(JsonElement element, string propertyName)
+            => ReadDouble(element, propertyName, 0D);
+
+        private static double ReadDouble(JsonElement element, string propertyName, double fallback)
         {
             if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(propertyName, out JsonElement value))
             {
-                return 0D;
+                return fallback;
             }
 
-            return value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double result) ? Clamp01(result) : 0D;
+            return value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double result) ? Clamp01(result) : fallback;
         }
 
         private static IReadOnlyList<string> ReadStringArray(JsonElement element, string propertyName)

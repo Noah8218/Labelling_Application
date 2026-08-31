@@ -12,15 +12,8 @@ namespace MvcVisionSystem.Yolo
 {
     public static class CvatSegmentationImportService
     {
-        private static readonly string[] DatasetModes =
-        {
-            YoloDatasetSplitService.TrainMode,
-            YoloDatasetSplitService.ValidMode,
-            YoloDatasetSplitService.TestMode
-        };
-
         public static CvatSegmentationImportResult ImportArchive(
-            CData data,
+            LabelingProjectData data,
             string archivePath,
             string targetSplit = YoloDatasetSplitService.TrainMode)
         {
@@ -39,7 +32,7 @@ namespace MvcVisionSystem.Yolo
                 throw new FileNotFoundException("CVAT segmentation archive was not found.", archivePath);
             }
 
-            string split = NormalizeSplit(targetSplit);
+            string split = YoloDatasetSplitService.NormalizeStandardSplit(targetSplit);
             if (string.IsNullOrWhiteSpace(split))
             {
                 throw new ArgumentException("Target split must be train, valid, or test.", nameof(targetSplit));
@@ -86,7 +79,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static bool TryImportImage(
-            CData data,
+            LabelingProjectData data,
             ZipArchive archive,
             XElement imageElement,
             string imageDirectory,
@@ -137,7 +130,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static Dictionary<string, List<LabelingSegmentationObject>> BuildSegments(
-            CData data,
+            LabelingProjectData data,
             XElement imageElement,
             Size imageSize,
             CvatSegmentationImportResult result)
@@ -164,7 +157,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static bool TryBuildSegment(
-            CData data,
+            LabelingProjectData data,
             XElement polygonElement,
             Size imageSize,
             out string className,
@@ -183,7 +176,7 @@ namespace MvcVisionSystem.Yolo
                 return false;
             }
 
-            int classIndex = FindOrAddClass(data, className);
+            int classIndex = ClassCatalogService.FindOrAddClass(data, className);
             if (classIndex < 0)
             {
                 return false;
@@ -213,7 +206,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static void SaveSegmentationArtifacts(
-            CData data,
+            LabelingProjectData data,
             string targetSplit,
             string fileName,
             Image image,
@@ -253,49 +246,12 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static int FindOrAddClass(CData data, string className)
-        {
-            int classIndex = FindClassIndex(data, className);
-            if (classIndex >= 0)
-            {
-                return classIndex;
-            }
-
-            ClassCatalogService.TryAddClass(data, className, out _);
-            return FindClassIndex(data, className);
-        }
-
-        private static int FindClassIndex(CData data, string className)
-        {
-            for (int index = 0; index < (data.ClassNamedList?.Count ?? 0); index++)
-            {
-                if (string.Equals(data.ClassNamedList[index]?.Text, className, StringComparison.OrdinalIgnoreCase))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
-        }
-
         private static bool TryReadInt(XElement element, string attributeName, out int value)
         {
             value = 0;
             return int.TryParse(element?.Attribute(attributeName)?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
         }
 
-        private static string NormalizeSplit(string split)
-        {
-            foreach (string mode in DatasetModes)
-            {
-                if (string.Equals(split, mode, StringComparison.OrdinalIgnoreCase))
-                {
-                    return mode;
-                }
-            }
-
-            return string.Empty;
-        }
     }
 
 }

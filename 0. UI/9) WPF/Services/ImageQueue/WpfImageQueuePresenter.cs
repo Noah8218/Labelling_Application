@@ -366,5 +366,69 @@ namespace MvcVisionSystem
                 _ => "미검토"
             };
         }
+
+        public static void ApplySaveRequiredStatusToItem(WpfImageQueueItem item, string reason)
+        {
+            if (item == null)
+            {
+                return;
+            }
+
+            string displayReason = string.IsNullOrWhiteSpace(reason) ? "라벨 편집" : reason.Trim();
+            item.IsSaveRequired = true;
+            item.LabelStatus = "저장 필요";
+            item.QueueIconKind = PackIconMaterialKind.AlertCircleOutline;
+            item.QueueIconBrush = WpfImageQueueItem.WarningBrush;
+            item.QueueBadgeBackgroundBrush = WpfImageQueueItem.WarningBadgeBrush;
+            item.QueueRowAccentBrush = WpfImageQueueItem.WarningBrush;
+            item.QueueBadgeText = "저장 필요";
+            item.QueueStatusSummary = $"라벨 저장 필요: {displayReason}";
+            item.Detail = $"{item.FileName}{Environment.NewLine}파일에 반영하려면 라벨 저장을 눌러야 합니다.{Environment.NewLine}{displayReason}";
+        }
+
+        public static void ApplyAnomalyReviewStatusToItem(
+            WpfImageQueueItem item,
+            AnomalyImageReviewStatus status)
+        {
+            if (item == null || status == null)
+            {
+                return;
+            }
+
+            item.AnomalyReviewState = status.ReviewState;
+            item.IsLabeled = status.IsReviewed;
+            item.IsSaveRequired = false;
+            item.DetectStatus = status.IsReviewed ? "완료" : "확인 필요";
+            switch (status.ReviewState)
+            {
+                case AnomalyImageReviewState.Normal:
+                    item.LabelStatus = "OK";
+                    item.QueueStatusSummary = "정상(OK) 판정 완료";
+                    item.QueueBadgeText = "OK";
+                    item.QueueIconKind = PackIconMaterialKind.CheckboxMarkedCircleOutline;
+                    item.QueueIconBrush = WpfImageQueueItem.SuccessBrush;
+                    item.QueueBadgeBackgroundBrush = WpfImageQueueItem.SuccessBadgeBrush;
+                    item.QueueRowAccentBrush = WpfImageQueueItem.SuccessBrush;
+                    break;
+                case AnomalyImageReviewState.Abnormal:
+                    item.LabelStatus = "NG";
+                    item.QueueStatusSummary = "이상(NG) 판정 완료";
+                    item.QueueBadgeText = "NG";
+                    item.QueueIconKind = PackIconMaterialKind.AlertCircleOutline;
+                    item.QueueIconBrush = WpfImageQueueItem.ErrorBrush;
+                    item.QueueBadgeBackgroundBrush = WpfImageQueueItem.ErrorBadgeBrush;
+                    item.QueueRowAccentBrush = WpfImageQueueItem.ErrorBrush;
+                    break;
+                default:
+                    item.LabelStatus = "미판정";
+                    item.QueueStatusSummary = "정상(OK) 또는 이상(NG) 판정 필요";
+                    item.QueueBadgeText = "미판정";
+                    item.QueueIconKind = PackIconMaterialKind.ImageOutline;
+                    item.QueueIconBrush = WpfImageQueueItem.MutedBrush;
+                    item.QueueBadgeBackgroundBrush = WpfImageQueueItem.MutedBadgeBrush;
+                    item.QueueRowAccentBrush = WpfImageQueueItem.TransparentBrush;
+                    break;
+            }
+        }
     }
 }

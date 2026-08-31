@@ -23,14 +23,14 @@ namespace MvcVisionSystem
                 : repositoryRoot;
         }
 
-        public WpfAnomalyClassificationEvaluationRunRequest BuildRequest(CData data)
+        public WpfAnomalyClassificationEvaluationRunRequest BuildRequest(LabelingProjectData data)
         {
             data?.NormalizeOutputPaths();
             data?.NormalizeTrainingSettings();
             data?.ProjectSettings?.EnsureDefaults();
 
             PythonModelSettings settings = data?.ProjectSettings?.PythonModel ?? new PythonModelSettings();
-            settings.EnsureDefaults();
+            _1._Core.PythonModelRuntimePathResolver.ApplyDefaults(settings);
             string outputRoot = data?.OutputRootPath ?? string.Empty;
             string datasetRoot = string.Empty;
             string preparationError = string.Empty;
@@ -224,7 +224,7 @@ namespace MvcVisionSystem
             };
         }
 
-        private static string TryExportEvaluationDataset(CData data, string datasetRoot)
+        private static string TryExportEvaluationDataset(LabelingProjectData data, string datasetRoot)
         {
             try
             {
@@ -426,24 +426,7 @@ namespace MvcVisionSystem
         }
 
         private static string FindRepositoryRoot()
-        {
-            foreach (string startPath in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
-            {
-                string current = startPath;
-                while (!string.IsNullOrWhiteSpace(current))
-                {
-                    if (File.Exists(Path.Combine(current, "OpenVisionLab.LabelingStudio.sln"))
-                        || File.Exists(Path.Combine(current, "OpenVisionLab.LabelingStudio.csproj")))
-                    {
-                        return current;
-                    }
-
-                    current = Directory.GetParent(current)?.FullName;
-                }
-            }
-
-            return Directory.GetCurrentDirectory();
-        }
+            => WpfRepositoryRootResolver.FindRepositoryRoot();
     }
 
     public sealed class WpfAnomalyClassificationEvaluationRunRequest

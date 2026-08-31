@@ -9,15 +9,8 @@ namespace MvcVisionSystem.Yolo
 {
     public static class LabelStudioDetectionImportService
     {
-        private static readonly string[] DatasetModes =
-        {
-            YoloDatasetSplitService.TrainMode,
-            YoloDatasetSplitService.ValidMode,
-            YoloDatasetSplitService.TestMode
-        };
-
         public static LabelStudioDetectionImportResult ImportTasks(
-            CData data,
+            LabelingProjectData data,
             string taskJsonPath,
             string imageRoot,
             string targetSplit = YoloDatasetSplitService.TrainMode)
@@ -37,7 +30,7 @@ namespace MvcVisionSystem.Yolo
                 throw new FileNotFoundException("Label Studio task JSON was not found.", taskJsonPath);
             }
 
-            string split = NormalizeSplit(targetSplit);
+            string split = YoloDatasetSplitService.NormalizeStandardSplit(targetSplit);
             if (string.IsNullOrWhiteSpace(split))
             {
                 throw new ArgumentException("Target split must be train, valid, or test.", nameof(targetSplit));
@@ -52,7 +45,7 @@ namespace MvcVisionSystem.Yolo
             var result = new LabelStudioDetectionImportResult
             {
                 TaskJsonPath = taskJsonPath,
-                ImageRoot = ResolveImageRoot(taskJsonPath, imageRoot),
+                ImageRoot = YoloDatasetImportPathService.ResolveImageRoot(taskJsonPath, imageRoot),
                 TargetSplit = split
             };
 
@@ -75,7 +68,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static bool TryImportTask(
-            CData data,
+            LabelingProjectData data,
             LabelStudioDetectionTask task,
             string imageDirectory,
             string labelDirectory,
@@ -87,13 +80,13 @@ namespace MvcVisionSystem.Yolo
                 return false;
             }
 
-            string sourcePath = ResolveSourceImagePath(result.ImageRoot, imageValue);
+            string sourcePath = YoloDatasetImportPathService.ResolveSourceImagePath(result.ImageRoot, imageValue);
             if (!File.Exists(sourcePath))
             {
                 return false;
             }
 
-            string fileName = Path.GetFileName(imageValue.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar));
+            string fileName = YoloDatasetImportPathService.GetFileName(imageValue);
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 return false;
@@ -115,7 +108,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static List<string> BuildLabelLines(
-            CData data,
+            LabelingProjectData data,
             LabelStudioDetectionTask task,
             Size fallbackImageSize,
             LabelStudioDetectionImportResult result)
@@ -139,7 +132,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static bool TryBuildLabelLine(
-            CData data,
+            LabelingProjectData data,
             LabelStudioDetectionResult item,
             Size fallbackImageSize,
             out string line)
@@ -156,7 +149,7 @@ namespace MvcVisionSystem.Yolo
             }
 
             string className = ClassCatalogService.NormalizeClassName(item.Value.RectangleLabels[0]);
-            int classIndex = FindOrAddClass(data, className);
+            int classIndex = ClassCatalogService.FindOrAddClass(data, className);
             Size imageSize = item.OriginalWidth > 0 && item.OriginalHeight > 0
                 ? new Size(item.OriginalWidth, item.OriginalHeight)
                 : fallbackImageSize;
@@ -181,67 +174,12 @@ namespace MvcVisionSystem.Yolo
             return !string.IsNullOrWhiteSpace(line);
         }
 
-        private static int FindOrAddClass(CData data, string className)
-        {
-            if (string.IsNullOrWhiteSpace(className))
-            {
-                return -1;
-            }
-
-            int classIndex = FindClassIndex(data, className);
-            if (classIndex >= 0)
-            {
-                return classIndex;
-            }
-
-            ClassCatalogService.TryAddClass(data, className, out _);
-            return FindClassIndex(data, className);
-        }
-
-        private static int FindClassIndex(CData data, string className)
-        {
-            for (int index = 0; index < (data.ClassNamedList?.Count ?? 0); index++)
-            {
-                if (string.Equals(data.ClassNamedList[index]?.Text, className, StringComparison.OrdinalIgnoreCase))
-                {
-                    return index;
-                }
-            }
-
-            return -1;
-        }
-
         private static Size ResolveImageSize(string sourcePath)
         {
             using Image image = Image.FromFile(sourcePath);
             return image.Size;
         }
 
-        private static string ResolveImageRoot(string taskJsonPath, string imageRoot)
-            => string.IsNullOrWhiteSpace(imageRoot)
-                ? Path.GetDirectoryName(Path.GetFullPath(taskJsonPath)) ?? string.Empty
-                : Path.GetFullPath(imageRoot);
-
-        private static string ResolveSourceImagePath(string imageRoot, string imageValue)
-        {
-            string normalized = imageValue.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
-            return Path.IsPathRooted(normalized)
-                ? normalized
-                : Path.Combine(imageRoot ?? string.Empty, normalized);
-        }
-
-        private static string NormalizeSplit(string split)
-        {
-            foreach (string mode in DatasetModes)
-            {
-                if (string.Equals(split, mode, StringComparison.OrdinalIgnoreCase))
-                {
-                    return mode;
-                }
-            }
-
-            return string.Empty;
-        }
     }
 
 }

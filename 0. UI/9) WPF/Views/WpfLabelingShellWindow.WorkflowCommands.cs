@@ -53,6 +53,11 @@ namespace MvcVisionSystem
                     Dispatcher.BeginInvoke(
                         new Action(() =>
                         {
+                            if (isApplicationCloseApproved)
+                            {
+                                return;
+                            }
+
                             if (!TryOpenNextIncompleteQueueImage(completedImagePath))
                             {
                                 FinishQueueCompletionAndGuideDatasetCheck();

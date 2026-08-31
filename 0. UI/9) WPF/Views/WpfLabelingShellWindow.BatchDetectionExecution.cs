@@ -51,7 +51,7 @@ namespace MvcVisionSystem
             {
                 SetGlobalInferenceStatus(batchDetectionProgressService.BuildWorkerPreparingInferenceStatus(queue.Count), isBusy: true);
                 SetPythonStatus("\uCD94\uB860: \uC77C\uAD04 \uC5F0\uACB0 \uD655\uC778 \uC911");
-                bool workerReady = await global
+                bool workerReady = await global.ModelRuntime
                     .EnsurePythonModelClientReadyAsync(GetWorkerConnectTimeoutMilliseconds())
                     .ConfigureAwait(true);
                 if (!workerReady)
@@ -70,7 +70,7 @@ namespace MvcVisionSystem
                     }
 
                     string imageName = Path.GetFileNameWithoutExtension(item.ImagePath);
-                    ApplyReviewStatusToItem(item, imageReviewStatus.SetDetectionRequested(item.ImagePath, imageName));
+                    ApplyReviewStatusToItem(item, imageQualityReviewWorkflowService.SetDetectionRequested(item.ImagePath, imageName));
                     ShowBatchDetectionImage(item);
                     string currentFileName = batchDetectionProgressService.ResolveImageFileName(item.ImagePath);
                     SetGlobalInferenceStatus(batchDetectionProgressService.BuildItemInferenceStatus(batchDetectionCompletedCount, batchDetectionTotalCount, item.ImagePath), isBusy: true);
@@ -107,7 +107,7 @@ namespace MvcVisionSystem
                     pendingReviewStatusSaves++;
                     if (pendingReviewStatusSaves >= BatchReviewStatusSaveInterval)
                     {
-                        imageReviewStatus.SaveReviewStatus(global.Data);
+                        imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
                         if (IsAnomalyDatasetPurpose())
                         {
                             SaveAnomalyImageReviewStatus();
@@ -131,7 +131,7 @@ namespace MvcVisionSystem
                 isBatchDetectionRunning = false;
                 if (pendingReviewStatusSaves > 0 || batchDetectionCompletedCount > 0)
                 {
-                    imageReviewStatus.SaveReviewStatus(global.Data);
+                    imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
                     if (IsAnomalyDatasetPurpose())
                     {
                         SaveAnomalyImageReviewStatus();

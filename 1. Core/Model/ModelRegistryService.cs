@@ -2,8 +2,6 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace MvcVisionSystem
 {
@@ -650,9 +648,8 @@ namespace MvcVisionSystem
 
         private static string BuildStableId(string prefix, string value)
         {
-            using SHA256 sha = SHA256.Create();
-            byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(value ?? string.Empty));
-            return $"{prefix}-{Convert.ToHexString(hash).Substring(0, 16).ToLowerInvariant()}";
+            string hash = HashingService.ComputeUtf8TextSha256(value, lowerCase: true);
+            return $"{prefix}-{hash.Substring(0, 16)}";
         }
 
         private static string NormalizePath(string path)

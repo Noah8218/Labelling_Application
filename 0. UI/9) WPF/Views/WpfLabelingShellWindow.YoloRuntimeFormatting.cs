@@ -17,7 +17,7 @@ namespace MvcVisionSystem
         private string BuildPythonWorkerFailureText()
         {
             PythonCommunicationStatus status = global.GetPythonCommunicationStatusSnapshot();
-            string error = FirstNonEmpty(status.LastError, global.PythonClientProcess.LastError, "상세 없음");
+            string error = FirstNonEmpty(status.LastError, global.ModelRuntime.PythonClientProcess.LastError, "상세 없음");
             return $"\uCD94\uB860 \uC2E4\uD589\uAE30 \uC5F0\uACB0 \uC2E4\uD328: {error}";
         }
 

@@ -12,7 +12,7 @@ namespace MvcVisionSystem
                 args => ClassNameBox_KeyDown(ClassNameBox, args),
                 ExecuteAddClassCommand,
                 ExecuteRenameClassCommand,
-                ExecuteRemoveClassCommand,
+                ExecuteArchiveClassCommand,
                 ExecuteApplyClassColorCommand,
                 selected => ClassListBox_SelectionChanged(ClassListBox, selected));
             RefreshAttachedCommandBindings(ClassNameBox, InputCommandBehaviors.PreviewKeyInputCommandProperty);

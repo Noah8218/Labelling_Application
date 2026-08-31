@@ -109,42 +109,9 @@ namespace MvcVisionSystem._1._Core
 
         private static IEnumerable<string> EnumerateWorkerCandidates(string relativePath)
         {
-            string[] roots =
-            {
-                AppContext.BaseDirectory,
-                Environment.CurrentDirectory,
-                FindRepositoryRoot(AppContext.BaseDirectory),
-                FindRepositoryRoot(Environment.CurrentDirectory)
-            };
-
-            return roots
-                .Where(root => !string.IsNullOrWhiteSpace(root))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+            return PythonModelRuntimePathResolver
+                .EnumerateRuntimeSearchRoots()
                 .Select(root => Path.Combine(root, relativePath));
-        }
-
-        private static string FindRepositoryRoot(string startPath)
-        {
-            string current = string.IsNullOrWhiteSpace(startPath)
-                ? string.Empty
-                : Path.GetFullPath(startPath);
-            if (File.Exists(current))
-            {
-                current = Path.GetDirectoryName(current) ?? string.Empty;
-            }
-
-            while (!string.IsNullOrWhiteSpace(current))
-            {
-                if (File.Exists(Path.Combine(current, "OpenVisionLab.LabelingStudio.csproj"))
-                    || File.Exists(Path.Combine(current, "MvcVisionSystem.csproj")))
-                {
-                    return current;
-                }
-
-                current = Directory.GetParent(current)?.FullName ?? string.Empty;
-            }
-
-            return string.Empty;
         }
     }
 }

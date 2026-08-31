@@ -92,11 +92,21 @@ namespace MvcVisionSystem
 
         public TextBlock TrainingModelLifecycleCurrent => TrainingModelLifecycleCurrentText;
 
+        public TextBlock TrainingModelLifecycleSummaryTitle => TrainingModelLifecycleSummaryTitleText;
+
+        public TextBlock TrainingModelLifecycleCurrentCaption => TrainingModelLifecycleCurrentCaptionText;
+
         public TextBlock TrainingModelLifecycleCandidate => TrainingModelLifecycleCandidateText;
+
+        public TextBlock TrainingModelLifecycleCandidateCaption => TrainingModelLifecycleCandidateCaptionText;
 
         public TextBlock TrainingModelLifecycleDecision => TrainingModelLifecycleDecisionText;
 
+        public TextBlock TrainingModelLifecycleDecisionCaption => TrainingModelLifecycleDecisionCaptionText;
+
         public TextBlock TrainingModelLifecycleNextAction => TrainingModelLifecycleNextActionText;
+
+        public TextBlock TrainingModelLifecycleNextActionCaption => TrainingModelLifecycleNextActionCaptionText;
 
         public ItemsControl DatasetDashboardMetricList => DatasetDashboardMetricItemsControl;
 
@@ -105,6 +115,8 @@ namespace MvcVisionSystem
         public TextBlock YoloTrainingHistory => YoloTrainingHistoryText;
 
         public TextBlock YoloTrainingResultComparison => YoloTrainingResultComparisonText;
+
+        public TextBlock YoloTrainingResultComparisonTitle => YoloTrainingResultComparisonTitleText;
 
         public TextBlock YoloTrainingModelAdoptionDecision => YoloTrainingModelAdoptionDecisionText;
 

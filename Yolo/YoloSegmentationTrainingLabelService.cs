@@ -19,7 +19,7 @@ namespace MvcVisionSystem.Yolo
 
         private static readonly string[] ImageExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
-        public static YoloSegmentationTrainingLabelExportResult Export(CData data)
+        public static YoloSegmentationTrainingLabelExportResult Export(LabelingProjectData data)
         {
             var result = new YoloSegmentationTrainingLabelExportResult();
             if (data == null)
@@ -57,7 +57,7 @@ namespace MvcVisionSystem.Yolo
         internal static IReadOnlyList<string> BuildReadOnlyLabelLines(
             string segmentPath,
             string maskPath,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             string imagePath,
             out IReadOnlyList<string> errors)
         {
@@ -67,7 +67,7 @@ namespace MvcVisionSystem.Yolo
             return lines;
         }
 
-        private static void ExportMode(CData data, string mode, YoloSegmentationTrainingLabelExportResult result)
+        private static void ExportMode(LabelingProjectData data, string mode, YoloSegmentationTrainingLabelExportResult result)
         {
             string imageDirectory = Path.Combine(data.OutputRootPath, "data", mode, "images");
             string segmentDirectory = Path.Combine(data.OutputRootPath, "data", mode, "segments");
@@ -124,7 +124,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static void ImportOkBackgroundImages(CData data, YoloSegmentationTrainingLabelExportResult result)
+        private static void ImportOkBackgroundImages(LabelingProjectData data, YoloSegmentationTrainingLabelExportResult result)
         {
             string sourceRoot = data?.ProjectSettings?.PythonModel?.ImageRootPath;
             if (string.IsNullOrWhiteSpace(sourceRoot) || !Directory.Exists(sourceRoot))
@@ -170,7 +170,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static void RemoveStaleOkBackgroundCopies(CData data, string fileStem, IReadOnlyList<string> selectedModes)
+        private static void RemoveStaleOkBackgroundCopies(LabelingProjectData data, string fileStem, IReadOnlyList<string> selectedModes)
         {
             foreach (string mode in DatasetModes)
             {
@@ -201,7 +201,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static bool HasSegmentationArtifact(CData data, string mode, string fileStem)
+        private static bool HasSegmentationArtifact(LabelingProjectData data, string mode, string fileStem)
         {
             string modeRoot = Path.Combine(data.OutputRootPath, "data", mode);
             return File.Exists(Path.Combine(modeRoot, "segments", $"{fileStem}.json"))
@@ -240,7 +240,7 @@ namespace MvcVisionSystem.Yolo
         private static List<string> BuildLabelLines(
             string segmentPath,
             string maskPath,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             string imagePath,
             string mode,
             YoloSegmentationTrainingLabelExportResult result)
@@ -369,7 +369,7 @@ namespace MvcVisionSystem.Yolo
             return true;
         }
 
-        private static int ResolveClassIndex(string className, IReadOnlyList<CClassItem> classes)
+        private static int ResolveClassIndex(string className, IReadOnlyList<LabelClass> classes)
         {
             if (string.IsNullOrWhiteSpace(className) || classes == null)
             {

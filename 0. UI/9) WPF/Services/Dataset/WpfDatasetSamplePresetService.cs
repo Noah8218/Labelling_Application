@@ -95,7 +95,7 @@ namespace MvcVisionSystem
 
         public static bool TryApplySample(
             WpfDatasetSetupRequest request,
-            CData data,
+            LabelingProjectData data,
             out WpfDatasetSamplePresetApplyResult result,
             out string error)
         {
@@ -139,7 +139,7 @@ namespace MvcVisionSystem
             };
         }
 
-        private static bool TryApplyCoco128(CData data, out WpfDatasetSamplePresetApplyResult result, out string error)
+        private static bool TryApplyCoco128(LabelingProjectData data, out WpfDatasetSamplePresetApplyResult result, out string error)
         {
             result = new WpfDatasetSamplePresetApplyResult();
             error = string.Empty;
@@ -164,7 +164,7 @@ namespace MvcVisionSystem
             return true;
         }
 
-        private static bool TryApplyIndustrialObjectDetectionImages(CData data, out WpfDatasetSamplePresetApplyResult result, out string error)
+        private static bool TryApplyIndustrialObjectDetectionImages(LabelingProjectData data, out WpfDatasetSamplePresetApplyResult result, out string error)
         {
             result = new WpfDatasetSamplePresetApplyResult();
             error = string.Empty;
@@ -191,7 +191,7 @@ namespace MvcVisionSystem
             return true;
         }
 
-        private static bool TryApplyIndustrialDefectMasks(CData data, out WpfDatasetSamplePresetApplyResult result, out string error)
+        private static bool TryApplyIndustrialDefectMasks(LabelingProjectData data, out WpfDatasetSamplePresetApplyResult result, out string error)
         {
             result = new WpfDatasetSamplePresetApplyResult();
             error = string.Empty;
@@ -350,26 +350,7 @@ namespace MvcVisionSystem
         }
 
         private static string FindRepositoryRoot()
-        {
-            foreach (string startPath in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
-            {
-                string current = startPath;
-                while (!string.IsNullOrWhiteSpace(current))
-                {
-                    if (File.Exists(Path.Combine(current, "OpenVisionLab.LabelingStudio.sln"))
-                        || File.Exists(Path.Combine(current, "OpenVisionLab.LabelingStudio.csproj"))
-                        || File.Exists(Path.Combine(current, "MvcVisionSystem.sln"))
-                        || File.Exists(Path.Combine(current, "MvcVisionSystem.csproj")))
-                    {
-                        return current;
-                    }
-
-                    current = Directory.GetParent(current)?.FullName;
-                }
-            }
-
-            return Directory.GetCurrentDirectory();
-        }
+            => WpfRepositoryRootResolver.FindRepositoryRoot();
 
         private static IReadOnlyList<string> GetCocoClassNames()
             => new[]

@@ -147,9 +147,10 @@ namespace MvcVisionSystem
             }
 
             comparisonStatusText ??= BuildTrainingComparisonStatusText(comparison);
-            LearningWorkflowViewModel.TrainingResultComparisonText = comparisonStatusText;
-            LearningWorkflowViewModel.TrainingResultComparisonSummaryText = BuildTrainingComparisonSummaryText(comparison);
-            LearningWorkflowViewModel.TrainingModelAdoptionDecisionText = BuildTrainingModelAdoptionDecisionText(comparison);
+            LearningWorkflowViewModel.SetTrainingComparisonResultTexts(
+                summaryText: BuildTrainingComparisonSummaryText(comparison),
+                comparisonText: comparisonStatusText,
+                adoptionDecisionText: BuildTrainingModelAdoptionDecisionText(comparison));
             LearningWorkflowViewModel.SetTrainingResultReportItems(BuildTrainingResultReportItems(comparison));
             UpdateCandidateModelComparisonReviewPanel(comparison);
         }

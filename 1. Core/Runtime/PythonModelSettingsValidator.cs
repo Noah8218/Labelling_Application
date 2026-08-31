@@ -14,6 +14,7 @@ namespace MvcVisionSystem._1._Core
             IEnumerable<string> detectionModels = null)
         {
             settings ??= new PythonModelSettings();
+            PythonModelRuntimePathResolver.ApplyPathDefaults(settings);
 
             string projectRootPath = settings.ProjectRootPath?.Trim() ?? string.Empty;
             string clientScriptPath = settings.ClientScriptPath?.Trim() ?? string.Empty;
@@ -104,7 +105,7 @@ namespace MvcVisionSystem._1._Core
             int configuredDetectionTimeoutSeconds = settings?.DetectionTimeoutSeconds ?? 30;
 
             settings ??= new PythonModelSettings();
-            settings.EnsureDefaults();
+            PythonModelRuntimePathResolver.ApplyDefaults(settings);
 
             ValidateDirectory(settings.ProjectRootPath, "YOLO 프로젝트 폴더", errors);
             ValidateFile(settings.ClientScriptPath, "YOLO TCP 클라이언트 스크립트", errors);

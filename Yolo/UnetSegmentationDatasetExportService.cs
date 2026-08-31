@@ -18,8 +18,6 @@ namespace MvcVisionSystem.Yolo
     /// </summary>
     public static class UnetSegmentationDatasetExportService
     {
-        private const int ManifestVersion = 1;
-
         private static readonly string[] DatasetModes =
         {
             YoloDatasetSplitService.TrainMode,
@@ -32,7 +30,7 @@ namespace MvcVisionSystem.Yolo
             ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff"
         };
 
-        public static UnetSegmentationDatasetExportResult Export(CData data)
+        public static UnetSegmentationDatasetExportResult Export(LabelingProjectData data)
         {
             var result = new UnetSegmentationDatasetExportResult();
             ExportPlan plan = BuildPlan(data, result);
@@ -42,8 +40,8 @@ namespace MvcVisionSystem.Yolo
             }
 
             result.SourceDataTreeSha256Before = ComputeDirectorySha256(plan.SourceDataRootPath);
-            result.ClassContractSha256 = ComputeTextSha256(JsonConvert.SerializeObject(plan.Classes));
-            result.DatasetFingerprint = ComputeTextSha256(result.SourceDataTreeSha256Before + "\n" + result.ClassContractSha256)
+            result.ClassContractSha256 = HashingService.ComputeUtf8TextSha256(JsonConvert.SerializeObject(plan.Classes));
+            result.DatasetFingerprint = HashingService.ComputeUtf8TextSha256(result.SourceDataTreeSha256Before + "\n" + result.ClassContractSha256)
                 .ToLowerInvariant();
             result.OutputRootPath = Path.Combine(
                 plan.RecipeRootPath,
@@ -51,7 +49,7 @@ namespace MvcVisionSystem.Yolo
                 "unet-dataset",
                 result.DatasetFingerprint);
 
-            if (TryReuseExistingArtifact(result, plan))
+            if (TryReuseExistingArtifact(result))
             {
                 result.SourceDataTreeSha256After = ComputeDirectorySha256(plan.SourceDataRootPath);
                 return result;
@@ -62,8 +60,12 @@ namespace MvcVisionSystem.Yolo
             try
             {
                 Directory.CreateDirectory(temporaryPath);
-                MaterializeExport(temporaryPath, plan, result);
-                WriteManifestFiles(temporaryPath, plan, result);
+                SegmentationCanonicalArtifactWriter.Write(
+                    temporaryPath,
+                    plan.RecipeRootPath,
+                    plan.Classes,
+                    plan.Entries,
+                    result);
                 Directory.Move(temporaryPath, result.OutputRootPath);
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is ExternalException)
@@ -87,14 +89,14 @@ namespace MvcVisionSystem.Yolo
             return result;
         }
 
-        public static string ComputeSourceDataTreeSha256(CData data)
+        public static string ComputeSourceDataTreeSha256(LabelingProjectData data)
         {
             string recipeRootPath = data?.OutputRootPath ?? string.Empty;
             string sourceDataRootPath = Path.Combine(recipeRootPath, "data");
             return Directory.Exists(sourceDataRootPath) ? ComputeDirectorySha256(sourceDataRootPath) : string.Empty;
         }
 
-        private static ExportPlan BuildPlan(CData data, UnetSegmentationDatasetExportResult result)
+        private static ExportPlan BuildPlan(LabelingProjectData data, UnetSegmentationDatasetExportResult result)
         {
             if (data == null)
             {
@@ -162,7 +164,7 @@ namespace MvcVisionSystem.Yolo
                         imagePath,
                         relativeImagePath,
                         classes,
-                        out ExportEntry entry,
+                        out SegmentationCanonicalArtifactItem entry,
                         out string error))
                     {
                         result.Errors.Add(error);
@@ -207,11 +209,11 @@ namespace MvcVisionSystem.Yolo
             return result.Errors.Count == 0 ? plan : null;
         }
 
-        private static List<UnetClassContractItem> BuildClassContract(IReadOnlyList<CClassItem> sourceClasses, List<string> errors)
+        private static List<UnetClassContractItem> BuildClassContract(IReadOnlyList<LabelClass> sourceClasses, List<string> errors)
         {
             var classes = new List<UnetClassContractItem>();
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (CClassItem sourceClass in sourceClasses ?? Array.Empty<CClassItem>())
+            foreach (LabelClass sourceClass in sourceClasses ?? Array.Empty<LabelClass>())
             {
                 string name = sourceClass?.Text?.Trim() ?? string.Empty;
                 if (string.IsNullOrWhiteSpace(name))
@@ -246,7 +248,7 @@ namespace MvcVisionSystem.Yolo
             string imagePath,
             string relativeImagePath,
             IReadOnlyList<UnetClassContractItem> classes,
-            out ExportEntry entry,
+            out SegmentationCanonicalArtifactItem entry,
             out string error)
         {
             entry = null;
@@ -304,14 +306,14 @@ namespace MvcVisionSystem.Yolo
             }
 
             bool hasForeground = maskValues.Any(value => value != 0);
-            entry = new ExportEntry
+            entry = new SegmentationCanonicalArtifactItem
             {
                 Split = split,
                 SourceImagePath = imagePath,
                 SourceRelativeImagePath = Path.Combine(split, "images", relativeImagePath).Replace('\\', '/'),
                 RelativeImagePath = relativeImagePath,
                 RelativeMaskPath = Path.ChangeExtension(relativeImagePath, ".png") ?? string.Empty,
-                ImageSha256 = ComputeFileSha256(imagePath),
+                ImageSha256 = HashingService.ComputeFileSha256(imagePath),
                 ImageWidth = imageSize.Width,
                 ImageHeight = imageSize.Height,
                 MaskValues = maskValues,
@@ -548,7 +550,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static bool TryReuseExistingArtifact(UnetSegmentationDatasetExportResult result, ExportPlan plan)
+        private static bool TryReuseExistingArtifact(UnetSegmentationDatasetExportResult result)
         {
             if (!Directory.Exists(result.OutputRootPath))
             {
@@ -560,7 +562,7 @@ namespace MvcVisionSystem.Yolo
             {
                 UnetSegmentationDatasetExportManifest manifest = JsonConvert.DeserializeObject<UnetSegmentationDatasetExportManifest>(File.ReadAllText(manifestPath));
                 if (manifest != null
-                    && manifest.Version == ManifestVersion
+                    && manifest.Version == SegmentationCanonicalArtifactWriter.ManifestVersion
                     && string.Equals(manifest.DatasetFingerprint, result.DatasetFingerprint, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(manifest.SourceDataTreeSha256, result.SourceDataTreeSha256Before, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(manifest.ClassContractSha256, result.ClassContractSha256, StringComparison.OrdinalIgnoreCase))
@@ -579,94 +581,6 @@ namespace MvcVisionSystem.Yolo
             return false;
         }
 
-        private static void MaterializeExport(string temporaryPath, ExportPlan plan, UnetSegmentationDatasetExportResult result)
-        {
-            foreach (ExportEntry entry in plan.Entries)
-            {
-                string imagePath = Path.Combine(temporaryPath, "images", entry.Split, entry.RelativeImagePath);
-                string maskPath = Path.Combine(temporaryPath, "masks", entry.Split, entry.RelativeMaskPath);
-                Directory.CreateDirectory(Path.GetDirectoryName(imagePath) ?? temporaryPath);
-                Directory.CreateDirectory(Path.GetDirectoryName(maskPath) ?? temporaryPath);
-                File.Copy(entry.SourceImagePath, imagePath, overwrite: false);
-                WriteMask(maskPath, entry.ImageWidth, entry.ImageHeight, entry.MaskValues);
-                entry.ExportImageSha256 = ComputeFileSha256(imagePath);
-                entry.ExportMaskSha256 = ComputeFileSha256(maskPath);
-            }
-        }
-
-        private static void WriteManifestFiles(string temporaryPath, ExportPlan plan, UnetSegmentationDatasetExportResult result)
-        {
-            var manifest = new UnetSegmentationDatasetExportManifest
-            {
-                Version = ManifestVersion,
-                DatasetFingerprint = result.DatasetFingerprint,
-                SourceRecipeRootPath = plan.RecipeRootPath,
-                SourceDataTreeSha256 = result.SourceDataTreeSha256Before,
-                ClassContractSha256 = result.ClassContractSha256,
-                Classes = plan.Classes,
-                Splits = plan.Entries
-                    .GroupBy(entry => entry.Split, StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(group => Array.IndexOf(DatasetModes, group.Key))
-                    .Select(group => new UnetSegmentationDatasetExportManifestSplit
-                    {
-                        Split = group.Key,
-                        Images = group.Select(entry => new UnetSegmentationDatasetExportManifestImage
-                        {
-                            SourceRelativeImagePath = entry.SourceRelativeImagePath,
-                            ImageSha256 = entry.ImageSha256,
-                            ImageWidth = entry.ImageWidth,
-                            ImageHeight = entry.ImageHeight,
-                            ExportImageRelativePath = Path.Combine("images", entry.Split, entry.RelativeImagePath).Replace('\\', '/'),
-                            ExportImageSha256 = entry.ExportImageSha256,
-                            ExportMaskRelativePath = Path.Combine("masks", entry.Split, entry.RelativeMaskPath).Replace('\\', '/'),
-                            ExportMaskSha256 = entry.ExportMaskSha256,
-                            HasForeground = entry.HasForeground
-                        }).ToList()
-                    }).ToList()
-            };
-
-            File.WriteAllText(
-                Path.Combine(temporaryPath, "classes.json"),
-                JsonConvert.SerializeObject(plan.Classes, Formatting.Indented),
-                Encoding.UTF8);
-            File.WriteAllText(
-                Path.Combine(temporaryPath, "dataset-manifest.json"),
-                JsonConvert.SerializeObject(manifest, Formatting.Indented),
-                Encoding.UTF8);
-        }
-
-        private static void WriteMask(string path, int width, int height, byte[] values)
-        {
-            using var bitmap = new Bitmap(width, height, PixelFormat.Format24bppRgb);
-            Rectangle bounds = new Rectangle(0, 0, width, height);
-            BitmapData bitmapData = bitmap.LockBits(bounds, ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
-            try
-            {
-                int stride = Math.Abs(bitmapData.Stride);
-                var pixels = new byte[stride * height];
-                for (int y = 0; y < height; y++)
-                {
-                    int targetRow = bitmapData.Stride >= 0 ? y : height - 1 - y;
-                    int targetOffset = targetRow * stride;
-                    int sourceOffset = y * width;
-                    for (int x = 0; x < width; x++)
-                    {
-                        byte value = values[sourceOffset + x];
-                        int pixelOffset = targetOffset + (x * 3);
-                        pixels[pixelOffset] = value;
-                        pixels[pixelOffset + 1] = value;
-                        pixels[pixelOffset + 2] = value;
-                    }
-                }
-                Marshal.Copy(pixels, 0, bitmapData.Scan0, pixels.Length);
-            }
-            finally
-            {
-                bitmap.UnlockBits(bitmapData);
-            }
-            bitmap.Save(path, ImageFormat.Png);
-        }
-
         private static string ComputeDirectorySha256(string rootPath)
         {
             using SHA256 hash = SHA256.Create();
@@ -674,24 +588,11 @@ namespace MvcVisionSystem.Yolo
                 .OrderBy(path => Path.GetRelativePath(rootPath, path), StringComparer.OrdinalIgnoreCase))
             {
                 string relativePath = Path.GetRelativePath(rootPath, path).Replace('\\', '/');
-                byte[] line = Encoding.UTF8.GetBytes(relativePath + "\0" + ComputeFileSha256(path) + "\n");
+                byte[] line = Encoding.UTF8.GetBytes(relativePath + "\0" + HashingService.ComputeFileSha256(path) + "\n");
                 hash.TransformBlock(line, 0, line.Length, null, 0);
             }
             hash.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
             return Convert.ToHexString(hash.Hash);
-        }
-
-        private static string ComputeFileSha256(string path)
-        {
-            using SHA256 hash = SHA256.Create();
-            using FileStream stream = File.OpenRead(path);
-            return Convert.ToHexString(hash.ComputeHash(stream));
-        }
-
-        private static string ComputeTextSha256(string text)
-        {
-            using SHA256 hash = SHA256.Create();
-            return Convert.ToHexString(hash.ComputeHash(Encoding.UTF8.GetBytes(text ?? string.Empty)));
         }
 
         private sealed class ExportPlan
@@ -709,34 +610,8 @@ namespace MvcVisionSystem.Yolo
 
             public List<UnetClassContractItem> Classes { get; }
 
-            public List<ExportEntry> Entries { get; } = new List<ExportEntry>();
-        }
-
-        private sealed class ExportEntry
-        {
-            public string Split { get; set; } = string.Empty;
-
-            public string SourceImagePath { get; set; } = string.Empty;
-
-            public string SourceRelativeImagePath { get; set; } = string.Empty;
-
-            public string RelativeImagePath { get; set; } = string.Empty;
-
-            public string RelativeMaskPath { get; set; } = string.Empty;
-
-            public string ImageSha256 { get; set; } = string.Empty;
-
-            public string ExportImageSha256 { get; set; } = string.Empty;
-
-            public string ExportMaskSha256 { get; set; } = string.Empty;
-
-            public int ImageWidth { get; set; }
-
-            public int ImageHeight { get; set; }
-
-            public byte[] MaskValues { get; set; } = Array.Empty<byte>();
-
-            public bool HasForeground { get; set; }
+            public List<SegmentationCanonicalArtifactItem> Entries { get; } =
+                new List<SegmentationCanonicalArtifactItem>();
         }
     }
 

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MvcVisionSystem._1._Core;
 
 namespace MvcVisionSystem
 {
@@ -14,23 +15,31 @@ namespace MvcVisionSystem
         private readonly SemaphoreSlim applyGate = new SemaphoreSlim(1, 1);
         private long applyRequestVersion;
 
-        public string Save(CData data, string recipeName)
+        public string Save(LabelingProjectData data, string recipeName)
         {
-            CRecipe.InitDirectory(recipeName);
-            data.SaveConfig(recipeName);
+            ArgumentNullException.ThrowIfNull(data);
+            data.ProjectSettings ??= new LabelingProjectSettings();
+            PythonModelRuntimePathResolver.ApplyDefaults(data.ProjectSettings);
+            Recipe.InitDirectory(recipeName);
+            RecipeConfigurationSaveResult result = data.SaveConfig(recipeName);
+            if (!result.IsSuccess)
+            {
+                throw new IOException($"Recipe configuration could not be saved: {result.ErrorMessage}");
+            }
+
             return WpfProjectRecipeService.BuildConfigPath(
                 WpfProjectRecipeService.GetRecipeRootDirectory(),
                 recipeName);
         }
 
-        public string Apply(CGlobal application, string recipeName)
+        public string Apply(LabelingApplicationState application, string recipeName)
         {
             ValidateApplyInputs(application, recipeName);
             long requestVersion = Interlocked.Increment(ref applyRequestVersion);
             applyGate.Wait();
             try
             {
-                CData loadedData = LoadRecipeData(application, recipeName);
+                LabelingProjectData loadedData = LoadRecipeData(application, recipeName);
                 return CommitIfCurrent(application, recipeName, loadedData, requestVersion);
             }
             finally
@@ -40,7 +49,7 @@ namespace MvcVisionSystem
         }
 
         public async Task<string> ApplyAsync(
-            CGlobal application,
+            LabelingApplicationState application,
             string recipeName,
             CancellationToken cancellationToken = default)
         {
@@ -49,8 +58,8 @@ namespace MvcVisionSystem
             await applyGate.WaitAsync(cancellationToken);
             try
             {
-                CData sourceData = GetSourceData(application, recipeName);
-                CData loadedData = await Task.Run(
+                LabelingProjectData sourceData = GetSourceData(application, recipeName);
+                LabelingProjectData loadedData = await Task.Run(
                     () => LoadRecipeData(sourceData, recipeName),
                     cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
@@ -62,7 +71,7 @@ namespace MvcVisionSystem
             }
         }
 
-        public string ApplyPrepared(CGlobal application, string recipeName, CData preparedData)
+        public string ApplyPrepared(LabelingApplicationState application, string recipeName, LabelingProjectData preparedData)
         {
             ValidateApplyInputs(application, recipeName);
             ArgumentNullException.ThrowIfNull(preparedData);
@@ -78,34 +87,39 @@ namespace MvcVisionSystem
             }
         }
 
-        private static CData LoadRecipeData(CGlobal application, string recipeName)
+        private static LabelingProjectData LoadRecipeData(LabelingApplicationState application, string recipeName)
         {
-            CData sourceData = GetSourceData(application, recipeName);
+            LabelingProjectData sourceData = GetSourceData(application, recipeName);
             return LoadRecipeData(sourceData, recipeName);
         }
 
-        private static CData GetSourceData(CGlobal application, string recipeName)
+        private static LabelingProjectData GetSourceData(LabelingApplicationState application, string recipeName)
         {
             ValidateApplyInputs(application, recipeName);
-            return application.Data ?? new CData();
+            return application.Data ?? new LabelingProjectData();
         }
 
-        private static CData LoadRecipeData(CData sourceData, string recipeName)
+        private static LabelingProjectData LoadRecipeData(LabelingProjectData sourceData, string recipeName)
         {
             string normalizedRecipeName = recipeName.Trim();
-            if (!CRecipe.InitDirectory(normalizedRecipeName))
+            RecipeConfigurationLoadResult result = sourceData.TryLoadConfig(normalizedRecipeName);
+            if (result.IsSuccess)
             {
-                throw new IOException($"Recipe directory could not be initialized: {normalizedRecipeName}");
+                return result.Data;
             }
 
-            return sourceData.LoadConfig(normalizedRecipeName)
-                ?? throw new InvalidOperationException($"Recipe configuration could not be loaded: {normalizedRecipeName}");
+            if (result.FailureKind == RecipeConfigurationFailureKind.Missing)
+            {
+                throw new FileNotFoundException($"Recipe configuration does not exist: {normalizedRecipeName}", result.Path);
+            }
+
+            throw new InvalidOperationException($"Recipe configuration could not be loaded: {normalizedRecipeName}. {result.ErrorMessage}");
         }
 
         private string CommitIfCurrent(
-            CGlobal application,
+            LabelingApplicationState application,
             string recipeName,
-            CData loadedData,
+            LabelingProjectData loadedData,
             long requestVersion)
         {
             if (requestVersion != Volatile.Read(ref applyRequestVersion))
@@ -116,15 +130,17 @@ namespace MvcVisionSystem
             return Commit(application, recipeName.Trim(), loadedData);
         }
 
-        private static string Commit(CGlobal application, string recipeName, CData loadedData)
+        private static string Commit(LabelingApplicationState application, string recipeName, LabelingProjectData loadedData)
         {
             string previousRecipeName = (application.Recipe.Name ?? string.Empty).Trim();
+            loadedData.ProjectSettings ??= new LabelingProjectSettings();
+            PythonModelRuntimePathResolver.ApplyDefaults(loadedData.ProjectSettings);
             application.Data = loadedData;
             application.Recipe.CommitLoadedRecipe(recipeName);
             return previousRecipeName;
         }
 
-        private static void ValidateApplyInputs(CGlobal application, string recipeName)
+        private static void ValidateApplyInputs(LabelingApplicationState application, string recipeName)
         {
             ArgumentNullException.ThrowIfNull(application);
             if (string.IsNullOrWhiteSpace(recipeName))

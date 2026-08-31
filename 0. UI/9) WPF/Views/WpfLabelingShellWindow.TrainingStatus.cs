@@ -201,6 +201,11 @@ namespace MvcVisionSystem
 
         private void RefreshTrainingReadinessPanel(bool refreshYaml)
         {
+            if (!viewModels.IsModelWorkflowCreated)
+            {
+                return;
+            }
+
             EnsureProjectSettings();
             ExternalYoloDatasetSettings externalDataset = global.Data.ProjectSettings.ExternalYoloDataset;
             if (externalDataset?.UseForTraining == true)

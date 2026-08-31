@@ -1442,9 +1442,11 @@
                             Padding="7"
                             Margin="0,5,0,0">
                         <StackPanel>
-                            <TextBlock Text="&#xBAA8;&#xB378; &#xD655;&#xC778;"
-                                       Style="{StaticResource LearningWorkflowCaptionStyle}"
-                                       Margin="0,0,0,3" />
+                             <TextBlock x:Name="TrainingModelLifecycleSummaryTitleText"
+                                        AutomationProperties.AutomationId="TrainingModelLifecycleSummaryTitleText"
+                                        Text="{Binding TrainingModelLifecycleSummaryTitleText}"
+                                        Style="{StaticResource LearningWorkflowCaptionStyle}"
+                                        Margin="0,0,0,3" />
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -1456,10 +1458,12 @@
                                     <ColumnDefinition Width="64" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Row="0"
-                                           Grid.Column="0"
-                                           Text="&#xAC80;&#xC0AC; &#xBAA8;&#xB378;"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                 <TextBlock x:Name="TrainingModelLifecycleCurrentCaptionText"
+                                            AutomationProperties.AutomationId="TrainingModelLifecycleCurrentCaptionText"
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            Text="{Binding TrainingModelLifecycleCurrentCaptionText}"
+                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            FontFamily="Segoe UI"
                                            FontSize="9"
                                            FontWeight="SemiBold"
@@ -1476,10 +1480,12 @@
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,3"
                                            TextWrapping="Wrap" />
-                                <TextBlock Grid.Row="1"
-                                           Grid.Column="0"
-                                           Text="&#xD559;&#xC2B5; &#xD6C4;&#xBCF4;"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                 <TextBlock x:Name="TrainingModelLifecycleCandidateCaptionText"
+                                            AutomationProperties.AutomationId="TrainingModelLifecycleCandidateCaptionText"
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Text="{Binding TrainingModelLifecycleCandidateCaptionText}"
+                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            FontFamily="Segoe UI"
                                            FontSize="9"
                                            FontWeight="SemiBold"
@@ -1495,10 +1501,12 @@
                                            FontSize="9.5"
                                            Margin="0,0,0,3"
                                            TextWrapping="Wrap" />
-                                <TextBlock Grid.Row="2"
-                                           Grid.Column="0"
-                                           Text="&#xD310;&#xB2E8;"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                 <TextBlock x:Name="TrainingModelLifecycleDecisionCaptionText"
+                                            AutomationProperties.AutomationId="TrainingModelLifecycleDecisionCaptionText"
+                                            Grid.Row="2"
+                                            Grid.Column="0"
+                                            Text="{Binding TrainingModelLifecycleDecisionCaptionText}"
+                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            FontFamily="Segoe UI"
                                            FontSize="9"
                                            FontWeight="SemiBold"
@@ -1515,10 +1523,12 @@
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,3"
                                            TextWrapping="Wrap" />
-                                <TextBlock Grid.Row="3"
-                                           Grid.Column="0"
-                                           Text="&#xB2E4;&#xC74C;"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                 <TextBlock x:Name="TrainingModelLifecycleNextActionCaptionText"
+                                            AutomationProperties.AutomationId="TrainingModelLifecycleNextActionCaptionText"
+                                            Grid.Row="3"
+                                            Grid.Column="0"
+                                            Text="{Binding TrainingModelLifecycleNextActionCaptionText}"
+                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            FontFamily="Segoe UI"
                                            FontSize="9"
                                            FontWeight="SemiBold"
@@ -2029,9 +2039,10 @@
                                             Padding="6"
                                             Margin="0,5,0,0">
                                         <StackPanel>
-                                            <TextBlock x:Name="YoloTrainingResultComparisonTitleText"
-                                                       Text="&#xD559;&#xC2B5; &#xACB0;&#xACFC; &#xBE44;&#xAD50;"
-                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                             <TextBlock x:Name="YoloTrainingResultComparisonTitleText"
+                                                        AutomationProperties.AutomationId="YoloTrainingResultComparisonTitleText"
+                                                        Text="{Binding TrainingResultComparisonTitleText}"
+                                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                                        FontFamily="Segoe UI"
                                                        FontSize="10"
                                                        FontWeight="SemiBold" />

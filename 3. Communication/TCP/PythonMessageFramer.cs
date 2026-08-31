@@ -9,10 +9,10 @@ namespace MvcVisionSystem._3._Communication.TCP
         private static readonly string[] CommandNames =
         {
             PythonDetectionResultProtocol.ResultDefectCommand,
-            nameof(CCommunicationLearning.CommandLearning.StartTraining),
-            nameof(CCommunicationLearning.CommandLearning.StopTraining),
-            nameof(CCommunicationLearning.CommandLearning.StartDefect),
-            nameof(CCommunicationLearning.CommandLearning.StopDefect)
+            nameof(PythonModelCommunication.CommandLearning.StartTraining),
+            nameof(PythonModelCommunication.CommandLearning.StopTraining),
+            nameof(PythonModelCommunication.CommandLearning.StartDefect),
+            nameof(PythonModelCommunication.CommandLearning.StopDefect)
         };
 
         private readonly StringBuilder buffer = new StringBuilder();

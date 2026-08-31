@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using Wpf.Ui.Appearance;
 using FluentWindow = Wpf.Ui.Controls.FluentWindow;
@@ -32,6 +33,12 @@ namespace MvcVisionSystem
 
         public WpfEnvironmentSetupCenterViewModel ViewModel
             => DataContext as WpfEnvironmentSetupCenterViewModel;
+
+        protected override void OnClosed(EventArgs e)
+        {
+            ViewModel?.Dispose();
+            base.OnClosed(e);
+        }
 
         public void ApplyThemeFrom(FrameworkElement source)
         {

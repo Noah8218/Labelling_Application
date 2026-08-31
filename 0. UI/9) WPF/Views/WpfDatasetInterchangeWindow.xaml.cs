@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Media;
 using Wpf.Ui.Appearance;
@@ -32,6 +33,12 @@ namespace MvcVisionSystem
 
         public WpfDatasetInterchangeViewModel ViewModel =>
             DataContext as WpfDatasetInterchangeViewModel;
+
+        protected override void OnClosed(EventArgs e)
+        {
+            ViewModel?.Dispose();
+            base.OnClosed(e);
+        }
 
         public void ApplyThemeFrom(FrameworkElement source)
         {

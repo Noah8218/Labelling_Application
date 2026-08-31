@@ -89,7 +89,8 @@ namespace MvcVisionSystem
             history.EnsureDefaults();
             LearningWorkflowViewModel.SetTrainingRunHistoryItems(
                 trainingGuideHistoryService.BuildRunHistoryItems(history, FormatTrainingState));
-            LearningWorkflowViewModel.TrainingHistoryText = trainingGuideHistoryService.BuildHistoryText(history, FormatTrainingState);
+            LearningWorkflowViewModel.SetTrainingHistoryText(
+                trainingGuideHistoryService.BuildHistoryText(history, FormatTrainingState));
             UpdateTrainingResultComparisonText();
         }
 
@@ -117,10 +118,16 @@ namespace MvcVisionSystem
 
             try
             {
-                CRecipe.InitDirectory(recipeName);
+                Recipe.InitDirectory(recipeName);
                 // Training progress is recipe metadata. The training start already
                 // captured the exact dataset, so do not rescan every image here.
-                global.Data.SaveConfig(recipeName, refreshDatasetVersion: false);
+                RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName, refreshDatasetVersion: false);
+                if (!saveResult.IsSuccess)
+                {
+                    AppendLog($"\uD559\uC2B5 \uAC00\uC774\uB4DC \uC774\uB825 \uC800\uC7A5 \uC2E4\uD328: {saveResult.ErrorMessage}");
+                    return false;
+                }
+
                 return true;
             }
             catch (Exception ex)

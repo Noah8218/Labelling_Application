@@ -16,10 +16,10 @@ namespace MvcVisionSystem
         private void ExecuteLoadImageRootQueueCommand()
         {
             EnsureProjectSettings();
-            string imageRootPath = YoloModelSettingsViewModel?.ImageRootPath?.Trim();
-            if (string.IsNullOrWhiteSpace(imageRootPath))
+            string imageRootPath = global.Data.ProjectSettings.ResolveImageRootPath();
+            if (string.IsNullOrWhiteSpace(imageRootPath) && viewModels.IsModelWorkflowCreated)
             {
-                imageRootPath = global.Data.ProjectSettings.PythonModel.ImageRootPath;
+                imageRootPath = viewModels.YoloModelSettingsViewModel?.ImageRootPath?.Trim();
             }
             if (string.IsNullOrWhiteSpace(imageRootPath) || !Directory.Exists(imageRootPath))
             {
@@ -27,9 +27,9 @@ namespace MvcVisionSystem
                 return;
             }
 
-            if (!string.Equals(global.Data.ProjectSettings.PythonModel.ImageRootPath, imageRootPath, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(global.Data.ProjectSettings.ResolveImageRootPath(), imageRootPath, StringComparison.OrdinalIgnoreCase))
             {
-                global.Data.ProjectSettings.PythonModel.ImageRootPath = imageRootPath;
+                global.Data.ProjectSettings.ImageRootPath = imageRootPath;
                 SaveCurrentImageRootToRecipe(imageRootPath);
             }
 
@@ -45,7 +45,7 @@ namespace MvcVisionSystem
             }
 
             EnsureProjectSettings();
-            global.Data.ProjectSettings.PythonModel.ImageRootPath = selectedPath;
+            global.Data.ProjectSettings.ImageRootPath = selectedPath;
             SaveCurrentImageRootToRecipe(selectedPath);
             _ = LoadImageQueueFromRootAsync(selectedPath, string.Empty, loadFirstImage: true);
             RefreshShellDatasetContext();
@@ -64,7 +64,12 @@ namespace MvcVisionSystem
             {
                 // Image folder is part of the dataset context. Persist it immediately
                 // so switching away and back reloads the right queue for this recipe.
-                global.Data.SaveConfig(recipeName);
+                RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName);
+                if (!saveResult.IsSuccess)
+                {
+                    throw new IOException(saveResult.ErrorMessage);
+                }
+
                 PopulateYoloEditorFields();
                 PopulateProjectConfigPanelFields();
                 AppendLog($"\uC774\uBBF8\uC9C0 \uD3F4\uB354 \uC800\uC7A5: {selectedPath}");
@@ -79,7 +84,7 @@ namespace MvcVisionSystem
         {
             string root = Directory.Exists(currentImageRoot)
                 ? currentImageRoot
-                : global.Data.ProjectSettings?.PythonModel?.ImageRootPath;
+                : global.Data.ProjectSettings?.ResolveImageRootPath();
             if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root))
             {
                 AppendLog($"현재 이미지 폴더를 열 수 없습니다: {root}");
@@ -99,7 +104,7 @@ namespace MvcVisionSystem
         {
             string root = Directory.Exists(currentImageRoot)
                 ? currentImageRoot
-                : global.Data.ProjectSettings?.PythonModel?.ImageRootPath;
+                : global.Data.ProjectSettings?.ResolveImageRootPath();
             if (string.IsNullOrWhiteSpace(root) || !Directory.Exists(root))
             {
                 AppendLog($"이미지 루트가 없습니다: {root}");
@@ -127,7 +132,7 @@ namespace MvcVisionSystem
             IReadOnlyList<string> orderedPaths = imageQueueItems.Select(item => item.ImagePath).ToList();
             if (IsAnomalyDatasetPurpose())
             {
-                if (anomalyImageReviewStatus.TryFindNextUnreviewed(orderedPaths, currentImagePath, out string nextAnomalyImagePath))
+                if (anomalyImageReviewWorkflowService.TryFindNextUnreviewed(orderedPaths, currentImagePath, out string nextAnomalyImagePath))
                 {
                     bool loaded = imageQueueNavigationLoadOverride?.Invoke(nextAnomalyImagePath)
                         ?? TryLoadImage(
@@ -149,7 +154,7 @@ namespace MvcVisionSystem
                 return false;
             }
 
-            if (imageReviewStatus.TryFindNextUnlabeled(orderedPaths, currentImagePath, out string nextImagePath))
+            if (imageQualityReviewWorkflowService.TryFindNextUnlabeled(orderedPaths, currentImagePath, out string nextImagePath))
             {
                 SelectImageQueueItem(nextImagePath);
                 TryLoadImage(nextImagePath);

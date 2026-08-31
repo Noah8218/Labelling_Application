@@ -43,8 +43,24 @@ namespace MvcVisionSystem
             EnsureRegistered();
             lock (SyncRoot)
             {
+                for (int i = Windows.Count - 1; i >= 0; i--)
+                {
+                    if (!Windows[i].TryGetTarget(out Window registeredWindow))
+                    {
+                        Windows.RemoveAt(i);
+                        continue;
+                    }
+
+                    if (ReferenceEquals(registeredWindow, window))
+                    {
+                        return;
+                    }
+                }
+
                 Windows.Add(new WeakReference<Window>(window));
             }
+
+            window.Closed += RegisteredWindow_Closed;
 
             if (window.IsLoaded)
             {
@@ -60,9 +76,38 @@ namespace MvcVisionSystem
             }
 
             EnsureRegistered();
+            bool alreadyRegistered = false;
             lock (SyncRoot)
             {
-                Roots.Add(new WeakReference<FrameworkElement>(root));
+                for (int i = Roots.Count - 1; i >= 0; i--)
+                {
+                    if (!Roots[i].TryGetTarget(out FrameworkElement registeredRoot))
+                    {
+                        Roots.RemoveAt(i);
+                        continue;
+                    }
+
+                    if (ReferenceEquals(registeredRoot, root))
+                    {
+                        alreadyRegistered = true;
+                        break;
+                    }
+                }
+
+                if (!alreadyRegistered)
+                {
+                    Roots.Add(new WeakReference<FrameworkElement>(root));
+                }
+            }
+
+            if (alreadyRegistered)
+            {
+                if (root.IsLoaded)
+                {
+                    RefreshRoot(root);
+                }
+
+                return;
             }
 
             root.Loaded += RegisteredRoot_Loaded;
@@ -83,7 +128,10 @@ namespace MvcVisionSystem
                 {
                     if (Windows[i].TryGetTarget(out Window window))
                     {
-                        liveWindows.Add(window);
+                        if (window.IsLoaded)
+                        {
+                            liveWindows.Add(window);
+                        }
                     }
                     else
                     {
@@ -203,6 +251,27 @@ namespace MvcVisionSystem
                 window.Dispatcher.BeginInvoke(
                     DispatcherPriority.Background,
                     new Action(() => RefreshWindow(window)));
+            }
+        }
+
+        private static void RegisteredWindow_Closed(object sender, EventArgs e)
+        {
+            if (!(sender is Window window))
+            {
+                return;
+            }
+
+            window.Closed -= RegisteredWindow_Closed;
+            lock (SyncRoot)
+            {
+                for (int i = Windows.Count - 1; i >= 0; i--)
+                {
+                    if (!Windows[i].TryGetTarget(out Window registeredWindow)
+                        || ReferenceEquals(registeredWindow, window))
+                    {
+                        Windows.RemoveAt(i);
+                    }
+                }
             }
         }
 
@@ -326,7 +395,7 @@ namespace MvcVisionSystem
 
         private static void RefreshWindow(Window window)
         {
-            if (window == null)
+            if (window == null || !window.IsLoaded)
             {
                 return;
             }
@@ -342,8 +411,14 @@ namespace MvcVisionSystem
                 return;
             }
 
+            FrameworkElement frameworkElement = root as FrameworkElement;
+            if (frameworkElement != null && !frameworkElement.IsLoaded)
+            {
+                return;
+            }
+
             RefreshRootPass(root);
-            if (root is FrameworkElement frameworkElement && frameworkElement.IsLoaded)
+            if (frameworkElement != null && frameworkElement.IsLoaded)
             {
                 frameworkElement.UpdateLayout();
                 RefreshRootPass(root);

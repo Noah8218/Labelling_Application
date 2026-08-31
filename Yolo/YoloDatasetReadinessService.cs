@@ -5,7 +5,7 @@ namespace MvcVisionSystem.Yolo
 {
     public static class YoloDatasetReadinessService
     {
-        public static YoloDatasetReadinessReport Build(CData data, bool refreshYaml)
+        public static YoloDatasetReadinessReport Build(LabelingProjectData data, bool refreshYaml)
         {
             LabelingDatasetPurpose purpose = ResolveDatasetPurpose(data);
             YoloDatasetValidationResult configuration = purpose == LabelingDatasetPurpose.AnomalyDetection
@@ -56,7 +56,7 @@ namespace MvcVisionSystem.Yolo
             return new YoloDatasetReadinessReport(configuration, files, statistics, purpose);
         }
 
-        private static LabelingDatasetPurpose ResolveDatasetPurpose(CData data)
+        private static LabelingDatasetPurpose ResolveDatasetPurpose(LabelingProjectData data)
         {
             data?.ProjectSettings?.EnsureDefaults();
             return data?.ProjectSettings?.DatasetPurpose ?? LabelingDatasetPurpose.ObjectDetection;

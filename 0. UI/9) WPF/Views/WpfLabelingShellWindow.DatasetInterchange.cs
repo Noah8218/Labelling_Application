@@ -14,7 +14,9 @@ namespace MvcVisionSystem
         {
             if (datasetInterchangeWindow == null)
             {
-                var viewModel = new WpfDatasetInterchangeViewModel(global.Data);
+                var viewModel = new WpfDatasetInterchangeViewModel(
+                    global.Data,
+                    recipeName: global.Recipe.Name);
                 viewModel.ConfigurePickers(
                     PickDatasetInterchangeSource,
                     PickDatasetInterchangeTarget,
@@ -29,7 +31,7 @@ namespace MvcVisionSystem
             }
             else
             {
-                datasetInterchangeWindow.ViewModel?.Refresh(global.Data);
+                datasetInterchangeWindow.ViewModel?.Refresh(global.Data, global.Recipe.Name);
                 datasetInterchangeWindow.ApplyThemeFrom(this);
                 if (datasetInterchangeWindow.WindowState == WindowState.Minimized)
                 {

@@ -45,11 +45,12 @@ namespace MvcVisionSystem
         public bool IsRequired { get; }
     }
 
-    public sealed class WpfEnvironmentSetupCenterViewModel : WpfObservableViewModel
+    public sealed class WpfEnvironmentSetupCenterViewModel : WpfObservableViewModel, IDisposable
     {
         private readonly WpfRuntimeDiagnosticsService diagnosticsService;
         private readonly Func<PythonModelSettings> pythonSettingsProvider;
         private readonly Action openModelSettingsAction;
+        private bool disposed;
         private string overallStatusText = "환경 확인 전";
         private string overallDetailText = "앱과 모델 실행 유틸리티를 읽기 전용으로 확인합니다.";
         private string selectedRuntimeText = "선택된 모델 실행기: 미설정";
@@ -62,7 +63,7 @@ namespace MvcVisionSystem
         public WpfEnvironmentSetupCenterViewModel()
             : this(
                 new WpfRuntimeDiagnosticsService(),
-                () => CGlobal.Inst.Data.ProjectSettings?.PythonModel ?? new PythonModelSettings(),
+                () => LabelingApplicationState.Inst.Data.ProjectSettings?.PythonModel ?? new PythonModelSettings(),
                 null)
         {
         }
@@ -75,8 +76,8 @@ namespace MvcVisionSystem
             this.diagnosticsService = diagnosticsService ?? throw new ArgumentNullException(nameof(diagnosticsService));
             this.pythonSettingsProvider = pythonSettingsProvider ?? throw new ArgumentNullException(nameof(pythonSettingsProvider));
             this.openModelSettingsAction = openModelSettingsAction;
-            RefreshCommand = new RelayCommand(Refresh, () => !IsBusy);
-            OpenModelSettingsCommand = new RelayCommand(OpenModelSettings, () => !IsBusy && this.openModelSettingsAction != null);
+            RefreshCommand = new RelayCommand(Refresh, () => !IsBusy && !disposed);
+            OpenModelSettingsCommand = new RelayCommand(OpenModelSettings, () => !IsBusy && !disposed && this.openModelSettingsAction != null);
             OpenVisionLanguageService.LanguageChanged += OpenVisionLanguageService_LanguageChanged;
             Refresh();
         }
@@ -147,9 +148,21 @@ namespace MvcVisionSystem
         public string SafetyBoundaryText
             => T("WpfEnvironment.SafetyBoundary");
 
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
+            CommandManager.InvalidateRequerySuggested();
+        }
+
         public void Refresh()
         {
-            if (IsBusy)
+            if (disposed || IsBusy)
             {
                 return;
             }
@@ -196,6 +209,11 @@ namespace MvcVisionSystem
 
         private void OpenModelSettings()
         {
+            if (disposed)
+            {
+                return;
+            }
+
             openModelSettingsAction?.Invoke();
         }
 
@@ -354,6 +372,11 @@ namespace MvcVisionSystem
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             Refresh();
             OnPropertyChanged(nameof(InstallGuideText));
             OnPropertyChanged(nameof(SafetyBoundaryText));

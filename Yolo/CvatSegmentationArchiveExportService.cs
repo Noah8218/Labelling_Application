@@ -15,17 +15,10 @@ namespace MvcVisionSystem.Yolo
 {
     public static class CvatSegmentationArchiveExportService
     {
-        private static readonly string[] DatasetModes =
-        {
-            YoloDatasetSplitService.TrainMode,
-            YoloDatasetSplitService.ValidMode,
-            YoloDatasetSplitService.TestMode
-        };
-
         private static readonly string[] ImageExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
         public static CvatSegmentationArchiveExportResult ExportDataset(
-            CData data,
+            LabelingProjectData data,
             string outputPath,
             IEnumerable<string> splits = null)
         {
@@ -75,7 +68,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static CvatSegmentationArchiveExportResult BuildAnnotationDocument(
-            CData data,
+            LabelingProjectData data,
             IEnumerable<string> splits,
             out XDocument document,
             out List<CvatSegmentationArchiveImage> images)
@@ -127,7 +120,7 @@ namespace MvcVisionSystem.Yolo
             return result;
         }
 
-        private static XDocument BuildCvatDocument(CData data, IReadOnlyList<CvatSegmentationArchiveImage> images)
+        private static XDocument BuildCvatDocument(LabelingProjectData data, IReadOnlyList<CvatSegmentationArchiveImage> images)
         {
             DateTimeOffset now = DateTimeOffset.UtcNow;
             var annotations = new XElement("annotations",
@@ -178,7 +171,7 @@ namespace MvcVisionSystem.Yolo
             return new XDocument(new XDeclaration("1.0", "utf-8", null), annotations);
         }
 
-        private static XElement BuildLabelsElement(CData data)
+        private static XElement BuildLabelsElement(LabelingProjectData data)
         {
             var labels = new XElement("labels");
             for (int classIndex = 0; classIndex < (data.ClassNamedList?.Count ?? 0); classIndex++)
@@ -199,7 +192,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static IReadOnlyList<CvatSegmentationPolygon> LoadPolygons(
-            CData data,
+            LabelingProjectData data,
             string segmentPath,
             Size imageSize,
             CvatSegmentationArchiveExportResult result)
@@ -247,7 +240,7 @@ namespace MvcVisionSystem.Yolo
 
         private static bool TryBuildPolygon(
             SegmentationPolygonRecord record,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize,
             out CvatSegmentationPolygon polygon)
         {
@@ -280,7 +273,7 @@ namespace MvcVisionSystem.Yolo
             return true;
         }
 
-        private static int ResolveClassIndex(SegmentationPolygonRecord record, IReadOnlyList<CClassItem> classes)
+        private static int ResolveClassIndex(SegmentationPolygonRecord record, IReadOnlyList<LabelClass> classes)
         {
             if (classes == null || classes.Count == 0)
             {
@@ -320,16 +313,16 @@ namespace MvcVisionSystem.Yolo
         private static string FormatTimestamp(DateTimeOffset value)
             => value.ToString("yyyy-MM-dd HH:mm:ss.ffffffK", CultureInfo.InvariantCulture);
 
-        private static int CountExportableClasses(CData data)
+        private static int CountExportableClasses(LabelingProjectData data)
             => data.ClassNamedList?
                 .Count(item => !string.IsNullOrWhiteSpace(item?.Text)) ?? 0;
 
         private static IReadOnlyList<string> NormalizeSplits(IEnumerable<string> splits)
         {
             var result = new List<string>();
-            foreach (string split in splits ?? DatasetModes)
+            foreach (string split in splits ?? YoloDatasetSplitService.StandardModes)
             {
-                string normalized = NormalizeSplit(split);
+                string normalized = YoloDatasetSplitService.NormalizeStandardSplit(split);
                 if (!string.IsNullOrWhiteSpace(normalized)
                     && !result.Contains(normalized, StringComparer.OrdinalIgnoreCase))
                 {
@@ -337,20 +330,7 @@ namespace MvcVisionSystem.Yolo
                 }
             }
 
-            return result.Count > 0 ? result : DatasetModes.ToList();
-        }
-
-        private static string NormalizeSplit(string split)
-        {
-            foreach (string mode in DatasetModes)
-            {
-                if (string.Equals(split, mode, StringComparison.OrdinalIgnoreCase))
-                {
-                    return mode;
-                }
-            }
-
-            return string.Empty;
+            return result.Count > 0 ? result : YoloDatasetSplitService.StandardModes.ToList();
         }
 
         private static IEnumerable<string> EnumerateImageFiles(string imageDirectory)

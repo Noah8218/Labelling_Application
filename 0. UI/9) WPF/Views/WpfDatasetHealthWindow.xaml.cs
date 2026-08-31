@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -33,6 +34,12 @@ namespace MvcVisionSystem
         }
 
         public WpfDatasetHealthViewModel ViewModel => DataContext as WpfDatasetHealthViewModel;
+
+        protected override void OnClosed(EventArgs e)
+        {
+            ViewModel?.Dispose();
+            base.OnClosed(e);
+        }
 
         private void DatasetHealthTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

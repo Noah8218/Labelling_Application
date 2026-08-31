@@ -103,14 +103,14 @@ namespace MvcVisionSystem._1._Core
             string selectedFolderPath)
         {
             string projectRootPath = string.IsNullOrWhiteSpace(selectedFolderPath)
-                ? PythonModelSettings.GetDefaultUnetProjectRootPath()
+                ? PythonModelRuntimePathResolver.GetDefaultUnetProjectRootPath()
                 : selectedFolderPath.Trim();
             PythonModelSettings settings = Clone(currentSettings);
             settings.ModelEngine = PythonModelSettings.EngineUnet;
             settings.ProjectRootPath = projectRootPath;
             settings.ClientScriptPath = PythonModelRuntimeBundledWorkerService.ResolveUnetWorkerScriptPath();
             settings.PythonExecutablePath = ResolveLocalPythonExecutablePath(projectRootPath);
-            settings.WeightsPath = PythonModelSettings.GetDefaultUnetWeightsPath(projectRootPath);
+            settings.WeightsPath = PythonModelRuntimePathResolver.GetDefaultUnetWeightsPath(projectRootPath);
 
             PythonModelRuntimeSelfTestReport report = PythonModelRuntimeSelfTestService.BuildReport(settings);
             string summary = report.CanTrain
@@ -128,12 +128,12 @@ namespace MvcVisionSystem._1._Core
         {
             PythonModelSettings settings = Clone(currentSettings);
             settings.ModelEngine = PythonModelSettings.EnginePatchCore;
-            settings.ProjectRootPath = PythonModelSettings.GetDefaultPatchCoreProjectRootPath();
+            settings.ProjectRootPath = PythonModelRuntimePathResolver.GetDefaultPatchCoreProjectRootPath();
             settings.ClientScriptPath = PythonModelRuntimeBundledWorkerService.ResolvePatchCoreWorkerScriptPath();
             settings.PythonExecutablePath = string.IsNullOrWhiteSpace(pythonExecutablePath)
                 ? PythonModelSettingsValidator.ResolvePythonExecutable(currentSettings)
                 : ResolvePythonOrVenvPath(pythonExecutablePath);
-            settings.WeightsPath = PythonModelSettings.GetDefaultPatchCoreWeightsPath(settings.ProjectRootPath);
+            settings.WeightsPath = PythonModelRuntimePathResolver.GetDefaultPatchCoreWeightsPath(settings.ProjectRootPath);
 
             PythonModelRuntimeSelfTestReport report = PythonModelRuntimeSelfTestService.BuildReport(settings);
             string summary = report.CanTrain
@@ -173,7 +173,9 @@ namespace MvcVisionSystem._1._Core
             out PythonModelRuntimeConnectionResult result)
         {
             result = null;
-            string engine = PythonModelSettings.NormalizeModelEngine(currentSettings?.ModelEngine);
+            PythonModelSettings resolvedSettings = Clone(currentSettings);
+            PythonModelRuntimePathResolver.ApplyPathDefaults(resolvedSettings);
+            string engine = PythonModelSettings.NormalizeModelEngine(resolvedSettings.ModelEngine);
             if (string.Equals(engine, PythonModelSettings.EngineYoloV8, StringComparison.Ordinal)
                 || string.Equals(engine, PythonModelSettings.EngineYolo11, StringComparison.Ordinal)
                 || string.Equals(engine, PythonModelSettings.EnginePatchCore, StringComparison.Ordinal))
@@ -181,14 +183,14 @@ namespace MvcVisionSystem._1._Core
                 return false;
             }
 
-            string yolo8Root = ResolveKnownLocalRuntimeFolder(currentSettings?.ProjectRootPath, "yolov8");
+            string yolo8Root = ResolveKnownLocalRuntimeFolder(resolvedSettings.ProjectRootPath, "yolov8");
             if (string.IsNullOrWhiteSpace(yolo8Root))
             {
                 return false;
             }
 
             PythonModelRuntimeConnectionResult candidate = BuildYoloV8FolderConnection(
-                currentSettings,
+                resolvedSettings,
                 yolo8Root,
                 LabelingDatasetPurpose.AnomalyDetection);
             if (!candidate.SelfTestReport.CanTrain)

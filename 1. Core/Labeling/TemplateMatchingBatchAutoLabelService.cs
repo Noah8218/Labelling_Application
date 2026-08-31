@@ -26,7 +26,7 @@ namespace MvcVisionSystem._1._Core
 
         public IReadOnlyList<string> BuildUnlabeledImagePathQueue(
             IEnumerable<string> imagePaths,
-            CData data,
+            LabelingProjectData data,
             string activeImagePath)
         {
             return (imagePaths ?? Array.Empty<string>())
@@ -38,7 +38,7 @@ namespace MvcVisionSystem._1._Core
                 .ToList();
         }
 
-        public bool HasExistingLabelFile(string imagePath, CData data)
+        public bool HasExistingLabelFile(string imagePath, LabelingProjectData data)
         {
             if (data?.ProjectSettings?.DatasetPurpose == LabelingDatasetPurpose.Segmentation)
             {
@@ -55,9 +55,9 @@ namespace MvcVisionSystem._1._Core
         public TemplateMatchingBatchAutoLabelItemResult MatchAndSaveImage(
             string imagePath,
             Bitmap templateImage,
-            CClassItem classItem,
+            LabelClass classItem,
             string className,
-            CData data,
+            LabelingProjectData data,
             TemplateMatchingAutoLabelOptions options,
             CancellationToken token,
             Rectangle? sourceSegmentBounds = null,
@@ -102,7 +102,7 @@ namespace MvcVisionSystem._1._Core
                     return TemplateMatchingBatchAutoLabelItemResult.Failed(imagePath, result.Message, stopwatch.Elapsed, sourceImage.Size);
                 }
 
-                IReadOnlyDictionary<string, List<CRectangleObject>> roisByClass = BuildRoisByClass(
+                IReadOnlyDictionary<string, List<AnnotationRectangleObject>> roisByClass = BuildRoisByClass(
                     classItem,
                     className,
                     result.Candidates);
@@ -118,7 +118,7 @@ namespace MvcVisionSystem._1._Core
                     bool saved = LabelingAnnotationPersistence.SaveImageAnnotations(
                         imageName,
                         sourceImage,
-                        new Dictionary<string, List<CRectangleObject>>(StringComparer.OrdinalIgnoreCase),
+                        new Dictionary<string, List<AnnotationRectangleObject>>(StringComparer.OrdinalIgnoreCase),
                         BuildSegmentsByClass(
                             classItem,
                             className,
@@ -160,8 +160,8 @@ namespace MvcVisionSystem._1._Core
             }
         }
 
-        private static IReadOnlyDictionary<string, List<CRectangleObject>> BuildRoisByClass(
-            CClassItem classItem,
+        private static IReadOnlyDictionary<string, List<AnnotationRectangleObject>> BuildRoisByClass(
+            LabelClass classItem,
             string className,
             IReadOnlyList<YoloWorkerSmokeCandidate> candidates)
         {
@@ -171,7 +171,7 @@ namespace MvcVisionSystem._1._Core
                 normalizedClassName = string.IsNullOrWhiteSpace(className) ? "Defect" : className.Trim();
             }
 
-            var rois = new List<CRectangleObject>();
+            var rois = new List<AnnotationRectangleObject>();
             foreach (YoloWorkerSmokeCandidate candidate in candidates ?? Array.Empty<YoloWorkerSmokeCandidate>())
             {
                 Rectangle bounds = candidate.ToRectangle();
@@ -180,21 +180,21 @@ namespace MvcVisionSystem._1._Core
                     continue;
                 }
 
-                rois.Add(new CRectangleObject
+                rois.Add(new AnnotationRectangleObject
                 {
                     Roi = bounds,
-                    cClassItem = classItem ?? new CClassItem { Text = normalizedClassName }
+                    cClassItem = classItem ?? new LabelClass { Text = normalizedClassName }
                 });
             }
 
-            return new Dictionary<string, List<CRectangleObject>>(StringComparer.OrdinalIgnoreCase)
+            return new Dictionary<string, List<AnnotationRectangleObject>>(StringComparer.OrdinalIgnoreCase)
             {
                 [normalizedClassName] = rois
             };
         }
 
         internal static IReadOnlyDictionary<string, List<LabelingSegmentationObject>> BuildSegmentsByClass(
-            CClassItem classItem,
+            LabelClass classItem,
             string className,
             IReadOnlyList<YoloWorkerSmokeCandidate> candidates,
             Size imageSize,
@@ -250,7 +250,7 @@ namespace MvcVisionSystem._1._Core
                         continue;
                     }
 
-                    segment = new LabelingSegmentationObject(points, classItem ?? new CClassItem { Text = normalizedClassName })
+                    segment = new LabelingSegmentationObject(points, classItem ?? new LabelClass { Text = normalizedClassName })
                     {
                         ClassName = normalizedClassName
                     };
@@ -267,7 +267,7 @@ namespace MvcVisionSystem._1._Core
 
         // Shared by the approved historical migration so it uses the same contour transfer as new template labeling.
         internal static IReadOnlyList<LabelingSegmentationObject> BuildTranslatedSourceMaskSegments(
-            CClassItem classItem,
+            LabelClass classItem,
             string className,
             Rectangle targetBounds,
             Size imageSize,
@@ -336,7 +336,7 @@ namespace MvcVisionSystem._1._Core
                 ? Array.Empty<LabelingSegmentationObject>()
                 : new[]
                 {
-                    new LabelingSegmentationObject(Array.Empty<Point>(), classItem ?? new CClassItem { Text = className })
+                    new LabelingSegmentationObject(Array.Empty<Point>(), classItem ?? new LabelClass { Text = className })
                     {
                         ClassName = className,
                         MaskData = targetMask,
@@ -347,7 +347,7 @@ namespace MvcVisionSystem._1._Core
         }
 
         private static LabelingSegmentationObject BuildTranslatedSourceSegment(
-            CClassItem classItem,
+            LabelClass classItem,
             string className,
             Rectangle targetBounds,
             Size imageSize,
@@ -369,7 +369,7 @@ namespace MvcVisionSystem._1._Core
                 return null;
             }
 
-            var segment = new LabelingSegmentationObject(points, classItem ?? new CClassItem { Text = className })
+            var segment = new LabelingSegmentationObject(points, classItem ?? new LabelClass { Text = className })
             {
                 ClassName = className
             };

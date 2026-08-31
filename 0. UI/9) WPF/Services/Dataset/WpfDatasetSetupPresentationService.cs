@@ -21,6 +21,11 @@ namespace MvcVisionSystem
                 ? "\uC0D8\uD50C \uB370\uC774\uD130\uC14B\uC744 \uC900\uBE44\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4."
                 : sampleError.Trim();
 
+        public string BuildRecipePersistenceFailureMessage(string errorMessage)
+            => string.IsNullOrWhiteSpace(errorMessage)
+                ? "Recipe \uC124\uC815\uC744 \uC800\uC7A5\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4."
+                : $"Recipe \uC124\uC815 \uC800\uC7A5 \uC2E4\uD328: {errorMessage.Trim()}";
+
         public string BuildReadyStatus(
             string recipeName,
             LabelingDatasetPurpose purpose,

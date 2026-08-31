@@ -1037,11 +1037,7 @@ namespace MvcVisionSystem.Yolo
         }
 
         private static string ComputeFileSha256(string path)
-        {
-            using FileStream stream = File.OpenRead(path);
-            using SHA256 sha256 = SHA256.Create();
-            return ToHex(sha256.ComputeHash(stream));
-        }
+            => HashingService.ComputeFileSha256(path);
 
         private static string ToHex(byte[] bytes)
             => BitConverter.ToString(bytes ?? Array.Empty<byte>()).Replace("-", string.Empty);

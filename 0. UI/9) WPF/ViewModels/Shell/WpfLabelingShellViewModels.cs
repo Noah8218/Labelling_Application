@@ -1,9 +1,12 @@
 using OpenVisionLab.ImageCanvas.ViewModels;
+using System;
 
 namespace MvcVisionSystem
 {
-    public sealed class WpfLabelingShellViewModels
+    public sealed class WpfLabelingShellViewModels : System.IDisposable
     {
+        private bool disposed;
+
         public WpfLocalizationViewModel LanguageViewModel { get; } = WpfLocalizationViewModel.Instance;
 
         public WpfLabelingShellViewModel ShellViewModel { get; } = new WpfLabelingShellViewModel();
@@ -18,17 +21,47 @@ namespace MvcVisionSystem
 
         public WpfObjectReviewPanelViewModel ObjectReviewViewModel { get; } = new WpfObjectReviewPanelViewModel();
 
-        public WpfCandidateReviewPanelViewModel CandidateReviewViewModel { get; } = new WpfCandidateReviewPanelViewModel();
+        private readonly Lazy<WpfModelWorkflowViewModels> modelWorkflowViewModels =
+            new Lazy<WpfModelWorkflowViewModels>(() => new WpfModelWorkflowViewModels());
+
+        public WpfModelWorkflowViewModels ModelWorkflowViewModels => modelWorkflowViewModels.Value;
+
+        public bool IsModelWorkflowCreated => modelWorkflowViewModels.IsValueCreated;
+
+        // Binding-safe accessors do not create model workflow state. Explicit shell
+        // workflow entry points use the window accessors, which compose the model
+        // panels before returning the concrete ViewModel.
+        public WpfCandidateReviewPanelViewModel CandidateReviewViewModel =>
+            modelWorkflowViewModels.IsValueCreated
+                ? modelWorkflowViewModels.Value.ExistingCandidateReviewViewModel
+                : null;
+
+        public WpfCandidateReviewPanelViewModel ExistingCandidateReviewViewModel => CandidateReviewViewModel;
 
         public WpfClassCatalogPanelViewModel ClassCatalogViewModel { get; } = new WpfClassCatalogPanelViewModel();
 
-        public WpfYoloStatusPanelViewModel YoloStatusViewModel { get; } = new WpfYoloStatusPanelViewModel();
+        public WpfYoloStatusPanelViewModel YoloStatusViewModel =>
+            modelWorkflowViewModels.IsValueCreated
+                ? modelWorkflowViewModels.Value.ExistingYoloStatusViewModel
+                : null;
+
+        public WpfYoloStatusPanelViewModel ExistingYoloStatusViewModel => YoloStatusViewModel;
 
         public WpfProjectConfigPanelViewModel ProjectConfigViewModel { get; } = new WpfProjectConfigPanelViewModel();
 
-        public WpfYoloModelSettingsPanelViewModel YoloModelSettingsViewModel { get; } = new WpfYoloModelSettingsPanelViewModel();
+        public WpfYoloModelSettingsPanelViewModel YoloModelSettingsViewModel =>
+            modelWorkflowViewModels.IsValueCreated
+                ? modelWorkflowViewModels.Value.ExistingYoloModelSettingsViewModel
+                : null;
 
-        public WpfTrainingSettingsPanelViewModel TrainingSettingsViewModel { get; } = new WpfTrainingSettingsPanelViewModel();
+        public WpfYoloModelSettingsPanelViewModel ExistingYoloModelSettingsViewModel => YoloModelSettingsViewModel;
+
+        public WpfTrainingSettingsPanelViewModel TrainingSettingsViewModel =>
+            modelWorkflowViewModels.IsValueCreated
+                ? modelWorkflowViewModels.Value.ExistingTrainingSettingsViewModel
+                : null;
+
+        public WpfTrainingSettingsPanelViewModel ExistingTrainingSettingsViewModel => TrainingSettingsViewModel;
 
         public WpfStatusBarPanelViewModel StatusBarViewModel { get; } = new WpfStatusBarPanelViewModel();
 
@@ -37,5 +70,19 @@ namespace MvcVisionSystem
         public WpfRuntimeDiagnosticsViewModel RuntimeDiagnosticsViewModel { get; } = new WpfRuntimeDiagnosticsViewModel();
 
         public RoiImageCanvasViewModel MainCanvasViewModel { get; } = new RoiImageCanvasViewModel("Main");
+
+        public void Dispose()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            CanvasPanelViewModel.Dispose();
+            LearningWorkflowViewModel.Dispose();
+            StatusBarViewModel.Dispose();
+            ShellLogViewModel.Dispose();
+        }
     }
 }

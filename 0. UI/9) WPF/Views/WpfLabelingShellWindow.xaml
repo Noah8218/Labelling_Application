@@ -925,22 +925,6 @@
                                            FontWeight="SemiBold"
                                            Margin="2,4,0,6"
                                            Visibility="Collapsed" />
-                                <ui:Button x:Name="ThemeToggleMenuCollapsedButton"
-                                           x:Uid="ThemeToggleMenuCollapsedButton"
-                                           Style="{StaticResource WpfUiToolbarButtonStyle}"
-                                           HorizontalAlignment="Stretch"
-                                           MinWidth="218"
-                                           Margin="0,0,0,8"
-                                            AutomationProperties.AutomationId="ThemeToggleMenuCollapsedButton"
-                                           AutomationProperties.Name="Theme"
-                                           ToolTip="&#xB2E4;&#xD06C;/&#xB77C;&#xC774;&#xD2B8; &#xD14C;&#xB9C8; &#xC804;&#xD658;"
-                                           Command="{Binding ShellViewModel.ToggleThemeCommand}"
-                                           Visibility="Collapsed">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ThemeLightDark" />
-                                        <TextBlock x:Name="ThemeToggleCollapsedText" Text="&#xD14C;&#xB9C8;: &#xB2E4;&#xD06C;" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </ui:Button>
                                 <Expander x:Name="HeaderToolsMenuQuickSection"
                                           Header="빠른 실행"
                                           FontFamily="Segoe UI"
@@ -980,7 +964,7 @@
                                                 <TextBlock Text="라벨링 시작" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </ui:Button>
-                                        <ui:Button x:Name="QuickInferenceModeButton"
+                                         <ui:Button x:Name="QuickInferenceModeButton"
                                                    Style="{StaticResource WorkflowModeToolbarButtonStyle}"
                                                    HorizontalAlignment="Stretch"
                                                    MinWidth="218"
@@ -1040,12 +1024,6 @@
                                                            Margin="0,2,0,0" />
                                             </StackPanel>
                                         </Border>
-                                <ui:Button x:Name="LoadSampleButton" Style="{StaticResource WpfUiToolbarButtonStyle}" HorizontalAlignment="Stretch" MinWidth="218" Margin="0,0,0,4" AutomationProperties.AutomationId="LoadSampleButton" AutomationProperties.Name="샘플" ToolTip="설정된 샘플 이미지 다시 불러오기" Command="{Binding ShellViewModel.LoadSampleCommand}" Visibility="Collapsed">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ImageSearch" />
-                                                <TextBlock Text="샘플 불러오기" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </ui:Button>
                                         <ui:Button x:Name="AddSampleRoiButton" Style="{StaticResource WpfUiToolbarButtonStyle}" HorizontalAlignment="Stretch" MinWidth="218" Margin="0,0,0,4" AutomationProperties.AutomationId="AddSampleRoiButton" AutomationProperties.Name="박스" ToolTip="현재 이미지 중앙에 새 박스 라벨 추가" Command="{Binding ShellViewModel.AddSampleRoiCommand}">
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ShapeSquareRoundedPlus" />
@@ -1083,33 +1061,6 @@
                                                    FontWeight="SemiBold"
                                                    Margin="0,0,0,6"
                                                    Visibility="Collapsed" />
-                                        <ui:Button x:Name="TeachingModeButton" Style="{StaticResource WorkflowModeToolbarButtonStyle}" HorizontalAlignment="Stretch" MinWidth="218" Margin="0,0,0,4" AutomationProperties.Name="라벨링 시작" ToolTip="라벨링 도구 패널을 열고 가이드를 진행 모드로 이동" IsEnabled="{Binding ShellViewModel.IsLabelingModeButtonEnabled}" Tag="{Binding ShellViewModel.IsLabelingModeActive}" Command="{Binding ShellViewModel.LabelingModeCommand}" Visibility="Collapsed">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="SchoolOutline" />
-                                                <TextBlock Text="라벨링 시작" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </ui:Button>
-                                        <ui:Button x:Name="InferenceModeButton" Style="{StaticResource WorkflowModeToolbarButtonStyle}" HorizontalAlignment="Stretch" MinWidth="218" Margin="0,0,0,4" AutomationProperties.Name="AI 후보 검토" ToolTip="AI 후보 검토 버튼을 활성화" IsEnabled="{Binding ShellViewModel.IsInferenceModeButtonEnabled}" Tag="{Binding ShellViewModel.IsInferenceModeActive}" Command="{Binding ShellViewModel.InferenceModeCommand}" Visibility="Collapsed">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="RobotIndustrial" />
-                                                <TextBlock Text="AI 후보 검토" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </ui:Button>
-                                        <ui:Button x:Name="ThemeToggleButton"
-                                                   Style="{StaticResource WpfUiToolbarButtonStyle}"
-                                                   HorizontalAlignment="Stretch"
-                                                   MinWidth="218"
-                                                   Margin="0,0,0,4"
-                                                   AutomationProperties.AutomationId="ThemeToggleButton"
-                                                   AutomationProperties.Name="Theme"
-                                                   ToolTip="&#xB2E4;&#xD06C;/&#xB77C;&#xC774;&#xD2B8; &#xD14C;&#xB9C8; &#xC804;&#xD658;"
-                                                   Command="{Binding ShellViewModel.ToggleThemeCommand}"
-                                                   Visibility="Collapsed">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <iconPacks:PackIconMaterial Style="{StaticResource ToolbarIconStyle}" Kind="ThemeLightDark" />
-                                                <TextBlock x:Name="ThemeToggleText" Text="&#xD14C;&#xB9C8;: &#xB2E4;&#xD06C;" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </ui:Button>
                                         <ui:Button x:Name="ResetWorkspaceLayoutButton"
                                                    Style="{StaticResource WpfUiToolbarButtonStyle}"
                                                    HorizontalAlignment="Stretch"
@@ -1540,7 +1491,7 @@
                                        AutomationProperties.Name="{Binding ShellViewModel.ModelCenterConfirmModelButtonText, ElementName=ShellWindow}"
                                        ToolTip="{Binding ShellViewModel.ModelCenterConfirmModelButtonToolTip, ElementName=ShellWindow}"
                                        IsEnabled="{Binding ShellViewModel.IsModelCenterConfirmModelEnabled, ElementName=ShellWindow}"
-                                       Command="{Binding YoloModelSettingsViewModel.SaveSettingsCommand, ElementName=ShellWindow}"
+                                       Command="{Binding ExistingYoloModelSettingsViewModel.SaveSettingsCommand, ElementName=ShellWindow}"
                                        Height="23"
                                        MinHeight="23"
                                        MinWidth="92"
@@ -2153,8 +2104,8 @@
                                                            FontWeight="SemiBold"
                                                            TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Grid.Column="1"
-                                                           Text="{Binding TrainingSettingsViewModel.TrainingProgressValue, StringFormat={}{0:0}%}"
-                                                           Foreground="{Binding TrainingSettingsViewModel.TrainingProgressForeground}"
+                                                           Text="{Binding ExistingTrainingSettingsViewModel.TrainingProgressValue, StringFormat={}{0:0}%}"
+                                                           Foreground="{Binding ExistingTrainingSettingsViewModel.TrainingProgressForeground}"
                                                            FontFamily="Segoe UI"
                                                            FontSize="11"
                                                            FontWeight="SemiBold"
@@ -2167,11 +2118,11 @@
                                                          Maximum="100"
                                                          Height="4"
                                                          Margin="0,0,0,8"
-                                                         Value="{Binding TrainingSettingsViewModel.TrainingProgressValue, Mode=OneWay}"
-                                                         IsIndeterminate="{Binding TrainingSettingsViewModel.TrainingProgressIsIndeterminate, Mode=OneWay}" />
+                                                         Value="{Binding ExistingTrainingSettingsViewModel.TrainingProgressValue, Mode=OneWay}"
+                                                         IsIndeterminate="{Binding ExistingTrainingSettingsViewModel.TrainingProgressIsIndeterminate, Mode=OneWay}" />
                                             <TextBlock x:Name="YoloModelLifecycleTrainingStatusText"
                                                        Text="{Binding ShellViewModel.ModelCenterTrainingStatusText}"
-                                                       Foreground="{Binding TrainingSettingsViewModel.TrainingProgressForeground}"
+                                                       Foreground="{Binding ExistingTrainingSettingsViewModel.TrainingProgressForeground}"
                                                        FontFamily="Segoe UI"
                                                        FontSize="11.5"
                                                        FontWeight="SemiBold"
@@ -2308,7 +2259,7 @@
                                                                     Style="{StaticResource WpfUiToolbarButtonStyle}"
                                                                     AutomationProperties.AutomationId="ModelCenterPrioritySaveModelButton"
                                                                     ToolTip="{Binding ShellViewModel.ModelCenterConfirmModelButtonToolTip}"
-                                                                    Command="{Binding YoloModelSettingsViewModel.SaveSettingsCommand}"
+                                                                    Command="{Binding ExistingYoloModelSettingsViewModel.SaveSettingsCommand}"
                                                                     IsEnabled="{Binding ShellViewModel.IsModelCenterConfirmModelEnabled}"
                                                                     MinWidth="96"
                                                                     Height="26"
@@ -2934,8 +2885,8 @@
                                                            AutomationProperties.AutomationId="YoloLifecycleRefreshButton"
                                                            AutomationProperties.Name="&#xB370;&#xC774;&#xD130;&#xC14B; &#xC810;&#xAC80;"
                                                            ToolTip="&#xB77C;&#xBCA8;&#xACFC; &#xD559;&#xC2B5; &#xC124;&#xC815; &#xC900;&#xBE44; &#xC0C1;&#xD0DC;&#xB97C; &#xD655;&#xC778;"
-                                                           Command="{Binding TrainingSettingsViewModel.RefreshReadinessCommand}"
-                                                           IsEnabled="{Binding TrainingSettingsViewModel.IsRefreshReadinessEnabled}"
+                                                           Command="{Binding ExistingTrainingSettingsViewModel.RefreshReadinessCommand}"
+                                                           IsEnabled="{Binding ExistingTrainingSettingsViewModel.IsRefreshReadinessEnabled}"
                                                            MinWidth="62"
                                                            Margin="0,0,4,4">
                                                     <TextBlock Text="&#xC810;&#xAC80;" VerticalAlignment="Center" />
@@ -2945,8 +2896,8 @@
                                                            AutomationProperties.AutomationId="YoloLifecycleStartTrainingButton"
                                                            AutomationProperties.Name="&#xD559;&#xC2B5; &#xC2DC;&#xC791;"
                                                            ToolTip="&#xBAA8;&#xB378; &#xD559;&#xC2B5; &#xC2DC;&#xC791;"
-                                                           Command="{Binding TrainingSettingsViewModel.StartTrainingCommand}"
-                                                           IsEnabled="{Binding TrainingSettingsViewModel.IsStartTrainingEnabled}"
+                                                           Command="{Binding ExistingTrainingSettingsViewModel.StartTrainingCommand}"
+                                                           IsEnabled="{Binding ExistingTrainingSettingsViewModel.IsStartTrainingEnabled}"
                                                            MinWidth="82"
                                                            Margin="0,0,4,4">
                                                     <TextBlock Text="&#xD559;&#xC2B5; &#xC2DC;&#xC791;" VerticalAlignment="Center" />
@@ -2956,53 +2907,11 @@
                                                            AutomationProperties.AutomationId="YoloLifecycleStopTrainingButton"
                                                            AutomationProperties.Name="&#xD559;&#xC2B5; &#xC911;&#xC9C0;"
                                                            ToolTip="&#xC2E4;&#xD589; &#xC911;&#xC778; &#xD559;&#xC2B5; &#xC911;&#xC9C0;"
-                                                           Command="{Binding TrainingSettingsViewModel.StopTrainingCommand}"
-                                                           IsEnabled="{Binding TrainingSettingsViewModel.IsStopTrainingEnabled}"
+                                                           Command="{Binding ExistingTrainingSettingsViewModel.StopTrainingCommand}"
+                                                           IsEnabled="{Binding ExistingTrainingSettingsViewModel.IsStopTrainingEnabled}"
                                                            MinWidth="62"
                                                            Margin="0,0,4,4">
                                                     <TextBlock Text="&#xC911;&#xC9C0;" VerticalAlignment="Center" />
-                                                </ui:Button>
-                                                <ui:Button x:Name="YoloLifecycleReviewCandidateModelButton"
-                                                           Style="{StaticResource WpfUiToolbarButtonStyle}"
-                                                           AutomationProperties.AutomationId="YoloLifecycleReviewCandidateModelButton"
-                                                           AutomationProperties.Name="{Binding ShellViewModel.ModelCenterReviewCandidateButtonText}"
-                                                           ToolTip="{Binding ShellViewModel.ModelCenterReviewCandidateButtonToolTip}"
-                                                           Command="{Binding ShellViewModel.ReviewCandidateModelCommand}"
-                                                           IsEnabled="{Binding ShellViewModel.IsModelCenterReviewCandidateEnabled}"
-                                                           Visibility="Collapsed"
-                                                           MinWidth="82"
-                                                           Margin="0,0,4,4">
-                                                    <TextBlock x:Name="YoloLifecycleReviewCandidateModelButtonText"
-                                                               Text="{Binding ShellViewModel.ModelCenterReviewCandidateButtonText}"
-                                                               VerticalAlignment="Center" />
-                                                </ui:Button>
-                                                <ui:Button x:Name="YoloLifecycleSaveModelSettingsButton"
-                                                           Style="{StaticResource WpfUiToolbarButtonStyle}"
-                                                           AutomationProperties.AutomationId="YoloLifecycleSaveModelSettingsButton"
-                                                           AutomationProperties.Name="{Binding ShellViewModel.ModelCenterConfirmModelButtonText}"
-                                                           ToolTip="{Binding ShellViewModel.ModelCenterConfirmModelButtonToolTip}"
-                                                           Command="{Binding YoloModelSettingsViewModel.SaveSettingsCommand}"
-                                                           IsEnabled="{Binding ShellViewModel.IsModelCenterConfirmModelEnabled}"
-                                                           Visibility="Collapsed"
-                                                           MinWidth="108"
-                                                           Margin="0,0,0,4">
-                                                    <TextBlock x:Name="YoloLifecycleSaveModelSettingsButtonText"
-                                                               Text="{Binding ShellViewModel.ModelCenterConfirmModelButtonText}"
-                                                               VerticalAlignment="Center" />
-                                                </ui:Button>
-                                                <ui:Button x:Name="YoloLifecycleInspectCurrentImageButton"
-                                                           Style="{StaticResource WpfUiToolbarButtonStyle}"
-                                                           AutomationProperties.AutomationId="YoloLifecycleInspectCurrentImageButton"
-                                                           AutomationProperties.Name="{Binding ShellViewModel.ModelCenterInspectCurrentImageButtonText}"
-                                                           ToolTip="{Binding ShellViewModel.ModelCenterInspectCurrentImageButtonToolTip}"
-                                                           Command="{Binding ShellViewModel.DetectCurrentImageCommand}"
-                                                           IsEnabled="{Binding ShellViewModel.IsModelCenterInspectCurrentImageEnabled}"
-                                                           Visibility="Collapsed"
-                                                           MinWidth="82"
-                                                           Margin="4,0,0,4">
-                                                    <TextBlock x:Name="YoloLifecycleInspectCurrentImageButtonText"
-                                                               Text="{Binding ShellViewModel.ModelCenterInspectCurrentImageButtonText}"
-                                                               VerticalAlignment="Center" />
                                                 </ui:Button>
                                                 <ui:Button x:Name="YoloAnomalyEvaluationRunButton"
                                                            Style="{StaticResource WpfUiToolbarButtonStyle}"
@@ -3081,8 +2990,8 @@
                                                                    FontSize="11"
                                                                    FontWeight="SemiBold" />
                                                         <TextBlock x:Name="YoloDatasetQuickReadinessText"
-                                                                   Text="{Binding TrainingSettingsViewModel.TrainingReadinessText}"
-                                                                   Foreground="{Binding TrainingSettingsViewModel.TrainingReadinessForeground}"
+                                                                   Text="{Binding ExistingTrainingSettingsViewModel.TrainingReadinessText}"
+                                                                   Foreground="{Binding ExistingTrainingSettingsViewModel.TrainingReadinessForeground}"
                                                                    FontFamily="Segoe UI"
                                                                    FontSize="10"
                                                                    Margin="0,2,0,0"
@@ -3133,7 +3042,7 @@
                                                                    AutomationProperties.AutomationId="YoloDatasetQuickRefreshButton"
                                                                    AutomationProperties.Name="&#xD559;&#xC2B5; &#xB370;&#xC774;&#xD130;&#xC14B; &#xC0C8;&#xB85C;&#xACE0;&#xCE68;"
                                                                    ToolTip="&#xC800;&#xC7A5;&#xB41C; &#xB77C;&#xBCA8;&#xACFC; &#xD559;&#xC2B5; &#xC124;&#xC815; &#xC900;&#xBE44; &#xC0C1;&#xD0DC; &#xC810;&#xAC80;"
-                                                                   Command="{Binding TrainingSettingsViewModel.RefreshReadinessCommand}">
+                                                                   Command="{Binding ExistingTrainingSettingsViewModel.RefreshReadinessCommand}">
                                                             <iconPacks:PackIconMaterial Kind="Refresh"
                                                                                         Width="14"
                                                                                         Height="14" />

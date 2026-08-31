@@ -76,7 +76,7 @@ namespace MvcVisionSystem
             var loadedSegments = new List<LabelingSegmentationObject>();
             foreach (KeyValuePair<string, List<LabelingSegmentationObject>> classSegments in savedSegments)
             {
-                CClassItem classItem = EnsureClassItem(classSegments.Key);
+                LabelClass classItem = EnsureClassItem(classSegments.Key);
                 foreach (LabelingSegmentationObject segment in classSegments.Value ?? Enumerable.Empty<LabelingSegmentationObject>())
                 {
                     if (segment == null)

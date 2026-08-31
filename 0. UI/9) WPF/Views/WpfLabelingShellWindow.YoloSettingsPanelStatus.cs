@@ -49,7 +49,7 @@ namespace MvcVisionSystem
                 validation,
                 runtimeState,
                 communicationStatus,
-                global.PythonClientProcess?.IsRunning == true,
+                global.ModelRuntime.PythonClientProcess?.IsRunning == true,
                 environment,
                 environmentCheckError);
 

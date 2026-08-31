@@ -52,10 +52,11 @@ namespace MvcVisionSystem
             IsBlocking ? "WpfBatch.Finding.Severity.Blocking" : "WpfBatch.Finding.Severity.Warning");
     }
 
-    public sealed class WpfBatchDetectionPreflightViewModel : WpfObservableViewModel
+    public sealed class WpfBatchDetectionPreflightViewModel : WpfObservableViewModel, IDisposable
     {
         private readonly WpfBatchDetectionPreflightService preflightService;
-        private CData data;
+        private bool disposed;
+        private LabelingProjectData data;
         private IReadOnlyList<WpfImageQueueItem> items = Array.Empty<WpfImageQueueItem>();
         private string scopeText = string.Empty;
         private WpfBatchExistingLabelPolicyOption selectedExistingLabelPolicy;
@@ -67,7 +68,7 @@ namespace MvcVisionSystem
         private string destinationPolicyText = string.Empty;
 
         public WpfBatchDetectionPreflightViewModel(
-            CData data,
+            LabelingProjectData data,
             IReadOnlyList<WpfImageQueueItem> items,
             string scopeText,
             WpfBatchDetectionPreflightService preflightService = null)
@@ -142,14 +143,30 @@ namespace MvcVisionSystem
             private set => SetProperty(ref destinationPolicyText, value ?? string.Empty);
         }
 
-        public bool CanStart => currentReport?.CanStart == true;
+        public bool CanStart => !disposed && currentReport?.CanStart == true;
 
         public ICommand RecheckCommand { get; }
 
         public ICommand StartCommand { get; }
 
-        public void Refresh(CData sourceData, IReadOnlyList<WpfImageQueueItem> sourceItems, string sourceScopeText)
+        public void Dispose()
         {
+            if (disposed)
+            {
+                return;
+            }
+
+            disposed = true;
+            OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
+        }
+
+        public void Refresh(LabelingProjectData sourceData, IReadOnlyList<WpfImageQueueItem> sourceItems, string sourceScopeText)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
             data = sourceData;
             items = sourceItems ?? Array.Empty<WpfImageQueueItem>();
             scopeText = sourceScopeText ?? string.Empty;
@@ -166,6 +183,11 @@ namespace MvcVisionSystem
 
         private void RunDryRun()
         {
+            if (disposed)
+            {
+                return;
+            }
+
             currentReport = preflightService.DryRun(new WpfBatchDetectionPreflightRequest
             {
                 Data = data,
@@ -222,6 +244,11 @@ namespace MvcVisionSystem
 
         private void OpenVisionLanguageService_LanguageChanged(object sender, EventArgs e)
         {
+            if (disposed)
+            {
+                return;
+            }
+
             foreach (WpfBatchExistingLabelPolicyOption option in ExistingLabelPolicies)
             {
                 option.RefreshLocalizedPresentation();
@@ -237,6 +264,30 @@ namespace MvcVisionSystem
                 || string.IsNullOrWhiteSpace(text))
             {
                 return text ?? string.Empty;
+            }
+
+            if (TryLocalizePathFinding(
+                    text,
+                    "\u0059\u004F\u004C\u004F \uD504\uB85C\uC81D\uD2B8 \uD3F4\uB354\uB97C \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4: ",
+                    "WpfBatch.Finding.ProjectFolderNotFound",
+                    out string localizedPathFinding)
+                || TryLocalizePathFinding(
+                    text,
+                    "\u0059\u004F\u004C\u004F \u0054\u0043\u0050 \uD074\uB77C\uC774\uC5B8\uD2B8 \uC2A4\uD06C\uB9BD\uD2B8\uC744 \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4: ",
+                    "WpfBatch.Finding.ClientScriptNotFound",
+                    out localizedPathFinding)
+                || TryLocalizePathFinding(
+                    text,
+                    "\u0050\u0079\u0074\u0068\u006F\u006E \uC2E4\uD589 \uD30C\uC77C\uC744 \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4: ",
+                    "WpfBatch.Finding.PythonExecutableNotFound",
+                    out localizedPathFinding)
+                || TryLocalizePathFinding(
+                    text,
+                    "\u0059\u004F\u004C\u004F \uAC00\uC911\uCE58 \uD30C\uC77C\uC744 \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4: ",
+                    "WpfBatch.Finding.WeightsFileNotFound",
+                    out localizedPathFinding))
+            {
+                return localizedPathFinding;
             }
 
             const string missingImagePrefix = "\uD30C\uC77C\uC744 \uC5F4 \uC218 \uC5C6\uB294 \uC774\uBBF8\uC9C0 ";
@@ -266,6 +317,22 @@ namespace MvcVisionSystem
             }
 
             return WpfLocalizationTextRuntimeService.Translate(text);
+        }
+
+        private static bool TryLocalizePathFinding(
+            string text,
+            string prefix,
+            string localizationKey,
+            out string localizedText)
+        {
+            if (!text.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                localizedText = string.Empty;
+                return false;
+            }
+
+            localizedText = Format(localizationKey, text.Substring(prefix.Length));
+            return true;
         }
 
         private static string FormatPurposeText(LabelingDatasetPurpose? purpose)

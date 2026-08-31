@@ -15,7 +15,7 @@ namespace MvcVisionSystem.Yolo
     {
         private static readonly string[] ImageExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
-        public static YoloDatasetValidationResult ValidateConfiguration(CData data)
+        public static YoloDatasetValidationResult ValidateConfiguration(LabelingProjectData data)
         {
             var errors = new List<string>();
             if (data == null)
@@ -32,7 +32,7 @@ namespace MvcVisionSystem.Yolo
             return new YoloDatasetValidationResult(errors);
         }
 
-        public static YoloDatasetValidationResult ValidateTrainingFiles(CData data)
+        public static YoloDatasetValidationResult ValidateTrainingFiles(LabelingProjectData data)
         {
             var errors = new List<string>();
             if (data == null)
@@ -89,7 +89,7 @@ namespace MvcVisionSystem.Yolo
             return new YoloDatasetValidationResult(errors);
         }
 
-        public static YoloDatasetValidationResult ValidateAnomalyClassificationConfiguration(CData data)
+        public static YoloDatasetValidationResult ValidateAnomalyClassificationConfiguration(LabelingProjectData data)
         {
             var errors = new List<string>();
             if (data == null)
@@ -142,7 +142,7 @@ namespace MvcVisionSystem.Yolo
             errors.Add($"{purposeName} dataset has no YOLO box labels. Draw and save at least one rectangle label before training.");
         }
 
-        public static YoloDatasetStatistics BuildStatistics(CData data)
+        public static YoloDatasetStatistics BuildStatistics(LabelingProjectData data)
         {
             var statistics = new YoloDatasetStatistics();
             if (data == null)
@@ -187,7 +187,7 @@ namespace MvcVisionSystem.Yolo
             return statistics;
         }
 
-        private static void ValidateOutputPath(CData data, List<string> errors)
+        private static void ValidateOutputPath(LabelingProjectData data, List<string> errors)
         {
             if (string.IsNullOrWhiteSpace(data.OutputRootPath))
             {
@@ -235,7 +235,7 @@ namespace MvcVisionSystem.Yolo
             return string.Empty;
         }
 
-        private static void ValidateClasses(CData data, List<string> errors)
+        private static void ValidateClasses(LabelingProjectData data, List<string> errors)
         {
             if (data.ClassNamedList == null || data.ClassNamedList.Count == 0)
             {
@@ -309,7 +309,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static void ValidateDataYamlContract(CData data, List<string> errors)
+        private static void ValidateDataYamlContract(LabelingProjectData data, List<string> errors)
         {
             if (data == null || string.IsNullOrWhiteSpace(data.DataYamlFilePath) || !File.Exists(data.DataYamlFilePath))
             {
@@ -359,7 +359,7 @@ namespace MvcVisionSystem.Yolo
             ValidateDataYamlPath(data.DataYamlFilePath, yaml.path, "test", yaml.test, data.TestImagesPath, required: false, errors);
         }
 
-        private static void ValidateDataYamlClasses(CData data, YoloDataYamlContract yaml, List<string> errors)
+        private static void ValidateDataYamlClasses(LabelingProjectData data, YoloDataYamlContract yaml, List<string> errors)
         {
             List<string> classNames = data.ClassNamedList?
                 .Select(item => item?.Text?.Trim() ?? string.Empty)
@@ -448,7 +448,7 @@ namespace MvcVisionSystem.Yolo
             return Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         }
 
-        private static void ValidateImageAndLabelSet(string mode, string imageDirectory, string labelDirectory, IReadOnlyList<CClassItem> classes, List<string> errors)
+        private static void ValidateImageAndLabelSet(string mode, string imageDirectory, string labelDirectory, IReadOnlyList<LabelClass> classes, List<string> errors)
         {
             if (!Directory.Exists(imageDirectory))
             {
@@ -489,7 +489,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static void ValidateOptionalImageAndLabelSet(string mode, string imageDirectory, string labelDirectory, IReadOnlyList<CClassItem> classes, List<string> errors)
+        private static void ValidateOptionalImageAndLabelSet(string mode, string imageDirectory, string labelDirectory, IReadOnlyList<LabelClass> classes, List<string> errors)
         {
             bool hasImages = EnumerateSupportedImages(imageDirectory).Any();
             bool hasLabels = Directory.Exists(labelDirectory) && Directory.EnumerateFiles(labelDirectory, "*.txt").Any();
@@ -507,7 +507,7 @@ namespace MvcVisionSystem.Yolo
             string segmentDirectory,
             string maskDirectory,
             string labelDirectory,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             List<string> errors)
         {
             if (!Directory.Exists(imageDirectory))
@@ -571,7 +571,7 @@ namespace MvcVisionSystem.Yolo
             string segmentDirectory,
             string maskDirectory,
             string labelDirectory,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             List<string> errors)
         {
             bool hasImages = EnumerateSupportedImages(imageDirectory).Any();
@@ -591,7 +591,7 @@ namespace MvcVisionSystem.Yolo
             string segmentPath,
             string maskPath,
             Size imageSize,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             List<string> errors)
         {
             SegmentationAnnotationFile annotation;
@@ -716,7 +716,7 @@ namespace MvcVisionSystem.Yolo
             errors.Add($"{leftMode}/{rightMode} image split has duplicate image content: {overlap.ContentOverlapCount} overlapping image(s). Use different split images before training.{example}");
         }
 
-        private static void ValidateLabelFile(string mode, string labelPath, IReadOnlyList<CClassItem> classes, List<string> errors)
+        private static void ValidateLabelFile(string mode, string labelPath, IReadOnlyList<LabelClass> classes, List<string> errors)
         {
             int lineNo = 0;
             foreach (string line in File.ReadLines(labelPath))
@@ -824,7 +824,7 @@ namespace MvcVisionSystem.Yolo
                 .Count(path => File.ReadAllText(path).Trim().Length == 0);
         }
 
-        private static void CountObjects(string labelDirectory, IReadOnlyList<CClassItem> classes, YoloDatasetStatistics statistics)
+        private static void CountObjects(string labelDirectory, IReadOnlyList<LabelClass> classes, YoloDatasetStatistics statistics)
         {
             if (!Directory.Exists(labelDirectory) || classes == null || statistics == null)
             {
@@ -851,7 +851,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static void CountSegmentationObjects(string segmentDirectory, IReadOnlyList<CClassItem> classes, YoloDatasetStatistics statistics)
+        private static void CountSegmentationObjects(string segmentDirectory, IReadOnlyList<LabelClass> classes, YoloDatasetStatistics statistics)
         {
             if (!Directory.Exists(segmentDirectory) || statistics == null)
             {
@@ -883,7 +883,7 @@ namespace MvcVisionSystem.Yolo
             }
         }
 
-        private static string ResolveSegmentationClassName(SegmentationPolygonRecord record, IReadOnlyList<CClassItem> classes)
+        private static string ResolveSegmentationClassName(SegmentationPolygonRecord record, IReadOnlyList<LabelClass> classes)
         {
             if (!string.IsNullOrWhiteSpace(record?.ClassName))
             {
@@ -895,7 +895,7 @@ namespace MvcVisionSystem.Yolo
                 : string.Empty;
         }
 
-        private static LabelingDatasetPurpose ResolveDatasetPurpose(CData data)
+        private static LabelingDatasetPurpose ResolveDatasetPurpose(LabelingProjectData data)
         {
             data?.ProjectSettings?.EnsureDefaults();
             return data?.ProjectSettings?.DatasetPurpose ?? LabelingDatasetPurpose.ObjectDetection;

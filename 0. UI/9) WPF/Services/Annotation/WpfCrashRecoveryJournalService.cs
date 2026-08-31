@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
@@ -56,7 +55,7 @@ namespace MvcVisionSystem
             {
                 SchemaVersion = CurrentSchemaVersion,
                 Format = FormatName,
-                PayloadSha256 = ComputeSha256(draftJson),
+                PayloadSha256 = HashingService.ComputeUtf8TextSha256(draftJson, lowerCase: true),
                 Draft = draft
             };
             string envelopeJson = JsonSerializer.Serialize(envelope, JsonOptions);
@@ -113,7 +112,7 @@ namespace MvcVisionSystem
                     }
 
                     string draftJson = JsonSerializer.Serialize(envelope.Draft, JsonOptions);
-                    string actualSha256 = ComputeSha256(draftJson);
+                    string actualSha256 = HashingService.ComputeUtf8TextSha256(draftJson, lowerCase: true);
                     if (!IsSha256(envelope.PayloadSha256)
                         || !string.Equals(envelope.PayloadSha256, actualSha256, StringComparison.OrdinalIgnoreCase))
                     {
@@ -390,12 +389,6 @@ namespace MvcVisionSystem
             {
                 throw new InvalidDataException($"{fieldName} 경로가 올바르지 않습니다.", ex);
             }
-        }
-
-        private static string ComputeSha256(string value)
-        {
-            byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(value ?? string.Empty));
-            return Convert.ToHexString(hash).ToLowerInvariant();
         }
 
         private static bool IsSha256(string value)

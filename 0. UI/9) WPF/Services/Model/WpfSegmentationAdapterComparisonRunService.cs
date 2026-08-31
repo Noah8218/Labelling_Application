@@ -16,11 +16,12 @@ namespace MvcVisionSystem
     public sealed class WpfSegmentationAdapterComparisonRunService
     {
         public WpfSegmentationAdapterComparisonContext BuildContext(
-            CData data,
+            LabelingProjectData data,
             ModelRegistrySettings registry,
             PythonModelSettings currentSettings)
         {
             currentSettings ??= new PythonModelSettings();
+            PythonModelRuntimePathResolver.ApplyPathDefaults(currentSettings);
             string selectedYoloEngine = ResolveDefaultYoloEngine(registry, currentSettings);
             string unetWeightsPath = ResolveCheckpointPath(
                 PythonModelSettings.EngineUnet,
@@ -92,13 +93,14 @@ namespace MvcVisionSystem
         }
 
         public WpfSegmentationAdapterComparisonRunRequest BuildRequest(
-            CData data,
+            LabelingProjectData data,
             PythonModelSettings currentSettings,
             string unetWeightsPath,
             string yoloWeightsPath,
             string yoloEngine)
         {
             currentSettings ??= new PythonModelSettings();
+            PythonModelRuntimePathResolver.ApplyPathDefaults(currentSettings);
             string normalizedYoloEngine = NormalizeUltralyticsEngine(yoloEngine);
             PythonModelSettings unetSettings = BuildUnetSettings(currentSettings, unetWeightsPath);
             PythonModelSettings yoloSettings = BuildYoloSettings(currentSettings, normalizedYoloEngine, yoloWeightsPath);
@@ -218,7 +220,7 @@ namespace MvcVisionSystem
                 comparison);
         }
 
-        private static UnetSegmentationDatasetExportResult BuildCanonicalExport(CData data)
+        private static UnetSegmentationDatasetExportResult BuildCanonicalExport(LabelingProjectData data)
         {
             ExternalYoloDatasetSettings externalDataset = data?.ProjectSettings?.ExternalYoloDataset;
             if (externalDataset?.UseForTraining != true)
@@ -265,7 +267,7 @@ namespace MvcVisionSystem
                 StringComparison.Ordinal)
                 && Directory.Exists(currentSettings.ProjectRootPath)
                 ? currentSettings.ProjectRootPath
-                : PythonModelSettings.GetDefaultUnetProjectRootPath();
+                : PythonModelRuntimePathResolver.GetDefaultUnetProjectRootPath();
             PythonModelRuntimeConnectionResult connection = PythonModelRuntimeConnectionService.BuildUnetFolderConnection(
                 currentSettings,
                 projectRootPath);
@@ -401,7 +403,7 @@ namespace MvcVisionSystem
 
             string runtimeAnchorRoot = Directory.Exists(currentRoot)
                 ? currentRoot
-                : PythonModelSettings.GetDefaultUnetProjectRootPath();
+                : PythonModelRuntimePathResolver.GetDefaultUnetProjectRootPath();
             string parent = Directory.GetParent(runtimeAnchorRoot)?.FullName ?? string.Empty;
             string sibling = string.IsNullOrWhiteSpace(parent) ? string.Empty : Path.Combine(parent, runtimeFolderName);
             return Directory.Exists(sibling) ? sibling : string.Empty;
@@ -487,7 +489,7 @@ namespace MvcVisionSystem
 
     public sealed class WpfSegmentationAdapterComparisonRunRequest
     {
-        public CData Data { get; set; }
+        public LabelingProjectData Data { get; set; }
         public PythonModelSettings UnetSettings { get; set; } = new PythonModelSettings();
         public PythonModelSettings YoloSettings { get; set; } = new PythonModelSettings();
         public string YoloEngine { get; set; } = PythonModelSettings.EngineYoloV8;

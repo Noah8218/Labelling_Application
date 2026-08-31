@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using MvcVisionSystem.Yolo;
 
@@ -19,9 +18,9 @@ namespace MvcVisionSystem
             StringComparer.OrdinalIgnoreCase);
         private static readonly string[] Splits = { "train", "valid", "test" };
 
-        public static RecipeDatasetVersionSnapshot CreateSnapshot(CData data)
+        public static RecipeDatasetVersionSnapshot CreateSnapshot(LabelingProjectData data)
         {
-            data ??= new CData();
+            data ??= new LabelingProjectData();
             data.NormalizeOutputPaths();
             data.ProjectSettings ??= new LabelingProjectSettings();
             data.ProjectSettings.EnsureDefaults();
@@ -61,7 +60,7 @@ namespace MvcVisionSystem
 
             if (!snapshot.Files.Any(item => string.Equals(item.Kind, "image", StringComparison.Ordinal)))
             {
-                string imageRootPath = data.ProjectSettings.PythonModel?.ImageRootPath ?? string.Empty;
+                string imageRootPath = data.ProjectSettings.ResolveImageRootPath();
                 AddFiles(snapshot.Files, imageRootPath, "image", "source", imageRootPath, IsImageFile);
             }
 
@@ -83,14 +82,14 @@ namespace MvcVisionSystem
             snapshot.FileCount = snapshot.Files.Count;
             snapshot.ImageFileCount = snapshot.Files.Count(item => string.Equals(item.Kind, "image", StringComparison.Ordinal));
             snapshot.AnnotationFileCount = snapshot.FileCount - snapshot.ImageFileCount;
-            snapshot.ClassContractSha256 = HashText(BuildClassContract(snapshot.Classes));
-            snapshot.SplitContractSha256 = HashText(BuildFileContract(snapshot.Files));
-            snapshot.ContentSha256 = HashText(string.Join(
+            snapshot.ClassContractSha256 = HashingService.ComputeUtf8TextSha256(BuildClassContract(snapshot.Classes), lowerCase: true);
+            snapshot.SplitContractSha256 = HashingService.ComputeUtf8TextSha256(BuildFileContract(snapshot.Files), lowerCase: true);
+            snapshot.ContentSha256 = HashingService.ComputeUtf8TextSha256(string.Join(
                 "\n",
                 "recipe-dataset-version-v2",
                 snapshot.DatasetPurpose,
                 snapshot.ClassContractSha256,
-                snapshot.SplitContractSha256));
+                snapshot.SplitContractSha256), lowerCase: true);
             snapshot.DatasetVersionId = "dsv2-" + snapshot.ContentSha256.ToLowerInvariant();
             return snapshot;
         }
@@ -245,7 +244,7 @@ namespace MvcVisionSystem
                 Split = split ?? string.Empty,
                 RelativePath = relativePath ?? string.Empty,
                 Length = fileInfo.Length,
-                Sha256 = ComputeFileSha256(path)
+                Sha256 = HashingService.ComputeFileSha256(path, lowerCase: true)
             };
         }
 
@@ -281,17 +280,5 @@ namespace MvcVisionSystem
             return builder.ToString();
         }
 
-        private static string ComputeFileSha256(string path)
-        {
-            using SHA256 sha = SHA256.Create();
-            using FileStream stream = File.OpenRead(path);
-            return Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
-        }
-
-        private static string HashText(string text)
-        {
-            using SHA256 sha = SHA256.Create();
-            return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(text ?? string.Empty))).ToLowerInvariant();
-        }
     }
 }

@@ -21,7 +21,7 @@ namespace MvcVisionSystem.Yolo
 
         private static readonly string[] ImageExtensions = { ".bmp", ".jpg", ".jpeg", ".png", ".tif", ".tiff" };
 
-        public static YoloSegmentationHistoricalRemediationAuditReport Build(CData data, string sourceImagePath = "")
+        public static YoloSegmentationHistoricalRemediationAuditReport Build(LabelingProjectData data, string sourceImagePath = "")
         {
             var report = new YoloSegmentationHistoricalRemediationAuditReport
             {
@@ -63,7 +63,7 @@ namespace MvcVisionSystem.Yolo
             return report;
         }
 
-        public static string ResolveDefaultOutputPath(CData data)
+        public static string ResolveDefaultOutputPath(LabelingProjectData data)
         {
             string outputRootPath = data?.OutputRootPath;
             return string.IsNullOrWhiteSpace(outputRootPath)
@@ -154,7 +154,7 @@ namespace MvcVisionSystem.Yolo
 
         private static void BuildSplit(
             YoloSegmentationHistoricalRemediationAuditReport report,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             string outputRootPath,
             string split,
             string sourceStem)
@@ -279,7 +279,7 @@ namespace MvcVisionSystem.Yolo
 
         private static IReadOnlyList<SegmentationPolygonRecord> BuildProposedRecords(
             LabelingSegmentationObject segment,
-            IReadOnlyList<CClassItem> classes,
+            IReadOnlyList<LabelClass> classes,
             Size imageSize)
         {
             string className = segment?.ClassName ?? segment?.ClassItem?.Text ?? string.Empty;
@@ -357,7 +357,7 @@ namespace MvcVisionSystem.Yolo
                 .FirstOrDefault() ?? string.Empty;
         }
 
-        private static string ResolveClassName(SegmentationPolygonRecord record, IReadOnlyList<CClassItem> classes)
+        private static string ResolveClassName(SegmentationPolygonRecord record, IReadOnlyList<LabelClass> classes)
         {
             if (!string.IsNullOrWhiteSpace(record?.ClassName))
             {

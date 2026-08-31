@@ -21,9 +21,8 @@ namespace MvcVisionSystem
 
             lastYoloTrainingReadinessReport = report;
             YoloTrainingIssuePresentation presentation = BuildYoloTrainingIssuePresentation(report);
-            LearningWorkflowViewModel.TrainingChecklistStatusText = presentation.StatusText;
-            LearningWorkflowViewModel.TrainingChecklistDetailText = presentation.DetailText;
-            LearningWorkflowViewModel.TrainingChecklistActionText = presentation.ActionText;
+            LearningWorkflowViewModel.SetTrainingChecklistLocalization(presentation.Localization);
+            LearningWorkflowViewModel.SetTrainingChecklistActionLocalization(presentation.ActionLocalization);
             UpdateDatasetStatusDashboard(report, presentation);
             UpdateYoloTrainingGuideDatasetHistory(report, presentation, recordHistory);
             UpdateYoloTrainingHistoryText();
@@ -48,220 +47,43 @@ namespace MvcVisionSystem
                 ? AnomalyImageReviewStatusService.LoadPersistedSummary(global.Data, statistics.TotalImageCount)
                 : null;
             YoloDatasetQualityAuditReport qualityAudit = YoloDatasetQualityAuditService.Build(global.Data);
-            string statusText = report.IsReady
-                ? warnings.Count > 0
-                    ? "\uB370\uC774\uD130\uC14B \uC0C1\uD0DC: \uC8FC\uC758 \uD6C4 \uD559\uC2B5 \uAC00\uB2A5"
-                    : "\uB370\uC774\uD130\uC14B \uC0C1\uD0DC: \uD559\uC2B5 \uAC00\uB2A5"
-                : "\uB370\uC774\uD130\uC14B \uC0C1\uD0DC: \uD559\uC2B5 \uBD88\uAC00";
-            string summaryText =
-                $"purpose {report.Purpose}, images {statistics.TotalImageCount}, train {statistics.TrainImageCount}, valid {statistics.ValidImageCount}, test {statistics.TestImageCount}, classes {classCount}";
-            if (anomalySummary != null)
-            {
-                summaryText += $", anomaly normal {anomalySummary.NormalImageCount}, abnormal {anomalySummary.AbnormalImageCount}, unreviewed {anomalySummary.UnreviewedImageCount}";
-            }
-            summaryText += $", quality missing {qualityAudit.TotalMissingLabelCount}, invalid {qualityAudit.TotalInvalidLabelLineCount}, empty {qualityAudit.TotalEmptyLabelCount}";
+            WpfDatasetDashboardLocalizationSnapshot dashboardLocalization = WpfDatasetDashboardLocalizationService.Build(
+                report,
+                statistics,
+                classCount,
+                warnings,
+                anomalySummary,
+                qualityAudit,
+                ClassifyYoloTrainingIssue(report.Errors));
 
-            LearningWorkflowViewModel.SetModelReplacementReadiness(
-                BuildModelReplacementStatusText(report, statistics),
-                BuildModelReplacementDetailText(report, statistics));
+            LearningWorkflowViewModel.SetModelReplacementLocalization(
+                BuildModelReplacementLocalization(report, statistics));
             LearningWorkflowViewModel.SetDatasetDashboard(
-                statusText,
-                summaryText,
+                dashboardLocalization.StatusText,
+                dashboardLocalization.SummaryText,
                 presentation?.ActionText ?? string.Empty,
                 WpfDatasetDashboardPresentationService.BuildMetrics(report, statistics, classCount, anomalySummary, qualityAudit),
-                BuildDatasetDashboardIssues(report, warnings, classCount, anomalySummary, qualityAudit));
+                dashboardLocalization.IssueItems,
+                dashboardLocalization);
         }
 
 
 
+        private static WpfModelReplacementLocalizationSnapshot BuildModelReplacementLocalization(
+            YoloDatasetReadinessReport report,
+            YoloDatasetStatistics statistics)
+        {
+            return WpfModelReplacementLocalizationService.Build(report, statistics);
+        }
+
         private static string BuildModelReplacementStatusText(YoloDatasetReadinessReport report, YoloDatasetStatistics statistics)
         {
-            if (report?.IsReady != true)
-            {
-                return "\uBAA8\uB378 \uAD50\uCCB4: \uBD88\uAC00";
-            }
-
-            int testImageCount = statistics?.TestImageCount ?? 0;
-            int testLabelCount = statistics?.TestLabelCount ?? 0;
-            int finalVerificationCount = Math.Min(testImageCount, testLabelCount);
-            return testImageCount > 0 && testLabelCount > 0
-                ? finalVerificationCount >= RecommendedModelReplacementTestImageCount
-                    ? "\uBAA8\uB378 \uAD50\uCCB4: \uAC00\uB2A5"
-                    : "\uBAA8\uB378 \uAD50\uCCB4: \uADFC\uAC70 \uBD80\uC871"
-                : "\uBAA8\uB378 \uAD50\uCCB4: \uBCF4\uB958";
+            return BuildModelReplacementLocalization(report, statistics).StatusText;
         }
 
         private static string BuildModelReplacementDetailText(YoloDatasetReadinessReport report, YoloDatasetStatistics statistics)
         {
-            if (report?.IsReady != true)
-            {
-                return "\uBA3C\uC800 \uD559\uC2B5 \uBD88\uAC00 \uD56D\uBAA9\uC744 \uD574\uACB0\uD574\uC57C \uBAA8\uB378 \uAD50\uCCB4\uB97C \uD310\uB2E8\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.";
-            }
-
-            int testCount = statistics?.TestImageCount ?? 0;
-            int testLabelCount = statistics?.TestLabelCount ?? 0;
-            int finalVerificationCount = Math.Min(testCount, testLabelCount);
-            if (testCount > 0 && testLabelCount <= 0)
-            {
-                return "\uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0\uB294 \uC788\uC9C0\uB9CC \uC815\uB2F5 \uB77C\uBCA8 \uD30C\uC77C\uC774 \uC5C6\uC2B5\uB2C8\uB2E4. \uBAA8\uB378 \uBE44\uAD50 \uC804 \uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8\uC744 \uC800\uC7A5\uD558\uC138\uC694.";
-            }
-
-            if (finalVerificationCount > 0)
-            {
-                if (finalVerificationCount < RecommendedModelReplacementTestImageCount)
-                {
-                    int neededCount = RecommendedModelReplacementTestImageCount - finalVerificationCount;
-                    return $"\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5\uC73C\uB85C \uBE44\uAD50\uB294 \uAC00\uB2A5\uD558\uC9C0\uB9CC \uAD50\uCCB4 \uADFC\uAC70\uAC00 \uC57D\uD569\uB2C8\uB2E4. \uAD8C\uC7A5 {RecommendedModelReplacementTestImageCount}\uC7A5\uAE4C\uC9C0 {neededCount}\uC7A5\uC744 \uB354 \uD655\uBCF4\uD558\uC138\uC694.";
-                }
-
-                return $"\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5\uC73C\uB85C \uAE30\uC874 \uBAA8\uB378\uACFC \uBE44\uAD50 \uD6C4 \uAD50\uCCB4\uB97C \uD310\uB2E8\uD558\uC138\uC694.";
-            }
-
-            return "\uD559\uC2B5/\uAC80\uC99D \uC774\uBBF8\uC9C0\uB85C \uD559\uC2B5\uC740 \uAC00\uB2A5\uD558\uC9C0\uB9CC \uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0\uAC00 0\uC7A5\uC774\uBBC0\uB85C \uAE30\uC874 \uBAA8\uB378 \uAD50\uCCB4\uB294 \uBCF4\uB958\uD558\uC138\uC694.";
-        }
-
-        private static IReadOnlyList<string> BuildDatasetDashboardIssues(
-            YoloDatasetReadinessReport report,
-            IReadOnlyList<string> warnings,
-            int classCount,
-            AnomalyImageReviewSummary anomalySummary = null,
-            YoloDatasetQualityAuditReport qualityAudit = null)
-        {
-            var issues = new List<string>();
-            string nextAction = BuildObjectDetectionNextActionIssue(report, classCount);
-            if (!string.IsNullOrWhiteSpace(nextAction))
-            {
-                issues.Add(nextAction);
-            }
-
-            string qualityIssue = WpfDatasetQualityAuditPresentationService.BuildQualityIssue(qualityAudit);
-            if (!string.IsNullOrWhiteSpace(qualityIssue))
-            {
-                issues.Add(qualityIssue);
-            }
-
-            if (report?.Purpose == LabelingDatasetPurpose.AnomalyDetection)
-            {
-                string anomalyIssue = WpfAnomalyDashboardPresentationService.BuildReviewStateIssue(anomalySummary);
-                if (!string.IsNullOrWhiteSpace(anomalyIssue))
-                {
-                    issues.Add(anomalyIssue);
-                }
-            }
-
-            if (report?.IsReady == true)
-            {
-                if (warnings != null && warnings.Count > 0)
-                {
-                    foreach (string warning in warnings.Take(3))
-                    {
-                        issues.Add("\uC8FC\uC758: " + FormatDatasetQualityWarning(warning));
-                    }
-                }
-                else
-                {
-                    issues.Add("\uBB38\uC81C \uC5C6\uC74C: \uD559\uC2B5 \uC124\uC815\uC73C\uB85C \uC774\uB3D9\uD574\uB3C4 \uB429\uB2C8\uB2E4.");
-                }
-
-                return issues;
-            }
-
-            IReadOnlyList<string> errors = report?.Errors ?? Array.Empty<string>();
-            string issueKind = ClassifyYoloTrainingIssue(errors);
-            issues.Add(BuildDatasetDashboardFriendlyIssue(issueKind));
-            foreach (string error in errors.Take(2))
-            {
-                if (!string.IsNullOrWhiteSpace(error))
-                {
-                    issues.Add("\uC138\uBD80: " + error);
-                }
-            }
-
-            return issues;
-        }
-
-        private static string BuildObjectDetectionNextActionIssue(
-            YoloDatasetReadinessReport report,
-            int classCount)
-        {
-            if (report == null || report.Purpose != LabelingDatasetPurpose.ObjectDetection)
-            {
-                return string.Empty;
-            }
-
-            YoloDatasetStatistics statistics = report.Statistics ?? new YoloDatasetStatistics();
-            if (statistics.TotalImageCount <= 0)
-            {
-                return "다음: 이미지 폴더를 열어 객체탐지 데이터셋을 시작하세요.";
-            }
-
-            if (classCount <= 0)
-            {
-                return "다음: 클래스 탭에서 모델이 배울 이름을 등록하세요.";
-            }
-
-            if (statistics.TotalLabelFileCount <= 0 && statistics.TotalObjectCount <= 0)
-            {
-                return "다음: 박스 도구로 첫 객체를 라벨링하고 저장하세요.";
-            }
-
-            int completedImageCount = Math.Min(statistics.TotalLabelFileCount, statistics.TotalImageCount);
-            if (completedImageCount < statistics.TotalImageCount)
-            {
-                int remainingImageCount = Math.Max(0, statistics.TotalImageCount - completedImageCount);
-                return $"다음: 미완료 {remainingImageCount}장에 박스를 저장하거나 빈 정상 이미지로 완료 처리하세요.";
-            }
-
-            bool hasSplitOverlap = statistics.TrainValidImageContentOverlapCount > 0
-                || statistics.SplitImageContentOverlapCount > 0;
-            if (hasSplitOverlap)
-            {
-                return "\uB2E4\uC74C: \uD559\uC2B5/\uAC80\uC99D/\uCD5C\uC885 \uAC80\uC99D\uC5D0 \uAC19\uC740 \uC774\uBBF8\uC9C0\uAC00 \uC11E\uC774\uC9C0 \uC54A\uB3C4\uB85D \uBD84\uB9AC\uD558\uC138\uC694.";
-            }
-
-            if (statistics.ValidImageCount <= 0)
-            {
-                return "\uB2E4\uC74C: \uAC80\uC99D \uC774\uBBF8\uC9C0\uB97C 1\uC7A5 \uC774\uC0C1 \uD655\uBCF4\uD574 \uD559\uC2B5 \uAC80\uC99D\uC774 \uAC00\uB2A5\uD558\uAC8C \uB9CC\uB4DC\uC138\uC694.";
-            }
-
-            if (statistics.TestImageCount <= 0)
-            {
-                return "\uB2E4\uC74C: \uBAA8\uB378 \uAD50\uCCB4 \uD310\uB2E8 \uC804 \uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0\uB97C 1\uC7A5 \uC774\uC0C1 \uD655\uBCF4\uD558\uC138\uC694.";
-            }
-
-            if (statistics.TestImageCount > 0 && statistics.TestLabelCount <= 0)
-            {
-                return "\uB2E4\uC74C: \uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0\uC5D0 \uC815\uB2F5 \uB77C\uBCA8\uC744 \uC800\uC7A5\uD558\uC138\uC694.";
-            }
-
-            int finalVerificationCount = Math.Min(statistics.TestImageCount, statistics.TestLabelCount);
-            if (finalVerificationCount < RecommendedModelReplacementTestImageCount)
-            {
-                int neededCount = RecommendedModelReplacementTestImageCount - finalVerificationCount;
-                return $"\uB2E4\uC74C: \uBAA8\uB378 \uAD50\uCCB4 \uADFC\uAC70\uB97C \uB192\uC774\uB824\uBA74 \uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8\uC744 {neededCount}\uC7A5 \uB354 \uD655\uBCF4\uD558\uC138\uC694.";
-            }
-
-            return report.IsReady
-                ? "\uC644\uB8CC: \uAC1D\uCCB4\uD0D0\uC9C0 \uB77C\uBCA8\uB9C1 MVP\uAC00 \uC900\uBE44\uB418\uC5C8\uC2B5\uB2C8\uB2E4. \uD559\uC2B5 \uD6C4 \uCD5C\uC885 \uAC80\uC99D \uBE44\uAD50\uB85C \uBAA8\uB378 \uAD50\uCCB4\uB97C \uD310\uB2E8\uD558\uC138\uC694."
-                : "다음: 데이터셋 점검 결과의 세부 오류를 먼저 해결하세요.";
-        }
-
-        private static string BuildDatasetDashboardFriendlyIssue(string issueKind)
-        {
-            return issueKind switch
-            {
-                "Classes" => "\uD074\uB798\uC2A4 \uB4F1\uB85D\uC774 \uD544\uC694\uD569\uB2C8\uB2E4. \uBAA8\uB378\uC774 \uBC30\uC6B8 \uC774\uB984\uC744 \uBA3C\uC800 \uB9CC\uB4DC\uC138\uC694.",
-                "Labels" => "\uB77C\uBCA8 \uC800\uC7A5\uC774 \uD544\uC694\uD569\uB2C8\uB2E4. \uBC15\uC2A4\uB97C \uADF8\uB9AC\uACE0 \uC800\uC7A5\uD55C \uB4A4 \uB2E4\uC2DC \uC810\uAC80\uD558\uC138\uC694.",
-                "SegmentationPolicy" => "\uAC1D\uCCB4 \uD0D0\uC9C0\uB294 \uBC15\uC2A4 txt \uB77C\uBCA8\uC774 \uD544\uC694\uD569\uB2C8\uB2E4.",
-                "SegmentationLabels" => "\uC138\uADF8\uBA58\uD14C\uC774\uC158\uC740 \uBE0C\uB7EC\uC2DC/\uD3F4\uB9AC\uACE4 \uB77C\uBCA8\uC774 \uD544\uC694\uD569\uB2C8\uB2E4.",
-                "ValidImages" => "\uAC80\uC99D \uC774\uBBF8\uC9C0\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4. \uBD84\uD560 \uC124\uC815\uC744 \uD655\uC778\uD558\uC138\uC694.",
-                "Split" => "\uD559\uC2B5/\uAC80\uC99D/\uCD5C\uC885 \uAC80\uC99D\uC5D0 \uAC19\uC740 \uC774\uBBF8\uC9C0\uAC00 \uC11E\uC5EC \uC788\uC2B5\uB2C8\uB2E4. \uD559\uC2B5\uACFC \uAC80\uC99D\uC740 \uB2E4\uB978 \uC774\uBBF8\uC9C0\uB85C \uBD84\uB9AC\uD558\uC138\uC694.",
-                "DataYaml" => "\uD559\uC2B5 \uC124\uC815\uC774 \uD604\uC7AC \uD504\uB85C\uC81D\uD2B8\uC640 \uB9DE\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. \uB370\uC774\uD130\uC14B \uC810\uAC80\uC744 \uB2E4\uC2DC \uC2E4\uD589\uD558\uC138\uC694.",
-                "LabelFormat" => "\uBC15\uC2A4 \uB77C\uBCA8 \uD30C\uC77C \uD615\uC2DD\uC774 \uC798\uBABB\uB41C \uD30C\uC77C\uC774 \uC788\uC2B5\uB2C8\uB2E4.",
-                "OutputRoot" => "\uB370\uC774\uD130\uC14B \uC800\uC7A5 \uACBD\uB85C\uB97C \uD655\uC778\uD558\uC138\uC694.",
-                "Images" => "\uD559\uC2B5\uD560 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB97C \uB2E4\uC2DC \uC120\uD0DD\uD558\uC138\uC694.",
-                _ => "\uB370\uC774\uD130\uC14B \uC810\uAC80 \uACB0\uACFC\uB97C \uD655\uC778\uD558\uACE0 \uD544\uC694\uD55C \uD56D\uBAA9\uC744 \uC218\uC815\uD558\uC138\uC694."
-            };
+            return BuildModelReplacementLocalization(report, statistics).DetailText;
         }
 
         private YoloTrainingIssuePresentation BuildYoloTrainingIssuePresentation(YoloDatasetReadinessReport report)
@@ -273,77 +95,31 @@ namespace MvcVisionSystem
                 int classCount = global.Data?.ClassNamedList?.Count ?? 0;
                 IReadOnlyList<string> warnings = YoloDatasetDiagnosticsService.BuildQualityWarnings(global.Data, statistics);
                 bool hasWarnings = warnings.Count > 0;
+                WpfTrainingChecklistLocalizationSnapshot localization = WpfTrainingChecklistLocalizationService.BuildReady(
+                    statistics,
+                    classCount,
+                    purpose,
+                    hasWarnings);
                 return new YoloTrainingIssuePresentation(
                     hasWarnings ? "ReadyWithWarnings" : "Ready",
-                    BuildReadyDatasetStatusText(statistics, purpose, hasWarnings),
-                    BuildReadyDatasetDetail(statistics, classCount, purpose),
+                    localization,
                     hasWarnings
-                        ? BuildQualityWarningActionText(warnings)
-                        : BuildReadyDatasetActionText(purpose));
+                        ? WpfTrainingChecklistLocalizationService.BuildQualityWarningAction(warnings)
+                        : WpfTrainingChecklistLocalizationService.BuildReadyAction(purpose));
             }
 
             string firstError = report?.Errors?.FirstOrDefault() ?? "원인 미확인";
             string issueKind = ClassifyYoloTrainingIssue(report?.Errors ?? Array.Empty<string>());
             LabelingDatasetPurpose failurePurpose = report?.Purpose ?? LabelingDatasetPurpose.ObjectDetection;
-            string failureDetail = BuildDatasetFailureDetail(firstError, report?.Statistics, failurePurpose);
-            return issueKind switch
-            {
-                "Classes" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 학습 불가 / 클래스 등록 필요",
-                    failureDetail,
-                    "클래스 등록 버튼으로 이동해 모델이 배울 이름을 먼저 등록하세요."),
-                "Labels" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 학습 불가 / 라벨 저장 필요",
-                    failureDetail,
-                    "라벨링 시작 버튼으로 이동해 박스를 그리고 저장한 뒤 다시 점검하세요."),
-                "SegmentationPolicy" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 세그먼트 저장됨 / 박스 라벨 필요",
-                    failureDetail,
-                    "\uD604\uC7AC \uAC1D\uCCB4\uD0D0\uC9C0 \uD559\uC2B5\uC740 \uBC15\uC2A4 \uB77C\uBCA8 \uD30C\uC77C\uC774 \uD544\uC694\uD569\uB2C8\uB2E4. \uBC15\uC2A4 \uB77C\uBCA8\uC744 \uCD94\uAC00\uD558\uAC70\uB098 segmentation \uD559\uC2B5/export \uC815\uCC45\uC744 \uC120\uD0DD\uD558\uC138\uC694."),
-                "SegmentationLabels" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 세그멘테이션 준비 불가 / 마스크 라벨 필요",
-                    failureDetail,
-                    "세그멘테이션 목적에서는 브러시나 폴리곤으로 마스크를 저장한 뒤 다시 데이터셋 점검을 실행하세요."),
-                "ValidImages" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 학습 불가 / 검증 이미지 필요",
-                    failureDetail,
-                    "데이터셋 점검으로 이동해 train/valid 분리와 validation 비율을 다시 확인하세요."),
-                "Split" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 학습 불가 / train-valid-test 중복 분리 필요",
-                    failureDetail,
-                    "검증/테스트 이미지는 학습 이미지와 달라야 합니다. 이미지 폴더를 다시 나누거나 split 비율과 샘플 구성을 점검하세요."),
-                "DataYaml" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "\uB370\uC774\uD130\uC14B: \uD559\uC2B5 \uBD88\uAC00 / \uD559\uC2B5 \uC124\uC815 \uD655\uC778 \uD544\uC694",
-                    failureDetail,
-                    "\uB370\uC774\uD130\uC14B \uC810\uAC80 \uBC84\uD2BC\uC73C\uB85C \uD559\uC2B5 \uC124\uC815\uC744 \uB2E4\uC2DC \uC0DD\uC131\uD558\uACE0 \uC800\uC7A5 \uACBD\uB85C\uB97C \uD655\uC778\uD558\uC138\uC694."),
-                "LabelFormat" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 학습 불가 / 라벨 형식 오류",
-                    failureDetail,
-                    "문제가 있는 txt 라벨을 다시 저장하거나 해당 이미지를 다시 라벨링하세요."),
-                "OutputRoot" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 학습 불가 / 저장 경로 확인 필요",
-                    failureDetail,
-                    "\uB370\uC774\uD130\uC14B \uD648\uC5D0\uC11C \uC800\uC7A5 \uD3F4\uB354\uB97C \uD655\uC778\uD558\uACE0 \uC124\uC815\uC744 \uC800\uC7A5\uD558\uC138\uC694."),
-                "Images" => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 학습 불가 / 이미지 폴더 확인 필요",
-                    failureDetail,
-                    "1단계에서 학습 이미지 폴더를 다시 열고, 지원되는 이미지가 있는지 확인하세요."),
-                _ => new YoloTrainingIssuePresentation(
-                    issueKind,
-                    "데이터셋: 학습 불가 / 확인 필요",
-                    failureDetail,
-                    "원인을 확인한 뒤 클래스, 라벨링, 데이터셋 점검 중 맞는 항목으로 이동하세요.")
-            };
+            WpfTrainingChecklistLocalizationSnapshot failureLocalization = WpfTrainingChecklistLocalizationService.BuildFailure(
+                issueKind,
+                firstError,
+                report?.Statistics,
+                failurePurpose);
+            return new YoloTrainingIssuePresentation(
+                issueKind,
+                failureLocalization,
+                WpfTrainingChecklistLocalizationService.BuildFailureAction(issueKind));
         }
 
         private static string BuildReadyDatasetStatusText(
@@ -351,119 +127,38 @@ namespace MvcVisionSystem
             LabelingDatasetPurpose purpose,
             bool hasWarnings)
         {
-            statistics ??= new YoloDatasetStatistics();
-            string readinessText = hasWarnings ? "주의 후 학습 가능" : "학습 가능";
-            string purposeText = BuildDatasetPurposeDisplayName(purpose);
-            int imageCount = statistics.TotalImageCount;
-
-            return purpose switch
-            {
-                LabelingDatasetPurpose.Segmentation =>
-                    $"데이터셋: {purposeText} {readinessText} / 이미지 {imageCount} / {BuildSegmentationPrimaryLabelText(statistics)} / 박스 라벨 {statistics.TotalObjectCount} 보조",
-                LabelingDatasetPurpose.AnomalyDetection =>
-                    $"데이터셋: {purposeText} {readinessText} / 이미지 {imageCount} / 정상 {statistics.AnomalyNormalImageCount} / 이상 {statistics.AnomalyAbnormalImageCount} / 미판정 {statistics.AnomalyUnreviewedImageCount}",
-                _ =>
-                    $"데이터셋: {purposeText} {readinessText} / 이미지 {imageCount} / 박스 라벨 {statistics.TotalObjectCount} / 세그 라벨 {statistics.TotalSegmentationObjectCount} 제외"
-            };
+            return WpfTrainingChecklistLocalizationService
+                .BuildReady(statistics, classCount: 0, purpose: purpose, hasWarnings: hasWarnings)
+                .StatusText;
         }
 
         private static string BuildReadyDatasetDetail(YoloDatasetStatistics statistics, int classCount, LabelingDatasetPurpose purpose)
         {
-            if (statistics == null)
-            {
-                return $"purpose {purpose}, train 0, valid 0, test 0, box labels 0, segment labels 0, classes 0";
-            }
-
-            if (purpose == LabelingDatasetPurpose.AnomalyDetection)
-            {
-                return $"purpose {purpose}, train {statistics.TrainImageCount}, valid {statistics.ValidImageCount}, test {statistics.TestImageCount}, normal {statistics.AnomalyNormalImageCount}, abnormal {statistics.AnomalyAbnormalImageCount}, unreviewed {statistics.AnomalyUnreviewedImageCount}";
-            }
-
-            return $"purpose {purpose}, train {statistics.TrainImageCount}, valid {statistics.ValidImageCount}, test {statistics.TestImageCount}, box labels {statistics.TotalObjectCount} ({statistics.TotalLabelFileCount} files), segment labels {statistics.TotalSegmentationObjectCount} ({statistics.TotalSegmentFileCount} files), masks {statistics.TotalMaskFileCount}, classes {classCount}";
-        }
-
-        private static string BuildSegmentationPrimaryLabelText(YoloDatasetStatistics statistics)
-        {
-            if (statistics == null)
-            {
-                return "세그 라벨 0";
-            }
-
-            if (statistics.TotalSegmentationObjectCount > 0)
-            {
-                return $"세그 라벨 {statistics.TotalSegmentationObjectCount}";
-            }
-
-            return statistics.TotalMaskFileCount > 0
-                ? $"마스크 {statistics.TotalMaskFileCount}파일"
-                : "세그 라벨 0";
+            return WpfTrainingChecklistLocalizationService
+                .BuildReady(statistics, classCount, purpose, hasWarnings: false)
+                .DetailText;
         }
 
         private static string BuildReadyDatasetActionText(LabelingDatasetPurpose purpose)
         {
-            return purpose switch
-            {
-                LabelingDatasetPurpose.Segmentation => "이제 세그멘테이션 학습/export 설정을 확인하고 시작하세요.",
-                LabelingDatasetPurpose.AnomalyDetection => "이제 이상 탐지 학습 설정을 확인하고 시작하세요.",
-                _ => "\uC774\uC81C 5\uB2E8\uACC4 \uBAA8\uB378 \uD559\uC2B5\uC5D0\uC11C \uC124\uC815\uC744 \uD655\uC778\uD558\uACE0 \uC2DC\uC791\uD558\uC138\uC694."
-            };
+            return WpfTrainingChecklistLocalizationService.BuildReadyAction(purpose).ActionText;
         }
 
         private static string BuildQualityWarningActionText(IReadOnlyList<string> warnings)
         {
-            if (warnings == null || warnings.Count == 0)
-            {
-                return "\uC774\uC81C 5\uB2E8\uACC4 \uBAA8\uB378 \uD559\uC2B5\uC5D0\uC11C \uC124\uC815\uC744 \uD655\uC778\uD558\uACE0 \uC2DC\uC791\uD558\uC138\uC694.";
-            }
-
-            return string.Join(" / ", warnings.Take(2).Select(FormatDatasetQualityWarning));
+            return WpfTrainingChecklistLocalizationService.BuildQualityWarningAction(warnings).ActionText;
         }
 
         private static string FormatDatasetQualityWarning(string warning)
         {
-            if (string.IsNullOrWhiteSpace(warning))
-            {
-                return "\uD655\uC778\uC774 \uD544\uC694\uD55C \uB370\uC774\uD130\uC14B \uACBD\uACE0\uAC00 \uC788\uC2B5\uB2C8\uB2E4.";
-            }
-
-            string normalized = warning.Trim();
-            if (normalized.Contains("Test split is empty", StringComparison.OrdinalIgnoreCase))
-            {
-                return "\uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4. \uBAA8\uB378 \uAD50\uCCB4 \uD310\uB2E8 \uC804 1\uC7A5 \uC774\uC0C1 \uD655\uBCF4\uD558\uC138\uC694.";
-            }
-
-            if (normalized.Contains("YOLO split guide", StringComparison.OrdinalIgnoreCase))
-            {
-                return "\uAC80\uC99D\uACFC \uCD5C\uC885 \uAC80\uC99D \uBD84\uD560 \uAE30\uC900\uC744 \uD655\uC778\uD558\uC138\uC694.";
-            }
-
-            return normalized
-                .Replace("train/valid/test", "\uD559\uC2B5/\uAC80\uC99D/\uCD5C\uC885 \uAC80\uC99D", StringComparison.OrdinalIgnoreCase)
-                .Replace("train", "\uD559\uC2B5", StringComparison.OrdinalIgnoreCase)
-                .Replace("valid", "\uAC80\uC99D", StringComparison.OrdinalIgnoreCase)
-                .Replace("test split", "\uCD5C\uC885 \uAC80\uC99D", StringComparison.OrdinalIgnoreCase)
-                .Replace("test", "\uCD5C\uC885", StringComparison.OrdinalIgnoreCase);
+            return WpfTrainingChecklistLocalizationService.FormatQualityWarning(warning);
         }
 
         private static string BuildDatasetFailureDetail(string firstError, YoloDatasetStatistics statistics, LabelingDatasetPurpose purpose)
         {
-            string issue = string.IsNullOrWhiteSpace(firstError) ? "원인 미확인" : firstError;
-            if (statistics == null)
-            {
-                return $"purpose {purpose}, {issue}";
-            }
-
-            return $"purpose {purpose}, {issue} / train {statistics.TrainImageCount}, valid {statistics.ValidImageCount}, test {statistics.TestImageCount}, box labels {statistics.TotalObjectCount}, segment labels {statistics.TotalSegmentationObjectCount}, masks {statistics.TotalMaskFileCount}";
-        }
-
-        private static string BuildDatasetPurposeDisplayName(LabelingDatasetPurpose purpose)
-        {
-            return purpose switch
-            {
-                LabelingDatasetPurpose.Segmentation => "세그멘테이션",
-                LabelingDatasetPurpose.AnomalyDetection => "이상 탐지",
-                _ => "객체 탐지"
-            };
+            return WpfTrainingChecklistLocalizationService
+                .BuildFailure("Unknown", firstError, statistics, purpose)
+                .DetailText;
         }
 
         private static string ClassifyYoloTrainingIssue(IEnumerable<string> errors)
@@ -545,21 +240,27 @@ namespace MvcVisionSystem
 
         private sealed class YoloTrainingIssuePresentation
         {
-            public YoloTrainingIssuePresentation(string issueKind, string statusText, string detailText, string actionText)
+            public YoloTrainingIssuePresentation(
+                string issueKind,
+                WpfTrainingChecklistLocalizationSnapshot localization,
+                WpfTrainingChecklistActionLocalizationSnapshot actionLocalization)
             {
                 IssueKind = issueKind ?? string.Empty;
-                StatusText = statusText ?? string.Empty;
-                DetailText = detailText ?? string.Empty;
-                ActionText = actionText ?? string.Empty;
+                Localization = localization ?? throw new ArgumentNullException(nameof(localization));
+                ActionLocalization = actionLocalization ?? throw new ArgumentNullException(nameof(actionLocalization));
             }
 
             public string IssueKind { get; }
 
-            public string StatusText { get; }
+            public WpfTrainingChecklistLocalizationSnapshot Localization { get; }
 
-            public string DetailText { get; }
+            public WpfTrainingChecklistActionLocalizationSnapshot ActionLocalization { get; }
 
-            public string ActionText { get; }
+            public string StatusText => Localization.StatusText;
+
+            public string DetailText => Localization.DetailText;
+
+            public string ActionText => ActionLocalization.ActionText;
         }
     }
 }

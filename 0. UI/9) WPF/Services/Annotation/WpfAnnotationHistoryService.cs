@@ -307,14 +307,14 @@ namespace MvcVisionSystem
             return pixels;
         }
 
-        private static CClassItem CloneClassItem(CClassItem source)
+        private static LabelClass CloneClassItem(LabelClass source)
         {
             if (source == null)
             {
                 return null;
             }
 
-            return new CClassItem
+            return new LabelClass
             {
                 Text = source.Text ?? string.Empty,
                 DrawColor = source.DrawColor
@@ -525,7 +525,7 @@ namespace MvcVisionSystem
             int renderVersion,
             Rectangle renderDirtyBounds,
             string className,
-            CClassItem classItem,
+            LabelClass classItem,
             string objectId,
             int componentIndex,
             int zOrder,
@@ -544,7 +544,7 @@ namespace MvcVisionSystem
             ClassName = className ?? string.Empty;
             ClassItem = classItem == null
                 ? null
-                : new CClassItem
+                : new LabelClass
                 {
                     Text = classItem.Text ?? string.Empty,
                     DrawColor = classItem.DrawColor
@@ -574,7 +574,7 @@ namespace MvcVisionSystem
 
         public string ClassName { get; }
 
-        public CClassItem ClassItem { get; }
+        public LabelClass ClassItem { get; }
 
         public string ObjectId { get; }
 

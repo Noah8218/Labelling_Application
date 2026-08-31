@@ -24,7 +24,7 @@ namespace MvcVisionSystem
 
         string IWpfTemplateMatchingAutoLabelHost.ActiveAutoLabelImagePath => activeImagePath;
 
-        CData IWpfTemplateMatchingAutoLabelHost.AutoLabelData => global.Data;
+        LabelingProjectData IWpfTemplateMatchingAutoLabelHost.AutoLabelData => global.Data;
 
         int IWpfTemplateMatchingAutoLabelHost.MaximumTemplateMatchingCandidateCount
         {
@@ -203,7 +203,7 @@ namespace MvcVisionSystem
             return "Defect";
         }
 
-        CClassItem IWpfTemplateMatchingAutoLabelHost.EnsureAutoLabelClassItem(string className)
+        LabelClass IWpfTemplateMatchingAutoLabelHost.EnsureAutoLabelClassItem(string className)
         {
             return EnsureClassItem(className);
         }
@@ -307,7 +307,7 @@ namespace MvcVisionSystem
             }
 
             string imageName = Path.GetFileNameWithoutExtension(item.ImagePath);
-            ApplyReviewStatusToItem(item, imageReviewStatus.SetDetectionRequested(item.ImagePath, imageName));
+            ApplyReviewStatusToItem(item, imageQualityReviewWorkflowService.SetDetectionRequested(item.ImagePath, imageName));
         }
 
         void IWpfTemplateMatchingAutoLabelHost.UpdateAutoLabelBatchProgress(
@@ -335,26 +335,26 @@ namespace MvcVisionSystem
             string imageName = Path.GetFileNameWithoutExtension(item.ImagePath);
             if (result.Saved)
             {
-                status = imageReviewStatus.RefreshLabelStatusAndReviewState(
+                status = imageQualityReviewWorkflowService.RefreshLabelStatusAndReviewState(
                     item.ImagePath,
                     result.ImageSize,
                     global.Data,
                     hasActiveCandidates: false)
-                    ?? imageReviewStatus.MarkConfirmed(item.ImagePath, imageName);
+                    ?? imageQualityReviewWorkflowService.MarkConfirmed(item.ImagePath, imageName);
             }
             else if (result.NoCandidate)
             {
-                status = imageReviewStatus.SetDetectionNoCandidates(item.ImagePath, imageName);
+                status = imageQualityReviewWorkflowService.SetDetectionNoCandidates(item.ImagePath, imageName);
             }
             else
             {
-                status = imageReviewStatus.SetDetectionFailed(item.ImagePath, imageName, result.Message);
+                status = imageQualityReviewWorkflowService.SetDetectionFailed(item.ImagePath, imageName, result.Message);
             }
 
             ApplyReviewStatusToItem(item, status);
             if (saveReviewStatus)
             {
-                imageReviewStatus.SaveReviewStatus(global.Data);
+                imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
             }
 
             UpdateImageQueueStatusText();
@@ -362,7 +362,7 @@ namespace MvcVisionSystem
 
         void IWpfTemplateMatchingAutoLabelHost.SaveAutoLabelReviewStatus()
         {
-            imageReviewStatus.SaveReviewStatus(global.Data);
+            imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
         }
 
         void IWpfTemplateMatchingAutoLabelHost.CompleteAutoLabelBatch(
@@ -447,7 +447,7 @@ namespace MvcVisionSystem
             if (IsSegmentationDatasetPurposeActive())
             {
                 string className = GetCandidateClassName(labelsToAdd[0].Candidate);
-                CClassItem classItem = EnsureClassItem(className);
+                LabelClass classItem = EnsureClassItem(className);
                 IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segmentsByClass =
                     TemplateMatchingBatchAutoLabelService.BuildSegmentsByClass(
                         classItem,

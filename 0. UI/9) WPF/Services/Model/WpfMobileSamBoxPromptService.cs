@@ -53,6 +53,8 @@ namespace MvcVisionSystem
             IReadOnlyList<WpfSmartMaskPromptPoint> promptPoints = null,
             int maximumPolygonPoints = 96)
         {
+            currentSettings ??= new PythonModelSettings();
+            PythonModelRuntimePathResolver.ApplyPathDefaults(currentSettings);
             string normalizedImagePath = string.IsNullOrWhiteSpace(imagePath)
                 ? string.Empty
                 : Path.GetFullPath(imagePath);

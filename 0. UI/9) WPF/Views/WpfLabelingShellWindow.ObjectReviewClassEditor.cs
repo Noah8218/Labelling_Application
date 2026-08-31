@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
+using MvcVisionSystem.Yolo;
 using OpenVisionLab.Mvvm;
 
 namespace MvcVisionSystem
@@ -57,7 +58,7 @@ namespace MvcVisionSystem
             }
 
             return global.Data.ClassNamedList
-                .Where(item => item != null && !string.IsNullOrWhiteSpace(item.Text))
+                .Where(ClassCatalogService.IsActiveClass)
                 .Select(item => item.Text)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)

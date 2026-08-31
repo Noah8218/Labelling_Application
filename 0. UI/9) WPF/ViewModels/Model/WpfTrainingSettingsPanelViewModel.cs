@@ -126,12 +126,12 @@ namespace MvcVisionSystem
 
         public IReadOnlyList<string> TrainingModelOptions
             => IsLegacyYoloV5TrainingSelection
-                ? Enum.GetNames(typeof(CYolov5TrainingParam.Cfg))
+                ? Enum.GetNames(typeof(YoloV5TrainingParameters.Cfg))
                 : new[] { TrainingModelDisplayText };
 
         public IReadOnlyList<string> TrainingWeightOptions
             => IsLegacyYoloV5TrainingSelection
-                ? Enum.GetNames(typeof(CYolov5TrainingParam.Weight))
+                ? Enum.GetNames(typeof(YoloV5TrainingParameters.Weight))
                 : new[] { TrainingStartWeightDisplayText };
 
         public string SelectedTrainingModel
@@ -751,7 +751,7 @@ namespace MvcVisionSystem
             TrainingReadinessText = "\uCD5C\uC885 \uAC80\uC99D \uC900\uBE44: \uC0C8\uB85C \uC800\uC7A5\uD558\uB294 \uC774\uBBF8\uC9C0\uB294 test\uC5D0\uB9CC \uC800\uC7A5\uB429\uB2C8\uB2E4. \uB3C5\uB9BD \uC774\uBBF8\uC9C0\uB97C \uBD88\uB7EC\uC640 \uB77C\uBCA8\uC744 \uC800\uC7A5\uD55C \uB4A4 \uBE60\uB978 \uCD94\uCC9C \uC801\uC6A9\uC73C\uB85C \uD559\uC2B5 \uBD84\uD560\uC5D0 \uB3CC\uC544\uC624\uC138\uC694.";
         }
 
-        public void ApplyTo(TrainingSettings training, YoloDatasetSettings dataset, CYolov5TrainingParam trainingParam)
+        public void ApplyTo(TrainingSettings training, YoloDatasetSettings dataset, YoloV5TrainingParameters trainingParam)
         {
             if (training == null)
             {
