@@ -14,11 +14,21 @@ namespace MvcVisionSystem
         // Workflow command handlers are grouped away from the shell view plumbing so labeling flow changes are easier to audit.
         private void ExecuteLoadSampleCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             TryLoadStartupSampleImage();
         }
 
         private void ExecuteAddSampleRoiCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (activeImageSize.IsEmpty)
             {
                 AppendLog("박스 라벨을 추가하려면 이미지를 먼저 불러오세요.");
@@ -44,6 +54,11 @@ namespace MvcVisionSystem
 
         private void ExecuteSaveAnnotationsCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string completedImagePath = activeImagePath;
             if (SaveCurrentAnnotations(out int savedCount))
             {
@@ -74,6 +89,11 @@ namespace MvcVisionSystem
 
         private void ExecuteCompleteNoObjectAndNextCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (activeImageBitmap == null || activeImageSize.IsEmpty)
             {
                 AppendLog("\uAC1D\uCCB4 \uC5C6\uC74C\uC73C\uB85C \uC644\uB8CC\uD560 \uC774\uBBF8\uC9C0\uB97C \uBA3C\uC800 \uC5F4\uC5B4\uC8FC\uC138\uC694.");

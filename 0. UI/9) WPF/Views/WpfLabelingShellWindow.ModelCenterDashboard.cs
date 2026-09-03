@@ -73,7 +73,7 @@ namespace MvcVisionSystem
 
         private async void ExecuteRunAnomalyEvaluationCommand()
         {
-            if (isAnomalyEvaluationRunning)
+            if (isApplicationCloseApproved || isAnomalyEvaluationRunning)
             {
                 return;
             }
@@ -107,10 +107,14 @@ namespace MvcVisionSystem
                 WpfAnomalyClassificationEvaluationRunResult result = await anomalyClassificationEvaluationRunService
                     .RunAsync(request)
                     .ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
 
                 if (!result.Succeeded || string.IsNullOrWhiteSpace(result.SummaryPath))
                 {
-                    string errorText = BuildAnomalyEvaluationFailureText(result);
+                    string errorText = WpfAnomalyEvaluationFailurePresentationService.Build(result);
                     SetYoloCommandStatus(errorText, isBusy: false);
                     AppendLog(errorText);
                     return;
@@ -133,14 +137,20 @@ namespace MvcVisionSystem
             }
             catch (Exception ex)
             {
-                string errorText = $"\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00 \uC2E4\uD328: {ex.Message}";
-                SetYoloCommandStatus(errorText, isBusy: false);
-                AppendLog(errorText);
+                if (!isApplicationCloseApproved)
+                {
+                    string errorText = $"\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00 \uC2E4\uD328: {ex.Message}";
+                    SetYoloCommandStatus(errorText, isBusy: false);
+                    AppendLog(errorText);
+                }
             }
             finally
             {
                 isAnomalyEvaluationRunning = false;
-                UpdateYoloCommandButtons();
+                if (!isApplicationCloseApproved)
+                {
+                    UpdateYoloCommandButtons();
+                }
             }
         }
 
@@ -208,25 +218,6 @@ namespace MvcVisionSystem
             ShellViewModel?.ClearModelCenterAnomalyEvaluationState();
             SetYoloCommandStatus("\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00 summary\uB97C \uC77D\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. JSON \uD30C\uC77C\uACFC \uD3C9\uAC00 \uACB0\uACFC\uB97C \uD655\uC778\uD558\uC138\uC694.", isBusy: false);
             AppendLog($"Anomaly classification evaluation summary load failed: {selectedPath}");
-        }
-
-        private static string BuildAnomalyEvaluationFailureText(WpfAnomalyClassificationEvaluationRunResult result)
-        {
-            string detail = result?.Error ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(detail))
-            {
-                detail = result?.Output ?? string.Empty;
-            }
-
-            if (string.IsNullOrWhiteSpace(detail))
-            {
-                return "\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00 \uC2E4\uD328: \uC2E4\uD589 \uACB0\uACFC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.";
-            }
-
-            string firstLine = detail
-                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                .FirstOrDefault() ?? detail.Trim();
-            return $"\uC774\uC0C1 \uBD84\uB958 \uD3C9\uAC00 \uC2E4\uD328: {firstLine}";
         }
 
         private string ResolveModelCenterAnomalyEvaluationSummaryPath(string outputRootPath)

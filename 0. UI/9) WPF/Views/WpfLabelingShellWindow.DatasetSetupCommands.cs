@@ -12,6 +12,11 @@ namespace MvcVisionSystem
     {
         private void ExecuteStartDatasetSetupCommand(object selectedPurpose)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             try
             {
                 WpfDatasetSetupWizardViewModel wizardViewModel = CreateDatasetSetupWizardViewModel(selectedPurpose);
@@ -62,7 +67,7 @@ namespace MvcVisionSystem
                     () => ExecuteBrowseDatasetSetupImageRootCommand(wizardViewModel),
                     () => ExecuteBrowseDatasetSetupWeightsCommand(wizardViewModel));
 
-                if (wizard.ShowDialog() == true && acceptedRequest != null)
+                if (wizard.ShowDialog() == true && acceptedRequest != null && !isApplicationCloseApproved)
                 {
                     ApplyDatasetSetupRequest(acceptedRequest);
                 }
@@ -78,6 +83,11 @@ namespace MvcVisionSystem
 
         private async void ExecuteChangeDatasetCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             // Dataset change is intentionally a selector-first flow. Opening the
             // creation wizard directly made "change dataset" feel like "create dataset".
             AppendLog("\uB370\uC774\uD130\uC14B \uC120\uD0DD \uCC3D \uC5F4\uAE30");
@@ -118,6 +128,11 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (createNewRequested)
             {
                 ExecuteStartDatasetSetupCommand(LearningWorkflowViewModel?.SelectedDatasetPurposeMode);
@@ -137,6 +152,11 @@ namespace MvcVisionSystem
             ProjectConfigViewModel.RecipeName = recipeName.Trim();
             ProjectConfigViewModel.SelectedRecipeName = recipeName.Trim();
             if (!await ApplyProjectRecipeFromPanelAsync())
+            {
+                return;
+            }
+
+            if (isApplicationCloseApproved)
             {
                 return;
             }
@@ -202,6 +222,11 @@ namespace MvcVisionSystem
 
         private void ExecuteOpenDatasetRootFolderCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string outputRootPath = global.Data?.OutputRootPath ?? string.Empty;
             if (string.IsNullOrWhiteSpace(outputRootPath))
             {
@@ -366,35 +391,58 @@ namespace MvcVisionSystem
 
         private void ExecuteBrowseDatasetSetupOutputRootCommand(WpfDatasetSetupWizardViewModel viewModel)
         {
-            if (viewModel == null)
+            if (isApplicationCloseApproved || viewModel == null)
             {
                 return;
             }
 
             if (TryPickFolder("\uB370\uC774\uD130\uC14B \uC800\uC7A5 \uD3F4\uB354 \uC120\uD0DD", viewModel.OutputRootPath, out string selectedPath))
             {
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 viewModel.OutputRootPath = selectedPath;
             }
         }
 
         private void ExecuteBrowseDatasetSetupImageRootCommand(WpfDatasetSetupWizardViewModel viewModel)
         {
-            if (viewModel != null
-                && TryPickFolder("원본 이미지 폴더 선택", viewModel.ImageRootPath, out string selectedPath))
+            if (isApplicationCloseApproved || viewModel == null)
             {
+                return;
+            }
+
+            if (TryPickFolder("원본 이미지 폴더 선택", viewModel.ImageRootPath, out string selectedPath))
+            {
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 viewModel.ImageRootPath = selectedPath;
             }
         }
 
         private void ExecuteBrowseDatasetSetupWeightsCommand(WpfDatasetSetupWizardViewModel viewModel)
         {
-            if (viewModel != null
-                && TryPickFile(
-                    "초기 검사 모델 파일 선택",
-                    "모델 파일 (*.pt;*.pth;*.onnx)|*.pt;*.pth;*.onnx|All files (*.*)|*.*",
-                    viewModel.WeightsPath,
-                    out string selectedPath))
+            if (isApplicationCloseApproved || viewModel == null)
             {
+                return;
+            }
+
+            if (TryPickFile(
+                "초기 검사 모델 파일 선택",
+                "모델 파일 (*.pt;*.pth;*.onnx)|*.pt;*.pth;*.onnx|All files (*.*)|*.*",
+                viewModel.WeightsPath,
+                out string selectedPath))
+            {
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 viewModel.WeightsPath = selectedPath;
             }
         }

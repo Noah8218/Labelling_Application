@@ -47,7 +47,7 @@ namespace MvcVisionSystem
                 return false;
             }
 
-            DrawingRectangle candidateBounds = GetClippedCandidateBounds(candidate);
+            DrawingRectangle candidateBounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
             WpfCandidateOverlapInfo overlap = GetCandidateOverlapInfo(candidateBounds);
             if (!overlap.HasCurrentObject)
             {
@@ -73,7 +73,7 @@ namespace MvcVisionSystem
                 MainCanvasViewModel.ImageViewer.FitToRect(BuildCandidateFocusRect(overlap.Bounds));
             }
 
-            SetModelStatus($"\uD604\uC7AC \uB77C\uBCA8 \uC120\uD0DD: {overlap.Label}  {FormatBoundsCompact(overlap.Bounds)}");
+            SetModelStatus($"\uD604\uC7AC \uB77C\uBCA8 \uC120\uD0DD: {overlap.Label}  {WpfCandidateReviewPresenter.FormatBoundsCompact(overlap.Bounds)}");
             return true;
         }
 
@@ -89,7 +89,7 @@ namespace MvcVisionSystem
                 return false;
             }
 
-            DrawingRectangle bounds = GetClippedCandidateBounds(candidate);
+            DrawingRectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
             if (bounds.IsEmpty || bounds.Width <= 0 || bounds.Height <= 0)
             {
                 if (logIfMissing)

@@ -43,24 +43,38 @@ namespace MvcVisionSystem
     /// <summary>
     /// Creates the persisted dataset contract from a validated wizard request.
     /// It deliberately has no WPF window, view-model, or LabelingApplicationState dependency so
-    /// the shell can remain an adapter for UI state and navigation.
+    /// the shell can remain an adapter for UI state and navigation. Paired Recipe/YAML persistence
+    /// is delegated to the concrete project Recipe session owner.
     /// </summary>
     public sealed class WpfDatasetSetupExecutionService
     {
         private readonly WpfDatasetSetupPathService pathService;
         private readonly WpfDatasetSetupDataService dataService;
+        private readonly WpfProjectRecipeSessionService projectRecipeSessionService;
 
         public WpfDatasetSetupExecutionService()
-            : this(new WpfDatasetSetupPathService(), new WpfDatasetSetupDataService())
+            : this(
+                new WpfDatasetSetupPathService(),
+                new WpfDatasetSetupDataService(),
+                new WpfProjectRecipeSessionService())
         {
         }
 
         public WpfDatasetSetupExecutionService(
             WpfDatasetSetupPathService pathService,
             WpfDatasetSetupDataService dataService)
+            : this(pathService, dataService, new WpfProjectRecipeSessionService())
+        {
+        }
+
+        public WpfDatasetSetupExecutionService(
+            WpfDatasetSetupPathService pathService,
+            WpfDatasetSetupDataService dataService,
+            WpfProjectRecipeSessionService projectRecipeSessionService)
         {
             this.pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
             this.dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
+            this.projectRecipeSessionService = projectRecipeSessionService ?? throw new ArgumentNullException(nameof(projectRecipeSessionService));
         }
 
         public WpfDatasetSetupExecutionResult Execute(
@@ -119,7 +133,11 @@ namespace MvcVisionSystem
                     : data.TrainImagesPath;
             data.ProjectSettings.ImageRootPath = imageRootPath;
             PythonModelRuntimePathResolver.ApplyDefaults(data.ProjectSettings);
-            RecipeConfigurationSaveResult saveResult = data.SaveConfigAndYoloDataYaml(recipeName);
+            RecipeConfigurationSaveResult saveResult = projectRecipeSessionService.SaveConfiguration(
+                data,
+                recipeName,
+                updateYoloDataYaml: true,
+                refreshDatasetVersion: true);
             if (!saveResult.IsSuccess)
             {
                 result.Failure = WpfDatasetSetupExecutionFailure.RecipePersistence;

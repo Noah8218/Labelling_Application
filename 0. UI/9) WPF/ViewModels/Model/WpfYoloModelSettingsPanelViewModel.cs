@@ -701,6 +701,31 @@ namespace MvcVisionSystem
             RefreshDirtyState();
         }
 
+        /// <summary>
+        /// Builds the runtime-settings snapshot used by connection and package
+        /// commands. The editor owns the values currently being edited; the
+        /// applied settings provide the remaining runtime values without being
+        /// mutated.
+        /// </summary>
+        public PythonModelSettings CreateSettingsSnapshot(PythonModelSettings fallbackSettings = null)
+        {
+            PythonModelSettings fallback = fallbackSettings ?? new PythonModelSettings();
+            return new PythonModelSettings
+            {
+                PythonExecutablePath = PythonExecutablePath ?? fallback.PythonExecutablePath,
+                ModelEngine = SelectedModelEngine ?? fallback.ModelEngine,
+                ProjectRootPath = ProjectRootPath ?? fallback.ProjectRootPath,
+                ClientScriptPath = ClientScriptPath ?? fallback.ClientScriptPath,
+                WeightsPath = WeightsPath ?? fallback.WeightsPath,
+                ImageRootPath = ImageRootPath ?? fallback.ImageRootPath,
+                MinimumDetectionConfidence = fallback.MinimumDetectionConfidence,
+                MaximumDetectionCandidates = fallback.MaximumDetectionCandidates,
+                InferenceImageSize = fallback.InferenceImageSize,
+                DetectionTimeoutSeconds = fallback.DetectionTimeoutSeconds,
+                AutoStartClient = fallback.AutoStartClient
+            };
+        }
+
         public void ApplyTo(PythonModelSettings settings)
         {
             if (settings == null)
@@ -1065,17 +1090,7 @@ namespace MvcVisionSystem
         }
 
         private PythonModelSettings CreateCurrentSettingsSnapshot()
-        {
-            return new PythonModelSettings
-            {
-                PythonExecutablePath = PythonExecutablePath,
-                ModelEngine = SelectedModelEngine,
-                ProjectRootPath = ProjectRootPath,
-                ClientScriptPath = ClientScriptPath,
-                WeightsPath = WeightsPath,
-                ImageRootPath = ImageRootPath
-            };
-        }
+            => CreateSettingsSnapshot();
 
         private static string FormatPathLeaf(string path, string fallback)
         {

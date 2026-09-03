@@ -1,4 +1,6 @@
 using MvcVisionSystem._1._Core;
+using MvcVisionSystem._3._Communication.TCP;
+using OpenVisionLab.ImageCanvas.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,6 +12,132 @@ namespace MvcVisionSystem
 {
     public sealed class WpfCandidateReviewPresentationService
     {
+        public static YoloWorkerSmokeCandidate FromDefect(DefectInfo defect, int index)
+        {
+            return new YoloWorkerSmokeCandidate
+            {
+                Index = index,
+                ClassName = string.IsNullOrWhiteSpace(defect?.ClassName) ? "Defect" : defect.ClassName,
+                Confidence = defect?.Confidence ?? 0D,
+                X = defect?.X ?? 0D,
+                Y = defect?.Y ?? 0D,
+                Width = defect?.Width ?? 0D,
+                Height = defect?.Height ?? 0D,
+                CandidateType = defect?.CandidateType ?? string.Empty,
+                PredictionType = defect?.PredictionType ?? string.Empty,
+                ImageLevel = defect?.ImageLevel == true,
+                AnomalyScore = defect?.AnomalyScore,
+                AnomalyThreshold = defect?.AnomalyThreshold,
+                HeatmapPath = defect?.HeatmapPath ?? string.Empty,
+                SegmentationType = defect?.SegmentationType ?? string.Empty,
+                PolygonPoints = defect?.PolygonPoints?.ToArray() ?? Array.Empty<DetectionPolygonPoint>(),
+                NormalizedPolygonPoints = defect?.NormalizedPolygonPoints?.ToArray() ?? Array.Empty<DetectionPolygonPoint>()
+            };
+        }
+
+        public static Rectangle ClipCandidateBounds(YoloWorkerSmokeCandidate candidate, Size imageSize)
+        {
+            if (candidate == null)
+            {
+                return Rectangle.Empty;
+            }
+
+            Rectangle bounds = candidate.ToRectangle();
+            if (bounds.IsEmpty || imageSize.IsEmpty)
+            {
+                return bounds;
+            }
+
+            return Rectangle.Intersect(
+                bounds,
+                new Rectangle(0, 0, imageSize.Width, imageSize.Height));
+        }
+
+        public static IReadOnlyList<PointF> GetCandidateContourPoints(
+            YoloWorkerSmokeCandidate candidate,
+            Size imageSize)
+        {
+            if (candidate == null || imageSize.IsEmpty)
+            {
+                return Array.Empty<PointF>();
+            }
+
+            IReadOnlyList<DetectionPolygonPoint> sourcePoints = candidate.PolygonPoints;
+            bool normalized = sourcePoints == null || sourcePoints.Count < 3;
+            if (normalized)
+            {
+                sourcePoints = candidate.NormalizedPolygonPoints;
+            }
+
+            if (sourcePoints == null || sourcePoints.Count < 3)
+            {
+                return Array.Empty<PointF>();
+            }
+
+            List<PointF> points = sourcePoints
+                .Where(point => point != null && float.IsFinite(point.X) && float.IsFinite(point.Y))
+                .Select(point => new PointF(
+                    Math.Clamp(normalized ? point.X * imageSize.Width : point.X, 0F, imageSize.Width - 1F),
+                    Math.Clamp(normalized ? point.Y * imageSize.Height : point.Y, 0F, imageSize.Height - 1F)))
+                .ToList();
+            return points.Count >= 3 ? points : Array.Empty<PointF>();
+        }
+
+        public static IReadOnlyList<RoiImageCanvasDetectionOverlay> BuildDetectionOverlays(
+            IEnumerable<YoloWorkerSmokeCandidate> candidates,
+            YoloWorkerSmokeCandidate selectedCandidate,
+            Size imageSize,
+            Func<YoloWorkerSmokeCandidate, bool> isConfirmable)
+        {
+            return (candidates ?? Array.Empty<YoloWorkerSmokeCandidate>())
+                .Where(candidate => candidate != null)
+                .Select((candidate, index) =>
+                {
+                    IReadOnlyList<PointF> contourPoints = GetCandidateContourPoints(candidate, imageSize);
+                    bool isContourOnly = contourPoints.Count >= 3
+                        || string.Equals(candidate.SegmentationType, "polygon", StringComparison.OrdinalIgnoreCase);
+                    bool isSelected = ReferenceEquals(candidate, selectedCandidate);
+                    bool confirmable = isConfirmable != null && isConfirmable(candidate);
+                    return new RoiImageCanvasDetectionOverlay
+                    {
+                        Index = index,
+                        Bounds = ClipCandidateBounds(candidate, imageSize),
+                        ContourPoints = contourPoints,
+                        IsContourOnly = isContourOnly,
+                        Label = WpfCandidateReviewPresenter.BuildDetectionOverlayLabel(candidate, index + 1),
+                        IsSelected = isSelected,
+                        Color = isSelected
+                            ? Color.FromArgb(80, 180, 255)
+                            : confirmable
+                            ? Color.FromArgb(36, 211, 102)
+                            : Color.FromArgb(255, 193, 7)
+                    };
+                })
+                .Where(overlay => !overlay.Bounds.IsEmpty)
+                .ToList();
+        }
+
+        public static WpfCandidateOverlapInfo FindBestOverlap(
+            Rectangle candidateBounds,
+            IEnumerable<WpfCandidateOverlapSource> sources)
+        {
+            WpfCandidateOverlapSource best = default;
+            double bestIou = 0D;
+            foreach (WpfCandidateOverlapSource source in sources ?? Array.Empty<WpfCandidateOverlapSource>())
+            {
+                double iou = WpfCandidateReviewPresenter.CalculateIntersectionOverUnion(candidateBounds, source.Bounds);
+                if (iou > bestIou)
+                {
+                    bestIou = iou;
+                    best = source;
+                }
+            }
+
+            return bestIou <= 0D
+                ? new WpfCandidateOverlapInfo(string.Empty, Rectangle.Empty, 0D)
+                : new WpfCandidateOverlapInfo(best.Label, best.Bounds, bestIou, best.CurrentObjectRef);
+        }
+
         public WpfCandidateReviewListPresentation BuildListPresentation(
             IReadOnlyList<YoloWorkerSmokeCandidate> pendingCandidates,
             IReadOnlyList<YoloWorkerSmokeCandidate> visibleCandidates,
@@ -165,6 +293,25 @@ namespace MvcVisionSystem
 
             return -1;
         }
+    }
+
+    public readonly struct WpfCandidateOverlapSource
+    {
+        public WpfCandidateOverlapSource(
+            string label,
+            Rectangle bounds,
+            WpfObjectReviewItemRef currentObjectRef)
+        {
+            Label = label ?? string.Empty;
+            Bounds = bounds;
+            CurrentObjectRef = currentObjectRef;
+        }
+
+        public string Label { get; }
+
+        public Rectangle Bounds { get; }
+
+        public WpfObjectReviewItemRef CurrentObjectRef { get; }
     }
 
     public sealed class WpfCandidateReviewListPresentation

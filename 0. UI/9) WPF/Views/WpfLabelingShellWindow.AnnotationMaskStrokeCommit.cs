@@ -96,11 +96,21 @@ namespace MvcVisionSystem
 
         private void MaskStrokeCommitQueueTimer_Tick(object sender, EventArgs e)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             ProcessQueuedMaskStrokeCommits();
         }
 
         private void ProcessQueuedMaskStrokeCommits()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (queuedMaskStrokeCommits.Count == 0)
             {
                 maskStrokeCommitQueueTimer.Stop();
@@ -134,6 +144,11 @@ namespace MvcVisionSystem
 
         private void FlushQueuedMaskStrokeCommits()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (!Dispatcher.CheckAccess())
             {
                 Dispatcher.Invoke(new Action(FlushQueuedMaskStrokeCommits));
@@ -178,7 +193,7 @@ namespace MvcVisionSystem
             maskStrokeCommitQueueTimer.Stop();
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (!isMaskStrokeToolEndFlushScheduled)
+                if (isApplicationCloseApproved || !isMaskStrokeToolEndFlushScheduled)
                 {
                     return;
                 }
@@ -476,6 +491,11 @@ namespace MvcVisionSystem
             // wheel/pan input queued right after release keeps the viewport responsive.
             Dispatcher.BeginInvoke(new Action(() =>
             {
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 // Rapid mask painting must not force the right panel away from the
                 // active guide/tool tab; only the existing object-review view model
                 // receives incremental row data.
@@ -532,6 +552,11 @@ namespace MvcVisionSystem
         private void MaskStrokePreviewCommitSwapTimer_Tick(object sender, EventArgs e)
         {
             maskStrokePreviewCommitSwapTimer.Stop();
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (activeMaskStrokeInProgress)
             {
                 return;

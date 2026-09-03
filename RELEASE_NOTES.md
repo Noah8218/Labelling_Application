@@ -1,5 +1,17 @@
 # Release Notes
 
+## 0.3.1 — 2026-09-04
+
+- Continued the WPF Shell refactor by moving independently testable presentation,
+  catalog, persistence-adapter, and workflow policy slices to concrete owners;
+  the remaining Canvas pointer/rendering and Window lifecycle code stays in the
+  View where WPF requires it.
+- Added close-entry protection for long-running commands and late Canvas/ROI/
+  detection callbacks so shutdown cannot start new mutation work.
+- Preserved the existing annotation, Recipe, Dataset Version, model-state,
+  Python-process, and public file-format contracts. This is a compatible PATCH
+  candidate; runtime WPF/DPI/GPU/field-quality evidence remains a separate gate.
+
 ## 0.3.0 — 2026-08-31
 
 - Restored and versioned the integrated OpenVisionLab Labeling Studio workflow

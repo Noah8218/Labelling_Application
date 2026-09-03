@@ -272,7 +272,7 @@ namespace MvcVisionSystem
                 SynchronizeAnnotationToolSelection(fallback);
             }
 
-            string purposeName = FormatDatasetPurposeName(GetCurrentDatasetPurpose());
+            string purposeName = WpfDatasetContextPresentationService.FormatPurposeName(GetCurrentDatasetPurpose());
             string toolName = LearningWorkflowViewModel?.AnnotationTools.FirstOrDefault(item => item.Tool == tool)?.Text
                 ?? tool.ToString();
             SetModelStatus($"\uD604\uC7AC \uB370\uC774\uD130\uC14B \uBAA9\uC801({purposeName})\uC5D0\uC11C\uB294 {toolName} \uB3C4\uAD6C\uB97C \uC0AC\uC6A9\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.");

@@ -15,13 +15,13 @@ namespace MvcVisionSystem
         private readonly SemaphoreSlim applyGate = new SemaphoreSlim(1, 1);
         private long applyRequestVersion;
 
-        public string Save(LabelingProjectData data, string recipeName)
+        public string Save(LabelingProjectData data, string recipeName, bool refreshDatasetVersion = true)
         {
-            ArgumentNullException.ThrowIfNull(data);
-            data.ProjectSettings ??= new LabelingProjectSettings();
-            PythonModelRuntimePathResolver.ApplyDefaults(data.ProjectSettings);
-            Recipe.InitDirectory(recipeName);
-            RecipeConfigurationSaveResult result = data.SaveConfig(recipeName);
+            RecipeConfigurationSaveResult result = SaveConfiguration(
+                data,
+                recipeName,
+                updateYoloDataYaml: false,
+                refreshDatasetVersion: refreshDatasetVersion);
             if (!result.IsSuccess)
             {
                 throw new IOException($"Recipe configuration could not be saved: {result.ErrorMessage}");
@@ -30,6 +30,21 @@ namespace MvcVisionSystem
             return WpfProjectRecipeService.BuildConfigPath(
                 WpfProjectRecipeService.GetRecipeRootDirectory(),
                 recipeName);
+        }
+
+        public RecipeConfigurationSaveResult SaveConfiguration(
+            LabelingProjectData data,
+            string recipeName,
+            bool updateYoloDataYaml,
+            bool refreshDatasetVersion = true)
+        {
+            ArgumentNullException.ThrowIfNull(data);
+            data.ProjectSettings ??= new LabelingProjectSettings();
+            PythonModelRuntimePathResolver.ApplyDefaults(data.ProjectSettings);
+            Recipe.InitDirectory(recipeName);
+            return updateYoloDataYaml
+                ? data.SaveConfigAndYoloDataYaml(recipeName, refreshDatasetVersion)
+                : data.SaveConfig(recipeName, refreshDatasetVersion);
         }
 
         public string Apply(LabelingApplicationState application, string recipeName)

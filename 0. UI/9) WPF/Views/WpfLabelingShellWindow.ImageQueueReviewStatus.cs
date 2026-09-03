@@ -311,6 +311,11 @@ namespace MvcVisionSystem
 
         private void ExecuteExportQualityReviewReportCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (!IsLabelQualityReviewPurpose())
             {
                 SetModelStatus("QA 보고서는 Detection/Segmentation 데이터셋에서 내보낼 수 있습니다.");
@@ -338,6 +343,11 @@ namespace MvcVisionSystem
 
         private void SetActiveImageQualityReviewState(YoloImageQualityReviewState state)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (!IsLabelQualityReviewPurpose() || string.IsNullOrWhiteSpace(activeImagePath))
             {
                 AppendLog("품질 검수 상태를 변경할 Detection/Segmentation 이미지를 먼저 여세요.");
@@ -452,6 +462,11 @@ namespace MvcVisionSystem
 
         private void MarkActiveAnomalyImageReviewState(AnomalyImageReviewState state)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (!IsAnomalyDatasetPurpose() || string.IsNullOrWhiteSpace(activeImagePath))
             {
                 return;
@@ -473,6 +488,11 @@ namespace MvcVisionSystem
 
         private void ExecuteClearActiveAnomalyReviewCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (!IsAnomalyDatasetPurpose() || string.IsNullOrWhiteSpace(activeImagePath))
             {
                 return;
@@ -485,6 +505,11 @@ namespace MvcVisionSystem
 
         private void MarkActiveAnomalyImageAndOpenNext(AnomalyImageReviewState state)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (!IsAnomalyDatasetPurpose() || string.IsNullOrWhiteSpace(activeImagePath))
             {
                 return;

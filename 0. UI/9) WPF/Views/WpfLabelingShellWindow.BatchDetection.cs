@@ -1,5 +1,7 @@
+using MvcVisionSystem._1._Core;
 using MvcVisionSystem.Yolo;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace MvcVisionSystem
@@ -81,8 +83,82 @@ namespace MvcVisionSystem
 
         private void ExecuteStopBatchQueueCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             batchDetectionCts?.Cancel();
             AppendLog("\uC77C\uAD04 \uAC80\uC0AC \uC911\uC9C0\uB97C \uC694\uCCAD\uD588\uC2B5\uB2C8\uB2E4.");
+        }
+
+        // Queue result and progress projection stay beside the batch commands;
+        // asynchronous execution/lifetime remains in BatchDetectionExecution.cs.
+        private void ApplyDetectionResultToQueueItem(
+            WpfImageQueueItem item,
+            YoloWorkerSmokeTestResult result,
+            bool saveReviewStatus = true,
+            bool refreshQueueView = true,
+            bool updateQueueStatusText = true)
+        {
+            if (item == null || result == null)
+            {
+                return;
+            }
+
+            string imageName = Path.GetFileNameWithoutExtension(item.ImagePath);
+            YoloImageReviewStatus status = result.Succeeded
+                ? result.CandidateCount > 0
+                    ? imageQualityReviewWorkflowService.SetDetectionCandidates(item.ImagePath, imageName, result.CandidateCount)
+                    : imageQualityReviewWorkflowService.SetDetectionNoCandidates(item.ImagePath, imageName)
+                : imageQualityReviewWorkflowService.SetDetectionFailed(item.ImagePath, imageName, result.Summary);
+            ApplyReviewStatusToItem(item, status);
+            ApplyAnomalyClassificationToImage(item.ImagePath, imageName, result.Candidates, saveReviewStatus);
+            if (saveReviewStatus)
+            {
+                imageQualityReviewWorkflowService.SaveReviewStatus(global.Data);
+            }
+
+            if (refreshQueueView)
+            {
+                imageQueueView?.Refresh();
+            }
+
+            if (updateQueueStatusText)
+            {
+                UpdateImageQueueStatusText();
+            }
+        }
+
+        private IReadOnlyList<WpfImageQueueItem> GetVisibleQueueItems()
+        {
+            return imageQueueView == null
+                ? imageQueueItems.ToList()
+                : imageQueueView.Cast<object>().OfType<WpfImageQueueItem>().ToList();
+        }
+
+        private void UpdateBatchDetectionControls(string scopeText = "", string currentFileName = "")
+        {
+            UpdateYoloCommandButtons();
+            WpfBatchDetectionControlState controlState = batchDetectionProgressService.BuildControlState(
+                isBatchDetectionRunning,
+                batchDetectionTotalCount,
+                batchDetectionCompletedCount,
+                scopeText,
+                currentFileName);
+
+            BatchProgressBar.Maximum = controlState.ProgressMaximum;
+            BatchProgressBar.Value = controlState.ProgressValue;
+            BatchStatusText.Text = controlState.StatusText;
+
+            if (controlState.ShouldRefreshQueueStatus)
+            {
+                UpdateImageQueueStatusText();
+            }
+            else
+            {
+                SetDatasetStatus(controlState.DatasetStatusText);
+            }
         }
     }
 }

@@ -18,6 +18,8 @@ namespace MvcVisionSystem
     {
         bool IWpfTemplateMatchingAutoLabelHost.IsAutoLabelBusy => isBatchDetectionRunning || isDetecting;
 
+        bool IWpfTemplateMatchingAutoLabelHost.IsAutoLabelCloseApproved => isApplicationCloseApproved;
+
         bool IWpfTemplateMatchingAutoLabelHost.HasActiveAutoLabelImage => activeImageBitmap != null && !activeImageSize.IsEmpty;
 
         DrawingBitmap IWpfTemplateMatchingAutoLabelHost.ActiveAutoLabelImage => activeImageBitmap;
@@ -37,59 +39,20 @@ namespace MvcVisionSystem
 
         bool IWpfTemplateMatchingAutoLabelHost.TryResolveTemplateMatchingSource(out DrawingRectangle templateBounds, out string className)
         {
-            templateBounds = DrawingRectangle.Empty;
-            className = string.Empty;
-
-            if (TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef selected)
-                && selected?.Source == WpfObjectReviewSource.ManualRoi
-                && selected.Index >= 0
-                && selected.Index < manualRois.Count)
-            {
-                templateBounds = manualRois[selected.Index];
-                className = GetManualRoiClassName(selected.Index);
-                return !templateBounds.IsEmpty;
-            }
-
-            if (selected?.Source == WpfObjectReviewSource.ManualSegment
-                && TryResolveManualSegmentTemplateSource(selected.Index, out templateBounds, out className))
-            {
-                return true;
-            }
-
-            if (manualRois.Count == 1)
-            {
-                templateBounds = manualRois[0];
-                className = GetManualRoiClassName(0);
-                return !templateBounds.IsEmpty;
-            }
-
-            if (manualRois.Count == 0
-                && manualSegments.Count == 1
-                && TryResolveManualSegmentTemplateSource(0, out templateBounds, out className))
-            {
-                return true;
-            }
-
-            return false;
+            return templateMatchingSourceService.TryResolveTemplateMatchingSource(
+                CreateTemplateMatchingSourceSnapshot(),
+                out templateBounds,
+                out className);
         }
 
         bool IWpfTemplateMatchingAutoLabelHost.TryResolveTemplateMatchingSourceSegment(
             out IReadOnlyList<DrawingPoint> points,
             out IReadOnlyList<IReadOnlyList<DrawingPoint>> cutouts)
         {
-            points = Array.Empty<DrawingPoint>();
-            cutouts = Array.Empty<IReadOnlyList<DrawingPoint>>();
-
-            if (TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef selected)
-                && selected?.Source == WpfObjectReviewSource.ManualSegment
-                && TryResolveManualSegmentTemplateShape(selected.Index, out points, out cutouts))
-            {
-                return true;
-            }
-
-            return manualRois.Count == 0
-                && manualSegments.Count == 1
-                && TryResolveManualSegmentTemplateShape(0, out points, out cutouts);
+            return templateMatchingSourceService.TryResolveTemplateMatchingSourceSegment(
+                CreateTemplateMatchingSourceSnapshot(),
+                out points,
+                out cutouts);
         }
 
         bool IWpfTemplateMatchingAutoLabelHost.TryResolveTemplateMatchingSourceMask(
@@ -97,110 +60,21 @@ namespace MvcVisionSystem
             out System.Drawing.Size maskSize,
             out DrawingRectangle maskBounds)
         {
-            maskData = Array.Empty<byte>();
-            maskSize = System.Drawing.Size.Empty;
-            maskBounds = DrawingRectangle.Empty;
-
-            if (TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef selected)
-                && selected?.Source == WpfObjectReviewSource.ManualSegment
-                && TryResolveManualSegmentTemplateMask(selected.Index, out maskData, out maskSize, out maskBounds))
-            {
-                return true;
-            }
-
-            return manualRois.Count == 0
-                && manualSegments.Count == 1
-                && TryResolveManualSegmentTemplateMask(0, out maskData, out maskSize, out maskBounds);
+            return templateMatchingSourceService.TryResolveTemplateMatchingSourceMask(
+                CreateTemplateMatchingSourceSnapshot(),
+                out maskData,
+                out maskSize,
+                out maskBounds);
         }
 
-        private bool TryResolveManualSegmentTemplateSource(int index, out DrawingRectangle templateBounds, out string className)
+        private WpfTemplateMatchingSourceSnapshot CreateTemplateMatchingSourceSnapshot()
         {
-            templateBounds = DrawingRectangle.Empty;
-            className = string.Empty;
-
-            if (index < 0 || index >= manualSegments.Count)
-            {
-                return false;
-            }
-
-            LabelingSegmentationObject segment = manualSegments[index];
-            if (segment == null || segment.Bounds.IsEmpty)
-            {
-                return false;
-            }
-
-            templateBounds = segment.Bounds;
-            className = GetManualSegmentClassName(segment);
-            return true;
-        }
-
-        private bool TryResolveManualSegmentTemplateShape(
-            int index,
-            out IReadOnlyList<DrawingPoint> points,
-            out IReadOnlyList<IReadOnlyList<DrawingPoint>> cutouts)
-        {
-            points = Array.Empty<DrawingPoint>();
-            cutouts = Array.Empty<IReadOnlyList<DrawingPoint>>();
-
-            if (index < 0 || index >= manualSegments.Count)
-            {
-                return false;
-            }
-
-            LabelingSegmentationObject segment = manualSegments[index];
-            if (segment?.Points == null || segment.Points.Count < 3)
-            {
-                return false;
-            }
-
-            points = segment.Points.Select(point => point).ToList();
-            cutouts = (segment.CutoutPolygons ?? new List<List<DrawingPoint>>())
-                .Where(cutout => cutout?.Count >= 3)
-                .Select(cutout => (IReadOnlyList<DrawingPoint>)cutout.Select(point => point).ToList())
-                .ToList();
-            return true;
-        }
-
-        private bool TryResolveManualSegmentTemplateMask(
-            int index,
-            out byte[] maskData,
-            out System.Drawing.Size maskSize,
-            out DrawingRectangle maskBounds)
-        {
-            maskData = Array.Empty<byte>();
-            maskSize = System.Drawing.Size.Empty;
-            maskBounds = DrawingRectangle.Empty;
-
-            if (index < 0 || index >= manualSegments.Count)
-            {
-                return false;
-            }
-
-            LabelingSegmentationObject segment = manualSegments[index];
-            if (segment?.IsRasterMask != true || segment.MaskData == null || segment.MaskSize.IsEmpty)
-            {
-                return false;
-            }
-
-            maskData = segment.MaskData.ToArray();
-            maskSize = segment.MaskSize;
-            maskBounds = segment.Bounds;
-            return !maskBounds.IsEmpty;
-        }
-
-        private static string GetManualSegmentClassName(LabelingSegmentationObject segment)
-        {
-            if (!string.IsNullOrWhiteSpace(segment?.ClassName))
-            {
-                return segment.ClassName;
-            }
-
-            if (!string.IsNullOrWhiteSpace(segment?.ClassItem?.Text))
-            {
-                return segment.ClassItem.Text;
-            }
-
-            return "Defect";
+            TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef selected);
+            return new WpfTemplateMatchingSourceSnapshot(
+                selected,
+                manualRois,
+                manualRoiClassNames,
+                manualSegments);
         }
 
         LabelClass IWpfTemplateMatchingAutoLabelHost.EnsureAutoLabelClassItem(string className)
@@ -426,8 +300,8 @@ namespace MvcVisionSystem
             var labelsToAdd = new List<(YoloWorkerSmokeCandidate Candidate, DrawingRectangle Bounds)>();
             foreach (YoloWorkerSmokeCandidate candidate in candidates ?? Array.Empty<YoloWorkerSmokeCandidate>())
             {
-                DrawingRectangle bounds = GetClippedCandidateBounds(candidate);
-                if (bounds.IsEmpty || IsTemplateLabelDuplicate(bounds, GetCandidateClassName(candidate), labelsToAdd.Select(item => item.Bounds)))
+                DrawingRectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
+                if (bounds.IsEmpty || IsTemplateLabelDuplicate(bounds, WpfCandidateReviewPresenter.GetClassName(candidate), labelsToAdd.Select(item => item.Bounds)))
                 {
                     continue;
                 }
@@ -446,7 +320,7 @@ namespace MvcVisionSystem
             int addedCount;
             if (IsSegmentationDatasetPurposeActive())
             {
-                string className = GetCandidateClassName(labelsToAdd[0].Candidate);
+                string className = WpfCandidateReviewPresenter.GetClassName(labelsToAdd[0].Candidate);
                 LabelClass classItem = EnsureClassItem(className);
                 IReadOnlyDictionary<string, List<LabelingSegmentationObject>> segmentsByClass =
                     TemplateMatchingBatchAutoLabelService.BuildSegmentsByClass(
@@ -479,7 +353,7 @@ namespace MvcVisionSystem
             {
                 foreach ((YoloWorkerSmokeCandidate candidate, DrawingRectangle bounds) in labelsToAdd)
                 {
-                    string className = GetCandidateClassName(candidate);
+                    string className = WpfCandidateReviewPresenter.GetClassName(candidate);
                     EnsureClassItem(className);
                     manualRois.Add(bounds);
                     manualRoiClassNames.Add(className);
@@ -518,7 +392,7 @@ namespace MvcVisionSystem
             string normalizedClassName = ClassCatalogService.NormalizeClassName(className);
             foreach (DrawingRectangle pending in pendingBounds ?? Array.Empty<DrawingRectangle>())
             {
-                if (CalculateIntersectionOverUnion(bounds, pending) >= 0.9D)
+                if (WpfCandidateReviewPresenter.CalculateIntersectionOverUnion(bounds, pending) >= 0.9D)
                 {
                     return true;
                 }
@@ -527,7 +401,7 @@ namespace MvcVisionSystem
             for (int i = 0; i < manualRois.Count; i++)
             {
                 if (string.Equals(ClassCatalogService.NormalizeClassName(GetManualRoiClassName(i)), normalizedClassName, StringComparison.OrdinalIgnoreCase)
-                    && CalculateIntersectionOverUnion(bounds, manualRois[i]) >= 0.9D)
+                    && WpfCandidateReviewPresenter.CalculateIntersectionOverUnion(bounds, manualRois[i]) >= 0.9D)
                 {
                     return true;
                 }
@@ -536,8 +410,8 @@ namespace MvcVisionSystem
             foreach (LabelingSegmentationObject segment in manualSegments)
             {
                 if (segment != null
-                    && string.Equals(ClassCatalogService.NormalizeClassName(GetManualSegmentClassName(segment)), normalizedClassName, StringComparison.OrdinalIgnoreCase)
-                    && CalculateIntersectionOverUnion(bounds, segment.Bounds) >= 0.9D)
+                    && string.Equals(ClassCatalogService.NormalizeClassName(templateMatchingSourceService.GetManualSegmentClassName(segment)), normalizedClassName, StringComparison.OrdinalIgnoreCase)
+                    && WpfCandidateReviewPresenter.CalculateIntersectionOverUnion(bounds, segment.Bounds) >= 0.9D)
                 {
                     return true;
                 }
@@ -545,8 +419,10 @@ namespace MvcVisionSystem
 
             foreach (YoloWorkerSmokeCandidate confirmed in confirmedDetectionCandidates)
             {
-                if (string.Equals(ClassCatalogService.NormalizeClassName(GetCandidateClassName(confirmed)), normalizedClassName, StringComparison.OrdinalIgnoreCase)
-                    && CalculateIntersectionOverUnion(bounds, GetClippedCandidateBounds(confirmed)) >= 0.9D)
+                if (string.Equals(ClassCatalogService.NormalizeClassName(WpfCandidateReviewPresenter.GetClassName(confirmed)), normalizedClassName, StringComparison.OrdinalIgnoreCase)
+                    && WpfCandidateReviewPresenter.CalculateIntersectionOverUnion(
+                        bounds,
+                        WpfCandidateReviewPresentationService.ClipCandidateBounds(confirmed, activeImageSize)) >= 0.9D)
                 {
                     return true;
                 }

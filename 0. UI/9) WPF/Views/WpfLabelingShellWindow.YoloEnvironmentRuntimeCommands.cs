@@ -28,6 +28,10 @@ namespace MvcVisionSystem
                 RefreshYoloStatus();
                 ShowYoloModelCenterWorkflowView();
                 await RefreshYoloSettingsPanelAsync(result).ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
 
                 if (result.IsValid)
                 {
@@ -46,9 +50,12 @@ namespace MvcVisionSystem
             }
             catch (Exception ex)
             {
-                string failureStatus = WpfYoloEnvironmentCommandPresentationService.BuildEnvironmentCheckFailureStatus(ex.Message);
-                SetYoloCommandStatus(failureStatus, isBusy: false);
-                AppendLog(failureStatus);
+                if (!isApplicationCloseApproved)
+                {
+                    string failureStatus = WpfYoloEnvironmentCommandPresentationService.BuildEnvironmentCheckFailureStatus(ex.Message);
+                    SetYoloCommandStatus(failureStatus, isBusy: false);
+                    AppendLog(failureStatus);
+                }
             }
             finally
             {
@@ -58,6 +65,11 @@ namespace MvcVisionSystem
 
         private async void ExecuteDetectCurrentImageCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (!EnsureModelRuntimeForInference())
             {
                 return;
@@ -93,6 +105,10 @@ namespace MvcVisionSystem
                 PythonEnvironmentCheckResult check = await PythonEnvironmentService
                     .CheckRequirementsAsync(settings)
                     .ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
 
                 WpfRequirementsCheckPresentation checkPresentation =
                     WpfYoloEnvironmentCommandPresentationService.BuildRequirementsCheckPresentation(check);
@@ -101,6 +117,10 @@ namespace MvcVisionSystem
                 if (!checkPresentation.ShouldInstallRequirements)
                 {
                     await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
+                    if (isApplicationCloseApproved)
+                    {
+                        return;
+                    }
                     AppendLog(checkPresentation.LogText);
                     return;
                 }
@@ -111,13 +131,20 @@ namespace MvcVisionSystem
                     .ConfigureAwait(true);
 
                 await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
                 SetYoloCommandStatus(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsInstallResultStatus(install), isBusy: false);
                 AppendLog(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsInstallResultLog(install));
             }
             catch (Exception ex)
             {
-                SetYoloCommandStatus(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsInstallFailureStatus(ex.Message), isBusy: false);
-                AppendLog(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsInstallFailureLog(ex.Message));
+                if (!isApplicationCloseApproved)
+                {
+                    SetYoloCommandStatus(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsInstallFailureStatus(ex.Message), isBusy: false);
+                    AppendLog(WpfYoloEnvironmentCommandPresentationService.BuildRequirementsInstallFailureLog(ex.Message));
+                }
             }
             finally
             {
@@ -137,8 +164,13 @@ namespace MvcVisionSystem
 
         private async Task ExecuteUltralyticsPackageCommandAsync(bool uninstall)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string operationName = WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsOperationName(uninstall);
-            PythonModelSettings settings = CreateYoloModelSettingsSnapshot();
+            PythonModelSettings settings = YoloModelSettingsViewModel.CreateSettingsSnapshot(global?.Data?.ProjectSettings?.PythonModel);
             PythonModelRuntimeInstallPlan plan = PythonModelRuntimeInstallPlanService.BuildPlan(settings);
             bool canRun = uninstall ? plan.CanRunUninstall : plan.CanRunInstall;
             if (!plan.IsVisible || !canRun)
@@ -173,6 +205,10 @@ namespace MvcVisionSystem
                 PythonPackageInstallResult result = uninstall
                     ? await PythonEnvironmentService.UninstallPackageAsync(settings, "ultralytics").ConfigureAwait(true)
                     : await PythonEnvironmentService.InstallPackageAsync(settings, "ultralytics").ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
 
                 foreach (string line in WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsPackageOperationLogLines(operationName, result))
                 {
@@ -191,13 +227,16 @@ namespace MvcVisionSystem
             }
             catch (Exception ex)
             {
-                string statusText = WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsFailureStatus(operationName, ex.Message);
-                SetYoloCommandStatus(statusText, isBusy: false);
-                YoloModelSettingsViewModel?.SetRuntimeProfileActionStatus(statusText);
-                SetUltralyticsPackageOperationResult(
-                    WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsOperationSummary(DateTime.Now, operationName, "\uC2E4\uD328"),
-                    WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsPackageOperationDetail(plan, uninstall, null, statusText));
-                AppendLog(statusText);
+                if (!isApplicationCloseApproved)
+                {
+                    string statusText = WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsFailureStatus(operationName, ex.Message);
+                    SetYoloCommandStatus(statusText, isBusy: false);
+                    YoloModelSettingsViewModel?.SetRuntimeProfileActionStatus(statusText);
+                    SetUltralyticsPackageOperationResult(
+                        WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsOperationSummary(DateTime.Now, operationName, "\uC2E4\uD328"),
+                        WpfYoloEnvironmentCommandPresentationService.BuildUltralyticsPackageOperationDetail(plan, uninstall, null, statusText));
+                    AppendLog(statusText);
+                }
             }
             finally
             {
@@ -225,6 +264,11 @@ namespace MvcVisionSystem
 
         private async void ExecuteRunYoloSmokeCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (currentWorkflowMode != WorkflowMode.Inference)
             {
                 SetWorkflowMode(WorkflowMode.Inference);
@@ -244,16 +288,27 @@ namespace MvcVisionSystem
             try
             {
                 await RunInteractiveDetectionAsync(allowSmokeFallback: true).ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
                 await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
                 SetYoloCommandStatus(WpfYoloEnvironmentCommandPresentationService.BuildModelTestCompletedStatus(), isBusy: false);
             }
             catch (Exception ex)
             {
-                string errorText = WpfYoloEnvironmentCommandPresentationService.BuildModelTestFailureStatus(ex.Message);
-                WpfYoloEnvironmentRecoveryPresentation recovery = WpfYoloEnvironmentCommandPresentationService.BuildModelTestFailureRecovery(errorText);
-                SetYoloCommandStatus(errorText, isBusy: false);
-                SetYoloRecoveryStatus(recovery.Title, recovery.Detail, recovery.Action);
-                AppendLog(errorText);
+                if (!isApplicationCloseApproved)
+                {
+                    string errorText = WpfYoloEnvironmentCommandPresentationService.BuildModelTestFailureStatus(ex.Message);
+                    WpfYoloEnvironmentRecoveryPresentation recovery = WpfYoloEnvironmentCommandPresentationService.BuildModelTestFailureRecovery(errorText);
+                    SetYoloCommandStatus(errorText, isBusy: false);
+                    SetYoloRecoveryStatus(recovery.Title, recovery.Detail, recovery.Action);
+                    AppendLog(errorText);
+                }
             }
             finally
             {
@@ -278,26 +333,41 @@ namespace MvcVisionSystem
                 }
 
                 bool connected = await global
-                    .RestartPythonModelClientConnectionAsync(GetWorkerConnectTimeoutMilliseconds())
+                    .RestartPythonModelClientConnectionAsync(
+                        WpfYoloRuntimePresentationService.GetWorkerConnectTimeoutMilliseconds(
+                            global.Data?.ProjectSettings?.PythonModel?.DetectionTimeoutSeconds ?? 30))
                     .ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
 
                 if (connected)
                 {
-                    string requestId = CreateRequestId();
+                    string requestId = WpfYoloRuntimePresentationService.CreateRequestId();
                     global.ModelRuntime.DeepLearning.SendHealthCheck(requestId);
                     global.ModelRuntime.DeepLearning.SendModelStatus(requestId, ensureLoaded: false);
                 }
 
                 await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
                 ApplyYoloWorkerCommandPresentation(
                     WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartResult(
                         connected,
-                        BuildPythonWorkerFailureText()));
+                        WpfYoloRuntimePresentationService.BuildPythonWorkerFailureText(
+                            global.GetPythonCommunicationStatusSnapshot(),
+                            global.ModelRuntime.PythonClientProcess?.LastError)));
             }
             catch (Exception ex)
             {
-                ApplyYoloWorkerCommandPresentation(
-                    WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartFailure(ex.Message));
+                if (!isApplicationCloseApproved)
+                {
+                    ApplyYoloWorkerCommandPresentation(
+                        WpfYoloEnvironmentCommandPresentationService.BuildWorkerRestartFailure(ex.Message));
+                }
             }
             finally
             {
@@ -315,14 +385,25 @@ namespace MvcVisionSystem
             try
             {
                 await global.StopPythonModelClientConnectionAsync().ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
                 await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
                 ApplyYoloWorkerCommandPresentation(
                     WpfYoloEnvironmentCommandPresentationService.BuildWorkerStopCompleted());
             }
             catch (Exception ex)
             {
-                ApplyYoloWorkerCommandPresentation(
-                    WpfYoloEnvironmentCommandPresentationService.BuildWorkerStopFailure(ex.Message));
+                if (!isApplicationCloseApproved)
+                {
+                    ApplyYoloWorkerCommandPresentation(
+                        WpfYoloEnvironmentCommandPresentationService.BuildWorkerStopFailure(ex.Message));
+                }
             }
             finally
             {
@@ -342,6 +423,57 @@ namespace MvcVisionSystem
             }
 
             AppendLog(presentation.LogText);
+        }
+
+        private bool BeginYoloEnvironmentCommand(string statusText)
+        {
+            if (isApplicationCloseApproved || isYoloEnvironmentCommandRunning || isTrainingCommandRunning || isDetecting || isBatchDetectionRunning)
+            {
+                if (isApplicationCloseApproved)
+                {
+                    return false;
+                }
+
+                AppendLog(WpfYoloEnvironmentCommandPresentationService.BuildBusyCommandLog());
+                return false;
+            }
+
+            isYoloEnvironmentCommandRunning = true;
+            ClearYoloRecoveryStatus();
+            SetYoloCommandStatus(statusText, isBusy: true);
+            UpdateYoloCommandButtons();
+            return true;
+        }
+
+        private void EndYoloEnvironmentCommand()
+        {
+            isYoloEnvironmentCommandRunning = false;
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            YoloStatusViewModel.SetCommandBusy(false);
+
+            UpdateYoloCommandButtons();
+            RefreshYoloStatus();
+        }
+
+        private void SetYoloCommandStatus(string text, bool isBusy)
+        {
+            YoloStatusViewModel.SetCommandStatus(text, isBusy);
+        }
+
+        private void SetYoloRecoveryStatus(string titleText, string detailText, string actionText)
+        {
+            ShellViewModel?.SetModelCenterRecoveryState(titleText, detailText, actionText);
+            YoloStatusViewModel?.SetRecoveryState(titleText, detailText, actionText);
+        }
+
+        private void ClearYoloRecoveryStatus()
+        {
+            ShellViewModel?.ClearModelCenterRecoveryState();
+            YoloStatusViewModel?.ClearRecoveryState();
         }
     }
 }

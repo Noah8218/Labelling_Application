@@ -13,7 +13,7 @@ namespace MvcVisionSystem
     {
         private void MainCanvasViewModel_ImagePointClicked(object sender, CanvasImagePointEventArgs e)
         {
-            if (e == null)
+            if (isApplicationCloseApproved || e == null)
             {
                 return;
             }
@@ -100,7 +100,7 @@ namespace MvcVisionSystem
 
         private void MainCanvasViewModel_ImagePointMoved(object sender, CanvasImagePointEventArgs e)
         {
-            if (e == null)
+            if (isApplicationCloseApproved || e == null)
             {
                 return;
             }
@@ -120,6 +120,11 @@ namespace MvcVisionSystem
 
         private void MainCanvasViewModel_ImagePointReleased(object sender, CanvasImagePointEventArgs e)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             CompleteMaskAnnotationStroke();
             lastMaskStrokePoint = null;
             CompleteSelectedSegmentEdit();

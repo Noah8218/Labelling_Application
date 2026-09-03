@@ -31,6 +31,44 @@ namespace MvcVisionSystem
             return $"학습 데이터 확인 필요: {issueText} / {countText}";
         }
 
+        public static WpfTrainingChecklistPresentation BuildChecklistPresentation(
+            LabelingProjectData data,
+            YoloDatasetReadinessReport report)
+        {
+            if (report?.IsReady == true)
+            {
+                YoloDatasetStatistics statistics = report.Statistics;
+                LabelingDatasetPurpose purpose = report.Purpose;
+                int classCount = data?.ClassNamedList?.Count ?? 0;
+                IReadOnlyList<string> warnings = YoloDatasetDiagnosticsService.BuildQualityWarnings(data, statistics);
+                bool hasWarnings = warnings.Count > 0;
+                WpfTrainingChecklistLocalizationSnapshot localization = WpfTrainingChecklistLocalizationService.BuildReady(
+                    statistics,
+                    classCount,
+                    purpose,
+                    hasWarnings);
+                return new WpfTrainingChecklistPresentation(
+                    hasWarnings ? "ReadyWithWarnings" : "Ready",
+                    localization,
+                    hasWarnings
+                        ? WpfTrainingChecklistLocalizationService.BuildQualityWarningAction(warnings)
+                        : WpfTrainingChecklistLocalizationService.BuildReadyAction(purpose));
+            }
+
+            string firstError = report?.Errors?.FirstOrDefault() ?? "원인 미확인";
+            string issueKind = ClassifyIssue(report?.Errors ?? Array.Empty<string>());
+            LabelingDatasetPurpose failurePurpose = report?.Purpose ?? LabelingDatasetPurpose.ObjectDetection;
+            WpfTrainingChecklistLocalizationSnapshot failureLocalization = WpfTrainingChecklistLocalizationService.BuildFailure(
+                issueKind,
+                firstError,
+                report?.Statistics,
+                failurePurpose);
+            return new WpfTrainingChecklistPresentation(
+                issueKind,
+                failureLocalization,
+                WpfTrainingChecklistLocalizationService.BuildFailureAction(issueKind));
+        }
+
         public static string BuildAnomalyClassificationStatusText(AnomalyClassificationTrainingReadinessReport report)
         {
             report ??= new AnomalyClassificationTrainingReadinessReport(
@@ -52,6 +90,93 @@ namespace MvcVisionSystem
         public static string BuildFriendlyIssueSummary(string error)
             => BuildFriendlyIssueText((error ?? string.Empty)
                 .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
+
+        public static string BuildReadyDatasetStatusText(
+            YoloDatasetStatistics statistics,
+            LabelingDatasetPurpose purpose,
+            bool hasWarnings)
+        {
+            return WpfTrainingChecklistLocalizationService
+                .BuildReady(statistics, classCount: 0, purpose: purpose, hasWarnings: hasWarnings)
+                .StatusText;
+        }
+
+        public static string ClassifyIssue(IEnumerable<string> errors)
+        {
+            List<string> normalized = (errors ?? Array.Empty<string>())
+                .Select(error => error?.Trim() ?? string.Empty)
+                .Where(error => error.Length > 0)
+                .Select(error => error.ToLowerInvariant())
+                .ToList();
+
+            if (normalized.Any(error => error.Contains("invalid yolo format", StringComparison.Ordinal)
+                || error.Contains("invalid class index", StringComparison.Ordinal)
+                || error.Contains("out-of-range normalized value", StringComparison.Ordinal)
+                || error.Contains("label width must", StringComparison.Ordinal)
+                || error.Contains("label height must", StringComparison.Ordinal)))
+            {
+                return "LabelFormat";
+            }
+
+            if (normalized.Any(error => error.Contains("at least one class", StringComparison.Ordinal)
+                || error.Contains("class names", StringComparison.Ordinal)
+                || error.Contains("duplicate class", StringComparison.Ordinal)))
+            {
+                return "Classes";
+            }
+
+            if (normalized.Any(error => error.Contains("label file is missing", StringComparison.Ordinal)
+                || error.Contains("label directory", StringComparison.Ordinal)))
+            {
+                return "Labels";
+            }
+
+            if (normalized.Any(error => error.Contains("segmentation annotations", StringComparison.Ordinal)
+                && error.Contains("no yolo box labels", StringComparison.Ordinal)))
+            {
+                return "SegmentationPolicy";
+            }
+
+            if (normalized.Any(error => error.Contains("segmentation dataset", StringComparison.Ordinal)
+                || error.Contains("segmentation annotation is missing", StringComparison.Ordinal)
+                || error.Contains("segment json", StringComparison.Ordinal)
+                || error.Contains("mask png", StringComparison.Ordinal)))
+            {
+                return "SegmentationLabels";
+            }
+
+            if (normalized.Any(error => error.Contains("valid image directory", StringComparison.Ordinal)))
+            {
+                return "ValidImages";
+            }
+
+            if (normalized.Any(error => error.Contains("train/valid image split", StringComparison.Ordinal)
+                || error.Contains("train/test image split", StringComparison.Ordinal)
+                || error.Contains("valid/test image split", StringComparison.Ordinal)
+                || error.Contains("duplicate image content", StringComparison.Ordinal)
+                || error.Contains("different validation images", StringComparison.Ordinal)))
+            {
+                return "Split";
+            }
+
+            if (normalized.Any(error => error.Contains("data.yaml", StringComparison.Ordinal)))
+            {
+                return "DataYaml";
+            }
+
+            if (normalized.Any(error => error.Contains("output root", StringComparison.Ordinal)))
+            {
+                return "OutputRoot";
+            }
+
+            if (normalized.Any(error => error.Contains("image directory", StringComparison.Ordinal)
+                || error.Contains("supported images", StringComparison.Ordinal)))
+            {
+                return "Images";
+            }
+
+            return "Unknown";
+        }
 
         private static string BuildFriendlyIssueText(LabelingProjectData data, YoloDatasetReadinessReport report)
         {
@@ -201,5 +326,30 @@ namespace MvcVisionSystem
 
             return string.Empty;
         }
+    }
+
+    public sealed class WpfTrainingChecklistPresentation
+    {
+        public WpfTrainingChecklistPresentation(
+            string issueKind,
+            WpfTrainingChecklistLocalizationSnapshot localization,
+            WpfTrainingChecklistActionLocalizationSnapshot actionLocalization)
+        {
+            IssueKind = issueKind ?? string.Empty;
+            Localization = localization ?? throw new ArgumentNullException(nameof(localization));
+            ActionLocalization = actionLocalization ?? throw new ArgumentNullException(nameof(actionLocalization));
+        }
+
+        public string IssueKind { get; }
+
+        public WpfTrainingChecklistLocalizationSnapshot Localization { get; }
+
+        public WpfTrainingChecklistActionLocalizationSnapshot ActionLocalization { get; }
+
+        public string StatusText => Localization.StatusText;
+
+        public string DetailText => Localization.DetailText;
+
+        public string ActionText => ActionLocalization.ActionText;
     }
 }

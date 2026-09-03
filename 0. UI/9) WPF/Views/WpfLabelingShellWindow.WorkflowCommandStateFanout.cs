@@ -17,7 +17,7 @@ namespace MvcVisionSystem
                 isDetecting: isDetecting,
                 isBatchDetectionRunning: isBatchDetectionRunning,
                 isTrainingCommandRunning: isTrainingCommandRunning || isTrainingWorkflowRunning,
-                isTrainingStopAvailable: IsTrainingStopAvailable(global.GetPythonCommunicationStatusSnapshot()),
+                isTrainingStopAvailable: WpfTrainingProgressPresentationService.IsTrainingStopAvailable(global.GetPythonCommunicationStatusSnapshot()),
                 hasCurrentRecipeName: !string.IsNullOrWhiteSpace(GetCurrentRecipeName()),
                 canRunModelTraining: runtimeState.CanRunTraining,
                 canRunModelInference: runtimeState.CanRunInference,
@@ -101,20 +101,20 @@ namespace MvcVisionSystem
                     $"\uBE44\uAD50 \uAE30\uC900: \uCD5C\uC885 \uAC80\uC99D \uC774\uBBF8\uC9C0 {testImageCount}\uC7A5 / \uC815\uB2F5 \uB77C\uBCA8 0\uC7A5");
             }
 
-            if (finalVerificationCount < RecommendedModelReplacementTestImageCount)
+            if (finalVerificationCount < WpfDatasetDashboardPresentationService.RecommendedModelReplacementTestImageCount)
             {
                 return (
                     true,
                     "\uBAA8\uB378 \uBE44\uAD50",
-                    $"\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5\uC73C\uB85C \uBE44\uAD50\uB294 \uAC00\uB2A5\uD558\uC9C0\uB9CC \uAD50\uCCB4 \uADFC\uAC70\uAC00 \uC57D\uD569\uB2C8\uB2E4. \uAD8C\uC7A5 {RecommendedModelReplacementTestImageCount}\uC7A5 \uC774\uC0C1\uC744 \uD655\uBCF4\uD55C \uB4A4 \uC801\uC6A9\uD558\uC138\uC694.",
-                    $"\uBE44\uAD50 \uAE30\uC900: \uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5 / \uAD8C\uC7A5 {RecommendedModelReplacementTestImageCount}\uC7A5 \uC774\uC0C1 - \uBE44\uAD50 \uAC00\uB2A5, \uAD50\uCCB4 \uADFC\uAC70\uB294 \uC57D\uD568");
+                    $"\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5\uC73C\uB85C \uBE44\uAD50\uB294 \uAC00\uB2A5\uD558\uC9C0\uB9CC \uAD50\uCCB4 \uADFC\uAC70\uAC00 \uC57D\uD569\uB2C8\uB2E4. \uAD8C\uC7A5 {WpfDatasetDashboardPresentationService.RecommendedModelReplacementTestImageCount}\uC7A5 \uC774\uC0C1\uC744 \uD655\uBCF4\uD55C \uB4A4 \uC801\uC6A9\uD558\uC138\uC694.",
+                    $"\uBE44\uAD50 \uAE30\uC900: \uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5 / \uAD8C\uC7A5 {WpfDatasetDashboardPresentationService.RecommendedModelReplacementTestImageCount}\uC7A5 \uC774\uC0C1 - \uBE44\uAD50 \uAC00\uB2A5, \uAD50\uCCB4 \uADFC\uAC70\uB294 \uC57D\uD568");
             }
 
             return (
                 true,
                 "\uBAA8\uB378 \uBE44\uAD50",
                 $"\uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5\uC73C\uB85C \uAE30\uC874 \uBAA8\uB378\uACFC \uC0C8 \uD559\uC2B5 \uBAA8\uB378\uC744 \uBE44\uAD50\uD569\uB2C8\uB2E4.",
-                $"\uBE44\uAD50 \uAE30\uC900: \uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5 / \uAD8C\uC7A5 {RecommendedModelReplacementTestImageCount}\uC7A5 \uC774\uC0C1 - \uBE44\uAD50 \uD6C4 \uAD50\uCCB4 \uD310\uB2E8 \uAC00\uB2A5");
+                $"\uBE44\uAD50 \uAE30\uC900: \uCD5C\uC885 \uAC80\uC99D \uB77C\uBCA8 {finalVerificationCount}\uC7A5 / \uAD8C\uC7A5 {WpfDatasetDashboardPresentationService.RecommendedModelReplacementTestImageCount}\uC7A5 \uC774\uC0C1 - \uBE44\uAD50 \uD6C4 \uAD50\uCCB4 \uD310\uB2E8 \uAC00\uB2A5");
         }
 
         private void ApplyShellCommandState(WpfWorkflowCommandState state)

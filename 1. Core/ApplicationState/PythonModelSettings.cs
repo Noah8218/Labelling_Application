@@ -89,6 +89,17 @@ namespace MvcVisionSystem
             return EngineYoloV5;
         }
 
+        public static string FormatModelEngineName(string value)
+        {
+            return NormalizeModelEngine(value) switch
+            {
+                EngineYoloV5 => "YOLOv5",
+                EngineYoloV8 => "YOLOv8",
+                EngineYolo11 => "YOLO11",
+                _ => "YOLO"
+            };
+        }
+
         public string GetProtocolModelName()
         {
             return NormalizeModelEngine(ModelEngine) switch

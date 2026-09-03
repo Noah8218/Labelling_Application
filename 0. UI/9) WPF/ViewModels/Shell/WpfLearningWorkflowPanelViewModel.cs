@@ -136,13 +136,10 @@ namespace MvcVisionSystem
 
             SetTrainingComparisonLocalization(trainingComparisonLocalizationSnapshot);
 
-            LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.LabelingBasics, "\uB77C\uBCA8\uB9C1", PackIconMaterialKind.SchoolOutline, "\uC815\uB2F5 \uB77C\uBCA8\uC744 \uADF8\uB9AC\uB294 \uD750\uB984"));
-            LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.ObjectDetection, "\uAC1D\uCCB4 \uD0D0\uC9C0", PackIconMaterialKind.ShapeSquareRoundedPlus, "\uBC15\uC2A4 \uB77C\uBCA8\uACFC \uBAA8\uB378 \uD6C4\uBCF4 \uAC80\uD1A0"));
-            LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.Segmentation, "\uC138\uADF8\uBA58\uD14C\uC774\uC158", PackIconMaterialKind.ViewListOutline, "\uD3F4\uB9AC\uACE4\uACFC \uB9C8\uC2A4\uD06C \uB77C\uBCA8"));
-            LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.AnomalyDetection, "\uC774\uC0C1 \uD0D0\uC9C0", PackIconMaterialKind.AlertCircleOutline, "이미지 전체 정상/이상 판정"));
-            LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.Train, "\uD559\uC2B5", PackIconMaterialKind.PlayCircleOutline, "\uB370\uC774\uD130\uC14B \uC900\uBE44\uC640 \uD559\uC2B5"));
-            LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.Infer, "\uCD94\uB860", PackIconMaterialKind.RobotIndustrial, "\uBAA8\uB378 \uC2E4\uD589\uACFC \uC608\uCE21 \uD655\uC778"));
-            LearningModes.Add(new WpfLearningModeItem(WpfLearningMode.Review, "\uAC80\uD1A0", PackIconMaterialKind.CheckAll, "\uC608\uCE21\uC744 \uD655\uC815 \uB77C\uBCA8\uB85C \uC804\uD658"));
+            foreach (WpfLearningModeItem mode in WpfLearningWorkflowCatalogService.BuildLearningModes())
+            {
+                LearningModes.Add(mode);
+            }
             DatasetPurposeModes.Add(LearningModes.First(item => item.Mode == WpfLearningMode.ObjectDetection));
             DatasetPurposeModes.Add(LearningModes.First(item => item.Mode == WpfLearningMode.Segmentation));
             DatasetPurposeModes.Add(LearningModes.First(item => item.Mode == WpfLearningMode.AnomalyDetection));
@@ -150,177 +147,41 @@ namespace MvcVisionSystem
             ExternalYoloDatasetPurposeModes.Add(DatasetPurposeModes.First(item => item.Mode == WpfLearningMode.Segmentation));
             SelectedExternalYoloDatasetPurposeMode = ExternalYoloDatasetPurposeModes.FirstOrDefault();
 
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.Select, "\uC120\uD0DD", PackIconMaterialKind.CursorDefaultOutline, "\uAC1D\uCCB4 \uC120\uD0DD\uACFC \uD3B8\uC9D1"));
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.Rectangle, "\uBC15\uC2A4", PackIconMaterialKind.VectorRectangle, "\uAC1D\uCCB4 \uBC15\uC2A4 \uC601\uC5ED"));
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.Ellipse, "\uC6D0/\uD0C0\uC6D0", PackIconMaterialKind.VectorEllipse, "\uC6D0\uD615 \uD639\uC740 \uD0C0\uC6D0 \uC601\uC5ED"));
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.Polygon, "\uD3F4\uB9AC\uACE4", PackIconMaterialKind.VectorPolygon, "\uB2E4\uAC01\uD615 \uC138\uADF8\uBA58\uD14C\uC774\uC158"));
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.Brush, "\uBE0C\uB7EC\uC2DC", PackIconMaterialKind.BrushVariant, "\uBE0C\uB7EC\uC2DC \uB9C8\uC2A4\uD06C \uD3B8\uC9D1"));
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.Eraser, "\uC9C0\uC6B0\uAC1C", PackIconMaterialKind.EraserVariant, "\uB9C8\uC2A4\uD06C\uB098 \uC601\uC5ED \uC9C0\uC6B0\uAE30"));
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.PanZoom, "\uC774\uB3D9", PackIconMaterialKind.CursorMove, "\uD654\uBA74 \uC774\uB3D9\uACFC \uD655\uB300"));
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.Undo, "\uB418\uB3CC\uB9AC\uAE30", PackIconMaterialKind.Refresh, "\uB9C8\uC9C0\uB9C9 \uD3B8\uC9D1 \uB418\uB3CC\uB9AC\uAE30"));
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.Redo, "\uB2E4\uC2DC \uC801\uC6A9", PackIconMaterialKind.Reload, "\uB418\uB3CC\uB9B0 \uD3B8\uC9D1 \uB2E4\uC2DC \uC801\uC6A9"));
-            RegisterAnnotationTool(new WpfAnnotationToolItem(WpfAnnotationTool.Delete, "\uC0AD\uC81C", PackIconMaterialKind.TrashCanOutline, "\uC120\uD0DD \uB77C\uBCA8 \uC0AD\uC81C"));
+            foreach (WpfAnnotationToolItem tool in WpfLearningWorkflowCatalogService.BuildAnnotationTools())
+            {
+                RegisterAnnotationTool(tool);
+            }
             ApplyDatasetPurpose(LabelingDatasetPurpose.ObjectDetection);
 
-            LearningSteps.Add(new WpfLearningStepItem(WpfLearningStep.Sample, "\uC0D8\uD50C", PackIconMaterialKind.FolderImage));
-            LearningSteps.Add(new WpfLearningStepItem(WpfLearningStep.Label, "\uB77C\uBCA8", PackIconMaterialKind.ShapeSquareRoundedPlus));
-            LearningSteps.Add(new WpfLearningStepItem(WpfLearningStep.Infer, "\uCD94\uB860", PackIconMaterialKind.RobotIndustrial));
-            LearningSteps.Add(new WpfLearningStepItem(WpfLearningStep.Review, "\uB9AC\uBDF0", PackIconMaterialKind.CheckAll));
-            LearningSteps.Add(new WpfLearningStepItem(WpfLearningStep.Save, "\uC800\uC7A5", PackIconMaterialKind.ContentSaveOutline));
+            foreach (WpfLearningStepItem step in WpfLearningWorkflowCatalogService.BuildLearningSteps())
+            {
+                LearningSteps.Add(step);
+            }
 
-            TemplateWorkflowSteps.Add(new WpfTemplateWorkflowStepItem(
-                1,
-                "\uAE30\uC900 \uB77C\uBCA8 \uC120\uD0DD",
-                "\uC798 \uADF8\uB824\uC9C4 \uBC15\uC2A4 1\uAC1C\uB97C \uC120\uD0DD\uD558\uBA74 \uADF8 \uC601\uC5ED\uC774 \uD15C\uD50C\uB9BF\uC774 \uB429\uB2C8\uB2E4.",
-                "\uC800\uC7A5 \uB77C\uBCA8",
-                PackIconMaterialKind.CursorDefaultClickOutline));
-            TemplateWorkflowSteps.Add(new WpfTemplateWorkflowStepItem(
-                2,
-                "\uD604\uC7AC \uC774\uBBF8\uC9C0 \uB77C\uBCA8 \uCD08\uC548",
-                "\uB2E4\uB978 \uC774\uBBF8\uC9C0\uC5D0\uC11C \uAC19\uC740 \uBAA8\uC591\uC744 \uCC3E\uACE0 \uADF8 \uC704\uCE58\uC5D0 \uC800\uC7A5 \uC804 \uB77C\uBCA8 \uCD08\uC548\uC744 \uCD94\uAC00\uD569\uB2C8\uB2E4.",
-                "\uC0C1\uB2E8/\uC624\uB978\uCABD",
-                PackIconMaterialKind.SelectionSearch));
-            TemplateWorkflowSteps.Add(new WpfTemplateWorkflowStepItem(
-                3,
-                "\uC804\uCCB4 \uC774\uBBF8\uC9C0 \uC790\uB3D9 \uC800\uC7A5",
-                "\uC774\uBBF8\uC9C0 \uBAA9\uB85D\uC744 \uD55C \uBC88\uC529 \uB3CC\uBA70 \uB77C\uBCA8\uC774 \uC5C6\uB294 \uD56D\uBAA9\uC5D0\uB9CC \uC800\uC7A5\uD569\uB2C8\uB2E4.",
-                "\uC774\uBBF8\uC9C0 \uD050",
-                PackIconMaterialKind.PlaylistCheck));
-            TemplateWorkflowSteps.Add(new WpfTemplateWorkflowStepItem(
-                4,
-                "\uAC80\uD1A0\uC640 \uC800\uC7A5",
-                "\uD604\uC7AC \uC774\uBBF8\uC9C0 \uCD08\uC548\uC740 \uC704\uCE58\uB97C \uD655\uC778\uD55C \uB4A4 \uB77C\uBCA8 \uC800\uC7A5\uC744 \uB20C\uB7EC\uC57C \uBC18\uC601\uB429\uB2C8\uB2E4.",
-                "\uC800\uC7A5 \uC804 \uCD08\uC548",
-                PackIconMaterialKind.ContentSaveCheckOutline));
+            foreach (WpfTemplateWorkflowStepItem step in WpfLearningWorkflowCatalogService.BuildTemplateWorkflowSteps())
+            {
+                TemplateWorkflowSteps.Add(step);
+            }
 
-            FirstRunSamplePathItems.Add(new WpfFirstRunChecklistItem(
-                1,
-                "\uB370\uC774\uD130\uC14B",
-                "\uC0C8\uB85C \uB9CC\uB4E4\uAE30 \uB610\uB294 \uAE30\uC874 \uC5F4\uAE30",
-                "\uC800\uC7A5 \uD3F4\uB354\uC640 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB97C \uBD84\uB9AC\uD574 \uC0C8 \uC2E4\uC2B5\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.DatabasePlusOutline,
-                shortcutWorkflowStepOrder: 1,
-                shortcutActionText: "\uC2DC\uC791"));
-            FirstRunSamplePathItems.Add(new WpfFirstRunChecklistItem(
-                2,
-                "\uC774\uBBF8\uC9C0",
-                "\uD3F4\uB354 \uC5F4\uACE0 \uD050 \uD655\uC778",
-                "\uC774\uBBF8\uC9C0\uAC00 \uBCF4\uC774\uBA74 \uCCAB \uC774\uBBF8\uC9C0\uB97C \uC120\uD0DD\uD574 \uC791\uC5C5\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.FolderImage,
-                shortcutWorkflowStepOrder: 2,
-                shortcutActionText: "\uC5F4\uAE30"));
-            FirstRunSamplePathItems.Add(new WpfFirstRunChecklistItem(
-                3,
-                "\uCCAB \uB77C\uBCA8",
-                "\uBC15\uC2A4 \uADF8\uB9B0 \uB4A4 \uB77C\uBCA8 \uC800\uC7A5",
-                "\uC800\uC7A5\uD574\uC57C \uBC15\uC2A4 \uB77C\uBCA8 \uD30C\uC77C\uC774 \uC0DD\uC131\uB418\uACE0 \uD559\uC2B5 \uC810\uAC80\uC5D0 \uBC18\uC601\uB429\uB2C8\uB2E4.",
-                PackIconMaterialKind.ShapeSquareRoundedPlus,
-                shortcutWorkflowStepOrder: 4,
-                shortcutActionText: "\uB77C\uBCA8\uB9C1"));
-            FirstRunSamplePathItems.Add(new WpfFirstRunChecklistItem(
-                4,
-                "\uD6C4\uBCF4 \uD655\uC778",
-                "\uD6C4\uBCF4 \uC0DD\uC131 \uD6C4 \uC218\uB77D/\uC2A4\uD0B5",
-                "\uD6C4\uBCF4\uB294 \uC815\uB2F5\uC774 \uC544\uB2C8\uBBC0\uB85C \uAC80\uD1A0 \uD6C4 \uC800\uC7A5\uD55C \uAC83\uB9CC \uD559\uC2B5\uC5D0 \uC0AC\uC6A9\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.RobotIndustrial,
-                shortcutWorkflowStepOrder: 7,
-                shortcutActionText: "\uAC80\uD1A0"));
-            FirstRunSamplePathItems.Add(new WpfFirstRunChecklistItem(
-                5,
-                "\uD559\uC2B5 \uC900\uBE44",
-                "\uC810\uAC80 \uD1B5\uACFC \uB4A4 \uD559\uC2B5 \uC2DC\uC791",
-                "\uD559\uC2B5\uC774 \uB05D\uB098\uBA74 \uBAA8\uB378\uC13C\uD130\uC5D0\uC11C \uC0C8 \uD559\uC2B5 \uACB0\uACFC \uD6C4\uBCF4\uB97C \uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.CheckAll,
-                shortcutWorkflowStepOrder: 5,
-                shortcutActionText: "\uC810\uAC80"));
+            foreach (WpfFirstRunChecklistItem item in WpfLearningWorkflowCatalogService.BuildFirstRunSamplePathItems())
+            {
+                FirstRunSamplePathItems.Add(item);
+            }
 
-            FirstRunChecklistItems.Add(new WpfFirstRunChecklistItem(
-                1,
-                "\uB370\uC774\uD130\uC14B",
-                "\uC0C8\uB85C \uB9CC\uB4E4\uAE30 \uB610\uB294 \uAE30\uC874 \uC5F4\uAE30",
-                "\uC800\uC7A5 \uD3F4\uB354\uC640 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB97C \uBA3C\uC800 \uAD6C\uBD84\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.DatabasePlusOutline));
-            FirstRunChecklistItems.Add(new WpfFirstRunChecklistItem(
-                2,
-                "\uC774\uBBF8\uC9C0",
-                "\uC6D0\uBCF8 \uC774\uBBF8\uC9C0 \uD3F4\uB354 \uD655\uC778",
-                "\uC774\uBBF8\uC9C0 \uD050\uC5D0 \uD30C\uC77C\uC774 \uBCF4\uC774\uBA74 \uB2E4\uC74C \uB2E8\uACC4\uC785\uB2C8\uB2E4.",
-                PackIconMaterialKind.FolderImage));
-            FirstRunChecklistItems.Add(new WpfFirstRunChecklistItem(
-                3,
-                "\uD074\uB798\uC2A4",
-                "OK, NG \uB4F1 \uB77C\uBCA8 \uC774\uB984 \uD655\uC778",
-                "\uBAA8\uB378\uC774 \uBC30\uC6B8 \uC774\uB984\uC744 \uBA3C\uC800 \uC815\uD574 \uB450\uBA74 \uC800\uC7A5 \uD6C4 \uD63C\uB780\uC774 \uC904\uC5B4\uB4ED\uB2C8\uB2E4.",
-                PackIconMaterialKind.TagMultipleOutline));
-            FirstRunChecklistItems.Add(new WpfFirstRunChecklistItem(
-                4,
-                "\uCCAB \uBC15\uC2A4",
-                "\uBC15\uC2A4 \uB3C4\uAD6C\uB85C 1\uAC1C \uADF8\uB9AC\uAE30",
-                "\uAC1D\uCCB4\uB97C \uD3EC\uD568\uD558\uB294 \uBC15\uC2A4\uB97C \uADF8\uB9AC\uACE0 \uC62C\uBC14\uB978 \uD074\uB798\uC2A4\uB97C \uC120\uD0DD\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.ShapeSquareRoundedPlus));
-            FirstRunChecklistItems.Add(new WpfFirstRunChecklistItem(
-                5,
-                "\uB77C\uBCA8 \uC800\uC7A5",
-                "\uC800\uC7A5 \uD6C4 \uB2E4\uC74C \uC774\uBBF8\uC9C0",
-                "\uB77C\uBCA8 \uC800\uC7A5 \uBC84\uD2BC\uC744 \uB20C\uB7EC \uD604\uC7AC \uC774\uBBF8\uC9C0\uC758 \uC815\uB2F5\uC744 \uD30C\uC77C\uC5D0 \uBC18\uC601\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.ContentSaveOutline));
-            FirstRunChecklistItems.Add(new WpfFirstRunChecklistItem(
-                6,
-                "\uD559\uC2B5 \uC900\uBE44",
-                "\uB370\uC774\uD130\uC14B \uC810\uAC80\uC73C\uB85C \uBD80\uC871\uD55C \uD56D\uBAA9 \uD655\uC778",
-                "\uD559\uC2B5 \uC2DC\uC791 \uC804\uC5D0 \uB77C\uBCA8, \uD074\uB798\uC2A4, \uBD84\uD560 \uC0C1\uD0DC\uB97C \uD55C \uBC88\uC5D0 \uD655\uC778\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.CheckAll));
+            foreach (WpfFirstRunChecklistItem item in WpfLearningWorkflowCatalogService.BuildFirstRunChecklistItems())
+            {
+                FirstRunChecklistItems.Add(item);
+            }
 
-            TutorialChecklistItems.Add("\uB370\uC774\uD130\uC14B\uC744 \uBA3C\uC800 \uB9CC\uB4E4\uACE0 \uC800\uC7A5 \uC704\uCE58\uC640 \uD559\uC2B5 \uBAA9\uC801\uC744 \uC815\uD569\uB2C8\uB2E4.");
-            TutorialChecklistItems.Add("\uC0D8\uD50C \uB610\uB294 \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB97C \uC5F4\uACE0 \uC88C\uCE21 \uD050\uC5D0\uC11C \uC774\uBBF8\uC9C0\uB97C \uC120\uD0DD\uD569\uB2C8\uB2E4.");
-            TutorialChecklistItems.Add("\uC624\uB978\uCABD \uD074\uB798\uC2A4 \uD0ED\uC5D0\uC11C OK, NG\uCC98\uB7FC \uBAA8\uB378\uC774 \uBC30\uC6B8 \uC774\uB984\uC744 \uB4F1\uB85D\uD569\uB2C8\uB2E4.");
-            TutorialChecklistItems.Add("\uB77C\uBCA8\uB9C1 \uBAA8\uB4DC\uC5D0\uC11C \uBC15\uC2A4\uB97C \uADF8\uB9AC\uACE0 \uC800\uC7A5\uD558\uC5EC \uBC15\uC2A4 \uB77C\uBCA8 \uD30C\uC77C\uC744 \uB9CC\uB4ED\uB2C8\uB2E4.");
-            TutorialChecklistItems.Add("\uB370\uC774\uD130\uC14B \uC810\uAC80\uC73C\uB85C \uB77C\uBCA8, \uD074\uB798\uC2A4, \uD559\uC2B5 \uC124\uC815\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.");
-            TutorialChecklistItems.Add("\uBAA8\uB378 \uD559\uC2B5\uC744 \uC2E4\uD589\uD558\uACE0 \uC644\uB8CC \uD6C4 \uD559\uC2B5 \uACB0\uACFC \uBAA8\uB378\uC744 \uC801\uC6A9\uD569\uB2C8\uB2E4.");
-            TutorialChecklistItems.Add("\uD604\uC7AC \uAC80\uC0AC\uB85C AI \uD6C4\uBCF4\uB97C \uD655\uC778\uD558\uACE0 \uD655\uC815 \uB610\uB294 \uC2A4\uD0B5\uD569\uB2C8\uB2E4.");
+            foreach (string item in WpfLearningWorkflowCatalogService.BuildTutorialChecklistItems())
+            {
+                TutorialChecklistItems.Add(item);
+            }
 
-            YoloTrainingWorkflowSteps.Add(new WpfYoloTrainingWorkflowStepItem(
-                1,
-                "\uB370\uC774\uD130\uC14B \uB9CC\uB4E4\uAE30",
-                "\uD559\uC2B5 \uBAA9\uC801, \uC800\uC7A5 \uC704\uCE58, \uAE30\uBCF8 \uD074\uB798\uC2A4\uB97C \uC815\uD574 \uB370\uC774\uD130\uC14B\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4.",
-                "\uB370\uC774\uD130\uC14B \uB9CC\uB4E4\uAE30 \uCC3D\uC5D0\uC11C \uD3F4\uB354 \uAD6C\uC870\uC640 \uD074\uB798\uC2A4\uB97C \uC900\uBE44\uD558\uC138\uC694.",
-                PackIconMaterialKind.FolderImage));
-            YoloTrainingWorkflowSteps.Add(new WpfYoloTrainingWorkflowStepItem(
-                2,
-                "\uC774\uBBF8\uC9C0 \uBD88\uB7EC\uC624\uAE30",
-                "\uD559\uC2B5\uD560 N\uAC1C \uC774\uBBF8\uC9C0\uB97C \uC774\uBBF8\uC9C0 \uD050\uC5D0 \uC62C\uB9BD\uB2C8\uB2E4.",
-                "\uC774\uBBF8\uC9C0 \uD050\uC5D0 \uD3F4\uB354 \uACBD\uB85C\uC640 \uD30C\uC77C \uC218\uAC00 \uBCF4\uC774\uBA74 \uB2E4\uC74C \uB2E8\uACC4\uC785\uB2C8\uB2E4.",
-                PackIconMaterialKind.ImageMultipleOutline));
-            YoloTrainingWorkflowSteps.Add(new WpfYoloTrainingWorkflowStepItem(
-                3,
-                "\uD074\uB798\uC2A4 \uB4F1\uB85D",
-                "OK, NG, defect\uCC98\uB7FC \uBAA8\uB378\uC774 \uBC30\uC6B8 \uC774\uB984\uC744 \uBA3C\uC800 \uB9CC\uB4ED\uB2C8\uB2E4.",
-                "\uC624\uB978\uCABD \uD074\uB798\uC2A4 \uD0ED\uC5D0\uC11C \uBAA9\uB85D\uACFC \uC800\uC7A5 \uACBD\uB85C\uB97C \uD655\uC778\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.TagMultipleOutline));
-            YoloTrainingWorkflowSteps.Add(new WpfYoloTrainingWorkflowStepItem(
-                4,
-                "\uBC15\uC2A4 \uB77C\uBCA8\uB9C1",
-                "\uAC01 \uC774\uBBF8\uC9C0\uC5D0\uC11C \uAC1D\uCCB4\uB97C \uBC15\uC2A4\uB85C \uADF8\uB9AC\uACE0 \uD074\uB798\uC2A4\uB97C \uBD99\uC785\uB2C8\uB2E4.",
-                "\uB77C\uBCA8 \uC218\uAC00 \uB298\uACE0 \uC800\uC7A5\uD558\uBA74 \uBC15\uC2A4 \uB77C\uBCA8 \uD30C\uC77C\uC774 \uC0DD\uC131\uB429\uB2C8\uB2E4.",
-                PackIconMaterialKind.ShapeSquareRoundedPlus));
-            YoloTrainingWorkflowSteps.Add(new WpfYoloTrainingWorkflowStepItem(
-                5,
-                "\uC800\uC7A5\uACFC \uB370\uC774\uD130\uC14B \uC810\uAC80",
-                "\uB77C\uBCA8\uC774 \uBE60\uC9C4 \uC774\uBBF8\uC9C0, \uD074\uB798\uC2A4, \uD559\uC2B5 \uC124\uC815\uC744 \uAC80\uC0AC\uD569\uB2C8\uB2E4.",
-                "\uD559\uC2B5/\uBAA8\uB378 \uC13C\uD130\uC758 \uC0C8\uB85C\uACE0\uCE68\uC5D0\uC11C \uD559\uC2B5 \uAC00\uB2A5 \uC0C1\uD0DC\uAC00 \uB098\uC640\uC57C \uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.CheckAll));
-            YoloTrainingWorkflowSteps.Add(new WpfYoloTrainingWorkflowStepItem(
-                6,
-                "YOLO \uBAA8\uB378 \uD559\uC2B5",
-                "\uC774\uBBF8\uC9C0 \uD06C\uAE30, \uBC30\uCE58, \uC5D0\uD3ED, \uAC00\uC911\uCE58\uB97C \uD655\uC778\uD558\uACE0 \uD559\uC2B5\uC744 \uC2DC\uC791\uD569\uB2C8\uB2E4.",
-                "\uC9C4\uD589\uB960\uACFC \uC5D0\uD3ED\uC744 \uBCF4\uACE0, \uC644\uB8CC \uD6C4 \uD559\uC2B5 \uACB0\uACFC \uBAA8\uB378\uC744 \uD655\uC778\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.PlayCircleOutline));
-            YoloTrainingWorkflowSteps.Add(new WpfYoloTrainingWorkflowStepItem(
-                7,
-                "\uD559\uC2B5 \uACB0\uACFC \uCD94\uB860 \uAC80\uD1A0",
-                "\uC0C8\uB85C \uB9CC\uB4E0 \uBAA8\uB378\uB85C \uD604\uC7AC \uC774\uBBF8\uC9C0\uB97C \uAC80\uC0AC\uD558\uACE0 \uD6C4\uBCF4\uB97C \uD655\uC815\uD569\uB2C8\uB2E4.",
-                "\uACB0\uACFC\uAC00 \uB9DE\uC73C\uBA74 \uB77C\uBCA8\uB85C \uD655\uC815\uD558\uACE0, \uD2C0\uB9AC\uBA74 \uB370\uC774\uD130\uB97C \uCD94\uAC00\uD569\uB2C8\uB2E4.",
-                PackIconMaterialKind.RobotIndustrial));
+            foreach (WpfYoloTrainingWorkflowStepItem step in WpfLearningWorkflowCatalogService.BuildYoloTrainingWorkflowSteps())
+            {
+                YoloTrainingWorkflowSteps.Add(step);
+            }
 
             // Keep the file-format lesson close to dataset status: saving a box creates a paired label txt, not a hidden app-only object.
             RefreshYoloDatasetStructureItems();
@@ -337,7 +198,7 @@ namespace MvcVisionSystem
                 initialDashboard.StatusText,
                 initialDashboard.SummaryText,
                 datasetDashboardActionText,
-                BuildInitialDatasetDashboardMetrics(),
+                WpfLearningWorkflowCatalogService.BuildInitialDatasetDashboardMetrics(),
                 initialDashboard.IssueItems,
                 initialDashboard);
         }
@@ -934,7 +795,7 @@ namespace MvcVisionSystem
                     CurrentYoloTrainingStepDetailText = value?.ActionText ?? string.Empty;
                     CurrentYoloTrainingActionText = value == null
                         ? "대기"
-                        : ResolveCurrentYoloTrainingActionText(value);
+                        : WpfLearningWorkflowGuidanceService.BuildCurrentYoloTrainingActionText(value);
                 }
             }
         }
@@ -1368,7 +1229,7 @@ namespace MvcVisionSystem
             DatasetDashboardActionText = string.IsNullOrWhiteSpace(localizedActionText)
                 ? (string.IsNullOrWhiteSpace(actionText) ? string.Empty : actionText)
                 : localizedActionText;
-            ObjectDetectionMvpNextActionText = BuildObjectDetectionMvpNextActionText(DatasetDashboardActionText);
+            ObjectDetectionMvpNextActionText = WpfLearningWorkflowGuidanceService.BuildObjectDetectionMvpNextActionText(DatasetDashboardActionText);
 
             DatasetDashboardMetrics.Clear();
             IEnumerable<WpfDatasetDashboardMetricItem> localizedMetrics = datasetDashboardLocalizationSnapshot?.MetricItems
@@ -1424,79 +1285,6 @@ namespace MvcVisionSystem
             ExternalYoloDatasetIntakePathText = pathText ?? string.Empty;
         }
 
-        private static string BuildObjectDetectionMvpNextActionText(string actionText)
-        {
-            if (string.IsNullOrWhiteSpace(actionText))
-            {
-                return T("WpfLearningWorkflow.ObjectDetectionMvpNextAction.Empty");
-            }
-
-            string normalized = actionText.Trim();
-            if (normalized.StartsWith("\uC644\uB8CC:", StringComparison.Ordinal))
-            {
-                return T("WpfLearningWorkflow.ObjectDetectionMvpNextAction.Complete");
-            }
-
-            const string nextPrefix = "\uB2E4\uC74C:";
-            if (normalized.StartsWith(nextPrefix, StringComparison.Ordinal))
-            {
-                normalized = normalized.Substring(nextPrefix.Length).Trim();
-            }
-
-            return Format(
-                "WpfLearningWorkflow.ObjectDetectionMvpNextAction.Dynamic",
-                WpfLocalizationTextRuntimeService.Translate(normalized));
-        }
-
-        private static IEnumerable<WpfDatasetDashboardMetricItem> BuildInitialDatasetDashboardMetrics()
-        {
-            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
-                "WpfLearningWorkflow.DatasetDashboard.Metric.Images.Title",
-                "-",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
-                PackIconMaterialKind.FolderImage,
-                isProblem: false,
-                isWarning: false,
-                actionKind: WpfDatasetDashboardActionKind.OpenImages);
-            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
-                "WpfLearningWorkflow.DatasetDashboard.Metric.Progress.Title",
-                "-",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
-                PackIconMaterialKind.ProgressClock,
-                isProblem: false,
-                isWarning: false,
-                actionKind: WpfDatasetDashboardActionKind.OpenLabelingProgress);
-            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
-                "WpfLearningWorkflow.DatasetDashboard.Metric.Initial.Labels.Title",
-                "-",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
-                PackIconMaterialKind.ShapeSquareRoundedPlus,
-                isProblem: false,
-                isWarning: false,
-                actionKind: WpfDatasetDashboardActionKind.OpenLabelingTool);
-            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
-                "WpfLearningWorkflow.DatasetDashboard.Metric.Split.Title",
-                "-",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
-                PackIconMaterialKind.CheckAll,
-                isProblem: false,
-                isWarning: false,
-                actionKind: WpfDatasetDashboardActionKind.OpenDatasetSettings);
-            yield return WpfDatasetDashboardLocalizationService.CreateMetric(
-                "WpfLearningWorkflow.DatasetDashboard.Metric.Class.Title",
-                "-",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Before",
-                "WpfLearningWorkflow.DatasetDashboard.Metric.State.Waiting",
-                PackIconMaterialKind.TagMultipleOutline,
-                isProblem: false,
-                isWarning: false,
-                actionKind: WpfDatasetDashboardActionKind.OpenClassCatalog);
-        }
-
         public void SetYoloTrainingStepState(int order, bool isCompleted, string stateText)
         {
             WpfYoloTrainingWorkflowStepItem step = YoloTrainingWorkflowSteps.FirstOrDefault(item => item.Order == order);
@@ -1518,21 +1306,6 @@ namespace MvcVisionSystem
             CurrentYoloTrainingStep = nextStep;
         }
 
-        private static string ResolveCurrentYoloTrainingActionText(WpfYoloTrainingWorkflowStepItem step)
-        {
-            return step?.Order switch
-            {
-                1 => "데이터셋 만들기",
-                2 => "이미지 불러오기",
-                3 => "클래스 등록",
-                4 => "라벨링 시작",
-                5 => "데이터셋 점검",
-                6 => "학습 설정 확인",
-                7 => "AI 후보 검토",
-                _ => "이 단계로 이동"
-            };
-        }
-
         public void SetAnnotationHistoryState(bool canUndo, bool canRedo, string undoActionName, string redoActionName)
         {
             SetAnnotationToolRuntimeState(
@@ -1540,14 +1313,14 @@ namespace MvcVisionSystem
                 canUndo,
                 canUndo ? "\uAC00\uB2A5" : "\uC5C6\uC74C",
                 canUndo
-                    ? "\uB418\uB3CC\uB9AC\uAE30 \uAC00\uB2A5" + FormatHistoryActionSuffix(undoActionName)
+                    ? "\uB418\uB3CC\uB9AC\uAE30 \uAC00\uB2A5" + WpfLearningWorkflowGuidanceService.FormatHistoryActionSuffix(undoActionName)
                     : "\uB418\uB3CC\uB9B4 \uD3B8\uC9D1 \uC774\uB825\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");
             SetAnnotationToolRuntimeState(
                 WpfAnnotationTool.Redo,
                 canRedo,
                 canRedo ? "\uAC00\uB2A5" : "\uC5C6\uC74C",
                 canRedo
-                    ? "\uB2E4\uC2DC \uC801\uC6A9 \uAC00\uB2A5" + FormatHistoryActionSuffix(redoActionName)
+                    ? "\uB2E4\uC2DC \uC801\uC6A9 \uAC00\uB2A5" + WpfLearningWorkflowGuidanceService.FormatHistoryActionSuffix(redoActionName)
                     : "\uB2E4\uC2DC \uC801\uC6A9\uD560 \uD3B8\uC9D1 \uC774\uB825\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.");
         }
 
@@ -1556,9 +1329,6 @@ namespace MvcVisionSystem
             WpfAnnotationToolItem item = AnnotationTools.FirstOrDefault(candidate => candidate.Tool == tool);
             item?.SetRuntimeAvailability(isEnabled, stateText, statusText);
         }
-
-        private static string FormatHistoryActionSuffix(string actionName)
-            => string.IsNullOrWhiteSpace(actionName) ? string.Empty : $": {actionName}";
 
         public string DatasetPurposeHeaderText => T("WpfLearningWorkflow.DatasetPurposeHeader");
 
@@ -1679,7 +1449,7 @@ namespace MvcVisionSystem
                 : stepText.Trim();
             CurrentLabelingTaskToolText = string.IsNullOrWhiteSpace(toolText)
                 ? "\uB3C4\uAD6C: \uC120\uD0DD"
-                : FormatLiveLabelingTaskToolText(toolText);
+                : WpfLearningWorkflowGuidanceService.FormatLiveLabelingTaskToolText(toolText);
             CurrentLabelingTaskActionText = string.IsNullOrWhiteSpace(actionText)
                 ? "\uB77C\uBCA8\uC744 \uADF8\uB9AC\uACE0 \uACB0\uACFC\uB97C \uD655\uC778\uD55C \uB4A4 \uB77C\uBCA8 \uC800\uC7A5\uC744 \uB204\uB974\uC138\uC694."
                 : actionText.Trim();
@@ -1687,24 +1457,6 @@ namespace MvcVisionSystem
                 CurrentLabelingTaskStepText,
                 CurrentLabelingTaskToolText,
                 CurrentLabelingTaskActionText);
-        }
-
-        private static string FormatLiveLabelingTaskToolText(string toolText)
-        {
-            string value = toolText?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return "\uB3C4\uAD6C: \uC120\uD0DD";
-            }
-
-            if (value.IndexOf("\uAC80\uC0AC", StringComparison.Ordinal) >= 0
-                || value.IndexOf("AI", StringComparison.OrdinalIgnoreCase) >= 0
-                || value.IndexOf("\uD050", StringComparison.Ordinal) >= 0)
-            {
-                return $"\uBAA8\uB4DC: {value}";
-            }
-
-            return $"\uB3C4\uAD6C: {value}";
         }
 
         private void UpdateLiveLabelingTaskChecklist(string stepText, string toolText, string actionText)
@@ -1885,139 +1637,39 @@ namespace MvcVisionSystem
         private void RefreshLessonText()
         {
             // Keep dataset-purpose UX copy in the ViewModel so the panel remains a display-only composition surface.
-            DatasetPurposeSummaryText = ResolveReadableDatasetPurposeSummaryText(SelectedDatasetPurposeMode?.Mode ?? WpfLearningMode.ObjectDetection);
+            DatasetPurposeSummaryText = WpfLearningWorkflowGuidanceService.BuildDatasetPurposeSummaryText(
+                SelectedDatasetPurposeMode?.Mode ?? WpfLearningMode.ObjectDetection);
 
-            DatasetPurposeToolSummaryText = SelectedDatasetPurposeMode?.Mode switch
-            {
-                WpfLearningMode.ObjectDetection => T("WpfLearningWorkflow.ToolSummary.ObjectDetection"),
-                WpfLearningMode.Segmentation => T("WpfLearningWorkflow.ToolSummary.Segmentation"),
-                WpfLearningMode.AnomalyDetection => T("WpfLearningWorkflow.ToolSummary.AnomalyDetection"),
-                _ => T("WpfLearningWorkflow.ToolSummary.Default")
-            };
+            DatasetPurposeToolSummaryText = WpfLearningWorkflowGuidanceService.BuildDatasetPurposeToolSummaryText(
+                SelectedDatasetPurposeMode?.Mode);
 
-            DatasetSetupActionText = SelectedDatasetPurposeMode?.Mode switch
-            {
-                WpfLearningMode.ObjectDetection => T("WpfLearningWorkflow.DatasetSetupAction"),
-                WpfLearningMode.Segmentation => T("WpfLearningWorkflow.DatasetSetupAction"),
-                WpfLearningMode.AnomalyDetection => T("WpfLearningWorkflow.DatasetSetupAction"),
-                _ => T("WpfLearningWorkflow.DatasetSetupStatus.Before")
-            };
+            DatasetSetupActionText = WpfLearningWorkflowGuidanceService.BuildDatasetSetupActionText(
+                SelectedDatasetPurposeMode?.Mode);
 
-            DatasetSetupFirstActionText = SelectedDatasetPurposeMode?.Mode switch
-            {
-                WpfLearningMode.ObjectDetection => T("WpfLearningWorkflow.FirstAction.ObjectDetection"),
-                WpfLearningMode.Segmentation => T("WpfLearningWorkflow.FirstAction.Segmentation"),
-                WpfLearningMode.AnomalyDetection => T("WpfLearningWorkflow.FirstAction.AnomalyDetection"),
-                _ => T("WpfLearningWorkflow.FirstAction.Default")
-            };
+            DatasetSetupFirstActionText = WpfLearningWorkflowGuidanceService.BuildDatasetSetupFirstActionText(
+                SelectedDatasetPurposeMode?.Mode);
 
-            ModeDetailText = ResolveReadableModeDetailText(SelectedMode?.Mode ?? WpfLearningMode.LabelingBasics);
+            ModeDetailText = WpfLearningWorkflowGuidanceService.BuildModeDetailText(
+                SelectedMode?.Mode ?? WpfLearningMode.LabelingBasics);
 
-            StepDetailText = ResolveReadableStepDetailText(
+            StepDetailText = WpfLearningWorkflowGuidanceService.BuildStepDetailText(
                 SelectedStep?.Step,
                 SelectedDatasetPurposeMode?.Mode ?? WpfLearningMode.ObjectDetection);
 
-            CurrentWorkflowActionText = SelectedStep?.Step switch
-            {
-                WpfLearningStep.Sample => "\uB2E4\uC74C: \uC774\uBBF8\uC9C0 \uD3F4\uB354\uB97C \uC5F4\uACE0 \uCCAB \uC774\uBBF8\uC9C0\uB97C \uC120\uD0DD\uD569\uB2C8\uB2E4.",
-                WpfLearningStep.Label => SelectedDatasetPurposeMode?.Mode switch
-                {
-                    WpfLearningMode.Segmentation => "\uB2E4\uC74C: \uD3F4\uB9AC\uACE4/\uBE0C\uB7EC\uC2DC\uB85C \uB9C8\uC2A4\uD06C\uB97C \uB9CC\uB4E4\uACE0 \uC800\uC7A5\uD569\uB2C8\uB2E4.",
-                    WpfLearningMode.AnomalyDetection => "다음: 이미지 전체를 정상(OK) 또는 이상(NG)으로 판정하고 다음 이미지로 이동합니다.",
-                    _ => "\uB2E4\uC74C: \uBC15\uC2A4\uB97C \uADF8\uB9AC\uACE0 \uD074\uB798\uC2A4\uAC00 \uB9DE\uB294\uC9C0 \uD655\uC778\uD569\uB2C8\uB2E4."
-                },
-                WpfLearningStep.Infer => "\uB2E4\uC74C: \uCD94\uB860\uC744 \uC2E4\uD589\uD558\uACE0 AI \uD6C4\uBCF4\uB97C \uD655\uC778\uD569\uB2C8\uB2E4.",
-                WpfLearningStep.Review => "\uB2E4\uC74C: AI \uD6C4\uBCF4\uB97C \uD655\uC815\uD558\uAC70\uB098 \uC2A4\uD0B5\uD569\uB2C8\uB2E4.",
-                WpfLearningStep.Save => "\uB2E4\uC74C: \uB77C\uBCA8\uC744 \uC800\uC7A5\uD558\uACE0 \uB370\uC774\uD130\uC14B \uC810\uAC80\uC744 \uC2E4\uD589\uD569\uB2C8\uB2E4.",
-                _ => string.Empty
-            };
+            CurrentWorkflowActionText = WpfLearningWorkflowGuidanceService.BuildCurrentWorkflowActionText(
+                SelectedStep?.Step,
+                SelectedDatasetPurposeMode?.Mode);
 
-            ToolDetailText = ResolveReadableToolDetailText(SelectedTool?.Tool);
+            ToolDetailText = WpfLearningWorkflowGuidanceService.BuildToolDetailText(SelectedTool?.Tool);
         }
 
         private void RefreshYoloDatasetStructureItems()
         {
             YoloDatasetStructureItems.Clear();
-            YoloDatasetStructureItems.Add(new WpfYoloDatasetStructureItem(
-                "data.yaml",
-                T("WpfLearningWorkflow.Structure.DataYaml.Value"),
-                T("WpfLearningWorkflow.Structure.DataYaml.Detail"),
-                PackIconMaterialKind.FileCodeOutline));
-            YoloDatasetStructureItems.Add(new WpfYoloDatasetStructureItem(
-                "images",
-                T("WpfLearningWorkflow.Structure.Images.Value"),
-                T("WpfLearningWorkflow.Structure.Images.Detail"),
-                PackIconMaterialKind.FolderImage));
-            YoloDatasetStructureItems.Add(new WpfYoloDatasetStructureItem(
-                "labels",
-                T("WpfLearningWorkflow.Structure.Labels.Value"),
-                T("WpfLearningWorkflow.Structure.Labels.Detail"),
-                PackIconMaterialKind.FileDocumentOutline));
-            YoloDatasetStructureItems.Add(new WpfYoloDatasetStructureItem(
-                T("WpfLearningWorkflow.Structure.TxtLine.Title"),
-                T("WpfLearningWorkflow.Structure.TxtLine.Value"),
-                T("WpfLearningWorkflow.Structure.TxtLine.Detail"),
-                PackIconMaterialKind.FormatListNumbered));
-        }
-
-        private static string ResolveReadableDatasetPurposeSummaryText(WpfLearningMode mode)
-        {
-            return mode switch
+            foreach (WpfYoloDatasetStructureItem item in WpfLearningWorkflowCatalogService.BuildYoloDatasetStructureItems())
             {
-                WpfLearningMode.ObjectDetection => T("WpfLearningWorkflow.DatasetPurpose.ObjectDetection"),
-                WpfLearningMode.Segmentation => T("WpfLearningWorkflow.DatasetPurpose.Segmentation"),
-                WpfLearningMode.AnomalyDetection => T("WpfLearningWorkflow.DatasetPurpose.AnomalyDetection"),
-                WpfLearningMode.Train => T("WpfLearningWorkflow.DatasetPurpose.Train"),
-                WpfLearningMode.Infer => T("WpfLearningWorkflow.DatasetPurpose.Infer"),
-                WpfLearningMode.Review => T("WpfLearningWorkflow.DatasetPurpose.Review"),
-                _ => T("WpfLearningWorkflow.DatasetPurpose.Default")
-            };
-        }
-
-        private static string ResolveReadableModeDetailText(WpfLearningMode mode)
-        {
-            return mode switch
-            {
-                WpfLearningMode.ObjectDetection => "\uAC1D\uCCB4 \uD0D0\uC9C0: \uC774\uBBF8\uC9C0 \uC548\uC758 \uAC1D\uCCB4 \uC704\uCE58\uB97C \uBC15\uC2A4\uB85C \uCC3E\uACE0, YOLO \uB4F1 \uAC1D\uCCB4 \uD0D0\uC9C0 \uBAA8\uB378 \uD6C4\uBCF4\uB97C \uC815\uB2F5 \uB77C\uBCA8\uB85C \uD655\uC815\uD569\uB2C8\uB2E4.",
-                WpfLearningMode.Segmentation => "\uC138\uADF8\uBA58\uD14C\uC774\uC158: \uD53D\uC140 \uB2E8\uC704 \uB9C8\uC2A4\uD06C\uB97C \uB9CC\uB4E4\uACE0, \uBAA8\uB378 \uD559\uC2B5/\uAC80\uC0AC\uB294 \uC5F0\uACB0\uB41C \uC138\uADF8\uBA58\uD14C\uC774\uC158 \uC2E4\uD589\uAE30\uC5D0\uC11C \uC9C4\uD589\uD569\uB2C8\uB2E4.",
-                WpfLearningMode.AnomalyDetection => "이상 탐지: 이미지 전체의 정상/이상을 판정하고, 연결된 이미지 분류 실행기에서 학습과 검사를 진행합니다. 결함 위치를 그리는 작업은 객체탐지 또는 세그멘테이션을 사용하세요.",
-                WpfLearningMode.Train => "\uD559\uC2B5: \uB77C\uBCA8\uACFC \uD074\uB798\uC2A4\uAC00 \uC900\uBE44\uB41C \uB4A4 \uB370\uC774\uD130\uC14B\uACFC \uD30C\uB77C\uBBF8\uD130\uB97C \uD3C9\uAC00\uD569\uB2C8\uB2E4.",
-                WpfLearningMode.Infer => "\uCD94\uB860: \uD604\uC7AC \uC774\uBBF8\uC9C0 \uB610\uB294 \uC120\uD0DD \uC774\uBBF8\uC9C0\uB97C \uBA85\uC2DC\uC801\uC73C\uB85C \uAC80\uC0AC\uD569\uB2C8\uB2E4.",
-                WpfLearningMode.Review => "\uAC80\uD1A0: AI \uD6C4\uBCF4\uB97C \uBCF4\uACE0 \uD655\uC815/\uC2A4\uD0B5\uD558\uBA70 \uC815\uB2F5 \uB77C\uBCA8\uB85C \uBC14\uAFC9\uB2C8\uB2E4.",
-                _ => "\uB77C\uBCA8\uB9C1 \uD750\uB984\uC740 \uC815\uB2F5 \uC601\uC5ED\uC744 \uB9CC\uB4E4\uACE0 AI\uAC00 \uBC30\uC6B8 \uAE30\uC900\uC744 \uC900\uBE44\uD569\uB2C8\uB2E4."
-            };
-        }
-
-        private static string ResolveReadableStepDetailText(WpfLearningStep? step, WpfLearningMode purposeMode)
-        {
-            return step switch
-            {
-                WpfLearningStep.Sample => "\uC0D8\uD50C \uC774\uBBF8\uC9C0\uB97C \uBD88\uB7EC\uC640 \uAE30\uC900 \uD654\uBA74\uC744 \uB9CC\uB4ED\uB2C8\uB2E4.",
-                WpfLearningStep.Label when purposeMode == WpfLearningMode.AnomalyDetection => "이미지 전체를 정상(OK) 또는 이상(NG)으로 판정합니다. 박스나 마스크는 그리지 않습니다.",
-                WpfLearningStep.Label => "\uC815\uB2F5 \uB77C\uBCA8\uC744 \uC9C1\uC811 \uB9CC\uB4E4\uACE0 \uD074\uB798\uC2A4\uC640 \uC704\uCE58\uB97C \uD655\uC778\uD569\uB2C8\uB2E4.",
-                WpfLearningStep.Infer => "AI \uD6C4\uBCF4\uB97C \uB9CC\uB4E0 \uB4A4 \uB77C\uBCA8\uACFC \uBE44\uAD50\uD569\uB2C8\uB2E4.",
-                WpfLearningStep.Review => "\uD6C4\uBCF4\uB97C \uD558\uB098\uC529 \uBCF4\uBA70 \uD655\uC815, \uC804\uCCB4 \uD655\uC815, \uC2A4\uD0B5\uC744 \uC120\uD0DD\uD569\uB2C8\uB2E4.",
-                WpfLearningStep.Save when purposeMode == WpfLearningMode.AnomalyDetection => "현재 이미지의 OK/NG 판정을 이상탐지 검토 상태로 저장합니다.",
-                WpfLearningStep.Save => "\uD604\uC7AC \uB77C\uBCA8\uC744 \uB370\uC774\uD130\uC14B \uC800\uC7A5 \uD3F4\uB354\uC758 \uD559\uC2B5 \uB77C\uBCA8 \uD30C\uC77C\uB85C \uC800\uC7A5\uD569\uB2C8\uB2E4.",
-                _ => string.Empty
-            };
-        }
-
-        private static string ResolveReadableToolDetailText(WpfAnnotationTool? tool)
-        {
-            return tool switch
-            {
-                WpfAnnotationTool.Rectangle => "\uBC15\uC2A4: \uAC1D\uCCB4 \uD0D0\uC9C0 \uD559\uC2B5\uC5D0\uC11C \uAC00\uC7A5 \uAE30\uBCF8\uC774 \uB418\uB294 \uC601\uC5ED\uC785\uB2C8\uB2E4.",
-                WpfAnnotationTool.Ellipse => "\uC6D0/\uD0C0\uC6D0: \uC6D0\uD615 \uBD80\uC704\uB098 \uACB0\uD568\uC744 \uBE60\uB974\uAC8C \uC124\uBA85\uD558\uB294 \uBCF4\uC870 \uB3C4\uAD6C\uC785\uB2C8\uB2E4.",
-                WpfAnnotationTool.Polygon => "\uD3F4\uB9AC\uACE4: \uC138\uADF8\uBA58\uD14C\uC774\uC158 \uACBD\uACC4\uB97C \uAF2D\uC9D3\uC810\uC73C\uB85C \uB9CC\uB4ED\uB2C8\uB2E4.",
-                WpfAnnotationTool.Brush => "\uBE0C\uB7EC\uC2DC: \uB9C8\uC2A4\uD06C\uB97C \uCE60\uD574 \uD53D\uC140 \uB2E8\uC704 \uC815\uB2F5\uC744 \uB9CC\uB4ED\uB2C8\uB2E4.",
-                WpfAnnotationTool.Eraser => "\uC9C0\uC6B0\uAC1C: \uB9C8\uC2A4\uD06C\uB098 \uC601\uC5ED \uC77C\uBD80\uB97C \uC81C\uAC70\uD569\uB2C8\uB2E4.",
-                WpfAnnotationTool.PanZoom => "\uC774\uB3D9: \uB77C\uBCA8\uC744 \uB9CC\uB4E4\uAE30 \uC804\uC5D0 \uD654\uBA74 \uC704\uCE58\uB97C \uBE60\uB974\uAC8C \uC870\uC815\uD569\uB2C8\uB2E4.",
-                WpfAnnotationTool.Delete => "\uC0AD\uC81C: \uC120\uD0DD\uD55C \uB77C\uBCA8\uC744 \uC81C\uAC70\uD569\uB2C8\uB2E4.",
-                WpfAnnotationTool.Undo => "\uB418\uB3CC\uB9AC\uAE30: \uC9C1\uC804 \uD3B8\uC9D1\uC744 \uB418\uB3CC\uB9AC\uB294 \uBC84\uD2BC\uC785\uB2C8\uB2E4.",
-                WpfAnnotationTool.Redo => "\uB2E4\uC2DC \uC801\uC6A9: \uB418\uB3CC\uB9B0 \uD3B8\uC9D1\uC744 \uB2E4\uC2DC \uC801\uC6A9\uD558\uB294 \uBC84\uD2BC\uC785\uB2C8\uB2E4.",
-                _ => "\uC120\uD0DD: \uB9CC\uB4E0 \uB77C\uBCA8\uC744 \uACE0\uB974\uACE0 \uAC80\uC0AC\uD569\uB2C8\uB2E4."
-            };
+                YoloDatasetStructureItems.Add(item);
+            }
         }
 
         public void Dispose()
@@ -2098,7 +1750,7 @@ namespace MvcVisionSystem
                 }
             }
 
-            ObjectDetectionMvpNextActionText = BuildObjectDetectionMvpNextActionText(DatasetDashboardActionText);
+            ObjectDetectionMvpNextActionText = WpfLearningWorkflowGuidanceService.BuildObjectDetectionMvpNextActionText(DatasetDashboardActionText);
 
             // The remaining panel captions are expression-backed so one owner-level
             // notification refreshes them without a visual-tree string rewrite.

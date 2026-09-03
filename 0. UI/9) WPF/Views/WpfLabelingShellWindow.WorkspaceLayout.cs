@@ -21,7 +21,8 @@ namespace MvcVisionSystem
                 System.Windows.Threading.DispatcherPriority.ContextIdle,
                 new System.Action(() =>
                 {
-                    if (requestVersion != canvasLayoutAutoFitVersion
+                    if (isApplicationCloseApproved
+                        || requestVersion != canvasLayoutAutoFitVersion
                         || activeImageBitmap == null
                         || activeImageSize.IsEmpty
                         || MainCanvasView == null

@@ -41,78 +41,19 @@ namespace MvcVisionSystem
 
             int totalCount = imageQueueItems?.Count ?? 0;
             int completedCount = imageQueueItems?.Count(WpfImageQueueFilterService.IsCompletedQueueItem) ?? 0;
-            int remainingCount = Math.Max(0, totalCount - completedCount);
-            string stageText = ResolveWorkflowStageText(totalCount);
-            string progressText = totalCount > 0
-                ? $"진행: {completedCount}/{totalCount} 완료 · {remainingCount} 남음"
-                : "진행: 이미지 없음";
-            string nextActionText = ResolveWorkflowNextActionText(totalCount, remainingCount);
-            StatusBarViewModel.SetWorkflowStatus(stageText, progressText, nextActionText);
-        }
-
-        private string ResolveWorkflowStageText(int totalCount)
-        {
-            if (currentWorkflowMode == WorkflowMode.Inference)
-            {
-                return pendingDetectionCandidates.Count > 0
-                    ? "단계: AI 후보 검토"
-                    : "단계: AI 후보 대기";
-            }
-
-            if (!string.IsNullOrWhiteSpace(annotationDirtyReason))
-            {
-                return "단계: 저장 필요";
-            }
-
-            if (lastYoloTrainingReadinessReport?.IsReady == true)
-            {
-                return "단계: 학습 준비";
-            }
-
-            if (activeImageBitmap == null || activeImageSize.IsEmpty)
-            {
-                return totalCount > 0
-                    ? "단계: 이미지 선택"
-                    : "단계: 데이터셋 준비";
-            }
-
-            return activeImageBitmap != null && !activeImageSize.IsEmpty
-                ? "단계: 라벨링"
-                : "단계: 준비";
-        }
-
-        private string ResolveWorkflowNextActionText(int totalCount, int remainingCount)
-        {
-            if (activeImageBitmap == null || activeImageSize.IsEmpty)
-            {
-                return totalCount > 0
-                    ? "다음: 이미지 선택"
-                    : "다음: 데이터셋 시작";
-            }
-
-            if (pendingDetectionCandidates.Count > 0)
-            {
-                return "다음: AI 후보 확정/스킵";
-            }
-
-            if (!string.IsNullOrWhiteSpace(annotationDirtyReason))
-            {
-                return "다음: 저장";
-            }
-
-            if (totalCount > 0 && remainingCount > 0)
-            {
-                return "다음: 다음 미완료 이미지";
-            }
-
-            if (totalCount > 0)
-            {
-                return lastYoloTrainingReadinessReport?.IsReady == true
-                    ? "다음: 학습 시작"
-                    : "다음: 데이터셋 점검";
-            }
-
-            return "다음: 이미지 폴더";
+            WpfShellWorkflowStatus status = WpfShellWorkflowStatusPresentationService.Build(
+                new WpfShellWorkflowStatusContext(
+                    isInferenceMode: currentWorkflowMode == WorkflowMode.Inference,
+                    totalImageCount: totalCount,
+                    completedImageCount: completedCount,
+                    hasPendingCandidates: pendingDetectionCandidates.Count > 0,
+                    hasUnsavedAnnotationChanges: !string.IsNullOrWhiteSpace(annotationDirtyReason),
+                    isTrainingReady: lastYoloTrainingReadinessReport?.IsReady == true,
+                    hasActiveImage: activeImageBitmap != null && !activeImageSize.IsEmpty));
+            StatusBarViewModel.SetWorkflowStatus(
+                status.StageText,
+                status.ProgressText,
+                status.NextActionText);
         }
 
         private void SetModelStatus(string text)

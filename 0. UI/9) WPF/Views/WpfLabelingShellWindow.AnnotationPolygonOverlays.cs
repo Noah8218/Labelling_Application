@@ -223,7 +223,9 @@ namespace MvcVisionSystem
             }
 
             YoloWorkerSmokeCandidate candidate = GetSelectedCandidate();
-            IReadOnlyList<System.Drawing.PointF> contour = GetCandidateContourPoints(candidate);
+            IReadOnlyList<System.Drawing.PointF> contour = WpfCandidateReviewPresentationService.GetCandidateContourPoints(
+                candidate,
+                activeImageSize);
             if (candidate == null || contour.Count < 3)
             {
                 return;

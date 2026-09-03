@@ -45,7 +45,6 @@ namespace MvcVisionSystem
 {
     public partial class WpfLabelingShellWindow : WpfUiFluentWindow
     {
-        private const string TutorialHtmlGuideRelativePath = @"docs\tutorial\labeling-workbench-tutorial.html";
         private const int BatchReviewStatusSaveInterval = 10;
         private const int TrainingStatusPollTimeoutSeconds = 600;
         private const int AnnotationHistoryLimit = 50;
@@ -100,6 +99,8 @@ namespace MvcVisionSystem
         private string dismissedAnomalyFolderStateSuggestionRoot = string.Empty;
         private int queuedActiveImageQueueStatusRefreshVersion;
         private readonly WpfImageQueueSelectionService imageQueueSelectionService = new WpfImageQueueSelectionService();
+        private readonly WpfImageQueueCatalogLoadService imageQueueCatalogLoadService;
+        private readonly WpfImageQueueDetailRefreshService imageQueueDetailRefreshService = new WpfImageQueueDetailRefreshService();
         private readonly WpfDatasetImageRootResolver datasetImageRootResolver = new WpfDatasetImageRootResolver();
         private readonly WpfImageDecodeCacheService imageDecodeCacheService = new WpfImageDecodeCacheService();
         private readonly WpfImageDecodeService imageDecodeService = new WpfImageDecodeService();
@@ -158,6 +159,7 @@ namespace MvcVisionSystem
         private readonly WpfCandidateReviewCompletionPresentationService candidateReviewCompletionPresentationService = new WpfCandidateReviewCompletionPresentationService();
         private readonly WpfDetectionResultPresentationService detectionResultPresentationService = new WpfDetectionResultPresentationService();
         private readonly WpfDetectionTargetService detectionTargetService = new WpfDetectionTargetService();
+        private readonly WpfTemplateMatchingSourceService templateMatchingSourceService = new WpfTemplateMatchingSourceService();
         private readonly WpfBatchDetectionProgressService batchDetectionProgressService = new WpfBatchDetectionProgressService();
         private readonly WpfImageLoadPresentationService imageLoadPresentationService = new WpfImageLoadPresentationService();
         private readonly WpfObjectReviewPresentationService objectReviewPresentationService = new WpfObjectReviewPresentationService();
@@ -166,6 +168,7 @@ namespace MvcVisionSystem
         private readonly WpfDatasetSetupExecutionService datasetSetupExecutionService = new WpfDatasetSetupExecutionService();
         private readonly WpfDatasetSetupPresentationService datasetSetupPresentationService = new WpfDatasetSetupPresentationService();
         private readonly WpfProjectRecipeSessionService projectRecipeSessionService = new WpfProjectRecipeSessionService();
+        private readonly WpfClassCatalogWorkflowService classCatalogWorkflowService;
         private readonly CancellationTokenSource projectRecipeSessionCts = new CancellationTokenSource();
         private readonly WpfTrainingWeightsService trainingWeightsService = new WpfTrainingWeightsService();
         private readonly WpfModelComparisonReviewService modelComparisonReviewService = new WpfModelComparisonReviewService();
@@ -178,6 +181,7 @@ namespace MvcVisionSystem
         private readonly WpfWorkspaceLayoutSettingsService workspaceLayoutSettingsService = new WpfWorkspaceLayoutSettingsService();
         private readonly WpfApplicationClosePolicyService applicationClosePolicyService = new WpfApplicationClosePolicyService();
         private readonly WpfCrashRecoveryJournalService crashRecoveryJournalService = new WpfCrashRecoveryJournalService();
+        private readonly WpfCrashRecoverySessionService crashRecoverySessionService = new WpfCrashRecoverySessionService();
         private readonly WpfTrainingGuideHistoryService trainingGuideHistoryService = new WpfTrainingGuideHistoryService();
         private readonly WpfMaskEditStateService maskEditStateService = new WpfMaskEditStateService();
         private readonly WpfMaskStrokeHistoryDraftService maskStrokeHistoryDraftService = new WpfMaskStrokeHistoryDraftService();
@@ -259,8 +263,10 @@ namespace MvcVisionSystem
         internal WpfLabelingShellWindow(WpfLabelingShellViewModels viewModels)
         {
             this.viewModels = viewModels ?? throw new ArgumentNullException(nameof(viewModels));
+            imageQueueCatalogLoadService = new WpfImageQueueCatalogLoadService(imageQueueSelectionService);
             imageQualityReviewWorkflowService = new WpfImageQualityReviewWorkflowService(imageReviewStatus);
             anomalyImageReviewWorkflowService = new WpfAnomalyImageReviewWorkflowService(anomalyImageReviewStatus);
+            classCatalogWorkflowService = new WpfClassCatalogWorkflowService(projectRecipeSessionService);
             objectReviewWorkflowService = new WpfObjectReviewWorkflowService(
                 new WpfObjectMetadataPersistenceService(),
                 projectRecipeSessionService);
@@ -345,6 +351,24 @@ namespace MvcVisionSystem
             RefreshAnnotationHistoryToolState();
             RefreshShellDatasetContext();
             FocusDatasetOnboardingTabIfNoActiveImage();
+        }
+
+        // The event remains a View adapter; formatting policy lives in the
+        // UI-independent canvas diagnostics presentation service.
+        private void MainCanvasViewModel_RenderDiagnosticsCaptured(
+            object sender,
+            RoiImageCanvasRenderDiagnosticsEventArgs diagnostics)
+        {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            string message = WpfCanvasRenderDiagnosticsPresentationService.BuildLogMessage(diagnostics);
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                AppendLog(message);
+            }
         }
 
         private void PromoteSharedThemeResourcesToApplication()

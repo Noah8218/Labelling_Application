@@ -9,6 +9,18 @@ using System.Windows.Input;
 
 namespace MvcVisionSystem
 {
+    internal static class WpfDatasetInterchangeTextFormatter
+    {
+        public static string Translate(string key)
+            => OpenVisionLanguageService.T(key);
+
+        public static string Format(string key, params object[] arguments)
+            => string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                Translate(key),
+                arguments ?? Array.Empty<object>());
+    }
+
     public sealed class WpfDatasetInterchangeOption : WpfObservableViewModel, IDisposable
     {
         private bool disposed;
@@ -73,7 +85,7 @@ namespace MvcVisionSystem
         }
 
         private static string T(string key)
-            => OpenVisionLanguageService.T(key);
+            => WpfDatasetInterchangeTextFormatter.Translate(key);
     }
 
     public sealed class WpfDatasetInterchangeIssueItem
@@ -88,7 +100,7 @@ namespace MvcVisionSystem
 
         public bool IsBlocking { get; }
 
-        public string SeverityText => OpenVisionLanguageService.T(
+        public string SeverityText => WpfDatasetInterchangeTextFormatter.Translate(
             IsBlocking
                 ? "WpfDatasetInterchange.IssueSeverity.Blocking"
                 : "WpfDatasetInterchange.IssueSeverity.Warning");
@@ -530,13 +542,10 @@ namespace MvcVisionSystem
         }
 
         private static string T(string key)
-            => OpenVisionLanguageService.T(key);
+            => WpfDatasetInterchangeTextFormatter.Translate(key);
 
         private static string Format(string key, params object[] arguments)
-            => string.Format(
-                System.Globalization.CultureInfo.InvariantCulture,
-                T(key),
-                arguments ?? Array.Empty<object>());
+            => WpfDatasetInterchangeTextFormatter.Format(key, arguments);
 
         private static string LocalizeInterchangeText(string value)
             => WpfLocalizationTextRuntimeService.Translate(value ?? string.Empty);

@@ -72,24 +72,37 @@ namespace MvcVisionSystem
 
             int timeoutMilliseconds = connectTimeoutMilliseconds > 0
                 ? connectTimeoutMilliseconds
-                : GetWorkerConnectTimeoutMilliseconds();
+                : WpfYoloRuntimePresentationService.GetWorkerConnectTimeoutMilliseconds(
+                    global.Data?.ProjectSettings?.PythonModel?.DetectionTimeoutSeconds ?? 30);
             SetGlobalInferenceStatus(WpfInferenceStatusPresentationService.BuildWorkerPreparingInferenceStatus(applyToCanvas, imagePath), isBusy: true);
             SetPythonStatus("\uCD94\uB860: \uC5F0\uACB0 \uD655\uC778 \uC911");
             SetYoloCommandStatus(WpfInferenceStatusPresentationService.BuildWorkerPreparingCommandStatus(), isBusy: true);
             bool ready = workerReadyAlreadyChecked
                 ? true
                 : await global.ModelRuntime.EnsurePythonModelClientReadyAsync(timeoutMilliseconds).ConfigureAwait(true);
+            if (isApplicationCloseApproved)
+            {
+                return new YoloWorkerSmokeTestResult
+                {
+                    ImagePath = imagePath
+                };
+            }
+
             if (!ready)
             {
                 SetGlobalInferenceStatus(WpfInferenceStatusPresentationService.BuildWorkerConnectionFailureInferenceStatus(), isBusy: false, isWarning: true);
                 SetPythonStatus("\uCD94\uB860: \uC5F0\uACB0 \uC2E4\uD328");
-                AppendLog(WpfInferenceStatusPresentationService.BuildWorkerConnectionFailureLog(FormatElapsed(stopwatch.Elapsed)));
+                AppendLog(WpfInferenceStatusPresentationService.BuildWorkerConnectionFailureLog(
+                    WpfYoloRuntimePresentationService.FormatElapsed(stopwatch.Elapsed)));
+                string workerFailureText = WpfYoloRuntimePresentationService.BuildPythonWorkerFailureText(
+                    global.GetPythonCommunicationStatusSnapshot(),
+                    global.ModelRuntime.PythonClientProcess?.LastError);
                 return new YoloWorkerSmokeTestResult
                 {
                     Succeeded = false,
-                    Summary = BuildPythonWorkerFailureText(),
+                    Summary = workerFailureText,
                     ImagePath = imagePath,
-                    Errors = new[] { BuildPythonWorkerFailureText() }
+                    Errors = new[] { workerFailureText }
                 };
             }
 
@@ -130,6 +143,14 @@ namespace MvcVisionSystem
                 }
 
                 DetectionCandidatesUpdatedEventArgs completed = await completionWaiter.Completion.ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return new YoloWorkerSmokeTestResult
+                    {
+                        ImagePath = imagePath
+                    };
+                }
+
                 if (completed.Reason == DetectionCandidateUpdateReason.RequestTimedOut)
                 {
                     SetGlobalInferenceStatus(WpfInferenceStatusPresentationService.BuildWorkerTimedOutInferenceStatus(), isBusy: false, isWarning: true);
@@ -145,7 +166,7 @@ namespace MvcVisionSystem
 
                 IReadOnlyList<DefectInfo> defects = global.DetectionResults.GetLastDefects();
                 IReadOnlyList<YoloWorkerSmokeCandidate> candidates = defects
-                    .Select((defect, index) => ToSmokeCandidate(defect, index + 1))
+                    .Select((defect, index) => WpfCandidateReviewPresentationService.FromDefect(defect, index + 1))
                     .ToList();
                 YoloWorkerSmokeCandidate first = candidates.FirstOrDefault();
                 var result = new YoloWorkerSmokeTestResult
@@ -165,11 +186,21 @@ namespace MvcVisionSystem
                     SetPythonStatus(WpfInferenceStatusPresentationService.BuildWorkerPythonCompletedStatus(modelSourceText, result.CandidateCount));
                 }
 
-                AppendLog(WpfInferenceStatusPresentationService.BuildWorkerElapsedLog(FormatElapsed(stopwatch.Elapsed), modelSourceText));
+                AppendLog(WpfInferenceStatusPresentationService.BuildWorkerElapsedLog(
+                    WpfYoloRuntimePresentationService.FormatElapsed(stopwatch.Elapsed),
+                    modelSourceText));
                 return result;
             }
             catch (OperationCanceledException)
             {
+                if (isApplicationCloseApproved)
+                {
+                    return new YoloWorkerSmokeTestResult
+                    {
+                        ImagePath = imagePath
+                    };
+                }
+
                 SetGlobalInferenceStatus(WpfInferenceStatusPresentationService.BuildWorkerCanceledInferenceStatus(), isBusy: false, isWarning: true);
                 string canceledSummary = WpfInferenceStatusPresentationService.BuildWorkerCanceledSummary();
                 return new YoloWorkerSmokeTestResult

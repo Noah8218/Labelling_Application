@@ -156,11 +156,11 @@ namespace MvcVisionSystem
             ValidateFile(request.DataYamlPath, "\uD559\uC2B5 \uC124\uC815 \uD30C\uC77C", errors);
             ValidateFile(
                 request.BaselineWeightsPath,
-                request.IsEngineComparison ? FormatEngineName(request.BaselineModelEngine) + " \uAC1D\uCCB4\uD0D0\uC9C0 \uBAA8\uB378" : "\uAE30\uC874 \uBAA8\uB378 \uD30C\uC77C",
+                request.IsEngineComparison ? PythonModelSettings.FormatModelEngineName(request.BaselineModelEngine) + " \uAC1D\uCCB4\uD0D0\uC9C0 \uBAA8\uB378" : "\uAE30\uC874 \uBAA8\uB378 \uD30C\uC77C",
                 errors);
             ValidateFile(
                 request.CandidateWeightsPath,
-                request.IsEngineComparison ? FormatEngineName(request.CandidateModelEngine) + " \uAC1D\uCCB4\uD0D0\uC9C0 \uBAA8\uB378" : "\uC0C8 \uBAA8\uB378 \uD30C\uC77C",
+                request.IsEngineComparison ? PythonModelSettings.FormatModelEngineName(request.CandidateModelEngine) + " \uAC1D\uCCB4\uD0D0\uC9C0 \uBAA8\uB378" : "\uC0C8 \uBAA8\uB378 \uD30C\uC77C",
                 errors);
             if (request.IsEngineComparison && !string.Equals(request.ModelTask, "detect", StringComparison.OrdinalIgnoreCase))
             {
@@ -330,17 +330,6 @@ namespace MvcVisionSystem
 
             string projectRoot = settings?.ProjectRootPath?.Trim() ?? string.Empty;
             return string.IsNullOrWhiteSpace(projectRoot) ? string.Empty : Path.Combine(projectRoot, "best.pt");
-        }
-
-        private static string FormatEngineName(string engine)
-        {
-            return PythonModelSettings.NormalizeModelEngine(engine) switch
-            {
-                PythonModelSettings.EngineYoloV5 => "YOLOv5",
-                PythonModelSettings.EngineYoloV8 => "YOLOv8",
-                PythonModelSettings.EngineYolo11 => "YOLO11",
-                _ => "YOLO"
-            };
         }
 
         private static string ResolveYoloSourceRoot(string projectRoot)

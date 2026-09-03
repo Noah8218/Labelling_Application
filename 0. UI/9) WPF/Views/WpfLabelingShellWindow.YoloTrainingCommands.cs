@@ -11,13 +11,23 @@ namespace MvcVisionSystem
         // Training commands are separated from inference commands because their status and cancellation paths differ.
         private void ExecuteRefreshTrainingReadinessCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             SaveTrainingEditorFields();
             RefreshTrainingReadinessPanel(refreshYaml: true);
         }
 
         private async void ExecuteStartTrainingCommand()
         {
-            if (isTrainingWorkflowRunning || IsTrainingStopAvailable(global.GetPythonCommunicationStatusSnapshot()))
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            if (isTrainingWorkflowRunning || WpfTrainingProgressPresentationService.IsTrainingStopAvailable(global.GetPythonCommunicationStatusSnapshot()))
             {
                 string alreadyRunningText = WpfTrainingCommandPresentationService.BuildAlreadyRunningStatus();
                 SetTrainingReadinessStatus(alreadyRunningText);
@@ -43,11 +53,20 @@ namespace MvcVisionSystem
                 SaveTrainingEditorFields();
                 RefreshTrainingReadinessPanel(refreshYaml: true);
                 bool ready = await global.ModelRuntime
-                    .EnsurePythonModelClientReadyAsync(GetWorkerConnectTimeoutMilliseconds())
+                    .EnsurePythonModelClientReadyAsync(
+                        WpfYoloRuntimePresentationService.GetWorkerConnectTimeoutMilliseconds(
+                            global.Data?.ProjectSettings?.PythonModel?.DetectionTimeoutSeconds ?? 30))
                     .ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 if (!ready)
                 {
-                    string readinessText = BuildPythonWorkerFailureText();
+                    string readinessText = WpfYoloRuntimePresentationService.BuildPythonWorkerFailureText(
+                        global.GetPythonCommunicationStatusSnapshot(),
+                        global.ModelRuntime.PythonClientProcess?.LastError);
                     SetTrainingReadinessStatus(readinessText);
                     pendingRecovery = WpfTrainingCommandPresentationService.BuildWorkerConnectionFailureRecovery(readinessText);
                     AppendLog(readinessText);
@@ -82,6 +101,11 @@ namespace MvcVisionSystem
             }
             catch (Exception ex)
             {
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 string errorText = WpfTrainingCommandPresentationService.BuildStartExceptionStatus(ex.Message);
                 SetTrainingReadinessStatus(errorText);
                 pendingRecovery = WpfTrainingCommandPresentationService.BuildStartExceptionRecovery(errorText);
@@ -90,7 +114,7 @@ namespace MvcVisionSystem
             finally
             {
                 EndTrainingCommand();
-                if (pendingRecovery != null)
+                if (!isApplicationCloseApproved && pendingRecovery != null)
                 {
                     SetYoloRecoveryStatus(pendingRecovery.Title, pendingRecovery.Detail, pendingRecovery.Action);
                 }
@@ -108,6 +132,11 @@ namespace MvcVisionSystem
             try
             {
                 bool stopped = await Task.Run(() => global.ModelRuntime.TrainingWorkflow.TryStopTraining(global.ModelRuntime.DeepLearning)).ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 string stopText = WpfTrainingCommandPresentationService.BuildStopCommandResultStatus(stopped);
                 if (stopped)
                 {
@@ -124,6 +153,11 @@ namespace MvcVisionSystem
             }
             catch (Exception ex)
             {
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 string errorText = WpfTrainingCommandPresentationService.BuildStopExceptionStatus(ex.Message);
                 SetTrainingReadinessStatus(errorText);
                 pendingRecovery = WpfTrainingCommandPresentationService.BuildStopExceptionRecovery(errorText);
@@ -132,7 +166,7 @@ namespace MvcVisionSystem
             finally
             {
                 EndTrainingCommand();
-                if (pendingRecovery != null)
+                if (!isApplicationCloseApproved && pendingRecovery != null)
                 {
                     SetYoloRecoveryStatus(pendingRecovery.Title, pendingRecovery.Detail, pendingRecovery.Action);
                 }

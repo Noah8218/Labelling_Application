@@ -12,7 +12,7 @@ namespace MvcVisionSystem
         // The report is deliberately separate from the later, user-approved migration path.
         private async void ExecuteHistoricalSegmentationRemediationAuditCommand()
         {
-            if (isHistoricalSegmentationRemediationAuditRunning)
+            if (isApplicationCloseApproved || isHistoricalSegmentationRemediationAuditRunning)
             {
                 return;
             }
@@ -34,9 +34,13 @@ namespace MvcVisionSystem
                     await Task.Run(() =>
                     {
                         YoloSegmentationHistoricalRemediationAuditReport report =
-                            YoloSegmentationHistoricalRemediationAuditService.Build(data, sourceImagePath);
+                        YoloSegmentationHistoricalRemediationAuditService.Build(data, sourceImagePath);
                         return (report, YoloSegmentationHistoricalRemediationAuditService.ExportMarkdown(report, outputPath));
                     });
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
 
                 string sourceSummary = result.Report.ExcludedSourceImageCount > 0
                     ? $"\uAE30\uC900 \uC774\uBBF8\uC9C0 \uC81C\uC678 {result.Report.ExcludedSourceImageCount}\uC7A5"
@@ -51,8 +55,11 @@ namespace MvcVisionSystem
             }
             catch (Exception ex)
             {
-                SetModelStatus($"SEG \uBCF4\uC815 \uAC80\uD1A0 \uC2E4\uD328: {ex.Message}");
-                AppendLog($"SEG remediation dry run failed: {ex.Message}");
+                if (!isApplicationCloseApproved)
+                {
+                    SetModelStatus($"SEG \uBCF4\uC815 \uAC80\uD1A0 \uC2E4\uD328: {ex.Message}");
+                    AppendLog($"SEG remediation dry run failed: {ex.Message}");
+                }
             }
             finally
             {

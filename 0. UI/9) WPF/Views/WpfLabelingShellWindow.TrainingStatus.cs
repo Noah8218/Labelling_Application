@@ -17,6 +17,11 @@ namespace MvcVisionSystem
     {
         private bool BeginTrainingCommand(string statusText)
         {
+            if (isApplicationCloseApproved)
+            {
+                return false;
+            }
+
             if (isTrainingCommandRunning || isYoloEnvironmentCommandRunning || isDetecting || isBatchDetectionRunning)
             {
                 AppendLog("YOLO 또는 학습 명령이 이미 실행 중입니다.");
@@ -41,6 +46,11 @@ namespace MvcVisionSystem
         private void EndTrainingCommand()
         {
             isTrainingCommandRunning = false;
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             SyncTrainingReadinessFromTextBlockIfBindingWasBroken();
             SetTrainingProgressBusy(false);
             UpdateTrainingProgressFromWorker();

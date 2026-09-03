@@ -1191,9 +1191,7 @@ namespace MvcVisionSystem
             WorkflowStageTitleText = presentation.TitleText;
             WorkflowStageDetailText = presentation.DetailText;
             WorkflowStageNextActionText = presentation.NextActionText;
-            RightWorkflowViewTitleText = BuildRightWorkflowViewTitle(currentWorkflowStage, GetActiveRightWorkflowShortcut());
-            RightWorkflowViewDetailText = BuildRightWorkflowViewDetail(currentWorkflowStage, GetActiveRightWorkflowShortcut());
-            RightWorkflowRailCurrentViewText = BuildRightWorkflowRailCurrentViewText(currentWorkflowStage, GetActiveRightWorkflowShortcut());
+            ApplyRightWorkflowPresentation();
             RefreshRightWorkflowDockPresentation();
         }
 
@@ -1213,9 +1211,7 @@ namespace MvcVisionSystem
             IsSavedLabelsShortcutActive = shortcut == WpfRightWorkflowShortcut.SavedLabels;
             IsLabelingGuideShortcutActive = shortcut == WpfRightWorkflowShortcut.LabelingGuide;
             IsClassCatalogShortcutActive = shortcut == WpfRightWorkflowShortcut.ClassCatalog;
-            RightWorkflowViewTitleText = BuildRightWorkflowViewTitle(currentWorkflowStage, shortcut);
-            RightWorkflowViewDetailText = BuildRightWorkflowViewDetail(currentWorkflowStage, shortcut);
-            RightWorkflowRailCurrentViewText = BuildRightWorkflowRailCurrentViewText(currentWorkflowStage, shortcut);
+            ApplyRightWorkflowPresentation(shortcut);
         }
 
         private WpfRightWorkflowShortcut GetActiveRightWorkflowShortcut()
@@ -1235,85 +1231,17 @@ namespace MvcVisionSystem
                 : WpfRightWorkflowShortcut.None;
         }
 
-        private static string BuildRightWorkflowViewTitle(WpfShellWorkflowStage stage, WpfRightWorkflowShortcut shortcut)
+        private void ApplyRightWorkflowPresentation()
+            => ApplyRightWorkflowPresentation(GetActiveRightWorkflowShortcut());
+
+        private void ApplyRightWorkflowPresentation(WpfRightWorkflowShortcut shortcut)
         {
-            if (stage == WpfShellWorkflowStage.Dataset)
-            {
-                return shortcut == WpfRightWorkflowShortcut.ClassCatalog
-                    ? T("WpfShell.Right.Title.Classes")
-                    : T("WpfShell.Right.Title.Dataset");
-            }
-
-            if (stage == WpfShellWorkflowStage.Labeling)
-            {
-                return shortcut switch
-                {
-                    WpfRightWorkflowShortcut.LabelingGuide => T("WpfShell.Right.Title.CurrentTask"),
-                    WpfRightWorkflowShortcut.ClassCatalog => T("WpfShell.Right.Title.Classes"),
-                    _ => T("WpfShell.Right.Title.SavedLabels")
-                };
-            }
-
-            return stage switch
-            {
-                WpfShellWorkflowStage.Inference => T("WpfShell.Right.Title.AiCandidates"),
-                WpfShellWorkflowStage.TrainingModel => T("WpfShell.Right.Title.TrainingModel"),
-                _ => T("WpfShell.Right.Title.Dataset")
-            };
-        }
-
-        private static string BuildRightWorkflowViewDetail(WpfShellWorkflowStage stage, WpfRightWorkflowShortcut shortcut)
-        {
-            if (stage == WpfShellWorkflowStage.Dataset)
-            {
-                return shortcut == WpfRightWorkflowShortcut.ClassCatalog
-                    ? T("WpfShell.Right.Detail.DatasetClasses")
-                    : T("WpfShell.Right.Detail.Dataset");
-            }
-
-            if (stage == WpfShellWorkflowStage.Labeling)
-            {
-                return shortcut switch
-                {
-                    WpfRightWorkflowShortcut.LabelingGuide => T("WpfShell.Right.Detail.CurrentTask"),
-                    WpfRightWorkflowShortcut.ClassCatalog => T("WpfShell.Right.Detail.Classes"),
-                    _ => T("WpfShell.Right.Detail.SavedLabels")
-                };
-            }
-
-            return stage switch
-            {
-                WpfShellWorkflowStage.Inference => T("WpfShell.Right.Detail.AiCandidates"),
-                WpfShellWorkflowStage.TrainingModel => T("WpfShell.Right.Detail.TrainingModel"),
-                _ => T("WpfShell.Right.Detail.Dataset")
-            };
-        }
-
-        private static string BuildRightWorkflowRailCurrentViewText(WpfShellWorkflowStage stage, WpfRightWorkflowShortcut shortcut)
-        {
-            if (stage == WpfShellWorkflowStage.Dataset)
-            {
-                return shortcut == WpfRightWorkflowShortcut.ClassCatalog
-                    ? T("WpfShell.Right.Rail.Classes")
-                    : T("WpfShell.Right.Rail.Home");
-            }
-
-            if (stage == WpfShellWorkflowStage.Labeling)
-            {
-                return shortcut switch
-                {
-                    WpfRightWorkflowShortcut.LabelingGuide => T("WpfShell.Right.Rail.Task"),
-                    WpfRightWorkflowShortcut.ClassCatalog => T("WpfShell.Right.Rail.Classes"),
-                    _ => T("WpfShell.Right.Rail.Labels")
-                };
-            }
-
-            return stage switch
-            {
-                WpfShellWorkflowStage.Inference => T("WpfShell.Right.Rail.AiCandidates"),
-                WpfShellWorkflowStage.TrainingModel => T("WpfShell.Right.Rail.Model"),
-                _ => T("WpfShell.Right.Rail.Home")
-            };
+            WpfRightWorkflowPresentation presentation = WpfRightWorkflowPresentationService.Build(
+                currentWorkflowStage,
+                shortcut);
+            RightWorkflowViewTitleText = presentation.TitleText;
+            RightWorkflowViewDetailText = presentation.DetailText;
+            RightWorkflowRailCurrentViewText = presentation.RailCurrentViewText;
         }
 
         private void ApplyWorkflowStageShortcutState(WpfShellWorkflowStage stage)
@@ -1666,133 +1594,32 @@ namespace MvcVisionSystem
             ModelRegistryHistorySummaryText = count <= 0
                 ? "\uD559\uC2B5 \uD6C4\uBCF4\uB97C \uC800\uC7A5\uD558\uAC70\uB098 \uAC70\uC808\uD558\uBA74 \uC5EC\uAE30\uC5D0 \uCD5C\uADFC \uC774\uB825\uC774 \uD45C\uC2DC\uB429\uB2C8\uB2E4."
                 : "\uD559\uC2B5 run, \uD6C4\uBCF4 \uBAA8\uB378, \uC9C0\uD45C, \uCC44\uD0DD/\uAC70\uC808 \uACB0\uC815\uC744 \uD568\uAED8 \uBE44\uAD50\uD569\uB2C8\uB2E4.";
-            SelectedModelRegistryHistoryItem = FindModelRegistryHistorySelection(selectedCandidateId, selectedWeightsPath)
+            SelectedModelRegistryHistoryItem = WpfModelRegistryPresentationService.FindHistorySelection(
+                ModelRegistryHistoryItems,
+                selectedCandidateId,
+                selectedWeightsPath)
                 ?? ModelRegistryHistoryItems.FirstOrDefault();
-        }
-
-        private WpfModelRegistryHistoryItem FindModelRegistryHistorySelection(string candidateId, string weightsPath)
-        {
-            if (!string.IsNullOrWhiteSpace(candidateId))
-            {
-                WpfModelRegistryHistoryItem byCandidate = ModelRegistryHistoryItems.FirstOrDefault(item =>
-                    string.Equals(item?.CandidateId, candidateId, StringComparison.Ordinal));
-                if (byCandidate != null)
-                {
-                    return byCandidate;
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(weightsPath))
-            {
-                return ModelRegistryHistoryItems.FirstOrDefault(item =>
-                    string.Equals(item?.WeightsPath, weightsPath, StringComparison.OrdinalIgnoreCase));
-            }
-
-            return null;
         }
 
         private void RefreshSelectedModelHistoryState()
         {
-            WpfModelRegistryHistoryItem item = SelectedModelRegistryHistoryItem;
-            IsSelectedModelHistoryVisible = item != null;
-            if (item == null)
-            {
-                SelectedModelHistoryTitleText = "\uBAA8\uB378 \uC774\uB825 \uC120\uD0DD \uC5C6\uC74C";
-                SelectedModelHistoryDetailText = "\uC774\uB825\uC744 \uC120\uD0DD\uD558\uBA74 \uAC00\uC911\uCE58, \uC9C0\uD45C, \uC801\uC6A9 \uAC00\uB2A5 \uC5EC\uBD80\uB97C \uD655\uC778\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.";
-                SelectedModelHistoryMetricText = string.Empty;
-                SelectedModelHistoryDecisionText = string.Empty;
-                RefreshSelectedModelHistoryComparisonState(null);
-                SelectedModelHistoryActionText = "\uC801\uC6A9 \uBD88\uAC00";
-                SelectedModelHistoryActionToolTip = "\uC801\uC6A9\uD560 \uBAA8\uB378 \uC774\uB825\uC744 \uBA3C\uC800 \uC120\uD0DD\uD558\uC138\uC694.";
-                isSelectedModelHistoryActionAvailable = false;
-                RefreshSelectedModelHistoryActionEnabled();
-                return;
-            }
-
-            SelectedModelHistoryTitleText = string.IsNullOrWhiteSpace(item.TitleText)
-                ? "\uBAA8\uB378 \uC774\uB825"
-                : item.TitleText.Trim();
-            SelectedModelHistoryDetailText = string.IsNullOrWhiteSpace(item.DetailText)
-                ? item.WeightsPath ?? string.Empty
-                : item.DetailText.Trim();
-            SelectedModelHistoryMetricText = item.MetricText ?? string.Empty;
-            SelectedModelHistoryDecisionText = item.DecisionText ?? string.Empty;
-            RefreshSelectedModelHistoryComparisonState(item);
-            SelectedModelHistoryActionText = string.IsNullOrWhiteSpace(item.ActionText)
-                ? "\uC801\uC6A9 \uBD88\uAC00"
-                : item.ActionText.Trim();
-            SelectedModelHistoryActionToolTip = string.IsNullOrWhiteSpace(item.ActionToolTip)
-                ? "\uC120\uD0DD\uD55C \uBAA8\uB378 \uC774\uB825\uC744 \uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5\uD569\uB2C8\uB2E4."
-                : item.ActionToolTip.Trim();
-            isSelectedModelHistoryActionAvailable = item.CanPromoteToInspectionModel;
+            WpfModelRegistryHistorySelectionPresentation presentation =
+                WpfModelRegistryPresentationService.BuildSelectedHistoryPresentation(
+                    ModelRegistryHistoryItems,
+                    SelectedModelRegistryHistoryItem);
+            IsSelectedModelHistoryVisible = presentation.IsVisible;
+            SelectedModelHistoryTitleText = presentation.TitleText;
+            SelectedModelHistoryDetailText = presentation.DetailText;
+            SelectedModelHistoryMetricText = presentation.MetricText;
+            SelectedModelHistoryDecisionText = presentation.DecisionText;
+            SelectedModelHistoryComparisonTitleText = presentation.ComparisonTitleText;
+            SelectedModelHistoryCurrentModelText = presentation.CurrentModelText;
+            SelectedModelHistorySelectedModelText = presentation.SelectedModelText;
+            SelectedModelHistoryComparisonMetricText = presentation.ComparisonMetricText;
+            SelectedModelHistoryActionText = presentation.ActionText;
+            SelectedModelHistoryActionToolTip = presentation.ActionToolTip;
+            isSelectedModelHistoryActionAvailable = presentation.CanPromoteToInspectionModel;
             RefreshSelectedModelHistoryActionEnabled();
-        }
-
-        private void RefreshSelectedModelHistoryComparisonState(WpfModelRegistryHistoryItem selected)
-        {
-            SelectedModelHistoryComparisonTitleText = "\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uACFC \uC120\uD0DD \uC774\uB825 \uBAA8\uB378";
-            if (selected == null)
-            {
-                SelectedModelHistoryCurrentModelText = string.Empty;
-                SelectedModelHistorySelectedModelText = string.Empty;
-                SelectedModelHistoryComparisonMetricText = string.Empty;
-                return;
-            }
-
-            WpfModelRegistryHistoryItem current = ModelRegistryHistoryItems.FirstOrDefault(item => item?.IsCurrentInspectionModel == true);
-            SelectedModelHistoryCurrentModelText = current == null
-                ? "\uD604\uC7AC \uAC80\uC0AC: \uB4F1\uB85D\uB41C \uC774\uB825 \uC5C6\uC74C"
-                : BuildModelHistoryComparisonRowText("\uD604\uC7AC \uAC80\uC0AC", current);
-            SelectedModelHistorySelectedModelText = selected.IsCurrentInspectionModel
-                ? "\uC120\uD0DD \uC774\uB825: \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uACFC \uAC19\uC74C"
-                : BuildModelHistoryComparisonRowText("\uC120\uD0DD \uC774\uB825", selected);
-            SelectedModelHistoryComparisonMetricText = BuildModelHistoryComparisonMetricText(current, selected);
-        }
-
-        private static string BuildModelHistoryComparisonRowText(string titleText, WpfModelRegistryHistoryItem item)
-        {
-            if (item == null)
-            {
-                return $"{titleText}: \uC5C6\uC74C";
-            }
-
-            string title = string.IsNullOrWhiteSpace(item.TitleText)
-                ? item.WeightsPath ?? string.Empty
-                : item.TitleText.Trim();
-            string decision = string.IsNullOrWhiteSpace(item.DecisionText)
-                ? "\uACB0\uC815 \uBBF8\uD655\uC778"
-                : item.DecisionText.Trim();
-            return $"{titleText}: {title} / {decision}";
-        }
-
-        private static string BuildModelHistoryComparisonMetricText(WpfModelRegistryHistoryItem current, WpfModelRegistryHistoryItem selected)
-        {
-            if (selected == null)
-            {
-                return string.Empty;
-            }
-
-            if (current == null)
-            {
-                return "\uC9C0\uD45C \uBE44\uAD50: \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378 \uC774\uB825\uC774 \uC5C6\uC5B4 \uC120\uD0DD \uC774\uB825\uB9CC \uD655\uC778\uD569\uB2C8\uB2E4.";
-            }
-
-            bool isSameCandidate = !string.IsNullOrWhiteSpace(current.CandidateId)
-                && string.Equals(current.CandidateId, selected.CandidateId, StringComparison.Ordinal);
-            bool isSameWeights = !string.IsNullOrWhiteSpace(current.WeightsPath)
-                && string.Equals(current.WeightsPath, selected.WeightsPath, StringComparison.OrdinalIgnoreCase);
-            if (selected.IsCurrentInspectionModel || isSameCandidate || isSameWeights)
-            {
-                return "\uC9C0\uD45C \uBE44\uAD50: \uC120\uD0DD \uC774\uB825\uC774 \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uC785\uB2C8\uB2E4.";
-            }
-
-            string currentMetric = string.IsNullOrWhiteSpace(current.MetricText)
-                ? "\uC9C0\uD45C \uC5C6\uC74C"
-                : current.MetricText.Trim();
-            string selectedMetric = string.IsNullOrWhiteSpace(selected.MetricText)
-                ? "\uC9C0\uD45C \uC5C6\uC74C"
-                : selected.MetricText.Trim();
-            return $"\uC9C0\uD45C \uBE44\uAD50: \uD604\uC7AC {currentMetric} / \uC120\uD0DD \uC774\uB825 {selectedMetric}";
         }
 
         private void RefreshSelectedModelHistoryActionEnabled()
@@ -1915,115 +1742,26 @@ namespace MvcVisionSystem
             ModelCenterActionStateText = runtimeStateText
                 + ModelCenterActionRouteText
                 + " / \uBC84\uD2BC \uC0C1\uD0DC: "
-                + BuildModelCenterActionStatePart(
+                + WpfModelCenterDashboardPresentationService.BuildActionStatePart(
                     ModelCenterReviewCandidateButtonText,
                     IsModelCenterReviewCandidateEnabled,
                     isModelCenterReviewCandidateAvailable,
                     canRunModelCenterReviewCommands,
                     ModelCenterReviewCandidateButtonToolTip)
                 + " / "
-                + BuildModelCenterActionStatePart(
+                + WpfModelCenterDashboardPresentationService.BuildActionStatePart(
                     ModelCenterConfirmModelButtonText,
                     IsModelCenterConfirmModelEnabled,
                     isModelCenterConfirmModelAvailable,
                     canRunModelCenterCommands,
                     ModelCenterConfirmModelButtonToolTip)
                 + " / "
-                + BuildModelCenterActionStatePart(
+                + WpfModelCenterDashboardPresentationService.BuildActionStatePart(
                     ModelCenterInspectCurrentImageButtonText,
                     IsModelCenterInspectCurrentImageEnabled,
                     true,
                     canRunModelCenterReviewCommands && IsCurrentImageDetectionEnabled,
                     ModelCenterInspectCurrentImageButtonToolTip);
-        }
-
-        private static string BuildModelCenterActionStatePart(
-            string buttonText,
-            bool isEnabled,
-            bool isAvailable,
-            bool canRun,
-            string toolTip)
-        {
-            string label = CompactModelCenterActionLabel(buttonText);
-            if (isEnabled)
-            {
-                return $"{label} \uAC00\uB2A5";
-            }
-
-            string reason = !isAvailable
-                ? "\uB300\uC0C1 \uC5C6\uC74C"
-                : !canRun
-                    ? BuildModelCenterUnavailableReason(toolTip, "\uC791\uC5C5 \uC870\uAC74 \uD655\uC778")
-                    : BuildModelCenterUnavailableReason(toolTip, "\uC900\uBE44 \uD544\uC694");
-            return $"{label} \uB300\uAE30: {reason}";
-        }
-
-        private static string CompactModelCenterActionLabel(string buttonText)
-        {
-            string text = (buttonText ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                return "\uBC84\uD2BC";
-            }
-
-            if (text.Contains("\uD6C4\uBCF4", StringComparison.Ordinal))
-            {
-                return "\uD6C4\uBCF4 \uAC80\uC99D";
-            }
-
-            if (text.Contains("\uC800\uC7A5", StringComparison.Ordinal))
-            {
-                return "\uAC80\uC0AC \uBAA8\uB378 \uC800\uC7A5";
-            }
-
-            if (text.Contains("\uAC80\uC0AC", StringComparison.Ordinal))
-            {
-                return "\uD604\uC7AC \uAC80\uC0AC";
-            }
-
-            return text.Length > 16
-                ? text.Substring(0, 16) + "..."
-                : text;
-        }
-
-        private static string BuildModelCenterUnavailableReason(string toolTip, string fallback)
-        {
-            string text = (toolTip ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                return fallback;
-            }
-
-            if (text.Contains("\uAC80\uD1A0\uD560", StringComparison.Ordinal)
-                && text.Contains("\uC5C6\uC2B5\uB2C8\uB2E4", StringComparison.Ordinal))
-            {
-                return "\uD559\uC2B5 \uD6C4\uBCF4 \uC5C6\uC74C";
-            }
-
-            if (text.Contains("\uD655\uC815\uD560", StringComparison.Ordinal)
-                && text.Contains("\uC5C6\uC2B5\uB2C8\uB2E4", StringComparison.Ordinal))
-            {
-                return "\uC800\uC7A5\uD560 \uD6C4\uBCF4 \uC5C6\uC74C";
-            }
-
-            if (text.Contains("recipe", StringComparison.OrdinalIgnoreCase))
-            {
-                return "recipe \uC800\uC7A5 \uC870\uAC74 \uD655\uC778";
-            }
-
-            if (text.Contains("\uAC80\uC0AC \uBAA8\uB378\uC744 \uC800\uC7A5", StringComparison.Ordinal))
-            {
-                return "\uAC80\uC0AC \uBAA8\uB378 \uC800\uC7A5 \uD544\uC694";
-            }
-
-            if (text.Contains("\uD604\uC7AC \uC774\uBBF8\uC9C0", StringComparison.Ordinal))
-            {
-                return "\uD604\uC7AC \uC774\uBBF8\uC9C0/\uBAA8\uB378 \uD655\uC778";
-            }
-
-            return text.Length > 30
-                ? text.Substring(0, 30) + "..."
-                : text;
         }
 
         private static string T(string key) => OpenVisionLanguageService.T(key);

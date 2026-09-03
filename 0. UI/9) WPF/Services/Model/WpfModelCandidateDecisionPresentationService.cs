@@ -1,7 +1,39 @@
+using System;
 using System.IO;
 
 namespace MvcVisionSystem
 {
+    /// <summary>
+    /// Read-only inputs used to choose the candidate/adoption decision panel state.
+    /// This snapshot deliberately carries no registry or recipe mutation behavior.
+    /// </summary>
+    public sealed class WpfModelCandidateDecisionSnapshot
+    {
+        public bool HasPendingRecipeSave { get; set; }
+
+        public bool IsPromotionHeld { get; set; }
+
+        public string CandidateWeightsPath { get; set; } = string.Empty;
+
+        public string BaselineWeightsPath { get; set; } = string.Empty;
+
+        public bool CandidateWeightsFileExists { get; set; }
+
+        public bool BaselineWeightsFileExists { get; set; }
+
+        public bool HasLatestCandidate { get; set; }
+
+        public string LatestCandidateWeightsPath { get; set; } = string.Empty;
+
+        public string LatestCandidateDecision { get; set; } = string.Empty;
+
+        public string LatestCandidateDecisionSummary { get; set; } = string.Empty;
+
+        public bool LatestCandidateSavedToRecipe { get; set; }
+
+        public bool HasLatestWeights { get; set; }
+    }
+
     public sealed class WpfModelCandidateDecisionPresentation
     {
         public bool CanSave { get; set; }
@@ -19,6 +51,51 @@ namespace MvcVisionSystem
 
     public static class WpfModelCandidateDecisionPresentationService
     {
+        public static WpfModelCandidateDecisionPresentation Build(WpfModelCandidateDecisionSnapshot snapshot)
+        {
+            if (snapshot == null)
+            {
+                return BuildNoCandidate();
+            }
+
+            string candidateWeightsPath = snapshot.CandidateWeightsPath?.Trim() ?? string.Empty;
+            string baselineWeightsPath = snapshot.BaselineWeightsPath?.Trim() ?? string.Empty;
+            bool hasPendingCandidate = snapshot.HasPendingRecipeSave
+                && !string.IsNullOrWhiteSpace(candidateWeightsPath)
+                && snapshot.CandidateWeightsFileExists;
+            bool canReject = hasPendingCandidate
+                && !string.IsNullOrWhiteSpace(baselineWeightsPath)
+                && snapshot.BaselineWeightsFileExists;
+
+            if (hasPendingCandidate)
+            {
+                return snapshot.IsPromotionHeld
+                    ? BuildHeldCandidate(candidateWeightsPath, canReject)
+                    : BuildPendingCandidate(candidateWeightsPath, baselineWeightsPath, canReject);
+            }
+
+            if (snapshot.HasLatestCandidate)
+            {
+                string decision = snapshot.LatestCandidateDecision ?? string.Empty;
+                if (string.Equals(decision, ModelRegistryService.CandidateDecisionRejected, StringComparison.Ordinal))
+                {
+                    return BuildRejectedCandidate(
+                        snapshot.LatestCandidateWeightsPath,
+                        snapshot.LatestCandidateDecisionSummary);
+                }
+
+                if (string.Equals(decision, ModelRegistryService.CandidateDecisionAdopted, StringComparison.Ordinal)
+                    || snapshot.LatestCandidateSavedToRecipe)
+                {
+                    return BuildSavedCandidate(snapshot.LatestCandidateWeightsPath);
+                }
+            }
+
+            return snapshot.HasLatestWeights
+                ? BuildReviewAvailable()
+                : BuildNoCandidate();
+        }
+
         public static WpfModelCandidateDecisionPresentation BuildPendingCandidate(
             string candidateWeightsPath,
             string baselineWeightsPath,
@@ -136,14 +213,14 @@ namespace MvcVisionSystem
             string candidateName = FormatModelName(candidateWeightsPath, "\uD6C4\uBCF4 \uBAA8\uB378");
             return configSaved
                 ? $"\uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4\uB97C \uAC70\uC808\uD588\uC2B5\uB2C8\uB2E4: {candidateName}. \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uC744 \uC720\uC9C0\uD569\uB2C8\uB2E4."
-                : $"\uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4\uB97C \uAC70\uC808\uD588\uC2B5\uB2C8\uB2E4: {candidateName}. Recipe \uC800\uC7A5\uC740 \uBCC4\uB3C4 \uD655\uC778\uC774 \uD544\uC694\uD569\uB2C8\uB2E4.";
+                : $"\uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4 \uAC70\uC808\uC744 \uC800\uC7A5\uD558\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4: {candidateName}. \uD6C4\uBCF4\uB97C \uBCF4\uB958 \uC0C1\uD0DC\uB85C \uC720\uC9C0\uD569\uB2C8\uB2E4.";
         }
 
         public static string BuildRejectProjectConfigStatus(bool configSaved)
         {
             return configSaved
                 ? "\uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4 \uAC70\uC808 \uAE30\uB85D \uC800\uC7A5 \uC644\uB8CC."
-                : "\uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4 \uAC70\uC808 \uAE30\uB85D\uC740 \uBA54\uBAA8\uB9AC\uC5D0 \uBC18\uC601\uB418\uC5C8\uC9C0\uB9CC recipe \uC800\uC7A5\uC740 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4.";
+                : "\uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4 \uAC70\uC808\uC740 \uC800\uC7A5\uB418\uC9C0 \uC54A\uC558\uC2B5\uB2C8\uB2E4. Recipe \uC800\uC7A5 \uD6C4 \uB2E4\uC2DC \uAC70\uC808\uD558\uC138\uC694.";
         }
 
         public static string BuildRejectLog(string candidateWeightsPath, string baselineWeightsPath)
@@ -153,7 +230,12 @@ namespace MvcVisionSystem
 
         public static string BuildRejectFailureStatus(string message)
         {
-            return $"\uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4 \uAC70\uC808 \uC2E4\uD328: {NormalizeMessage(message)}";
+            return $"\uD559\uC2B5 \uBAA8\uB378 \uD6C4\uBCF4 \uAC70\uC808 \uC2E4\uD328. \uD6C4\uBCF4\uB294 \uBCF4\uB958 \uC0C1\uD0DC\uB85C \uC720\uC9C0\uB418\uBA70 \uC7AC\uC2DC\uB3C4\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4: {NormalizeMessage(message)}";
+        }
+
+        public static string BuildAdoptionRefreshFailureStatus(string message)
+        {
+            return $"\uBAA8\uB378 \uC774\uB825 \uC801\uC6A9 \uC800\uC7A5\uC740 \uC644\uB8CC\uB418\uC5C8\uC9C0\uB9CC \uD654\uBA74 \uAC31\uC2E0\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uC800\uC7A5\uB41C \uAC80\uC0AC \uBAA8\uB378\uC740 \uC720\uC9C0\uB429\uB2C8\uB2E4: {NormalizeMessage(message)}";
         }
 
         private static string FormatModelName(string path, string fallback)

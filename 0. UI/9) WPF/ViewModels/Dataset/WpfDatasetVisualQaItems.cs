@@ -121,13 +121,10 @@ namespace MvcVisionSystem
         }
 
         private static string T(string key)
-            => OpenVisionLanguageService.T(key);
+            => WpfDatasetHealthTextFormatter.Translate(key);
 
         private static string Format(string key, params object[] arguments)
-            => string.Format(
-                System.Globalization.CultureInfo.InvariantCulture,
-                T(key),
-                arguments ?? Array.Empty<object>());
+            => WpfDatasetHealthTextFormatter.Format(key, arguments);
     }
 
     public sealed class WpfDatasetVisualQaCatalog
@@ -174,6 +171,6 @@ namespace MvcVisionSystem
                 && string.Equals(ClassName, other.ClassName, StringComparison.Ordinal);
 
         private static string T(string key)
-            => OpenVisionLanguageService.T(key);
+            => WpfDatasetHealthTextFormatter.Translate(key);
     }
 }

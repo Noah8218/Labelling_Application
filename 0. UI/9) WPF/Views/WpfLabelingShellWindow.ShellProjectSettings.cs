@@ -46,6 +46,280 @@ namespace MvcVisionSystem
     public partial class WpfLabelingShellWindow
     {
         // Project settings helpers are shared by detection, training, and save flows.
+        private void SetProjectConfigStatus(string message)
+        {
+            ProjectConfigViewModel.StatusText = message ?? string.Empty;
+        }
+
+        private string GetCurrentRecipeName()
+        {
+            return global.Recipe?.Name?.Trim() ?? string.Empty;
+        }
+
+        private static string GetRecipeRootDirectory()
+        {
+            return WpfProjectRecipeService.GetRecipeRootDirectory();
+        }
+
+        private string GetCurrentRecipeConfigDirectory()
+        {
+            string recipeName = GetCurrentRecipeName();
+            return WpfProjectRecipeService.BuildConfigDirectory(GetRecipeRootDirectory(), recipeName);
+        }
+
+        private string GetCurrentRecipeConfigPath()
+        {
+            string recipeName = GetCurrentRecipeName();
+            return WpfProjectRecipeService.BuildConfigPath(GetRecipeRootDirectory(), recipeName);
+        }
+
+        private bool TryPickFile(string title, string filter, string currentPath, out string selectedPath)
+            => fileDialogService.TryPickFile(this, title, filter, currentPath, out selectedPath);
+
+        private bool TryPickFolder(string title, string currentPath, out string selectedPath)
+            => fileDialogService.TryPickFolder(this, title, currentPath, out selectedPath);
+
+        private void PopulateProjectConfigPanelFields()
+        {
+            string recipeName = GetCurrentRecipeName();
+            string configPath = GetCurrentRecipeConfigPath();
+            ProjectConfigViewModel?.LoadFrom(recipeName, GetRecipeRootDirectory());
+            ProjectConfigViewModel?.SetDatasetVersionInfo(
+                WpfRecipeDatasetVersionPresentationService.Build(ProjectConfigViewModel.ManifestPath));
+
+            PopulateProjectRecipeList(recipeName);
+
+            SetProjectConfigStatus(string.IsNullOrWhiteSpace(recipeName)
+                ? "Recipe 이름이 아직 없습니다. 저장 전에 recipe를 선택하거나 생성해야 합니다."
+                : $"현재 설정 파일: {Path.GetFileName(configPath)}");
+            UpdateYoloCommandButtons();
+        }
+
+        // Recipe list, save, and apply commands share the same project-settings
+        // boundary so a junior reader can follow one complete configuration flow.
+        private bool PopulateProjectRecipeList(string selectedRecipeName)
+        {
+            WpfProjectConfigPanelViewModel viewModel = ProjectConfigViewModel;
+            if (viewModel == null)
+            {
+                return false;
+            }
+
+            suppressProjectRecipeSelection = true;
+            try
+            {
+                IReadOnlyList<string> recipeNames = WpfProjectRecipeService.ListRecipeNames(GetRecipeRootDirectory());
+                string matchingRecipeName = recipeNames
+                    .FirstOrDefault(name => string.Equals(name, selectedRecipeName, StringComparison.OrdinalIgnoreCase))
+                    ?? string.Empty;
+                viewModel.SetRecipeList(recipeNames, matchingRecipeName);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                viewModel.SetRecipeList(Array.Empty<string>(), string.Empty);
+                SetProjectConfigStatus($"Recipe 목록 읽기 실패: {ex.Message}");
+                AppendLog($"Recipe 목록 읽기 실패: {ex.Message}");
+                return false;
+            }
+            finally
+            {
+                suppressProjectRecipeSelection = false;
+            }
+        }
+
+        private void ExecuteSaveProjectConfigCommand()
+        {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            SaveProjectConfigFromPanel();
+        }
+
+        private async void ExecuteApplyProjectRecipeCommand()
+        {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            await ApplyProjectRecipeFromPanelAsync();
+        }
+
+        private void ProjectRecipeListBox_SelectionChanged(object sender, object selectedItem)
+        {
+            if (suppressProjectRecipeSelection)
+            {
+                return;
+            }
+
+            string recipeName = selectedItem as string ?? ProjectConfigViewModel?.SelectedRecipeName ?? ProjectRecipeListBox?.SelectedItem as string;
+            if (string.IsNullOrWhiteSpace(recipeName))
+            {
+                return;
+            }
+
+            ProjectConfigViewModel?.SelectRecipeFromList(recipeName);
+        }
+
+        private void ExecuteRefreshProjectRecipeListCommand()
+        {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            string selectedRecipeName = ProjectConfigViewModel?.RecipeName?.Trim() ?? GetCurrentRecipeName();
+            if (PopulateProjectRecipeList(selectedRecipeName))
+            {
+                SetProjectConfigStatus("Recipe 목록을 다시 읽었습니다. 적용할 항목을 선택하세요.");
+            }
+        }
+
+        private void ExecuteOpenProjectConfigFolderCommand()
+        {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            string directoryPath = string.IsNullOrWhiteSpace(GetCurrentRecipeName())
+                ? GetRecipeRootDirectory()
+                : GetCurrentRecipeConfigDirectory();
+
+            try
+            {
+                Directory.CreateDirectory(directoryPath);
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = directoryPath,
+                    UseShellExecute = true
+                });
+                SetProjectConfigStatus($"폴더 열기: {directoryPath}");
+                AppendLog($"Recipe 설정 폴더 열기: {directoryPath}");
+            }
+            catch (Exception ex)
+            {
+                SetProjectConfigStatus($"폴더 열기 실패: {ex.Message}");
+                AppendLog($"Recipe 설정 폴더 열기 실패: {ex.Message}");
+            }
+        }
+
+        // Saving/applying a recipe reloads dependent panels so stale model state cannot survive a recipe switch.
+        private bool SaveProjectConfigFromPanel()
+        {
+            return SaveProjectConfigFromPanelCore(
+                recipeName => projectRecipeSessionService.Save(global.Data, recipeName));
+        }
+
+        private bool SaveModelMetadataConfigFromPanel()
+        {
+            return SaveProjectConfigFromPanelCore(
+                recipeName => projectRecipeSessionService.Save(global.Data, recipeName, refreshDatasetVersion: false));
+        }
+
+        private bool SaveProjectConfigFromPanelCore(Func<string, string> saveRecipe)
+        {
+            string recipeName = GetCurrentRecipeName();
+            if (string.IsNullOrWhiteSpace(recipeName))
+            {
+                SetProjectConfigStatus("Recipe 이름이 없어 설정을 저장하지 않았습니다.");
+                return false;
+            }
+
+            try
+            {
+                string configPath = saveRecipe(recipeName);
+                PopulateProjectConfigPanelFields();
+                SetProjectConfigStatus($"설정 저장 완료: {DateTime.Now:HH:mm:ss}");
+                SetDatasetStatus($"데이터셋: 설정 저장 {Path.GetFileName(configPath)}");
+                AppendLog($"프로젝트 설정 저장: {configPath}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                SetProjectConfigStatus($"설정 저장 실패: {ex.Message}");
+                AppendLog($"프로젝트 설정 저장 실패: {ex.Message}");
+                return false;
+            }
+        }
+
+        private async Task<bool> ApplyProjectRecipeFromPanelAsync()
+        {
+            if (isApplicationCloseApproved)
+            {
+                return false;
+            }
+
+            CancelFourPointBoxDraft(updateStatus: false);
+            string recipeName = ProjectConfigViewModel?.RecipeName?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(recipeName))
+            {
+                SetProjectConfigStatus("적용할 recipe 이름을 입력하세요.");
+                return false;
+            }
+
+            if (!WpfProjectRecipeService.IsValidRecipeName(recipeName))
+            {
+                SetProjectConfigStatus("Recipe 이름에 사용할 수 없는 문자가 있습니다.");
+                return false;
+            }
+
+            try
+            {
+                string previousRecipeName = await projectRecipeSessionService.ApplyAsync(
+                    global,
+                    recipeName,
+                    projectRecipeSessionCts.Token);
+                if (isApplicationCloseApproved)
+                {
+                    return false;
+                }
+
+                CompleteProjectRecipeApply(previousRecipeName, recipeName);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (Exception ex)
+            {
+                if (isApplicationCloseApproved)
+                {
+                    return false;
+                }
+
+                SetProjectConfigStatus($"Recipe 적용 실패: {ex.Message}");
+                AppendLog($"Recipe 적용 실패: {ex.Message}");
+                return false;
+            }
+        }
+
+        private void CompleteProjectRecipeApply(string previousRecipeName, string recipeName)
+        {
+            RememberLastOpenedDatasetRecipe(recipeName);
+            EnsureProjectSettings();
+            ApplyProjectDatasetPurposeToWorkflow();
+            // Recipe changes reload every dependent panel so stale labels, weights, and class lists do not survive the switch.
+            PopulateProjectConfigPanelFields();
+            PopulateYoloEditorFields();
+            PopulateTrainingEditorFields();
+            PopulateClassList();
+            RestoreObjectMetadataTagsFromProject();
+            RefreshCandidateList();
+            RefreshObjectList();
+            RefreshTrainingReadinessPanel(refreshYaml: false);
+            SetDatasetStatus($"데이터셋: recipe {recipeName}");
+            SetProjectConfigStatus(string.Equals(previousRecipeName, recipeName, StringComparison.OrdinalIgnoreCase)
+                ? $"Recipe 재적용: {recipeName}"
+                : $"Recipe 적용: {recipeName}");
+            AppendLog($"Recipe 적용: {recipeName}");
+        }
+
         private string BuildLabelPathSummary()
         {
             LabelingImageSnapshot activeImage = global.ImageWorkspace.CaptureSnapshot();
@@ -115,7 +389,8 @@ namespace MvcVisionSystem
                 System.Windows.Threading.DispatcherPriority.ContextIdle,
                 new Action(() =>
                 {
-                    if (recipeSessionCancellationToken.IsCancellationRequested)
+                    if (isApplicationCloseApproved
+                        || recipeSessionCancellationToken.IsCancellationRequested)
                     {
                         return;
                     }
@@ -129,7 +404,11 @@ namespace MvcVisionSystem
                         && string.Equals(global.Recipe.Name, recipeName, StringComparison.Ordinal)
                         && !string.IsNullOrWhiteSpace(recipeName))
                     {
-                        RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName);
+                        RecipeConfigurationSaveResult saveResult = projectRecipeSessionService.SaveConfiguration(
+                            global.Data,
+                            recipeName,
+                            updateYoloDataYaml: false,
+                            refreshDatasetVersion: true);
                         if (!saveResult.IsSuccess)
                         {
                             AppendLog($"\uB370\uC774\uD130\uC14B \uC6A9\uB3C4 \uC800\uC7A5 \uC2E4\uD328: {saveResult.ErrorMessage}");

@@ -102,6 +102,8 @@ namespace MvcVisionSystem
                     return false;
                 }
 
+                WpfCrashRecoveryRestorePlan restorePlan =
+                    crashRecoverySessionService.BuildRestorePlan(draft);
                 WpfAnnotationHistorySnapshot savedState = CaptureAnnotationHistory("비정상 종료 복구");
                 ClearAnnotationHistory();
                 PushAnnotationHistorySnapshot(savedState, markDirty: false);
@@ -115,7 +117,7 @@ namespace MvcVisionSystem
                 candidateReviewState.ClearAll();
                 smartMaskPromptSession.Reset();
 
-                foreach (WpfCrashRecoveryBox box in draft.Boxes ?? Enumerable.Empty<WpfCrashRecoveryBox>())
+                foreach (WpfCrashRecoveryBox box in restorePlan.Boxes)
                 {
                     manualRois.Add(new Rectangle(box.X, box.Y, box.Width, box.Height));
                     manualRoiClassNames.Add(box.ClassName);
@@ -126,11 +128,10 @@ namespace MvcVisionSystem
                     manualRoiOverlayIds.Add(string.Empty);
                     objectMetadataStateService.SetManualRoiMetadata(
                         manualRois.Count - 1,
-                        ToPersistentMetadata(box.Metadata));
+                        WpfCrashRecoverySessionService.ToPersistentMetadata(box.Metadata));
                 }
 
-                foreach (WpfCrashRecoverySegment source in draft.Segments
-                    ?? Enumerable.Empty<WpfCrashRecoverySegment>())
+                foreach (WpfCrashRecoverySegment source in restorePlan.Segments)
                 {
                     LabelClass classItem = EnsureClassItem(source.ClassName);
                     var segment = new LabelingSegmentationObject
@@ -165,7 +166,7 @@ namespace MvcVisionSystem
                     manualSegments.Add(segment);
                     objectMetadataStateService.SetManualSegmentMetadata(
                         segment,
-                        ToPersistentMetadata(source.Metadata));
+                        WpfCrashRecoverySessionService.ToPersistentMetadata(source.Metadata));
                 }
 
                 objectMetadataStateService.DissolveInvalidGroups(manualRois.Count, manualSegments);
@@ -196,7 +197,8 @@ namespace MvcVisionSystem
 
         private void ScheduleCrashRecoveryJournalWrite()
         {
-            if (suppressCrashRecoveryJournal
+            if (isApplicationCloseApproved
+                || suppressCrashRecoveryJournal
                 || activeImageBitmap == null
                 || activeImageSize.IsEmpty
                 || string.IsNullOrWhiteSpace(activeImagePath)
@@ -209,7 +211,8 @@ namespace MvcVisionSystem
             Dispatcher.BeginInvoke(
                 new Action(() =>
                 {
-                    if (captureVersion != crashRecoveryCaptureVersion
+                    if (isApplicationCloseApproved
+                        || captureVersion != crashRecoveryCaptureVersion
                         || suppressCrashRecoveryJournal
                         || string.IsNullOrWhiteSpace(annotationDirtyReason)
                         || HasPendingMaskStrokeCommitWork())
@@ -248,21 +251,7 @@ namespace MvcVisionSystem
 
         private WpfCrashRecoveryDraft CaptureCrashRecoveryDraft()
         {
-            var imageInfo = new FileInfo(activeImagePath);
-            var draft = new WpfCrashRecoveryDraft
-            {
-                CreatedUtc = DateTime.UtcNow,
-                ApplicationVersion = GetType().Assembly.GetName().Version?.ToString() ?? string.Empty,
-                RecipeName = GetCurrentRecipeName(),
-                DatasetRootPath = global.Data.OutputRootPath,
-                ImagePath = activeImagePath,
-                ImageLength = imageInfo.Length,
-                ImageLastWriteUtcTicks = imageInfo.LastWriteTimeUtc.Ticks,
-                ImageWidth = activeImageSize.Width,
-                ImageHeight = activeImageSize.Height,
-                DirtyReason = annotationDirtyReason
-            };
-
+            var manualRoiSnapshots = new List<WpfCrashRecoveryRoiSnapshot>();
             for (int index = 0; index < manualRois.Count; index++)
             {
                 Rectangle bounds = manualRois[index];
@@ -271,41 +260,27 @@ namespace MvcVisionSystem
                     continue;
                 }
 
-                draft.Boxes.Add(new WpfCrashRecoveryBox
-                {
-                    ClassName = GetManualRoiClassName(index),
-                    ShapeKind = index < manualRoiShapeKinds.Count
-                        ? manualRoiShapeKinds[index].ToString()
-                        : CanvasRoiShapeKind.Rectangle.ToString(),
-                    X = bounds.X,
-                    Y = bounds.Y,
-                    Width = bounds.Width,
-                    Height = bounds.Height,
-                    Metadata = ToRecoveryMetadata(objectMetadataStateService.GetManualRoiMetadata(index))
-                });
+                manualRoiSnapshots.Add(new WpfCrashRecoveryRoiSnapshot(
+                    bounds,
+                    GetManualRoiClassName(index),
+                    index < manualRoiShapeKinds.Count
+                        ? manualRoiShapeKinds[index]
+                        : CanvasRoiShapeKind.Rectangle,
+                    objectMetadataStateService.GetManualRoiMetadata(index)));
             }
 
+            var confirmedCandidates = new List<WpfCrashRecoveryCandidateSnapshot>();
             foreach (YoloWorkerSmokeCandidate candidate in confirmedDetectionCandidates)
             {
-                Rectangle bounds = GetClippedCandidateBounds(candidate);
-                if (bounds.IsEmpty || candidate?.PolygonPoints?.Count >= 3)
-                {
-                    continue;
-                }
-
-                draft.Boxes.Add(new WpfCrashRecoveryBox
-                {
-                    ClassName = FirstNonEmpty(candidate.ClassName, "Defect"),
-                    ShapeKind = CanvasRoiShapeKind.Rectangle.ToString(),
-                    X = bounds.X,
-                    Y = bounds.Y,
-                    Width = bounds.Width,
-                    Height = bounds.Height,
-                    Metadata = new WpfCrashRecoveryMetadata()
-                });
+                Rectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
+                confirmedCandidates.Add(new WpfCrashRecoveryCandidateSnapshot(
+                    candidate?.ClassName,
+                    bounds,
+                    candidate?.PolygonPoints?.Count >= 3));
             }
 
             Dictionary<string, List<LabelingSegmentationObject>> segmentsByClass = BuildAnnotationSegments();
+            var segments = new List<WpfCrashRecoverySegmentSnapshot>();
             foreach (LabelingSegmentationObject segment in segmentsByClass
                 .Values
                 .Where(items => items != null)
@@ -315,10 +290,19 @@ namespace MvcVisionSystem
                 WpfPersistentObjectMetadata metadata = manualSegments.Contains(segment)
                     ? objectMetadataStateService.GetManualSegmentMetadata(segment)
                     : WpfPersistentObjectMetadata.Default;
-                draft.Segments.Add(ToRecoverySegment(segment, metadata));
+                segments.Add(new WpfCrashRecoverySegmentSnapshot(segment, metadata));
             }
 
-            return draft;
+            return crashRecoverySessionService.Capture(new WpfCrashRecoveryCaptureRequest(
+                GetType().Assembly.GetName().Version?.ToString() ?? string.Empty,
+                GetCurrentRecipeName(),
+                global.Data.OutputRootPath,
+                activeImagePath,
+                activeImageSize,
+                annotationDirtyReason,
+                manualRoiSnapshots,
+                confirmedCandidates,
+                segments));
         }
 
         private void DiscardCrashRecoveryJournal()
@@ -328,54 +312,5 @@ namespace MvcVisionSystem
             crashRecoveryJournalService.Discard(revision);
         }
 
-        private static WpfCrashRecoverySegment ToRecoverySegment(
-            LabelingSegmentationObject segment,
-            WpfPersistentObjectMetadata metadata)
-        {
-            Rectangle maskBounds = segment.MaskBounds;
-            return new WpfCrashRecoverySegment
-            {
-                ClassName = FirstNonEmpty(segment.ClassName, segment.ClassItem?.Text, "Defect"),
-                ObjectId = segment.ObjectId ?? string.Empty,
-                ComponentIndex = segment.ComponentIndex,
-                ZOrder = segment.ZOrder,
-                LastStructuralOperation = segment.LastStructuralOperation ?? string.Empty,
-                Points = (segment.Points ?? new List<Point>())
-                    .Select(point => new WpfCrashRecoveryPoint { X = point.X, Y = point.Y })
-                    .ToList(),
-                CutoutPolygons = (segment.CutoutPolygons ?? new List<List<Point>>())
-                    .Select(cutout => (cutout ?? new List<Point>())
-                        .Select(point => new WpfCrashRecoveryPoint { X = point.X, Y = point.Y })
-                        .ToList())
-                    .ToList(),
-                MaskData = segment.MaskData?.ToArray() ?? Array.Empty<byte>(),
-                MaskWidth = segment.MaskSize.Width,
-                MaskHeight = segment.MaskSize.Height,
-                MaskBoundsX = maskBounds.X,
-                MaskBoundsY = maskBounds.Y,
-                MaskBoundsWidth = maskBounds.Width,
-                MaskBoundsHeight = maskBounds.Height,
-                Metadata = ToRecoveryMetadata(metadata)
-            };
-        }
-
-        private static WpfCrashRecoveryMetadata ToRecoveryMetadata(WpfPersistentObjectMetadata metadata)
-        {
-            WpfPersistentObjectMetadata normalized = metadata ?? WpfPersistentObjectMetadata.Default;
-            return new WpfCrashRecoveryMetadata
-            {
-                IsOccluded = normalized.IsOccluded,
-                Tags = normalized.Tags.ToList(),
-                GroupId = normalized.GroupId
-            };
-        }
-
-        private static WpfPersistentObjectMetadata ToPersistentMetadata(WpfCrashRecoveryMetadata metadata)
-            => metadata == null
-                ? WpfPersistentObjectMetadata.Default
-                : new WpfPersistentObjectMetadata(
-                    metadata.IsOccluded,
-                    metadata.Tags,
-                    metadata.GroupId);
     }
 }

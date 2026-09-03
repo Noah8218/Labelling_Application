@@ -1,22 +1,19 @@
 using MvcVisionSystem.Yolo;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using OpenVisionLab;
-using DrawingSize = System.Drawing.Size;
 
 namespace MvcVisionSystem
 {
     public partial class WpfLabelingShellWindow
     {
-        private const int ImageQueueDetailBatchSize = 64;
-        private const int ImageQueueDetailParallelism = 4;
-
-        // Queue detail scanning stays off the dispatcher. Only a bounded set of changed rows is applied at background priority.
+        // Queue detail scanning stays in the concrete service. Only a bounded set of changed rows is applied at background priority.
         private async Task StartImageQueueDetailRefreshAsync(
             IReadOnlyList<string> imagePaths,
             IReadOnlyDictionary<string, WpfImageQueueItem> itemLookup,
@@ -29,53 +26,26 @@ namespace MvcVisionSystem
                 return;
             }
 
-            int loadedCount = 0;
-            var pendingResults = new List<ImageQueueDetailLoadResult>(ImageQueueDetailBatchSize);
             try
             {
-                for (int startIndex = 0; startIndex < imagePaths.Count; startIndex += ImageQueueDetailParallelism)
-                {
-                    token.ThrowIfCancellationRequested();
-                    int endIndex = Math.Min(imagePaths.Count, startIndex + ImageQueueDetailParallelism);
-                    var detailTasks = new List<Task<ImageQueueDetailLoadResult>>(endIndex - startIndex);
-                    for (int index = startIndex; index < endIndex; index++)
-                    {
-                        string imagePath = imagePaths[index];
-                        if (!itemLookup.TryGetValue(imagePath, out WpfImageQueueItem item) || item == null)
-                        {
-                            continue;
-                        }
-
-                        detailTasks.Add(BuildImageQueueDetailResultAsync(imagePath, item, reviewWorkflow, data, token));
-                    }
-
-                    if (detailTasks.Count > 0)
-                    {
-                        ImageQueueDetailLoadResult[] results = await Task.WhenAll(detailTasks).ConfigureAwait(false);
-                        pendingResults.AddRange(results);
-                    }
-
-                    loadedCount = endIndex;
-                    if (pendingResults.Count >= ImageQueueDetailBatchSize || loadedCount == imagePaths.Count)
-                    {
-                        await ApplyImageQueueDetailBatchAsync(
-                            pendingResults,
-                            loadedCount,
-                            imagePaths.Count,
-                            token).ConfigureAwait(false);
-                    }
-                }
-
-                if (pendingResults.Count > 0)
-                {
-                    await ApplyImageQueueDetailBatchAsync(
-                        pendingResults,
+                await imageQueueDetailRefreshService.RefreshAsync(
+                    imagePaths,
+                    reviewWorkflow,
+                    data,
+                    (results, loadedCount, totalCount) => ApplyImageQueueDetailBatchAsync(
+                        results,
+                        itemLookup,
                         loadedCount,
-                        imagePaths.Count,
-                        token).ConfigureAwait(false);
-                }
+                        totalCount,
+                        token),
+                    token).ConfigureAwait(false);
 
                 token.ThrowIfCancellationRequested();
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 await Dispatcher.InvokeAsync(
                     () => CompleteImageQueueDetailRefresh(token),
                     DispatcherPriority.Background,
@@ -87,72 +57,60 @@ namespace MvcVisionSystem
             }
         }
 
-        private Task<ImageQueueDetailLoadResult> BuildImageQueueDetailResultAsync(
-            string imagePath,
-            WpfImageQueueItem item,
-            WpfImageQualityReviewWorkflowService reviewWorkflow,
-            LabelingProjectData data,
-            CancellationToken token)
-        {
-            return Task.Run(() =>
-            {
-                try
-                {
-                    return ImageQueueDetailLoadResult.Success(item, BuildImageQueueDetail(imagePath, reviewWorkflow, data));
-                }
-                catch (Exception ex) when (!(ex is OperationCanceledException))
-                {
-                    return ImageQueueDetailLoadResult.Failure(item, ex);
-                }
-            }, token);
-        }
-
         private async Task ApplyImageQueueDetailBatchAsync(
-            List<ImageQueueDetailLoadResult> pendingResults,
+            IReadOnlyList<WpfImageQueueDetailRefreshResult> results,
+            IReadOnlyDictionary<string, WpfImageQueueItem> itemLookup,
             int loadedCount,
             int totalCount,
             CancellationToken token)
         {
-            if (pendingResults == null || pendingResults.Count == 0)
+            if (results == null || results.Count == 0)
             {
                 return;
             }
 
-            ImageQueueDetailLoadResult[] results = pendingResults.ToArray();
-            pendingResults.Clear();
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             await Dispatcher.InvokeAsync(
-                () => ApplyImageQueueDetailBatch(results, loadedCount, totalCount, token),
+                () => ApplyImageQueueDetailBatch(results, itemLookup, loadedCount, totalCount, token),
                 DispatcherPriority.Background,
                 token).Task.ConfigureAwait(false);
         }
 
         private void ApplyImageQueueDetailBatch(
-            IReadOnlyList<ImageQueueDetailLoadResult> results,
+            IReadOnlyList<WpfImageQueueDetailRefreshResult> results,
+            IReadOnlyDictionary<string, WpfImageQueueItem> itemLookup,
             int loadedCount,
             int totalCount,
             CancellationToken token)
         {
-            if (token.IsCancellationRequested)
+            if (isApplicationCloseApproved || token.IsCancellationRequested)
             {
                 return;
             }
 
-            foreach (ImageQueueDetailLoadResult result in results ?? Array.Empty<ImageQueueDetailLoadResult>())
+            foreach (WpfImageQueueDetailRefreshResult result in results ?? Array.Empty<WpfImageQueueDetailRefreshResult>())
             {
-                if (result?.Item == null)
+                if (result == null
+                    || itemLookup == null
+                    || !itemLookup.TryGetValue(result.ImagePath, out WpfImageQueueItem item)
+                    || item == null)
                 {
                     continue;
                 }
 
                 if (result.Error != null)
                 {
-                    result.Item.LabelStatus = "\uC0C1\uD0DC \uD655\uC778 \uC2E4\uD328";
-                    result.Item.DetectStatus = "\uB300\uAE30";
-                    AppendLog($"Image status failed: {Path.GetFileName(result.Item.ImagePath)}  {result.Error.Message}");
+                    item.LabelStatus = "\uC0C1\uD0DC \uD655\uC778 \uC2E4\uD328";
+                    item.DetectStatus = "\uB300\uAE30";
+                    AppendLog($"Image status failed: {Path.GetFileName(item.ImagePath)}  {result.Error.Message}");
                     continue;
                 }
 
-                ApplyImageQueueDetail(result.Item, result.Detail);
+                ApplyImageQueueDetail(item, result.Detail);
             }
 
             UpdateImageQueueDetailProgress(loadedCount, totalCount);
@@ -160,7 +118,7 @@ namespace MvcVisionSystem
 
         private void CompleteImageQueueDetailRefresh(CancellationToken token)
         {
-            if (token.IsCancellationRequested)
+            if (isApplicationCloseApproved || token.IsCancellationRequested)
             {
                 return;
             }
@@ -189,14 +147,6 @@ namespace MvcVisionSystem
                 loaded,
                 total,
                 activeText));
-        }
-
-        private WpfImageQueueDetail BuildImageQueueDetail(
-            string imagePath,
-            WpfImageQualityReviewWorkflowService reviewWorkflow,
-            LabelingProjectData data)
-        {
-            return WpfImageQueueDetailLoader.Build(imagePath, reviewWorkflow, data);
         }
 
         private void ApplyImageQueueDetail(WpfImageQueueItem item, WpfImageQueueDetail detail)
@@ -256,30 +206,119 @@ namespace MvcVisionSystem
             }
         }
 
-        private sealed class ImageQueueDetailLoadResult
+        private void CancelImageQueueCatalogLoad(bool waitForCompletion)
         {
-            private ImageQueueDetailLoadResult(WpfImageQueueItem item, WpfImageQueueDetail detail, Exception error)
+            CancellationTokenSource cts = imageQueueCatalogLoadCts;
+            Task catalogTask = imageQueueCatalogLoadTask;
+            if (cts == null)
             {
-                Item = item;
-                Detail = detail;
-                Error = error;
+                return;
             }
 
-            public WpfImageQueueItem Item { get; }
-
-            public WpfImageQueueDetail Detail { get; }
-
-            public Exception Error { get; }
-
-            public static ImageQueueDetailLoadResult Success(WpfImageQueueItem item, WpfImageQueueDetail detail)
+            imageQueueCatalogLoadVersion++;
+            cts.Cancel();
+            if (waitForCompletion)
             {
-                return new ImageQueueDetailLoadResult(item, detail, null);
+                WaitForImageQueueDetailRefresh(catalogTask);
             }
 
-            public static ImageQueueDetailLoadResult Failure(WpfImageQueueItem item, Exception error)
+            if (catalogTask == null || catalogTask.IsCompleted)
             {
-                return new ImageQueueDetailLoadResult(item, null, error);
+                cts.Dispose();
+            }
+            else
+            {
+                catalogTask.ContinueWith(
+                    _ => cts.Dispose(),
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
+
+            if (ReferenceEquals(cts, imageQueueCatalogLoadCts))
+            {
+                imageQueueCatalogLoadCts = null;
+            }
+
+            if (ReferenceEquals(catalogTask, imageQueueCatalogLoadTask))
+            {
+                imageQueueCatalogLoadTask = Task.CompletedTask;
             }
         }
+
+        private void CancelImageQueueDetailRefresh(bool waitForCompletion)
+        {
+            CancellationTokenSource cts = imageQueueDetailLoadCts;
+            Task detailTask = imageQueueDetailLoadTask;
+            if (cts == null)
+            {
+                return;
+            }
+
+            cts.Cancel();
+            if (waitForCompletion)
+            {
+                WaitForImageQueueDetailRefresh(detailTask);
+            }
+
+            if (detailTask == null || detailTask.IsCompleted)
+            {
+                cts.Dispose();
+            }
+            else
+            {
+                detailTask.ContinueWith(
+                    _ => cts.Dispose(),
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
+
+            if (ReferenceEquals(cts, imageQueueDetailLoadCts))
+            {
+                imageQueueDetailLoadCts = null;
+            }
+
+            if (ReferenceEquals(detailTask, imageQueueDetailLoadTask))
+            {
+                imageQueueDetailLoadTask = Task.CompletedTask;
+            }
+        }
+
+        private void WaitForImageQueueDetailRefresh(Task detailTask)
+        {
+            if (detailTask == null || detailTask.IsCompleted)
+            {
+                return;
+            }
+
+            if (!Dispatcher.CheckAccess())
+            {
+                try
+                {
+                    detailTask.Wait(TimeSpan.FromSeconds(2));
+                }
+                catch (AggregateException)
+                {
+                }
+
+                return;
+            }
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            while (!detailTask.IsCompleted && stopwatch.Elapsed < TimeSpan.FromSeconds(2))
+            {
+                // Detail refresh resumes on the UI dispatcher; pump briefly so close can release image file handles.
+                var frame = new DispatcherFrame();
+                Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() => frame.Continue = false));
+                Dispatcher.PushFrame(frame);
+            }
+
+            if (detailTask.IsFaulted)
+            {
+                _ = detailTask.Exception;
+            }
+        }
+
     }
 }

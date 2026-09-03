@@ -12,9 +12,9 @@ namespace MvcVisionSystem
         private void UpdateTrainingProgressFromWorker()
         {
             PythonCommunicationStatus status = global.GetPythonCommunicationStatusSnapshot();
-            bool hasStatus = HasTrainingStatus(status);
+            bool hasStatus = WpfTrainingProgressPresentationService.HasTrainingStatus(status);
             bool hasCurrentStatus = hasStatus && IsTrainingStatusCurrent(status);
-            bool isLiveTraining = hasCurrentStatus && IsLiveTrainingStatus(status);
+            bool isLiveTraining = hasCurrentStatus && WpfTrainingProgressPresentationService.IsLiveTrainingStatus(status);
             if (hasCurrentStatus)
             {
                 isTrainingWorkflowRunning = isLiveTraining;
@@ -32,8 +32,8 @@ namespace MvcVisionSystem
             if (hasCurrentStatus)
             {
                 SetTrainingProgressStatus(
-                    BuildTrainingProgressSummary(status),
-                    BuildTrainingEpochSummary(status),
+                    WpfTrainingProgressPresentationService.BuildProgressSummary(status),
+                    WpfTrainingProgressPresentationService.BuildEpochSummary(status, isLiveTraining),
                     TrainingSettingsViewModel?.TrainingProgressValue ?? TrainingProgressBar?.Value ?? 0D,
                     isIndeterminate: isLiveTraining && !status.LastTrainingProgressPercent.HasValue);
                 UpdateYoloTrainingGuideTrainingHistory(status);
@@ -59,7 +59,7 @@ namespace MvcVisionSystem
             UpdateYoloTrainingRecoveryStatus(status);
             RefreshYoloTrainingStepCompletion();
             UpdateYoloCommandButtons();
-            if (hasCurrentStatus && IsTerminalTrainingState(status.LastTrainingState))
+            if (hasCurrentStatus && WpfTrainingProgressPresentationService.IsTerminalTrainingState(status.LastTrainingState))
             {
                 StopTrainingStatusPolling();
             }
@@ -85,7 +85,7 @@ namespace MvcVisionSystem
 
         private bool IsTrainingStatusCurrent(PythonCommunicationStatus status)
         {
-            if (!HasTrainingStatus(status))
+            if (!WpfTrainingProgressPresentationService.HasTrainingStatus(status))
             {
                 return false;
             }
@@ -100,31 +100,19 @@ namespace MvcVisionSystem
             return status.LastTrainingStatusAtUtc.Value >= trainingStatusPollStartedUtc.AddSeconds(-1);
         }
 
-        private static bool IsLiveTrainingStatus(PythonCommunicationStatus status)
-        {
-            if (!HasTrainingStatus(status))
-            {
-                return false;
-            }
-
-            string state = status.LastTrainingState?.Trim() ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(state))
-            {
-                return !IsTerminalTrainingState(state);
-            }
-
-            return status.LastTrainingProgressPercent.HasValue
-                && status.LastTrainingProgressPercent.Value > 0
-                && status.LastTrainingProgressPercent.Value < 100;
-        }
-
         private void TrainingStatusPollTimer_Tick(object sender, EventArgs e)
         {
+            if (isApplicationCloseApproved)
+            {
+                StopTrainingStatusPolling();
+                return;
+            }
+
             RequestTrainingStatusSnapshotFromWorker();
             PythonCommunicationStatus status = global.GetPythonCommunicationStatusSnapshot();
             UpdateTrainingProgressFromWorker();
-            bool hasCurrentStatus = HasTrainingStatus(status) && IsTrainingStatusCurrent(status);
-            if (hasCurrentStatus && IsTerminalTrainingState(status.LastTrainingState))
+            bool hasCurrentStatus = WpfTrainingProgressPresentationService.HasTrainingStatus(status) && IsTrainingStatusCurrent(status);
+            if (hasCurrentStatus && WpfTrainingProgressPresentationService.IsTerminalTrainingState(status.LastTrainingState))
             {
                 StopTrainingStatusPolling();
                 return;
@@ -160,12 +148,14 @@ namespace MvcVisionSystem
                 return;
             }
 
-            global.ModelRuntime.DeepLearning?.SendModelStatus(CreateRequestId(), ensureLoaded: false);
+            global.ModelRuntime.DeepLearning?.SendModelStatus(
+                WpfYoloRuntimePresentationService.CreateRequestId(),
+                ensureLoaded: false);
         }
 
         private void UpdateYoloTrainingRecoveryStatus(PythonCommunicationStatus status)
         {
-            if (!HasTrainingStatus(status))
+            if (!WpfTrainingProgressPresentationService.HasTrainingStatus(status))
             {
                 return;
             }
@@ -174,13 +164,14 @@ namespace MvcVisionSystem
             if (string.Equals(state, "failed", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(state, "error", StringComparison.OrdinalIgnoreCase))
             {
-                WpfTrainingRecoveryStatus recovery = WpfTrainingProgressPresentationService.BuildFailedRecovery(BuildTrainingRecoveryDetail(status));
+                WpfTrainingRecoveryStatus recovery = WpfTrainingProgressPresentationService.BuildFailedRecovery(
+                    WpfTrainingProgressPresentationService.BuildFailureDetail(status));
                 SetYoloRecoveryStatus(recovery.Title, recovery.Detail, recovery.Action);
                 return;
             }
 
             if (WpfTrainingWeightsService.IsCompletedTrainingState(state)
-                || IsLiveTrainingStatus(status)
+                || WpfTrainingProgressPresentationService.IsLiveTrainingStatus(status)
                 || string.Equals(state, "started", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(state, "running", StringComparison.OrdinalIgnoreCase))
             {
@@ -188,14 +179,9 @@ namespace MvcVisionSystem
             }
         }
 
-        private static string BuildTrainingRecoveryDetail(PythonCommunicationStatus status)
-        {
-            return WpfTrainingProgressPresentationService.BuildFailureDetail(status);
-        }
-
         private MediaBrush ResolveTrainingStateBrush(PythonCommunicationStatus status)
         {
-            if (!HasTrainingStatus(status))
+            if (!WpfTrainingProgressPresentationService.HasTrainingStatus(status))
             {
                 return ResolveBrushResource("SecondaryTextBrush", MediaBrushes.Gray);
             }
@@ -217,7 +203,7 @@ namespace MvcVisionSystem
                 return ResolveBrushResource("WarningBrush", MediaBrushes.DarkOrange);
             }
 
-            if (!IsTerminalTrainingState(state) || status.LastTrainingProgressPercent.HasValue)
+            if (!WpfTrainingProgressPresentationService.IsTerminalTrainingState(state) || status.LastTrainingProgressPercent.HasValue)
             {
                 return ResolveBrushResource("InfoBrush", MediaBrushes.DodgerBlue);
             }
@@ -230,34 +216,6 @@ namespace MvcVisionSystem
             return TryFindResource(key) as MediaBrush ?? fallback;
         }
 
-        private static bool HasTrainingStatus(PythonCommunicationStatus status)
-        {
-            return status != null
-                && (!string.IsNullOrWhiteSpace(status.LastTrainingState)
-                    || !string.IsNullOrWhiteSpace(status.LastTrainingMessage)
-                    || status.LastTrainingProgressPercent.HasValue
-                    || status.LastTrainingEpoch.HasValue
-                    || status.LastTrainingTotalEpochs.HasValue);
-        }
 
-        private static string BuildTrainingProgressSummary(PythonCommunicationStatus status)
-        {
-            return WpfTrainingProgressPresentationService.BuildProgressSummary(status);
-        }
-
-        private static string FormatTrainingState(string state)
-        {
-            return WpfTrainingProgressPresentationService.FormatTrainingState(state);
-        }
-
-        private static string FormatTrainingMessage(string message)
-        {
-            return WpfTrainingProgressPresentationService.FormatTrainingMessage(message);
-        }
-
-        private static string BuildTrainingEpochSummary(PythonCommunicationStatus status)
-        {
-            return WpfTrainingProgressPresentationService.BuildEpochSummary(status, IsLiveTrainingStatus(status));
-        }
     }
 }

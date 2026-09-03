@@ -1,20 +1,27 @@
 using MahApps.Metro.IconPacks;
-using Newtonsoft.Json;
 using OpenVisionLab;
 using OpenVisionLab.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 
 namespace MvcVisionSystem
 {
+    internal static class WpfDatasetSelectionTextFormatter
+    {
+        public static string Translate(string key) => OpenVisionLanguageService.T(key);
+
+        public static string Format(string key, params object[] values)
+            => string.Format(System.Globalization.CultureInfo.CurrentCulture, Translate(key), values ?? Array.Empty<object>());
+    }
+
     public sealed class WpfDatasetSelectionWindowViewModel : WpfObservableViewModel, IDisposable
     {
         private static readonly Action NoOpCommand = () => { };
+        private readonly WpfDatasetSelectionCatalogService datasetSelectionCatalogService = new WpfDatasetSelectionCatalogService();
         private WpfDatasetSelectionItem selectedDataset;
         private string statusText = string.Empty;
         private Visibility emptyStateVisibility = Visibility.Collapsed;
@@ -32,35 +39,35 @@ namespace MvcVisionSystem
 
         public string ViewName => nameof(WpfDatasetSelectionWindow);
 
-        public string WindowTitleText => T("WpfDatasetSelection.Title");
+        public string WindowTitleText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Title");
 
-        public string DatasetSourceRuleTitleText => T("WpfDatasetSelection.SourceRule.Title");
+        public string DatasetSourceRuleTitleText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.SourceRule.Title");
 
-        public string DatasetSourceRuleDetailText => T("WpfDatasetSelection.SourceRule.Detail");
+        public string DatasetSourceRuleDetailText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.SourceRule.Detail");
 
-        public string ExistingDatasetGuideTitleText => T("WpfDatasetSelection.Guide.Existing.Title");
+        public string ExistingDatasetGuideTitleText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Guide.Existing.Title");
 
-        public string ExistingDatasetGuideDetailText => T("WpfDatasetSelection.Guide.Existing.Detail");
+        public string ExistingDatasetGuideDetailText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Guide.Existing.Detail");
 
-        public string CreateDatasetGuideTitleText => T("WpfDatasetSelection.Guide.Create.Title");
+        public string CreateDatasetGuideTitleText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Guide.Create.Title");
 
-        public string CreateDatasetGuideDetailText => T("WpfDatasetSelection.Guide.Create.Detail");
+        public string CreateDatasetGuideDetailText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Guide.Create.Detail");
 
-        public string CreateDatasetGuideButtonText => T("WpfDatasetSelection.Action.Create.Short");
+        public string CreateDatasetGuideButtonText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Action.Create.Short");
 
-        public string EmptyStateTitleText => T("WpfDatasetSelection.Empty.Title");
+        public string EmptyStateTitleText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Empty.Title");
 
-        public string EmptyStateDetailText => T("WpfDatasetSelection.Empty.Detail");
+        public string EmptyStateDetailText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Empty.Detail");
 
-        public string CreateFirstDatasetButtonText => T("WpfDatasetSelection.Action.Create");
+        public string CreateFirstDatasetButtonText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Action.Create");
 
-        public string RefreshButtonText => T("WpfDatasetSelection.Action.Refresh");
+        public string RefreshButtonText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Action.Refresh");
 
-        public string CreateNewButtonText => T("WpfDatasetSelection.Action.Create.Short");
+        public string CreateNewButtonText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Action.Create.Short");
 
-        public string CancelButtonText => T("WpfDatasetSelection.Action.Cancel");
+        public string CancelButtonText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Action.Cancel");
 
-        public string OpenSelectedButtonText => T("WpfDatasetSelection.Action.Open");
+        public string OpenSelectedButtonText => WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Action.Open");
 
         public ObservableCollection<WpfDatasetSelectionItem> Datasets { get; } = new ObservableCollection<WpfDatasetSelectionItem>();
 
@@ -127,10 +134,12 @@ namespace MvcVisionSystem
             }
 
             ReleaseDatasetItems();
-            IReadOnlyList<string> recipeNames = WpfProjectRecipeService.ListRecipeNames(recipeRootPath);
-            foreach (string recipeName in recipeNames)
+            IReadOnlyList<WpfDatasetSelectionSnapshot> snapshots = datasetSelectionCatalogService.Load(
+                recipeRootPath,
+                currentRecipeName);
+            foreach (WpfDatasetSelectionSnapshot snapshot in snapshots)
             {
-                Datasets.Add(BuildDatasetItem(recipeRootPath, recipeName, currentRecipeName));
+                Datasets.Add(BuildDatasetItem(snapshot));
             }
 
             SelectedDataset = Datasets.FirstOrDefault(item => item.IsCurrent)
@@ -190,84 +199,27 @@ namespace MvcVisionSystem
         private void RefreshStatusText()
         {
             StatusText = Datasets.Count > 0
-                ? Format("WpfDatasetSelection.Status.Count", Datasets.Count)
-                : T("WpfDatasetSelection.Status.Empty");
+                ? WpfDatasetSelectionTextFormatter.Format("WpfDatasetSelection.Status.Count", Datasets.Count)
+                : WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Status.Empty");
         }
 
-        private static WpfDatasetSelectionItem BuildDatasetItem(string recipeRootPath, string recipeName, string currentRecipeName)
+        private static WpfDatasetSelectionItem BuildDatasetItem(WpfDatasetSelectionSnapshot snapshot)
         {
-            string manifestPath = WpfProjectRecipeService.BuildManifestPath(recipeRootPath, recipeName);
-            string configPath = WpfProjectRecipeService.BuildConfigPath(recipeRootPath, recipeName);
-            LabelingDatasetManifest manifest = TryReadManifest(manifestPath);
-            LabelingProjectData recipeData = TryReadRecipeConfig(configPath);
-            string purposeKey = GetDatasetPurposeKey(manifest?.DatasetPurpose);
-            string outputRootPath = FirstNonEmpty(manifest?.OutputRootPath, recipeData?.OutputRootPath);
-            string imageRootPath = FirstNonEmpty(manifest?.ImageRootPath, recipeData?.ProjectSettings?.ResolveImageRootPath());
-            List<string> configClasses = recipeData?.ClassNamedList?
-                .Select(item => item?.Text)
-                .Where(name => !string.IsNullOrWhiteSpace(name))
-                .ToList()
-                ?? new List<string>();
-            IReadOnlyList<string> classes = manifest?.Classes?.Count > 0
-                ? manifest.Classes
-                : configClasses;
-            string classesText = classes.Count > 0
-                ? string.Join(", ", classes.Take(4)) + (classes.Count > 4 ? " ..." : string.Empty)
+            string purposeKey = GetDatasetPurposeKey(snapshot?.DatasetPurpose);
+            string classesText = snapshot?.Classes?.Count > 0
+                ? string.Join(", ", snapshot.Classes.Take(4)) + (snapshot.Classes.Count > 4 ? " ..." : string.Empty)
                 : string.Empty;
-            int imageCount = manifest?.ArtifactSummary?.ImageCount ?? 0;
-            int labelCount = manifest?.ArtifactSummary?.PrimaryLabelCount ?? 0;
             return new WpfDatasetSelectionItem(
-                recipeName,
+                snapshot?.RecipeName,
                 purposeKey,
-                outputRootPath,
-                imageRootPath,
+                snapshot?.OutputRootPath,
+                snapshot?.ImageRootPath,
                 classesText,
-                imageCount,
-                labelCount,
-                manifestPath,
-                File.Exists(manifestPath),
-                string.Equals(recipeName, currentRecipeName, StringComparison.OrdinalIgnoreCase));
-        }
-
-        private static LabelingDatasetManifest TryReadManifest(string manifestPath)
-        {
-            if (string.IsNullOrWhiteSpace(manifestPath) || !File.Exists(manifestPath))
-            {
-                return null;
-            }
-
-            try
-            {
-                return JsonConvert.DeserializeObject<LabelingDatasetManifest>(File.ReadAllText(manifestPath));
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static LabelingProjectData TryReadRecipeConfig(string configPath)
-        {
-            if (string.IsNullOrWhiteSpace(configPath) || !File.Exists(configPath))
-            {
-                return null;
-            }
-
-            try
-            {
-                LabelingProjectData data = SerializeHelper.FromXmlFile<LabelingProjectData>(configPath);
-                data?.NormalizeOutputPaths();
-                return data;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static string FirstNonEmpty(params string[] values)
-        {
-            return values?.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+                snapshot?.ImageCount ?? 0,
+                snapshot?.LabelCount ?? 0,
+                snapshot?.ManifestPath,
+                snapshot?.HasManifest == true,
+                snapshot?.IsCurrent == true);
         }
 
         private static string GetDatasetPurposeKey(string purpose)
@@ -285,10 +237,6 @@ namespace MvcVisionSystem
             return "WpfShell.Dataset.Purpose.Unselected";
         }
 
-        private static string T(string key) => OpenVisionLanguageService.T(key);
-
-        private static string Format(string key, params object[] values)
-            => string.Format(System.Globalization.CultureInfo.CurrentCulture, T(key), values ?? Array.Empty<object>());
     }
 
     public sealed class WpfDatasetSelectionItem : WpfObservableViewModel, IDisposable
@@ -324,7 +272,7 @@ namespace MvcVisionSystem
 
         public string PurposeKey { get; }
 
-        public string PurposeText => T(PurposeKey);
+        public string PurposeText => WpfDatasetSelectionTextFormatter.Translate(PurposeKey);
 
         public string OutputRootPath { get; }
 
@@ -342,32 +290,32 @@ namespace MvcVisionSystem
 
         public bool IsCurrent { get; }
 
-        public string ToolTipText => Format(
+        public string ToolTipText => WpfDatasetSelectionTextFormatter.Format(
             "WpfDatasetSelection.Item.Tooltip",
-            string.IsNullOrWhiteSpace(OutputRootPath) ? T("WpfDatasetSelection.Item.StorageUnknown") : OutputRootPath,
-            string.IsNullOrWhiteSpace(ImageRootPath) ? T("WpfDatasetSelection.Item.ImageRootUnknown") : ImageRootPath);
+            string.IsNullOrWhiteSpace(OutputRootPath) ? WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Item.StorageUnknown") : OutputRootPath,
+            string.IsNullOrWhiteSpace(ImageRootPath) ? WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Item.ImageRootUnknown") : ImageRootPath);
 
-        public string StoragePathText => Format(
+        public string StoragePathText => WpfDatasetSelectionTextFormatter.Format(
             "WpfDatasetSelection.Item.StoragePath",
-            string.IsNullOrWhiteSpace(OutputRootPath) ? T("WpfDatasetSelection.Item.StorageUnknown") : OutputRootPath);
+            string.IsNullOrWhiteSpace(OutputRootPath) ? WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Item.StorageUnknown") : OutputRootPath);
 
-        public string ImageRootPathText => Format(
+        public string ImageRootPathText => WpfDatasetSelectionTextFormatter.Format(
             "WpfDatasetSelection.Item.ImageRootPath",
-            string.IsNullOrWhiteSpace(ImageRootPath) ? T("WpfDatasetSelection.Item.ImageRootUnknown") : ImageRootPath);
+            string.IsNullOrWhiteSpace(ImageRootPath) ? WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Item.ImageRootUnknown") : ImageRootPath);
 
-        public string ClassesLabelText => Format(
+        public string ClassesLabelText => WpfDatasetSelectionTextFormatter.Format(
             "WpfDatasetSelection.Item.Classes",
-            string.IsNullOrWhiteSpace(ClassesText) ? T("WpfDatasetSelection.Item.ClassesUnknown") : ClassesText);
+            string.IsNullOrWhiteSpace(ClassesText) ? WpfDatasetSelectionTextFormatter.Translate("WpfDatasetSelection.Item.ClassesUnknown") : ClassesText);
 
-        public string OpenActionText => T(IsCurrent
+        public string OpenActionText => WpfDatasetSelectionTextFormatter.Translate(IsCurrent
             ? "WpfDatasetSelection.Item.OpenAction.Current"
             : "WpfDatasetSelection.Item.OpenAction.Open");
 
-        public string StatusText => T(IsCurrent
+        public string StatusText => WpfDatasetSelectionTextFormatter.Translate(IsCurrent
             ? "WpfDatasetSelection.Item.Status.Current"
             : (HasManifest ? "WpfDatasetSelection.Item.Status.Ready" : "WpfDatasetSelection.Item.Status.Configured"));
 
-        public string CountText => Format("WpfDatasetSelection.Item.Count", ImageCount, LabelCount);
+        public string CountText => WpfDatasetSelectionTextFormatter.Format("WpfDatasetSelection.Item.Count", ImageCount, LabelCount);
 
         public PackIconMaterialKind IconKind => HasManifest ? PackIconMaterialKind.DatabaseCheckOutline : PackIconMaterialKind.DatabaseAlertOutline;
 
@@ -399,9 +347,5 @@ namespace MvcVisionSystem
             OpenVisionLanguageService.LanguageChanged -= OpenVisionLanguageService_LanguageChanged;
         }
 
-        private static string T(string key) => OpenVisionLanguageService.T(key);
-
-        private static string Format(string key, params object[] values)
-            => string.Format(System.Globalization.CultureInfo.CurrentCulture, T(key), values ?? Array.Empty<object>());
     }
 }

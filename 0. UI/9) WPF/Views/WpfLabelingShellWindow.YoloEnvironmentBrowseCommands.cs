@@ -147,7 +147,7 @@ namespace MvcVisionSystem
             }
 
             PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildUltralyticsPythonConnection(
-                CreateYoloModelSettingsSnapshot(),
+                YoloModelSettingsViewModel.CreateSettingsSnapshot(global?.Data?.ProjectSettings?.PythonModel),
                 engine,
                 selectedPath);
             YoloModelSettingsViewModel?.ApplyRuntimeConnectionResult(result);
@@ -170,7 +170,7 @@ namespace MvcVisionSystem
             }
 
             PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildYoloV8FolderConnection(
-                CreateYoloModelSettingsSnapshot(),
+                YoloModelSettingsViewModel.CreateSettingsSnapshot(global?.Data?.ProjectSettings?.PythonModel),
                 selectedPath,
                 global?.Data?.ProjectSettings?.DatasetPurpose ?? LabelingDatasetPurpose.ObjectDetection);
             YoloModelSettingsViewModel?.ApplyRuntimeConnectionResult(result);
@@ -194,7 +194,7 @@ namespace MvcVisionSystem
             }
 
             PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildYolo11FolderConnection(
-                CreateYoloModelSettingsSnapshot(),
+                YoloModelSettingsViewModel.CreateSettingsSnapshot(global?.Data?.ProjectSettings?.PythonModel),
                 selectedPath,
                 global?.Data?.ProjectSettings?.DatasetPurpose ?? LabelingDatasetPurpose.ObjectDetection);
             YoloModelSettingsViewModel?.ApplyRuntimeConnectionResult(result);
@@ -218,7 +218,7 @@ namespace MvcVisionSystem
             }
 
             PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildYoloV5FolderConnection(
-                CreateYoloModelSettingsSnapshot(),
+                YoloModelSettingsViewModel.CreateSettingsSnapshot(global?.Data?.ProjectSettings?.PythonModel),
                 selectedPath);
             YoloModelSettingsViewModel?.ApplyRuntimeConnectionResult(result);
             TrainingSettingsViewModel?.ApplyModelEngineSelection(result.Settings.ModelEngine);
@@ -231,7 +231,7 @@ namespace MvcVisionSystem
         {
             string projectRootPath = PythonModelRuntimePathResolver.GetDefaultUnetProjectRootPath();
             PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildUnetFolderConnection(
-                CreateYoloModelSettingsSnapshot(),
+                YoloModelSettingsViewModel.CreateSettingsSnapshot(global?.Data?.ProjectSettings?.PythonModel),
                 projectRootPath);
             YoloModelSettingsViewModel?.ApplyRuntimeConnectionResult(result);
             TrainingSettingsViewModel?.ApplyModelEngineSelection(result.Settings.ModelEngine);
@@ -245,7 +245,7 @@ namespace MvcVisionSystem
             string projectRootPath = PythonModelRuntimePathResolver.GetDefaultPatchCoreProjectRootPath();
             Directory.CreateDirectory(projectRootPath);
             PythonModelRuntimeConnectionResult result = PythonModelRuntimeConnectionService.BuildPatchCoreConnection(
-                CreateYoloModelSettingsSnapshot(),
+                YoloModelSettingsViewModel.CreateSettingsSnapshot(global?.Data?.ProjectSettings?.PythonModel),
                 YoloModelSettingsViewModel?.PythonExecutablePath ?? string.Empty);
             YoloModelSettingsViewModel?.ApplyRuntimeConnectionResult(result);
             TrainingSettingsViewModel?.ApplyModelEngineSelection(result.Settings.ModelEngine);
@@ -254,43 +254,16 @@ namespace MvcVisionSystem
             AppendLog($"PatchCore runtime profile applied: {result.Settings.ProjectRootPath} / {result.SummaryText}");
         }
 
-        private PythonModelSettings CreateYoloModelSettingsSnapshot()
-        {
-            PythonModelSettings current = global?.Data?.ProjectSettings?.PythonModel ?? new PythonModelSettings();
-            return new PythonModelSettings
-            {
-                PythonExecutablePath = YoloModelSettingsViewModel?.PythonExecutablePath ?? current.PythonExecutablePath,
-                ModelEngine = YoloModelSettingsViewModel?.SelectedModelEngine ?? current.ModelEngine,
-                ProjectRootPath = YoloModelSettingsViewModel?.ProjectRootPath ?? current.ProjectRootPath,
-                ClientScriptPath = YoloModelSettingsViewModel?.ClientScriptPath ?? current.ClientScriptPath,
-                WeightsPath = YoloModelSettingsViewModel?.WeightsPath ?? current.WeightsPath,
-                ImageRootPath = YoloModelSettingsViewModel?.ImageRootPath ?? current.ImageRootPath,
-                MinimumDetectionConfidence = current.MinimumDetectionConfidence,
-                MaximumDetectionCandidates = current.MaximumDetectionCandidates,
-                InferenceImageSize = current.InferenceImageSize,
-                DetectionTimeoutSeconds = current.DetectionTimeoutSeconds,
-                AutoStartClient = current.AutoStartClient
-            };
-        }
-
         private async void ExecuteSaveYoloSettingsCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             try
             {
                 EnsureProjectSettings();
-                PythonModelSettings previousModelSettings = new PythonModelSettings
-                {
-                    ModelEngine = global.Data.ProjectSettings.PythonModel.ModelEngine,
-                    ProjectRootPath = global.Data.ProjectSettings.PythonModel.ProjectRootPath,
-                    WeightsPath = global.Data.ProjectSettings.PythonModel.WeightsPath
-                };
-                ModelRegistryService.RecordConfiguredInspectionModel(
-                    global.Data.ProjectSettings.ModelRegistry,
-                    previousModelSettings,
-                    global.Data.ProjectSettings.DatasetPurpose);
-
-                SaveYoloEditorFields();
-                SaveTrainingEditorFields();
                 bool pendingWeightsRecipeSave = hasPendingTrainingWeightsRecipeSave;
                 if (pendingWeightsRecipeSave && CandidateReviewViewModel?.IsModelPromotionHeld == true)
                 {
@@ -300,6 +273,21 @@ namespace MvcVisionSystem
                     return;
                 }
 
+                using RecipeSettingsStateTransaction recipeSettingsTransaction = new RecipeSettingsStateTransaction(global.Data);
+                PythonModelSettings previousModelSettings = new PythonModelSettings
+                {
+                    ModelEngine = global.Data.ProjectSettings.PythonModel.ModelEngine,
+                    ProjectRootPath = global.Data.ProjectSettings.PythonModel.ProjectRootPath,
+                    WeightsPath = global.Data.ProjectSettings.PythonModel.WeightsPath
+                };
+
+                SaveYoloEditorFields();
+                SaveTrainingEditorFields();
+                using ModelRegistryStateTransaction registryTransaction = new ModelRegistryStateTransaction(global.Data.ProjectSettings.ModelRegistry);
+                ModelRegistryService.RecordConfiguredInspectionModel(
+                    global.Data.ProjectSettings.ModelRegistry,
+                    previousModelSettings,
+                    global.Data.ProjectSettings.DatasetPurpose);
                 if (pendingWeightsRecipeSave)
                 {
                     UpdateAppliedTrainingWeightsHistory(global.Data.ProjectSettings.PythonModel.WeightsPath, savedToRecipe: true);
@@ -314,17 +302,38 @@ namespace MvcVisionSystem
                 }
 
                 bool configSaved = SaveProjectConfigFromPanel();
-                if (!configSaved && pendingWeightsRecipeSave)
+
+                if (configSaved)
                 {
-                    UpdateAppliedTrainingWeightsHistory(global.Data.ProjectSettings.PythonModel.WeightsPath, savedToRecipe: false);
+                    recipeSettingsTransaction.Commit();
+                    registryTransaction.Commit();
+                }
+                else
+                {
+                    recipeSettingsTransaction.Rollback();
+                    registryTransaction.Rollback();
                 }
 
-                PopulateYoloEditorFields();
+                if (configSaved)
+                {
+                    PopulateYoloEditorFields();
+                    PopulateTrainingEditorFields();
+                }
+                else
+                {
+                    RefreshCandidateConfidenceFilterFromAppliedSettings();
+                }
+
                 RefreshYoloStatus();
+                UpdateYoloTrainingHistoryText();
                 await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
                 AppendLog(configSaved
                     ? "\uBAA8\uB378 \uD504\uB85C\uD544 \uC124\uC815 \uC800\uC7A5 \uC644\uB8CC."
-                    : "\uBAA8\uB378 \uD504\uB85C\uD544 \uC124\uC815 \uBC18\uC601 \uC644\uB8CC. Recipe \uC801\uC6A9 \uD6C4 \uC124\uC815 \uC800\uC7A5\uC774 \uD544\uC694\uD569\uB2C8\uB2E4.");
+                    : "\uBAA8\uB378 \uD504\uB85C\uD544 \uC124\uC815 \uC800\uC7A5 \uC2E4\uD328. \uD604\uC7AC \uC801\uC6A9 \uAC12\uC740 \uC720\uC9C0\uD558\uACE0 \uD3B8\uC9D1 \uB0B4\uC6A9\uC740 \uC7AC\uC2DC\uB3C4\uD560 \uC218 \uC788\uB3C4\uB85D \uB0A8\uACA8\uB450\uC5C8\uC2B5\uB2C8\uB2E4.");
                 if (configSaved && pendingWeightsRecipeSave)
                 {
                     hasPendingTrainingWeightsRecipeSave = false;
@@ -339,15 +348,28 @@ namespace MvcVisionSystem
             }
             catch (Exception ex)
             {
-                SetYoloCommandStatus($"설정 저장 실패: {ex.Message}", isBusy: false);
-                AppendLog($"\uBAA8\uB378 \uD504\uB85C\uD544 \uC124\uC815 \uC800\uC7A5 \uC2E4\uD328: {ex.Message}");
+                if (!isApplicationCloseApproved)
+                {
+                    RefreshCandidateConfidenceFilterFromAppliedSettings();
+                    SetYoloCommandStatus($"설정 저장 실패: {ex.Message}", isBusy: false);
+                    AppendLog($"\uBAA8\uB378 \uD504\uB85C\uD544 \uC124\uC815 \uC800\uC7A5 \uC2E4\uD328: {ex.Message}");
+                }
             }
         }
 
         private async void ExecuteResetYoloSettingsCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             YoloModelSettingsViewModel?.LoadDraftDefaults();
             await RefreshYoloSettingsPanelAsync().ConfigureAwait(true);
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
             SetYoloCommandStatus("기본값을 편집란에 불러왔습니다. Recipe에 저장 및 적용하기 전에는 현재 검사 모델이 바뀌지 않습니다.", isBusy: false);
             AppendLog("YOLO 모델 기본값을 편집란에 불러왔습니다. 현재 적용 설정은 유지됩니다.");
         }

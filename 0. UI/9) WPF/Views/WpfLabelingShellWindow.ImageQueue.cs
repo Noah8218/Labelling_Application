@@ -1,4 +1,3 @@
-using MvcVisionSystem.Yolo;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +20,11 @@ namespace MvcVisionSystem
 
             try
             {
-                ImageQueueCatalogLoadSnapshot snapshot = BuildImageQueueCatalogLoadSnapshot(request);
+                WpfImageQueueCatalogLoadResult snapshot = imageQueueCatalogLoadService.Build(
+                    request.ImageRoot,
+                    request.Data,
+                    request.IsAnomalyPurpose,
+                    request.CancellationToken);
                 return IsCurrentImageQueueCatalogLoad(request)
                     ? ApplyImageQueueCatalogLoad(request, snapshot)
                     : 0;
@@ -61,8 +64,12 @@ namespace MvcVisionSystem
         {
             try
             {
-                ImageQueueCatalogLoadSnapshot snapshot = await Task.Run(
-                    () => BuildImageQueueCatalogLoadSnapshot(request),
+                WpfImageQueueCatalogLoadResult snapshot = await Task.Run(
+                    () => imageQueueCatalogLoadService.Build(
+                        request.ImageRoot,
+                        request.Data,
+                        request.IsAnomalyPurpose,
+                        request.CancellationToken),
                     request.CancellationToken).ConfigureAwait(true);
                 return IsCurrentImageQueueCatalogLoad(request)
                     ? ApplyImageQueueCatalogLoad(request, snapshot)
@@ -91,6 +98,11 @@ namespace MvcVisionSystem
             out ImageQueueCatalogLoadRequest request)
         {
             request = null;
+            if (isApplicationCloseApproved)
+            {
+                return false;
+            }
+
             if (string.IsNullOrWhiteSpace(imageRoot) || !Directory.Exists(imageRoot))
             {
                 SetDatasetStatus("\uB370\uC774\uD130\uC14B: \uC774\uBBF8\uC9C0 \uB8E8\uD2B8 \uC5C6\uC74C");
@@ -127,50 +139,9 @@ namespace MvcVisionSystem
             return true;
         }
 
-        private ImageQueueCatalogLoadSnapshot BuildImageQueueCatalogLoadSnapshot(ImageQueueCatalogLoadRequest request)
-        {
-            request.CancellationToken.ThrowIfCancellationRequested();
-            List<string> imagePaths = imageQueueSelectionService.EnumerateImageFiles(
-                request.ImageRoot,
-                request.CancellationToken);
-            if (request.IsAnomalyPurpose)
-            {
-                imagePaths = imageQueueSelectionService.InterleaveTopLevelFolderImages(
-                    request.ImageRoot,
-                    imagePaths,
-                    request.CancellationToken);
-            }
-            IReadOnlyList<WpfImageQueueCatalogEntry> catalogEntries = imageQueueSelectionService.CreateCatalogEntries(
-                imagePaths,
-                request.CancellationToken);
-
-            var reviewStatus = new YoloImageReviewStatusService();
-            var reviewWorkflow = new WpfImageQualityReviewWorkflowService(reviewStatus);
-            reviewWorkflow.SetImages(imagePaths);
-            reviewWorkflow.LoadReviewStatus(request.Data, imagePaths);
-
-            var anomalyReviewStatus = new AnomalyImageReviewStatusService();
-            var anomalyReviewWorkflow = new WpfAnomalyImageReviewWorkflowService(anomalyReviewStatus);
-            anomalyReviewWorkflow.SetImages(imagePaths);
-            anomalyReviewWorkflow.LoadReviewStatus(request.Data, imagePaths);
-            AnomalyImageReviewFolderImportResult anomalyFolderStateSuggestion = request.IsAnomalyPurpose
-                ? anomalyReviewWorkflow.PreviewUnreviewedStatesFromParentFolders()
-                : null;
-            request.CancellationToken.ThrowIfCancellationRequested();
-
-            return new ImageQueueCatalogLoadSnapshot(
-                imagePaths,
-                catalogEntries,
-                reviewStatus,
-                anomalyReviewStatus,
-                reviewWorkflow,
-                anomalyReviewWorkflow,
-                anomalyFolderStateSuggestion);
-        }
-
         private int ApplyImageQueueCatalogLoad(
             ImageQueueCatalogLoadRequest request,
-            ImageQueueCatalogLoadSnapshot snapshot)
+            WpfImageQueueCatalogLoadResult snapshot)
         {
             if (snapshot == null || !IsCurrentImageQueueCatalogLoad(request))
             {
@@ -364,41 +335,6 @@ namespace MvcVisionSystem
             public CancellationTokenSource Cancellation { get; }
 
             public CancellationToken CancellationToken => Cancellation.Token;
-        }
-
-        private sealed class ImageQueueCatalogLoadSnapshot
-        {
-            public ImageQueueCatalogLoadSnapshot(
-                IReadOnlyList<string> imagePaths,
-                IReadOnlyList<WpfImageQueueCatalogEntry> catalogEntries,
-                YoloImageReviewStatusService reviewStatus,
-                AnomalyImageReviewStatusService anomalyReviewStatus,
-                WpfImageQualityReviewWorkflowService reviewWorkflow,
-                WpfAnomalyImageReviewWorkflowService anomalyReviewWorkflow,
-                AnomalyImageReviewFolderImportResult anomalyFolderStateSuggestion)
-            {
-                ImagePaths = imagePaths ?? Array.Empty<string>();
-                CatalogEntries = catalogEntries ?? Array.Empty<WpfImageQueueCatalogEntry>();
-                ReviewStatus = reviewStatus ?? new YoloImageReviewStatusService();
-                AnomalyReviewStatus = anomalyReviewStatus ?? new AnomalyImageReviewStatusService();
-                ReviewWorkflow = reviewWorkflow ?? new WpfImageQualityReviewWorkflowService(ReviewStatus);
-                AnomalyReviewWorkflow = anomalyReviewWorkflow ?? new WpfAnomalyImageReviewWorkflowService(AnomalyReviewStatus);
-                AnomalyFolderStateSuggestion = anomalyFolderStateSuggestion;
-            }
-
-            public IReadOnlyList<string> ImagePaths { get; }
-
-            public IReadOnlyList<WpfImageQueueCatalogEntry> CatalogEntries { get; }
-
-            public YoloImageReviewStatusService ReviewStatus { get; }
-
-            public AnomalyImageReviewStatusService AnomalyReviewStatus { get; }
-
-            public WpfImageQualityReviewWorkflowService ReviewWorkflow { get; }
-
-            public WpfAnomalyImageReviewWorkflowService AnomalyReviewWorkflow { get; }
-
-            public AnomalyImageReviewFolderImportResult AnomalyFolderStateSuggestion { get; }
         }
 
         private void PopulateImageQueue(string imageRoot, string selectedImagePath, bool refreshDetails = true)

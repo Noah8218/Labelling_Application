@@ -25,6 +25,11 @@ namespace MvcVisionSystem
 
         private void ExecuteBrowseSegmentationUnetCheckpointCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string currentPath = TrainingSettingsViewModel?.SegmentationUnetWeightsPath ?? string.Empty;
             if (!TryPickFile(
                     "U-Net segmentation checkpoint 선택",
@@ -35,12 +40,22 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             TrainingSettingsViewModel.SegmentationUnetWeightsPath = selectedPath;
             RefreshSegmentationAdapterComparisonState();
         }
 
         private void ExecuteBrowseSegmentationYoloCheckpointCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string currentPath = TrainingSettingsViewModel?.SegmentationYoloWeightsPath ?? string.Empty;
             if (!TryPickFile(
                     "YOLO segmentation checkpoint 선택",
@@ -51,13 +66,20 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             TrainingSettingsViewModel.SegmentationYoloWeightsPath = selectedPath;
             RefreshSegmentationAdapterComparisonState();
         }
 
         private async void ExecuteRunSegmentationAdapterComparisonCommand()
         {
-            if (isSegmentationAdapterComparisonRunning || TrainingSettingsViewModel == null)
+            if (isApplicationCloseApproved
+                || isSegmentationAdapterComparisonRunning
+                || TrainingSettingsViewModel == null)
             {
                 return;
             }
@@ -99,6 +121,11 @@ namespace MvcVisionSystem
                 WpfSegmentationAdapterComparisonRunResult result = await segmentationAdapterComparisonRunService
                     .RunAsync(request)
                     .ConfigureAwait(true);
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 if (!result.Succeeded)
                 {
                     string errorText = "U-Net vs YOLO-seg 비교 실패: " + FirstLine(result.Error);
@@ -138,7 +165,10 @@ namespace MvcVisionSystem
             finally
             {
                 isSegmentationAdapterComparisonRunning = false;
-                UpdateYoloCommandButtons();
+                if (!isApplicationCloseApproved)
+                {
+                    UpdateYoloCommandButtons();
+                }
             }
         }
 

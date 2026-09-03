@@ -30,6 +30,11 @@ namespace MvcVisionSystem
             reviewStatus.LoadReviewStatus(data, imagePaths);
         }
 
+        public AnomalyImageReviewSummary LoadPersistedSummary(LabelingProjectData data, int totalImageCount = 0)
+        {
+            return AnomalyImageReviewStatusService.LoadPersistedSummary(data, totalImageCount);
+        }
+
         public void SaveReviewStatus(LabelingProjectData data)
         {
             reviewStatus.SaveReviewStatus(data);

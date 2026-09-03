@@ -116,6 +116,61 @@ namespace MvcVisionSystem
             return string.Empty;
         }
 
+        public static bool HasTrainingStatus(PythonCommunicationStatus status)
+        {
+            return status != null
+                && (!string.IsNullOrWhiteSpace(status.LastTrainingState)
+                    || !string.IsNullOrWhiteSpace(status.LastTrainingMessage)
+                    || status.LastTrainingProgressPercent.HasValue
+                    || status.LastTrainingEpoch.HasValue
+                    || status.LastTrainingTotalEpochs.HasValue);
+        }
+
+        public static bool IsTerminalTrainingState(string state)
+        {
+            return string.Equals(state?.Trim(), "idle", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(state?.Trim(), "completed", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(state?.Trim(), "stopped", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(state?.Trim(), "failed", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(state?.Trim(), "error", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool IsLiveTrainingStatus(PythonCommunicationStatus status)
+        {
+            if (!HasTrainingStatus(status))
+            {
+                return false;
+            }
+
+            string state = status.LastTrainingState?.Trim() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(state))
+            {
+                return !IsTerminalTrainingState(state);
+            }
+
+            return status.LastTrainingProgressPercent.HasValue
+                && status.LastTrainingProgressPercent.Value > 0
+                && status.LastTrainingProgressPercent.Value < 100;
+        }
+
+        public static bool IsTrainingStopAvailable(PythonCommunicationStatus status)
+        {
+            if (status == null)
+            {
+                return false;
+            }
+
+            string state = status.LastTrainingState?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(state))
+            {
+                return status.LastTrainingProgressPercent.HasValue
+                    && status.LastTrainingProgressPercent.Value > 0
+                    && status.LastTrainingProgressPercent.Value < 100;
+            }
+
+            return !IsTerminalTrainingState(state);
+        }
+
         public static string FormatTrainingState(string state)
         {
             string normalized = state?.Trim() ?? string.Empty;
@@ -196,16 +251,6 @@ namespace MvcVisionSystem
             {
                 return normalized;
             }
-        }
-
-        private static bool HasTrainingStatus(PythonCommunicationStatus status)
-        {
-            return status != null
-                && (!string.IsNullOrWhiteSpace(status.LastTrainingState)
-                    || !string.IsNullOrWhiteSpace(status.LastTrainingMessage)
-                    || status.LastTrainingProgressPercent.HasValue
-                    || status.LastTrainingEpoch.HasValue
-                    || status.LastTrainingTotalEpochs.HasValue);
         }
 
         private static string NormalizeDetail(string detail)

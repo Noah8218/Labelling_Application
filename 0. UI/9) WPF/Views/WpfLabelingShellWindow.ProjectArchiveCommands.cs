@@ -11,6 +11,11 @@ namespace MvcVisionSystem
 
         private void ExecuteExportProjectArchiveCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string recipeName = GetCurrentRecipeName();
             string configPath = GetCurrentRecipeConfigPath();
             string datasetRoot = global.Data?.OutputRootPath ?? string.Empty;
@@ -40,6 +45,11 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             try
             {
                 WpfProjectArchiveExportResult result = portableProjectArchiveService.Export(
@@ -63,6 +73,11 @@ namespace MvcVisionSystem
 
         private void ExecuteImportProjectArchiveCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             WpfProjectArchivePreflightResult preflight = WpfProjectArchivePreflightService.Check(
                 WpfProjectArchiveOperation.Import,
                 BuildProjectArchiveOperationState());
@@ -86,6 +101,11 @@ namespace MvcVisionSystem
                 "가져온 데이터셋을 만들 상위 폴더 선택",
                 defaultDatasetParent,
                 out string datasetParent))
+            {
+                return;
+            }
+
+            if (isApplicationCloseApproved)
             {
                 return;
             }

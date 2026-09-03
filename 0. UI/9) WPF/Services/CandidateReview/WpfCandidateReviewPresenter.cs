@@ -446,6 +446,24 @@ namespace MvcVisionSystem
         public static string FormatBoundsCompact(Rectangle bounds)
             => bounds.IsEmpty ? "-" : $"\uD06C\uAE30 {bounds.Width}x{bounds.Height} / \uC704\uCE58 x={bounds.X}, y={bounds.Y}";
 
+        public static double CalculateIntersectionOverUnion(Rectangle first, Rectangle second)
+        {
+            if (first.IsEmpty || second.IsEmpty)
+            {
+                return 0D;
+            }
+
+            Rectangle intersection = Rectangle.Intersect(first, second);
+            if (intersection.IsEmpty)
+            {
+                return 0D;
+            }
+
+            double intersectionArea = intersection.Width * intersection.Height;
+            double unionArea = (first.Width * first.Height) + (second.Width * second.Height) - intersectionArea;
+            return unionArea <= 0D ? 0D : intersectionArea / unionArea;
+        }
+
         private static string BuildCandidateSummaryName(YoloWorkerSmokeCandidate candidate)
         {
             string indexText = candidate?.Index > 0 ? $"{candidate.Index}. " : string.Empty;

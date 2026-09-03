@@ -57,8 +57,123 @@ namespace MvcVisionSystem
         public IReadOnlyList<WpfModelRegistryHistoryItem> HistoryItems { get; set; } = Array.Empty<WpfModelRegistryHistoryItem>();
     }
 
+    /// <summary>
+    /// Pure projection for the selected model-history row. The ViewModel keeps
+    /// the observable selection and command enablement; this value carries only
+    /// the text and comparison state derived from a history snapshot.
+    /// </summary>
+    public sealed class WpfModelRegistryHistorySelectionPresentation
+    {
+        public bool IsVisible { get; set; }
+
+        public string TitleText { get; set; } = string.Empty;
+
+        public string DetailText { get; set; } = string.Empty;
+
+        public string MetricText { get; set; } = string.Empty;
+
+        public string DecisionText { get; set; } = string.Empty;
+
+        public string ComparisonTitleText { get; set; } = string.Empty;
+
+        public string CurrentModelText { get; set; } = string.Empty;
+
+        public string SelectedModelText { get; set; } = string.Empty;
+
+        public string ComparisonMetricText { get; set; } = string.Empty;
+
+        public string ActionText { get; set; } = string.Empty;
+
+        public string ActionToolTip { get; set; } = string.Empty;
+
+        public bool CanPromoteToInspectionModel { get; set; }
+    }
+
     public static class WpfModelRegistryPresentationService
     {
+        public static WpfModelRegistryHistoryItem FindHistorySelection(
+            IEnumerable<WpfModelRegistryHistoryItem> items,
+            string candidateId,
+            string weightsPath)
+        {
+            IReadOnlyList<WpfModelRegistryHistoryItem> historyItems =
+                (items ?? Array.Empty<WpfModelRegistryHistoryItem>())
+                .Where(item => item != null)
+                .ToList();
+            if (!string.IsNullOrWhiteSpace(candidateId))
+            {
+                WpfModelRegistryHistoryItem byCandidate = historyItems.FirstOrDefault(item =>
+                    string.Equals(item.CandidateId, candidateId, StringComparison.Ordinal));
+                if (byCandidate != null)
+                {
+                    return byCandidate;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(weightsPath))
+            {
+                return historyItems.FirstOrDefault(item =>
+                    string.Equals(item.WeightsPath, weightsPath, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return null;
+        }
+
+        public static WpfModelRegistryHistorySelectionPresentation BuildSelectedHistoryPresentation(
+            IEnumerable<WpfModelRegistryHistoryItem> items,
+            WpfModelRegistryHistoryItem selected)
+        {
+            const string comparisonTitle = "\uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uACFC \uC120\uD0DD \uC774\uB825 \uBAA8\uB378";
+            if (selected == null)
+            {
+                return new WpfModelRegistryHistorySelectionPresentation
+                {
+                    IsVisible = false,
+                    TitleText = "\uBAA8\uB378 \uC774\uB825 \uC120\uD0DD \uC5C6\uC74C",
+                    DetailText = "\uC774\uB825\uC744 \uC120\uD0DD\uD558\uBA74 \uAC00\uC911\uCE58, \uC9C0\uD45C, \uC801\uC6A9 \uAC00\uB2A5 \uC5EC\uBD80\uB97C \uD655\uC778\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.",
+                    ComparisonTitleText = comparisonTitle,
+                    ActionText = "\uC801\uC6A9 \uBD88\uAC00",
+                    ActionToolTip = "\uC801\uC6A9\uD560 \uBAA8\uB378 \uC774\uB825\uC744 \uBA3C\uC800 \uC120\uD0DD\uD558\uC138\uC694.",
+                    CanPromoteToInspectionModel = false
+                };
+            }
+
+            WpfModelRegistryHistoryItem current = (items ?? Array.Empty<WpfModelRegistryHistoryItem>())
+                .FirstOrDefault(item => item?.IsCurrentInspectionModel == true);
+            string title = string.IsNullOrWhiteSpace(selected.TitleText)
+                ? "\uBAA8\uB378 \uC774\uB825"
+                : selected.TitleText.Trim();
+            string detail = string.IsNullOrWhiteSpace(selected.DetailText)
+                ? selected.WeightsPath ?? string.Empty
+                : selected.DetailText.Trim();
+            string actionText = string.IsNullOrWhiteSpace(selected.ActionText)
+                ? "\uC801\uC6A9 \uBD88\uAC00"
+                : selected.ActionText.Trim();
+            string actionToolTip = string.IsNullOrWhiteSpace(selected.ActionToolTip)
+                ? "\uC120\uD0DD\uD55C \uBAA8\uB378 \uC774\uB825\uC744 \uAC80\uC0AC \uBAA8\uB378\uB85C \uC800\uC7A5\uD569\uB2C8\uB2E4."
+                : selected.ActionToolTip.Trim();
+
+            return new WpfModelRegistryHistorySelectionPresentation
+            {
+                IsVisible = true,
+                TitleText = title,
+                DetailText = detail,
+                MetricText = selected.MetricText ?? string.Empty,
+                DecisionText = selected.DecisionText ?? string.Empty,
+                ComparisonTitleText = comparisonTitle,
+                CurrentModelText = current == null
+                    ? "\uD604\uC7AC \uAC80\uC0AC: \uB4F1\uB85D\uB41C \uC774\uB825 \uC5C6\uC74C"
+                    : BuildHistoryComparisonRowText("\uD604\uC7AC \uAC80\uC0AC", current),
+                SelectedModelText = selected.IsCurrentInspectionModel
+                    ? "\uC120\uD0DD \uC774\uB825: \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uACFC \uAC19\uC74C"
+                    : BuildHistoryComparisonRowText("\uC120\uD0DD \uC774\uB825", selected),
+                ComparisonMetricText = BuildHistoryComparisonMetricText(current, selected),
+                ActionText = actionText,
+                ActionToolTip = actionToolTip,
+                CanPromoteToInspectionModel = selected.CanPromoteToInspectionModel
+            };
+        }
+
         public static WpfModelRegistryPresentation Build(
             PythonModelSettings settings,
             WpfTrainingWeightsComparison comparison,
@@ -683,6 +798,56 @@ namespace MvcVisionSystem
             }
 
             return DateTime.MinValue;
+        }
+
+        private static string BuildHistoryComparisonRowText(
+            string titleText,
+            WpfModelRegistryHistoryItem item)
+        {
+            if (item == null)
+            {
+                return $"{titleText}: \uC5C6\uC74C";
+            }
+
+            string title = string.IsNullOrWhiteSpace(item.TitleText)
+                ? item.WeightsPath ?? string.Empty
+                : item.TitleText.Trim();
+            string decision = string.IsNullOrWhiteSpace(item.DecisionText)
+                ? "\uACB0\uC815 \uBBF8\uD655\uC778"
+                : item.DecisionText.Trim();
+            return $"{titleText}: {title} / {decision}";
+        }
+
+        private static string BuildHistoryComparisonMetricText(
+            WpfModelRegistryHistoryItem current,
+            WpfModelRegistryHistoryItem selected)
+        {
+            if (selected == null)
+            {
+                return string.Empty;
+            }
+
+            if (current == null)
+            {
+                return "\uC9C0\uD45C \uBE44\uAD50: \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378 \uC774\uB825\uC774 \uC5C6\uC5B4 \uC120\uD0DD \uC774\uB825\uB9CC \uD655\uC778\uD569\uB2C8\uB2E4.";
+            }
+
+            bool isSameCandidate = !string.IsNullOrWhiteSpace(current.CandidateId)
+                && string.Equals(current.CandidateId, selected.CandidateId, StringComparison.Ordinal);
+            bool isSameWeights = !string.IsNullOrWhiteSpace(current.WeightsPath)
+                && string.Equals(current.WeightsPath, selected.WeightsPath, StringComparison.OrdinalIgnoreCase);
+            if (selected.IsCurrentInspectionModel || isSameCandidate || isSameWeights)
+            {
+                return "\uC9C0\uD45C \uBE44\uAD50: \uC120\uD0DD \uC774\uB825\uC774 \uD604\uC7AC \uAC80\uC0AC \uBAA8\uB378\uC785\uB2C8\uB2E4.";
+            }
+
+            string currentMetric = string.IsNullOrWhiteSpace(current.MetricText)
+                ? "\uC9C0\uD45C \uC5C6\uC74C"
+                : current.MetricText.Trim();
+            string selectedMetric = string.IsNullOrWhiteSpace(selected.MetricText)
+                ? "\uC9C0\uD45C \uC5C6\uC74C"
+                : selected.MetricText.Trim();
+            return $"\uC9C0\uD45C \uBE44\uAD50: \uD604\uC7AC {currentMetric} / \uC120\uD0DD \uC774\uB825 {selectedMetric}";
         }
     }
 }

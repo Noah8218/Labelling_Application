@@ -11,7 +11,7 @@ namespace MvcVisionSystem
         // Training guide history persistence is separated from live checklist calculation.
         private void UpdateYoloTrainingGuideDatasetHistory(
             YoloDatasetReadinessReport report,
-            YoloTrainingIssuePresentation presentation,
+            WpfTrainingChecklistPresentation presentation,
             bool recordHistory)
         {
             EnsureProjectSettings();
@@ -32,7 +32,7 @@ namespace MvcVisionSystem
 
         private void UpdateYoloTrainingGuideTrainingHistory(PythonCommunicationStatus status)
         {
-            if (!HasTrainingStatus(status))
+            if (!WpfTrainingProgressPresentationService.HasTrainingStatus(status))
             {
                 return;
             }
@@ -42,11 +42,11 @@ namespace MvcVisionSystem
             trainingGuideHistoryService.UpdateTrainingHistory(
                 history,
                 status,
-                IsTerminalTrainingState,
+                WpfTrainingProgressPresentationService.IsTerminalTrainingState,
                 ref lastRecordedTrainingGuideRunSignature);
             UpdateYoloTrainingHistoryText();
 
-            if (IsTerminalTrainingState(history.LastTrainingState) && !hasPendingTrainingWeightsRecipeSave)
+            if (WpfTrainingProgressPresentationService.IsTerminalTrainingState(history.LastTrainingState) && !hasPendingTrainingWeightsRecipeSave)
             {
                 TrySaveTrainingGuideHistoryQuietly();
             }
@@ -88,9 +88,9 @@ namespace MvcVisionSystem
             YoloTrainingGuideHistory history = global.Data.ProjectSettings.TrainingGuide;
             history.EnsureDefaults();
             LearningWorkflowViewModel.SetTrainingRunHistoryItems(
-                trainingGuideHistoryService.BuildRunHistoryItems(history, FormatTrainingState));
+                trainingGuideHistoryService.BuildRunHistoryItems(history, WpfTrainingProgressPresentationService.FormatTrainingState));
             LearningWorkflowViewModel.SetTrainingHistoryText(
-                trainingGuideHistoryService.BuildHistoryText(history, FormatTrainingState));
+                trainingGuideHistoryService.BuildHistoryText(history, WpfTrainingProgressPresentationService.FormatTrainingState));
             UpdateTrainingResultComparisonText();
         }
 
@@ -118,10 +118,13 @@ namespace MvcVisionSystem
 
             try
             {
-                Recipe.InitDirectory(recipeName);
                 // Training progress is recipe metadata. The training start already
                 // captured the exact dataset, so do not rescan every image here.
-                RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName, refreshDatasetVersion: false);
+                RecipeConfigurationSaveResult saveResult = projectRecipeSessionService.SaveConfiguration(
+                    global.Data,
+                    recipeName,
+                    updateYoloDataYaml: false,
+                    refreshDatasetVersion: false);
                 if (!saveResult.IsSuccess)
                 {
                     AppendLog($"\uD559\uC2B5 \uAC00\uC774\uB4DC \uC774\uB825 \uC800\uC7A5 \uC2E4\uD328: {saveResult.ErrorMessage}");

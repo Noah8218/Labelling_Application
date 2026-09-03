@@ -41,7 +41,7 @@ namespace MvcVisionSystem
                 preferredCandidate,
                 GetCandidateConfidenceFilter(),
                 GetMinimumDetectionConfidence(),
-                GetClippedCandidateBounds,
+                candidate => WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize),
                 GetCandidateOverlapInfo);
 
             CandidateReviewViewModel.SetCandidates(
@@ -142,7 +142,7 @@ namespace MvcVisionSystem
 
         private string BuildCandidateConfirmDisabledHintText(YoloWorkerSmokeCandidate candidate)
         {
-            DrawingRectangle bounds = GetClippedCandidateBounds(candidate);
+            DrawingRectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
             return WpfCandidateReviewPresenter.BuildConfirmDisabledHint(
                 candidate,
                 bounds,
@@ -169,18 +169,36 @@ namespace MvcVisionSystem
 
         private WpfCandidateOverlapInfo GetCandidateOverlapInfo(YoloWorkerSmokeCandidate candidate)
         {
-            return GetCandidateOverlapInfo(GetClippedCandidateBounds(candidate));
+            return GetCandidateOverlapInfo(
+                WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize));
         }
 
         private WpfCandidateOverlapInfo GetCandidateOverlapInfo(DrawingRectangle candidateBounds)
         {
-            (string label, DrawingRectangle bounds, double iou, WpfObjectReviewItemRef currentObjectRef) = FindBestCurrentObjectOverlapInfo(candidateBounds);
-            return new WpfCandidateOverlapInfo(label, bounds, iou, currentObjectRef);
+            var sources = new List<WpfCandidateOverlapSource>(manualRois.Count + confirmedDetectionCandidates.Count);
+            for (int index = 0; index < manualRois.Count; index++)
+            {
+                sources.Add(new WpfCandidateOverlapSource(
+                    $"수동 {GetManualRoiClassName(index)}",
+                    manualRois[index],
+                    WpfObjectReviewItemRef.Manual(index, GetManualRoiOverlayId(index))));
+            }
+
+            for (int index = 0; index < confirmedDetectionCandidates.Count; index++)
+            {
+                YoloWorkerSmokeCandidate confirmed = confirmedDetectionCandidates[index];
+                sources.Add(new WpfCandidateOverlapSource(
+                    $"AI {WpfCandidateReviewPresenter.GetClassName(confirmed)}",
+                    WpfCandidateReviewPresentationService.ClipCandidateBounds(confirmed, activeImageSize),
+                    WpfObjectReviewItemRef.ConfirmedAi(index)));
+            }
+
+            return WpfCandidateReviewPresentationService.FindBestOverlap(candidateBounds, sources);
         }
 
         private bool IsCandidateConfirmable(YoloWorkerSmokeCandidate candidate)
         {
-            DrawingRectangle bounds = GetClippedCandidateBounds(candidate);
+            DrawingRectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
             return WpfCandidateReviewPresenter.IsConfirmable(
                 candidate,
                 bounds,
@@ -190,7 +208,7 @@ namespace MvcVisionSystem
 
         private bool IsCandidateHighOverlap(YoloWorkerSmokeCandidate candidate)
         {
-            DrawingRectangle bounds = GetClippedCandidateBounds(candidate);
+            DrawingRectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
             return WpfCandidateReviewPresenter.IsHighOverlap(GetCandidateOverlapInfo(bounds));
         }
 
@@ -221,13 +239,17 @@ namespace MvcVisionSystem
                     return;
                 }
 
-                DrawingRectangle bounds = GetClippedCandidateBounds(candidate);
+                DrawingRectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
                 WpfCandidateComparisonPresentation comparison = WpfCandidateReviewPresenter.BuildComparison(
                     candidate,
                     bounds,
                     GetCandidateOverlapInfo(bounds));
                 CandidateReviewViewModel.ApplySelectionReview(
-                    FormatCandidateDetail(candidate),
+                    WpfCandidateReviewPresenter.BuildDetail(
+                        candidate,
+                        bounds,
+                        GetCandidateOverlapInfo(bounds),
+                        GetMinimumDetectionConfidence()),
                     comparison,
                     showComparison: true);
             }

@@ -1,6 +1,10 @@
 ﻿using MvcVisionSystem._1._Core;
 using MvcVisionSystem._3._Communication.TCP;
+using MahApps.Metro.IconPacks;
+using System;
 using System.IO;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace MvcVisionSystem
 {
@@ -211,7 +215,6 @@ namespace MvcVisionSystem
             PythonModelSettings settings = global.Data.ProjectSettings.PythonModel;
             YoloModelSettingsViewModel?.ApplyTo(settings);
             YoloModelSettingsViewModel?.ApplyTo(global.Data.ProjectSettings.AnomalyClassification);
-            YoloModelSettingsViewModel?.LoadFrom(settings, global.Data.ProjectSettings.AnomalyClassification);
             CandidateConfidenceSlider.Value = System.Math.Clamp(settings.MinimumDetectionConfidence, 0F, 1F);
         }
 
@@ -220,7 +223,165 @@ namespace MvcVisionSystem
             EnsureProjectSettings();
             TrainingSettings training = global.Data.ProjectSettings.Training;
             TrainingSettingsViewModel?.ApplyTo(training, global.Data.ProjectSettings.YoloDataset, global.Data.TrainingParam);
-            PopulateTrainingEditorFields();
+        }
+
+        private void RefreshCandidateConfidenceFilterFromAppliedSettings()
+        {
+            if (CandidateConfidenceSlider == null)
+            {
+                return;
+            }
+
+            CandidateConfidenceSlider.Value = System.Math.Clamp(
+                global.Data.ProjectSettings.PythonModel.MinimumDetectionConfidence,
+                0F,
+                1F);
+            UpdateCandidateConfidenceText();
+        }
+
+        // Settings-panel capability/package checks and runtime status labels
+        // share one YOLO status owner; the async check remains distinct from
+        // the cheap label refresh inside this owner.
+        private async Task RefreshYoloSettingsPanelAsync(PythonModelValidationResult validation = null)
+        {
+            global.Data.ProjectSettings ??= new LabelingProjectSettings();
+            global.Data.ProjectSettings.PythonModel ??= new PythonModelSettings();
+            PythonModelSettings settings = global.Data.ProjectSettings.PythonModel;
+            PythonCommunicationStatus communicationStatus = global.GetPythonCommunicationStatusSnapshot();
+            PythonModelRuntimeState runtimeState = PythonModelSettingsValidator.GetRuntimeState(
+                settings,
+                communicationStatus?.WorkerSupportedModels,
+                communicationStatus?.WorkerTrainingModels,
+                communicationStatus?.WorkerDetectionModels);
+            validation ??= runtimeState.State == PythonModelRuntimeStateKind.NotInstalled
+                ? new PythonModelValidationResult(new[] { runtimeState.NextActionText }, Array.Empty<string>())
+                : PythonModelSettingsValidator.Validate(settings, requireWeights: true);
+
+            YoloModelSettingsViewModel?.ApplyRuntimeCapabilities(
+                communicationStatus?.WorkerSupportedModels,
+                communicationStatus?.WorkerTrainingModels,
+                communicationStatus?.WorkerDetectionModels);
+
+            PythonEnvironmentCheckResult environment = null;
+            string environmentCheckError = string.Empty;
+            if (runtimeState.IsRuntimeInstalled)
+            {
+                try
+                {
+                    environment = await PythonEnvironmentService
+                        .CheckRequirementsAsync(settings)
+                        .ConfigureAwait(true);
+                }
+                catch (Exception ex)
+                {
+                    environmentCheckError = ex.Message;
+                }
+            }
+
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            string detail = WpfYoloSettingsPanelStatusPresentationService.BuildDetail(
+                settings,
+                validation,
+                runtimeState,
+                communicationStatus,
+                global.ModelRuntime.PythonClientProcess?.IsRunning == true,
+                environment,
+                environmentCheckError);
+
+            YoloStatusViewModel.SetSettingsStatus(runtimeState.SummaryText, detail);
+        }
+
+        // Inference status text and its cosmetic progress pulse are one
+        // runtime-status boundary; the timer remains framework-bound by design.
+        private void SetGlobalInferenceStatus(string text, bool isBusy, bool isWarning = false)
+        {
+            if (InferenceStatusText == null || InferenceStatusBorder == null)
+            {
+                return;
+            }
+
+            string statusText = string.IsNullOrWhiteSpace(text) ? "\uB300\uAE30" : text;
+            InferenceStatusText.Text = WpfInferenceStatusPresentationService.BuildStatusText(
+                statusText,
+                global?.Data?.ProjectSettings?.PythonModel,
+                hasPendingTrainingWeightsRecipeSave);
+            InferenceStatusBorder.ToolTip = WpfInferenceStatusPresentationService.BuildToolTip(
+                statusText,
+                global?.Data?.ProjectSettings?.PythonModel,
+                hasPendingTrainingWeightsRecipeSave);
+            InferenceStatusProgressBar.Visibility = isBusy ? Visibility.Visible : Visibility.Collapsed;
+            InferenceStatusProgressBar.IsIndeterminate = false;
+            if (isBusy)
+            {
+                StartInferenceStatusPulse();
+            }
+            else
+            {
+                StopInferenceStatusPulse();
+            }
+
+            InferenceStatusIcon.Kind = isBusy
+                ? PackIconMaterialKind.ProgressClock
+                : isWarning
+                    ? PackIconMaterialKind.AlertCircleOutline
+                    : PackIconMaterialKind.RobotIndustrial;
+
+            InferenceStatusBorder.SetResourceReference(
+                System.Windows.Controls.Border.BackgroundProperty,
+                isBusy ? "DetectionOverlaySelectedBackgroundBrush" : "ToolbarButtonBrush");
+            InferenceStatusBorder.SetResourceReference(
+                System.Windows.Controls.Border.BorderBrushProperty,
+                isBusy || isWarning ? "AccentBrush" : "BorderBrushDark");
+        }
+
+        private void StartInferenceStatusPulse()
+        {
+            if (InferenceStatusProgressBar == null)
+            {
+                return;
+            }
+
+            if (!inferenceStatusPulseTimer.IsEnabled)
+            {
+                // The progress is cosmetic: keep it timer-driven so inference work does not force layout updates from hot paths.
+                inferenceStatusPulseStopwatch.Restart();
+                InferenceStatusProgressBar.Value = 8;
+                inferenceStatusPulseTimer.Start();
+            }
+        }
+
+        private void StopInferenceStatusPulse()
+        {
+            inferenceStatusPulseTimer.Stop();
+            inferenceStatusPulseStopwatch.Reset();
+            if (InferenceStatusProgressBar != null)
+            {
+                InferenceStatusProgressBar.Value = 0;
+            }
+        }
+
+        private void InferenceStatusPulseTimer_Tick(object sender, EventArgs e)
+        {
+            if (isApplicationCloseApproved)
+            {
+                StopInferenceStatusPulse();
+                return;
+            }
+
+            if (InferenceStatusProgressBar == null || InferenceStatusProgressBar.Visibility != Visibility.Visible)
+            {
+                StopInferenceStatusPulse();
+                return;
+            }
+
+            const double cycleMilliseconds = 1400D;
+            double elapsed = inferenceStatusPulseStopwatch.Elapsed.TotalMilliseconds;
+            double phase = (elapsed % cycleMilliseconds) / cycleMilliseconds;
+            InferenceStatusProgressBar.Value = 8D + (phase * 84D);
         }
     }
 }

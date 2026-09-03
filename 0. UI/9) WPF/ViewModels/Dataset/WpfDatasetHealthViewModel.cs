@@ -11,6 +11,18 @@ using System.Windows.Input;
 
 namespace MvcVisionSystem
 {
+    internal static class WpfDatasetHealthTextFormatter
+    {
+        public static string Translate(string key)
+            => OpenVisionLanguageService.T(key);
+
+        public static string Format(string key, params object[] arguments)
+            => string.Format(
+                CultureInfo.InvariantCulture,
+                Translate(key),
+                arguments ?? Array.Empty<object>());
+    }
+
     public sealed class WpfDatasetHealthViewModel : WpfObservableViewModel, IDisposable
     {
         public const string AllVisualQaSplits = "전체";
@@ -669,13 +681,10 @@ namespace MvcVisionSystem
         }
 
         private static string T(string key)
-            => OpenVisionLanguageService.T(key);
+            => WpfDatasetHealthTextFormatter.Translate(key);
 
         private static string Format(string key, params object[] arguments)
-            => string.Format(
-                CultureInfo.InvariantCulture,
-                T(key),
-                arguments ?? Array.Empty<object>());
+            => WpfDatasetHealthTextFormatter.Format(key, arguments);
     }
 
     public sealed class WpfDatasetHealthMetricItem
@@ -758,13 +767,10 @@ namespace MvcVisionSystem
         }
 
         private static string T(string key)
-            => OpenVisionLanguageService.T(key);
+            => WpfDatasetHealthTextFormatter.Translate(key);
 
         private static string Format(string key, params object[] arguments)
-            => string.Format(
-                CultureInfo.InvariantCulture,
-                T(key),
-                arguments ?? Array.Empty<object>());
+            => WpfDatasetHealthTextFormatter.Format(key, arguments);
     }
 
     public sealed class WpfDatasetHealthClassRow
@@ -786,7 +792,7 @@ namespace MvcVisionSystem
         }
 
         private static string T(string key)
-            => OpenVisionLanguageService.T(key);
+            => WpfDatasetHealthTextFormatter.Translate(key);
 
         public string ClassName { get; }
 

@@ -11,7 +11,7 @@ namespace MvcVisionSystem
     /// </summary>
     public static class WpfDatasetDashboardPresentationService
     {
-        private const int RecommendedModelReplacementTestImageCount = 10;
+        public const int RecommendedModelReplacementTestImageCount = 10;
 
         public static IReadOnlyList<WpfDatasetDashboardMetricItem> BuildMetrics(
             YoloDatasetReadinessReport report,

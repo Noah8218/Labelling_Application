@@ -15,6 +15,11 @@ namespace MvcVisionSystem
         // Queue commands are invoked through WpfImageQueuePanelViewModel; the shell keeps only workflow orchestration here.
         private void ExecuteLoadImageRootQueueCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             EnsureProjectSettings();
             string imageRootPath = global.Data.ProjectSettings.ResolveImageRootPath();
             if (string.IsNullOrWhiteSpace(imageRootPath) && viewModels.IsModelWorkflowCreated)
@@ -38,8 +43,18 @@ namespace MvcVisionSystem
 
         private void ExecuteBrowseImageFolderCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string currentRoot = Directory.Exists(currentImageRoot) ? currentImageRoot : string.Empty;
             if (!TryPickFolder("이미지 폴더 선택", currentRoot, out string selectedPath))
+            {
+                return;
+            }
+
+            if (isApplicationCloseApproved)
             {
                 return;
             }
@@ -64,11 +79,7 @@ namespace MvcVisionSystem
             {
                 // Image folder is part of the dataset context. Persist it immediately
                 // so switching away and back reloads the right queue for this recipe.
-                RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName);
-                if (!saveResult.IsSuccess)
-                {
-                    throw new IOException(saveResult.ErrorMessage);
-                }
+                projectRecipeSessionService.Save(global.Data, recipeName);
 
                 PopulateYoloEditorFields();
                 PopulateProjectConfigPanelFields();
@@ -82,6 +93,11 @@ namespace MvcVisionSystem
 
         private void ExecuteOpenCurrentImageFolderCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string root = Directory.Exists(currentImageRoot)
                 ? currentImageRoot
                 : global.Data.ProjectSettings?.ResolveImageRootPath();
@@ -102,6 +118,11 @@ namespace MvcVisionSystem
 
         private void ExecuteRefreshImageQueueCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string root = Directory.Exists(currentImageRoot)
                 ? currentImageRoot
                 : global.Data.ProjectSettings?.ResolveImageRootPath();
@@ -116,6 +137,11 @@ namespace MvcVisionSystem
 
         private void ExecuteNextUnlabeledQueueCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (!TryOpenNextIncompleteQueueImage())
             {
                 AppendLog("현재 큐에 남은 미완료 이미지가 없습니다.");
@@ -324,6 +350,11 @@ namespace MvcVisionSystem
 
         private void ExecuteOpenSelectedQueueImageCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             TryOpenSelectedQueueImage(skipIfAlreadyActive: false);
         }
 
@@ -411,49 +442,19 @@ namespace MvcVisionSystem
                 return false;
             }
 
-            IReadOnlyList<WpfImageQueueItem> visibleItems = GetVisibleQueueItems()
-                .Where(CanOpenQueueItem)
-                .ToList();
-            if (visibleItems.Count == 0)
+            WpfImageQueueItem targetItem = imageQueueSelectionService.FindAdjacentOpenableItem(
+                GetVisibleQueueItems(),
+                activeImagePath,
+                ImageQueueViewModel?.SelectedQueueItem?.ImagePath,
+                direction,
+                CanOpenQueueItem);
+            if (targetItem == null)
             {
                 return false;
             }
 
-            int currentIndex = FindQueueNavigationIndex(visibleItems, activeImagePath);
-            if (currentIndex < 0)
-            {
-                currentIndex = FindQueueNavigationIndex(visibleItems, ImageQueueViewModel?.SelectedQueueItem?.ImagePath);
-            }
-
-            int targetIndex = currentIndex < 0
-                ? (direction > 0 ? 0 : visibleItems.Count - 1)
-                : currentIndex + Math.Sign(direction);
-            if (targetIndex < 0 || targetIndex >= visibleItems.Count)
-            {
-                return false;
-            }
-
-            WpfImageQueueItem targetItem = visibleItems[targetIndex];
             SelectImageQueueItem(targetItem.ImagePath);
             return TryOpenSelectedQueueImage(targetItem, skipIfAlreadyActive: true);
-        }
-
-        private static int FindQueueNavigationIndex(IReadOnlyList<WpfImageQueueItem> items, string imagePath)
-        {
-            if (items == null || string.IsNullOrWhiteSpace(imagePath))
-            {
-                return -1;
-            }
-
-            for (int i = 0; i < items.Count; i++)
-            {
-                if (string.Equals(items[i]?.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
-                {
-                    return i;
-                }
-            }
-
-            return -1;
         }
 
         private string BuildOpenQueueSelectionFailureMessage()

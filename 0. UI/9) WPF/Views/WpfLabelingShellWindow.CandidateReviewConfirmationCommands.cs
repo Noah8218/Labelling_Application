@@ -17,6 +17,11 @@ namespace MvcVisionSystem
         // Candidate confirmation mutates labels, history, and review state; keep it out of simple selection code.
         private void ExecuteConfirmSelectedCandidateCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             YoloWorkerSmokeCandidate candidate = GetSelectedCandidate();
             if (candidate == null)
             {
@@ -29,6 +34,11 @@ namespace MvcVisionSystem
 
         private void ExecuteConfirmAllCandidatesCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             IReadOnlyList<YoloWorkerSmokeCandidate> candidates = GetVisibleCandidateList();
             if (candidates.Count == 0)
             {
@@ -41,6 +51,11 @@ namespace MvcVisionSystem
 
         private void ExecuteSkipSelectedCandidateCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             YoloWorkerSmokeCandidate candidate = GetSelectedCandidate();
             if (candidate == null)
             {
@@ -69,14 +84,23 @@ namespace MvcVisionSystem
             RedrawReviewRois();
             FocusCandidateInViewer(nextCandidate, logIfMissing: false);
             MarkActiveImageSkippedOrCandidate();
-            AddCandidateReviewHistory($"스킵: {FormatCandidate(candidate)}");
+            AddCandidateReviewHistory($"스킵: {WpfCandidateReviewPresenter.FormatCandidate(
+                candidate,
+                WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize))}");
             SetPythonStatus($"\uCD94\uB860: \uB300\uAE30 {pendingDetectionCandidates.Count} / \uD655\uC815 {confirmedDetectionCandidates.Count}");
-            AppendLog($"후보 스킵: {FormatCandidate(candidate)}");
+            AppendLog($"후보 스킵: {WpfCandidateReviewPresenter.FormatCandidate(
+                candidate,
+                WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize))}");
             RefreshSmartMaskCommandState();
         }
 
         private void ExecuteCompleteImageAndNextCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (activeImageBitmap == null || activeImageSize.IsEmpty)
             {
                 AppendLog("\uC644\uB8CC\uD560 \uC774\uBBF8\uC9C0\uB97C \uBA3C\uC800 \uC5F4\uC5B4\uC8FC\uC138\uC694.");
@@ -132,7 +156,7 @@ namespace MvcVisionSystem
                 return;
             }
 
-            DrawingRectangle bounds = GetClippedCandidateBounds(candidate);
+            DrawingRectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
             string confidence = WpfCandidateReviewPresenter.FormatConfidence(candidate, "P1");
             ApplyCandidateSelectionReview(candidate);
             SetModelStatus(candidate.ImageLevel
@@ -146,6 +170,11 @@ namespace MvcVisionSystem
 
         private void ConfirmCandidates(IReadOnlyList<YoloWorkerSmokeCandidate> candidates, string scope)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (activeImageBitmap == null || activeImageSize.IsEmpty)
             {
                 AppendLog("후보를 확정하려면 이미지를 먼저 불러오세요.");

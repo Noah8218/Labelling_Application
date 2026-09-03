@@ -10,10 +10,12 @@ namespace MvcVisionSystem
     {
         private bool isExternalYoloDatasetIntakeRunning;
 
-        // Dialogs and recipe persistence belong to the view adapter; validation remains side-effect-free in YoloExternalDatasetIntakeService.
+        // Dialogs remain in the view adapter; Recipe persistence uses the existing
+        // project session owner and validation remains side-effect-free in
+        // YoloExternalDatasetIntakeService.
         private async void ExecuteSelectExternalYoloDatasetCommand()
         {
-            if (isExternalYoloDatasetIntakeRunning)
+            if (isApplicationCloseApproved || isExternalYoloDatasetIntakeRunning)
             {
                 return;
             }
@@ -38,6 +40,11 @@ namespace MvcVisionSystem
                 return;
             }
 
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             await ValidateAndStoreExternalYoloDatasetAsync(
                 selectedPath,
                 LearningWorkflowViewModel?.GetSelectedExternalYoloDatasetPurpose() ?? LabelingDatasetPurpose.ObjectDetection,
@@ -46,7 +53,7 @@ namespace MvcVisionSystem
 
         private async void ExecuteActivateExternalYoloDatasetCommand()
         {
-            if (isExternalYoloDatasetIntakeRunning)
+            if (isApplicationCloseApproved || isExternalYoloDatasetIntakeRunning)
             {
                 return;
             }
@@ -75,7 +82,7 @@ namespace MvcVisionSystem
 
         private void ExecuteClearExternalYoloDatasetCommand()
         {
-            if (isExternalYoloDatasetIntakeRunning)
+            if (isApplicationCloseApproved || isExternalYoloDatasetIntakeRunning)
             {
                 return;
             }
@@ -99,6 +106,11 @@ namespace MvcVisionSystem
             LabelingDatasetPurpose purpose,
             bool useForNextTraining)
         {
+            if (isApplicationCloseApproved || isExternalYoloDatasetIntakeRunning)
+            {
+                return;
+            }
+
             isExternalYoloDatasetIntakeRunning = true;
             LearningWorkflowViewModel?.SetExternalYoloDatasetIntakeResult(
                 purpose,
@@ -113,16 +125,24 @@ namespace MvcVisionSystem
             }
             catch (Exception ex)
             {
-                LearningWorkflowViewModel?.SetExternalYoloDatasetIntakeResult(
-                    purpose,
-                    "외부 YOLO data.yaml: 확인 불가",
-                    ex.Message,
-                    dataYamlFilePath);
+                if (!isApplicationCloseApproved)
+                {
+                    LearningWorkflowViewModel?.SetExternalYoloDatasetIntakeResult(
+                        purpose,
+                        "외부 YOLO data.yaml: 확인 불가",
+                        ex.Message,
+                        dataYamlFilePath);
+                }
                 return;
             }
             finally
             {
                 isExternalYoloDatasetIntakeRunning = false;
+            }
+
+            if (isApplicationCloseApproved)
+            {
+                return;
             }
 
             ExternalYoloDatasetSettings settings = GetExternalYoloDatasetSettings();
@@ -236,8 +256,11 @@ namespace MvcVisionSystem
 
             try
             {
-                Recipe.InitDirectory(recipeName);
-                RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName);
+                RecipeConfigurationSaveResult saveResult = projectRecipeSessionService.SaveConfiguration(
+                    global.Data,
+                    recipeName,
+                    updateYoloDataYaml: false,
+                    refreshDatasetVersion: true);
                 if (!saveResult.IsSuccess)
                 {
                     throw new IOException(saveResult.ErrorMessage);

@@ -1,4 +1,3 @@
-using MahApps.Metro.IconPacks;
 using MvcVisionSystem._1._Core;
 using System;
 using System.Collections.Generic;
@@ -18,7 +17,8 @@ namespace MvcVisionSystem
                 settings.ProjectRootPath,
                 global.Data.OutputRootPath,
                 settings.WeightsPath);
-            string comparisonStatusText = BuildTrainingComparisonStatusText(comparison);
+            string comparisonStatusText = WpfTrainingComparisonPresentationService
+                .BuildComparisonStatusText(comparison);
             if (LearningWorkflowViewModel != null)
             {
                 UpdateTrainingComparisonViewModel(comparison, comparisonStatusText);
@@ -115,30 +115,6 @@ namespace MvcVisionSystem
                 GetTrainingComparisonCurrentWeightsPath(settings.WeightsPath));
         }
 
-        private static string BuildTrainingComparisonStatusText(WpfTrainingWeightsComparison comparison)
-        {
-            if (comparison == null)
-            {
-                return string.Empty;
-            }
-
-            return string.IsNullOrWhiteSpace(comparison.MetricsStatusText)
-                ? comparison.StatusText
-                : $"{comparison.StatusText} / {comparison.MetricsStatusText}";
-        }
-
-        private static string BuildTrainingComparisonSummaryText(WpfTrainingWeightsComparison comparison)
-        {
-            if (comparison == null)
-            {
-                return string.Empty;
-            }
-
-            return string.IsNullOrWhiteSpace(comparison.MetricsStatusText)
-                ? comparison.StatusText
-                : comparison.MetricsStatusText;
-        }
-
         private void UpdateTrainingComparisonViewModel(WpfTrainingWeightsComparison comparison, string comparisonStatusText = null)
         {
             if (LearningWorkflowViewModel == null)
@@ -146,51 +122,14 @@ namespace MvcVisionSystem
                 return;
             }
 
-            comparisonStatusText ??= BuildTrainingComparisonStatusText(comparison);
+            WpfTrainingComparisonPresentation presentation = WpfTrainingComparisonPresentationService.Build(comparison);
+            comparisonStatusText ??= presentation.StatusText;
             LearningWorkflowViewModel.SetTrainingComparisonResultTexts(
-                summaryText: BuildTrainingComparisonSummaryText(comparison),
+                summaryText: presentation.SummaryText,
                 comparisonText: comparisonStatusText,
-                adoptionDecisionText: BuildTrainingModelAdoptionDecisionText(comparison));
-            LearningWorkflowViewModel.SetTrainingResultReportItems(BuildTrainingResultReportItems(comparison));
+                adoptionDecisionText: presentation.AdoptionDecisionText);
+            LearningWorkflowViewModel.SetTrainingResultReportItems(presentation.ResultReportItems);
             UpdateCandidateModelComparisonReviewPanel(comparison);
-        }
-
-        private static string BuildTrainingModelAdoptionDecisionText(WpfTrainingWeightsComparison comparison)
-        {
-            if (comparison == null)
-            {
-                return "교체 판단: 학습 결과 비교 전";
-            }
-
-            if (!comparison.HasLatestWeights)
-            {
-                return "교체 판단: 학습 결과 없음";
-            }
-
-            if (string.Equals(comparison.LatestWeightsPath?.Trim(), comparison.CurrentWeightsPath?.Trim(), StringComparison.OrdinalIgnoreCase))
-            {
-                return "교체 판단: 이미 현재 검사 모델로 사용 중";
-            }
-
-            if (comparison.LatestMetrics?.HasScore != true)
-            {
-                return "교체 판단: 보류 - 학습 지표가 없어 채택 판단 불가";
-            }
-
-            if (comparison.CurrentMetrics?.HasScore != true)
-            {
-                return "교체 판단: 비교 필요 - 현재 모델 지표가 부족합니다";
-            }
-
-            return comparison.MetricVerdictText switch
-            {
-                "새 모델 우세" => comparison.ShouldApplyLatest
-                    ? "교체 판단: 새 모델 후보 우세 - 최종 검증 예시 확인 후 저장"
-                    : "교체 판단: 새 모델 지표 우세 - 파일 상태 확인 필요",
-                "현재 모델 우세" => "교체 판단: 현재 모델 유지",
-                "동률" => "교체 판단: 보류 - 차이가 작아 예시 확인 필요",
-                _ => "교체 판단: 보류 - 최종 검증 비교 필요"
-            };
         }
 
         private void UpdateCandidateModelComparisonReviewPanel(WpfTrainingWeightsComparison comparison = null)
@@ -229,85 +168,5 @@ namespace MvcVisionSystem
             UpdateCandidateModelDecisionPanel(comparison);
         }
 
-        private static IEnumerable<WpfTrainingResultReportItem> BuildTrainingResultReportItems(WpfTrainingWeightsComparison comparison)
-        {
-            if (comparison == null)
-            {
-                yield break;
-            }
-
-            string verdict = string.IsNullOrWhiteSpace(comparison.MetricVerdictText)
-                ? "비교 대기"
-                : comparison.MetricVerdictText;
-            string decision = comparison.ShouldApplyLatest
-                ? "새 모델 후보"
-                : comparison.HasLatestWeights
-                    ? "현재 모델 유지"
-                    : "학습 결과 없음";
-            bool hasMetrics = comparison.LatestMetrics?.HasScore == true;
-
-            yield return new WpfTrainingResultReportItem(
-                "판정",
-                verdict,
-                decision,
-                hasMetrics ? PackIconMaterialKind.CheckCircleOutline : PackIconMaterialKind.AlertCircleOutline,
-                isWarning: !hasMetrics);
-            yield return new WpfTrainingResultReportItem(
-                "지표",
-                FormatTrainingReportMetricValue(comparison),
-                hasMetrics ? "mAP50-95를 우선 보고 precision/recall을 함께 확인합니다." : "results.csv가 없으면 모델 교체 판단을 보류합니다.",
-                PackIconMaterialKind.ProgressClock,
-                isWarning: !hasMetrics);
-            yield return new WpfTrainingResultReportItem(
-                "새 후보",
-                FormatTrainingReportPath(comparison.LatestWeightsPath),
-                FormatTrainingReportMetricSource(comparison.LatestMetrics),
-                PackIconMaterialKind.FileDocumentOutline,
-                isWarning: !comparison.HasLatestWeights);
-            yield return new WpfTrainingResultReportItem(
-                "현재",
-                FormatTrainingReportPath(comparison.CurrentWeightsPath),
-                FormatTrainingReportMetricSource(comparison.CurrentMetrics),
-                PackIconMaterialKind.RobotIndustrial);
-        }
-
-        private static string FormatTrainingReportMetricValue(WpfTrainingWeightsComparison comparison)
-        {
-            if (comparison?.LatestMetrics?.HasScore != true)
-            {
-                return "지표 없음";
-            }
-
-            WpfTrainingRunMetrics metrics = comparison.LatestMetrics;
-            if (metrics.Map5095.HasValue)
-            {
-                return $"mAP50-95 {FormatTrainingReportPercent(metrics.Map5095.Value)}";
-            }
-
-            if (metrics.Map50.HasValue)
-            {
-                return $"mAP50 {FormatTrainingReportPercent(metrics.Map50.Value)}";
-            }
-
-            if (metrics.Precision.HasValue)
-            {
-                return $"precision {FormatTrainingReportPercent(metrics.Precision.Value)}";
-            }
-
-            return metrics.Recall.HasValue
-                ? $"recall {FormatTrainingReportPercent(metrics.Recall.Value)}"
-                : "지표 있음";
-        }
-
-        private static string FormatTrainingReportMetricSource(WpfTrainingRunMetrics metrics)
-            => string.IsNullOrWhiteSpace(metrics?.ResultsCsvPath)
-                ? "results.csv 없음"
-                : $"results.csv: {Path.GetFileName(Path.GetDirectoryName(metrics.ResultsCsvPath) ?? metrics.ResultsCsvPath)}";
-
-        private static string FormatTrainingReportPath(string path)
-            => string.IsNullOrWhiteSpace(path) ? "없음" : Path.GetFileName(path);
-
-        private static string FormatTrainingReportPercent(double value)
-            => $"{(Math.Abs(value) <= 1.5D ? value * 100D : value):0.0}%";
     }
 }

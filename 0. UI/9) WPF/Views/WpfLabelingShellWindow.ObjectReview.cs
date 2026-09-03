@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
+using MvcVisionSystem.Yolo;
 using OpenVisionLab.Mvvm;
+using DrawingRectangle = System.Drawing.Rectangle;
 
 namespace MvcVisionSystem
 {
@@ -32,8 +34,16 @@ namespace MvcVisionSystem
                 confirmedDetectionCandidates,
                 preferredSelection,
                 previousSelection,
-                GetClippedCandidateBounds,
-                FormatCandidateDetail);
+                candidate => WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize),
+                candidate =>
+                {
+                    DrawingRectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
+                    return WpfCandidateReviewPresenter.BuildDetail(
+                        candidate,
+                        bounds,
+                        GetCandidateOverlapInfo(bounds),
+                        GetMinimumDetectionConfidence());
+                });
 
             ApplyObjectSessionStates(presentation.Rows);
             ApplyObjectPersistentMetadata(presentation.Rows);
@@ -159,6 +169,63 @@ namespace MvcVisionSystem
             SyncObjectClassEditorToSelection();
             UpdateObjectReviewActionState();
             return updated;
+        }
+
+        // Class-editor synchronization stays beside object-list construction because both
+        // paths operate on the selected object-review row and its class catalog.
+        private void UpdateObjectReviewActionState()
+        {
+            ObjectReviewViewModel?.RefreshActionState();
+        }
+
+        private void SyncObjectClassEditorToSelection()
+        {
+            if (ObjectReviewViewModel == null)
+            {
+                return;
+            }
+
+            if (!TryGetSelectedObjectReviewItem(out WpfObjectReviewItemRef item))
+            {
+                ObjectReviewViewModel.SelectedClassName = string.Empty;
+                return;
+            }
+
+            string className = WpfObjectReviewEditService.GetClassName(
+                item,
+                manualRoiClassNames,
+                manualSegments,
+                confirmedDetectionCandidates);
+            ObjectReviewViewModel.SetSelectedObjectClass(GetClassNames(), className);
+        }
+
+        private void RefreshObjectClassOptions(string selectedName = "")
+        {
+            if (ObjectReviewViewModel == null)
+            {
+                return;
+            }
+
+            string viewModelSelection = string.IsNullOrWhiteSpace(selectedName)
+                ? ObjectReviewViewModel.SelectedClassName
+                : selectedName;
+            ObjectReviewViewModel.SetClassNames(GetClassNames(), viewModelSelection);
+        }
+
+        private IReadOnlyList<string> GetClassNames()
+        {
+            if (global.Data.ClassNamedList == null
+                || !global.Data.ClassNamedList.Any(item => item != null && !string.IsNullOrWhiteSpace(item.Text)))
+            {
+                EnsureClassItem("Defect");
+            }
+
+            return global.Data.ClassNamedList
+                .Where(ClassCatalogService.IsActiveClass)
+                .Select(item => item.Text)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
 

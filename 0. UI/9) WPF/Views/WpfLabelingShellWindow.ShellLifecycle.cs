@@ -15,6 +15,11 @@ namespace MvcVisionSystem
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 RefreshYoloStatus();
                 _ = RefreshYoloSettingsPanelAsync();
                 if (!TryHandleCrashRecoveryOnStartup())
@@ -24,6 +29,43 @@ namespace MvcVisionSystem
                 SetPythonStatus(OpenVisionLanguageService.T("WpfShell.Status.InferenceWaiting"));
                 AppendLog("시작 완료. 추론은 사용자가 명시적으로 실행할 때만 시작합니다.");
             }), DispatcherPriority.ApplicationIdle);
+        }
+
+        // The language event is subscribed and released with the Window. Its
+        // fan-out is therefore part of this lifecycle adapter rather than a
+        // second Shell partial or a speculative localization service.
+        private void LanguageViewModel_LanguageChanged(object sender, EventArgs e)
+        {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(
+                    DispatcherPriority.DataBind,
+                    new Action(() => LanguageViewModel_LanguageChanged(sender, e)));
+                return;
+            }
+
+            ShellViewModel?.RefreshLocalizedPresentation();
+            ClassCatalogViewModel?.RefreshLocalizedPresentation();
+            ImageQueueViewModel?.RefreshLocalizedPresentation(imageQueueItems);
+            StatusBarViewModel?.RefreshLocalizedPresentation();
+            CanvasPanelControl?.RefreshLocalizedViewerStatus();
+            if (ImageQueueFilterBox?.ItemsSource is IEnumerable<WpfImageQueueFilterOption> filterOptions)
+            {
+                foreach (WpfImageQueueFilterOption filterOption in filterOptions)
+                {
+                    filterOption?.RefreshLocalizedPresentation();
+                }
+            }
+            RefreshShellDatasetContext();
+            UpdateImageQueueStatusText();
+            UpdateYoloCommandButtons();
+            WpfLocalizationTextRuntimeService.RefreshAll();
+            CanvasPanelControl?.RefreshLocalizedViewerStatus();
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -99,9 +141,21 @@ namespace MvcVisionSystem
             {
                 names.Add("일괄 AI 검사");
             }
+            if (isExternalYoloDatasetIntakeRunning)
+            {
+                names.Add("외부 YOLO 데이터셋 확인");
+            }
+            if (isExternalEvaluationDataAuditRunning)
+            {
+                names.Add("외부 평가 데이터 대조");
+            }
+            if (isHistoricalSegmentationRemediationAuditRunning)
+            {
+                names.Add("SEG 보정 검토");
+            }
             if (isTrainingCommandRunning
                 || isTrainingWorkflowRunning
-                || IsTrainingStopAvailable(global.GetPythonCommunicationStatusSnapshot()))
+                || WpfTrainingProgressPresentationService.IsTrainingStopAvailable(global.GetPythonCommunicationStatusSnapshot()))
             {
                 names.Add("모델 학습");
             }
@@ -232,9 +286,21 @@ namespace MvcVisionSystem
             smartMaskCancellation?.Cancel();
             smartMaskCancellation?.Dispose();
             smartMaskCancellation = null;
+            isCreatingSmartMask = false;
             batchDetectionCts?.Cancel();
             batchDetectionCts?.Dispose();
             batchDetectionCts = null;
+            isBatchDetectionRunning = false;
+            isDetecting = false;
+            isExternalYoloDatasetIntakeRunning = false;
+            isExternalEvaluationDataAuditRunning = false;
+            isHistoricalSegmentationRemediationAuditRunning = false;
+            isSegmentationAdapterComparisonRunning = false;
+            isModelComparisonRunning = false;
+            isAnomalyEvaluationRunning = false;
+            isYoloEnvironmentCommandRunning = false;
+            isTrainingCommandRunning = false;
+            isTrainingWorkflowRunning = false;
             global.StopPythonModelClientConnection();
             imageDecodeCacheService.Clear();
             activeImageBitmap?.Dispose();

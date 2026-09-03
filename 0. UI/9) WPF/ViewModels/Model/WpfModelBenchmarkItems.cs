@@ -10,6 +10,12 @@ using System.Windows.Media.Imaging;
 
 namespace MvcVisionSystem
 {
+    internal static class WpfModelBenchmarkValueFormatter
+    {
+        public static string FormatPercent(double? value)
+            => value?.ToString("P1", CultureInfo.CurrentCulture) ?? "-";
+    }
+
     public sealed class WpfModelBenchmarkDashboardPointViewModel
     {
         public WpfModelBenchmarkDashboardPointViewModel(
@@ -325,10 +331,10 @@ namespace MvcVisionSystem
             InstanceCountText = metric?.InstanceCount?.ToString(CultureInfo.CurrentCulture)
                 ?? review?.GroundTruthCount.ToString(CultureInfo.CurrentCulture)
                 ?? "-";
-            PrecisionText = FormatPercent(metric?.Precision);
-            RecallText = FormatPercent(metric?.Recall);
-            Map50Text = FormatPercent(metric?.Map50);
-            Map5095Text = FormatPercent(metric?.Map5095);
+            PrecisionText = WpfModelBenchmarkValueFormatter.FormatPercent(metric?.Precision);
+            RecallText = WpfModelBenchmarkValueFormatter.FormatPercent(metric?.Recall);
+            Map50Text = WpfModelBenchmarkValueFormatter.FormatPercent(metric?.Map50);
+            Map5095Text = WpfModelBenchmarkValueFormatter.FormatPercent(metric?.Map5095);
             GroundTruthReviewText = review == null
                 ? "-"
                 : $"TP {review.TruePositiveCount} · FP {review.FalsePositiveCount} · FN {review.FalseNegativeCount}";
@@ -343,10 +349,6 @@ namespace MvcVisionSystem
         public string Map5095Text { get; }
         public string GroundTruthReviewText { get; }
 
-        private static string FormatPercent(double? value)
-        {
-            return value.HasValue ? value.Value.ToString("P1", CultureInfo.CurrentCulture) : "-";
-        }
     }
 
     public sealed class WpfModelBenchmarkThresholdReviewRowViewModel
@@ -363,9 +365,9 @@ namespace MvcVisionSystem
             TruePositiveCountText = threshold?.TruePositiveCount.ToString(CultureInfo.CurrentCulture) ?? "-";
             FalsePositiveCountText = threshold?.FalsePositiveCount.ToString(CultureInfo.CurrentCulture) ?? "-";
             FalseNegativeCountText = threshold?.FalseNegativeCount.ToString(CultureInfo.CurrentCulture) ?? "-";
-            PrecisionText = FormatPercent(threshold?.Precision);
-            RecallText = FormatPercent(threshold?.Recall);
-            F1Text = FormatPercent(threshold?.F1);
+            PrecisionText = WpfModelBenchmarkValueFormatter.FormatPercent(threshold?.Precision);
+            RecallText = WpfModelBenchmarkValueFormatter.FormatPercent(threshold?.Recall);
+            F1Text = WpfModelBenchmarkValueFormatter.FormatPercent(threshold?.F1);
             EvidenceText = string.IsNullOrWhiteSpace(review?.GeometryCoordinateSystem)
                 ? "v" + Math.Max(1, review?.SchemaVersion ?? 1).ToString(CultureInfo.CurrentCulture)
                 : "v" + Math.Max(1, review.SchemaVersion).ToString(CultureInfo.CurrentCulture) + " / " + review.GeometryCoordinateSystem;
@@ -383,10 +385,6 @@ namespace MvcVisionSystem
         public string F1Text { get; }
         public string EvidenceText { get; }
 
-        private static string FormatPercent(double? value)
-        {
-            return value?.ToString("P1", CultureInfo.CurrentCulture) ?? "-";
-        }
     }
 
     public sealed class WpfModelBenchmarkGroundTruthExampleViewModel

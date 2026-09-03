@@ -49,13 +49,26 @@ namespace MvcVisionSystem
 
         private void ReportAnnotationVisibilityForDatasetPurpose(LabelingDatasetPurpose purpose, int segmentCount)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string text = BuildAnnotationVisibilityStatusText(purpose, segmentCount);
             SetModelStatus(text);
             AppendLog(text);
             // Tool selection can fire once more after the dataset-purpose list click.
             // Re-apply this short guidance at idle so the operator sees why masks vanished or returned.
             Dispatcher?.BeginInvoke(
-                new Action(() => SetModelStatus(text)),
+                new Action(() =>
+                {
+                    if (isApplicationCloseApproved)
+                    {
+                        return;
+                    }
+
+                    SetModelStatus(text);
+                }),
                 System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             var timer = new System.Windows.Threading.DispatcherTimer(
                 System.Windows.Threading.DispatcherPriority.ApplicationIdle,
@@ -66,6 +79,11 @@ namespace MvcVisionSystem
             timer.Tick += (_, _) =>
             {
                 timer.Stop();
+                if (isApplicationCloseApproved)
+                {
+                    return;
+                }
+
                 SetModelStatus(text);
             };
             timer.Start();
@@ -73,7 +91,7 @@ namespace MvcVisionSystem
 
         private static string BuildAnnotationVisibilityStatusText(LabelingDatasetPurpose purpose, int segmentCount)
         {
-            string purposeName = FormatDatasetPurposeName(purpose);
+            string purposeName = WpfDatasetContextPresentationService.FormatPurposeName(purpose);
             if (purpose == LabelingDatasetPurpose.Segmentation)
             {
                 return segmentCount > 0
@@ -84,16 +102,6 @@ namespace MvcVisionSystem
             return segmentCount > 0
                 ? $"데이터셋 목적: {purposeName} / 세그 라벨 {segmentCount}개 숨김"
                 : $"데이터셋 목적: {purposeName}";
-        }
-
-        private static string FormatDatasetPurposeName(LabelingDatasetPurpose purpose)
-        {
-            return purpose switch
-            {
-                LabelingDatasetPurpose.Segmentation => "세그멘테이션",
-                LabelingDatasetPurpose.AnomalyDetection => "이상 탐지",
-                _ => "객체 탐지"
-            };
         }
 
         private void EnsureSegmentationDatasetPurposeForSegmentationTool()

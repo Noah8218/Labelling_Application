@@ -24,7 +24,7 @@ namespace MvcVisionSystem
 
         private void ExecuteDatasetDashboardMetricCommand(WpfDatasetDashboardMetricItem metric)
         {
-            if (metric == null)
+            if (isApplicationCloseApproved || metric == null)
             {
                 return;
             }
@@ -77,6 +77,11 @@ namespace MvcVisionSystem
 
         private void ExecuteExportDatasetQualityAuditCommand()
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             string outputPath = Yolo.YoloDatasetQualityAuditExportService.ResolveDefaultOutputPath(global.Data);
             if (string.IsNullOrWhiteSpace(outputPath))
             {
@@ -100,6 +105,11 @@ namespace MvcVisionSystem
 
         private void ExecuteFirstRunSamplePathCommand(WpfFirstRunChecklistItem item)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             if (item == null || item.ShortcutWorkflowStepOrder <= 0)
             {
                 AppendLog("Guide first-run shortcut was ignored because no workflow target was defined.");
@@ -111,7 +121,12 @@ namespace MvcVisionSystem
 
         private void ExecuteOpenTutorialHtmlGuideCommand()
         {
-            string path = ResolveTutorialHtmlGuidePath();
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
+            string path = WpfTutorialGuidePathService.ResolveTutorialHtmlGuidePath();
             if (!File.Exists(path))
             {
                 SetModelStatus("\uD29C\uD1A0\uB9AC\uC5BC HTML\uC744 \uCC3E\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.");
@@ -136,64 +151,13 @@ namespace MvcVisionSystem
             }
         }
 
-        private static string ResolveTutorialHtmlGuidePath()
-        {
-            string[] searchRoots =
-            {
-                Environment.CurrentDirectory,
-                AppContext.BaseDirectory
-            };
-
-            foreach (string root in searchRoots)
-            {
-                string path = FindRelativeFileFromAncestor(root, TutorialHtmlGuideRelativePath);
-                if (!string.IsNullOrWhiteSpace(path))
-                {
-                    return path;
-                }
-            }
-
-            return Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, TutorialHtmlGuideRelativePath));
-        }
-
-        private static string FindRelativeFileFromAncestor(string startPath, string relativePath)
-        {
-            if (string.IsNullOrWhiteSpace(startPath) || string.IsNullOrWhiteSpace(relativePath))
-            {
-                return string.Empty;
-            }
-
-            DirectoryInfo directory;
-            try
-            {
-                directory = new DirectoryInfo(Path.GetFullPath(startPath));
-            }
-            catch
-            {
-                return string.Empty;
-            }
-
-            if (!directory.Exists && directory.Parent != null)
-            {
-                directory = directory.Parent;
-            }
-
-            while (directory != null)
-            {
-                string candidate = Path.Combine(directory.FullName, relativePath);
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-
-                directory = directory.Parent;
-            }
-
-            return string.Empty;
-        }
-
         private void ExecuteYoloTrainingWorkflowStep(int order, object sender)
         {
+            if (isApplicationCloseApproved)
+            {
+                return;
+            }
+
             switch (order)
             {
                 case 1:
@@ -282,6 +246,42 @@ namespace MvcVisionSystem
                 MarkActiveImageConfirmed();
                 AppendLog($"\uBAA8\uB378 \uD559\uC2B5 \uB77C\uBCA8 \uC800\uC7A5 \uC810\uAC80 \uC644\uB8CC. \uAC1D\uCCB4:{savedCount}  {BuildLabelPathSummary()}");
             }
+        }
+
+        private void LearningStepListBox_SelectionChanged(object sender, object selectedItem)
+        {
+            WpfLearningStep? step = (selectedItem as WpfLearningStepItem)?.Step ?? LearningWorkflowViewModel?.SelectedStep?.Step;
+            if (!step.HasValue)
+            {
+                return;
+            }
+
+            switch (WpfAnnotationWorkflowService.ResolveStepAction(step.Value))
+            {
+                case WpfLearningStepWorkflowAction.LoadSample:
+                    TryLoadStartupSampleImage();
+                    break;
+
+                case WpfLearningStepWorkflowAction.StartBoxLabeling:
+                    SetWorkflowMode(WorkflowMode.Labeling);
+                    SelectAnnotationTool(WpfAnnotationTool.Rectangle, revealInGuide: true);
+                    ExecuteAddSampleRoiCommand();
+                    break;
+
+                case WpfLearningStepWorkflowAction.Inference:
+                    SetWorkflowMode(WorkflowMode.Inference);
+                    break;
+
+                case WpfLearningStepWorkflowAction.ShowCandidateReview:
+                    ShowCandidateReviewWorkflowView();
+                    break;
+
+                case WpfLearningStepWorkflowAction.SaveAnnotations:
+                    ExecuteSaveAnnotationsCommand();
+                    break;
+            }
+
+            RefreshCanvasWorkflowContext();
         }
 
     }

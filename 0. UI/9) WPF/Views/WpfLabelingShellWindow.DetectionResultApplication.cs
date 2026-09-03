@@ -96,7 +96,7 @@ namespace MvcVisionSystem
 
                     foreach (YoloWorkerSmokeCandidate candidate in confirmedDetectionCandidates)
                     {
-                        DrawingRectangle bounds = GetClippedCandidateBounds(candidate);
+                        DrawingRectangle bounds = WpfCandidateReviewPresentationService.ClipCandidateBounds(candidate, activeImageSize);
                         if (!bounds.IsEmpty)
                         {
                             MainCanvasViewModel.AddInitialRoi(bounds, OpenVisionLab.ImageCanvas.CanvasShapes.CanvasRoiShapeKind.Rectangle, GetClassDrawColor(candidate.ClassName), candidate.ClassName);
@@ -106,7 +106,12 @@ namespace MvcVisionSystem
 
                 if (showInference)
                 {
-                    MainCanvasViewModel.SetDetectionOverlays(BuildDetectionOverlays(pendingDetectionCandidates));
+                    MainCanvasViewModel.SetDetectionOverlays(
+                        WpfCandidateReviewPresentationService.BuildDetectionOverlays(
+                            pendingDetectionCandidates,
+                            GetSelectedCandidate(),
+                            activeImageSize,
+                            IsCandidateConfirmable));
                 }
                 else
                 {

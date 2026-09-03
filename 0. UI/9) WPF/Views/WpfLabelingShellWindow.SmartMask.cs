@@ -12,7 +12,7 @@ namespace MvcVisionSystem
     {
         private async void ExecuteCreateSmartMaskCandidateCommand()
         {
-            if (isCreatingSmartMask)
+            if (isApplicationCloseApproved || isCreatingSmartMask)
             {
                 return;
             }
@@ -88,6 +88,11 @@ namespace MvcVisionSystem
                 }
                 cancellation.Dispose();
                 isCreatingSmartMask = false;
+            }
+
+            if (isApplicationCloseApproved)
+            {
+                return;
             }
 
             if (!smartMaskPromptSession.Matches(
@@ -238,7 +243,11 @@ namespace MvcVisionSystem
             {
                 try
                 {
-                    RecipeConfigurationSaveResult saveResult = global.Data.SaveConfig(recipeName, refreshDatasetVersion: false);
+                    RecipeConfigurationSaveResult saveResult = projectRecipeSessionService.SaveConfiguration(
+                        global.Data,
+                        recipeName,
+                        updateYoloDataYaml: false,
+                        refreshDatasetVersion: false);
                     if (!saveResult.IsSuccess)
                     {
                         AppendLog("\uC790\uB3D9 \uC724\uACFD \uC635\uC158 \uC800\uC7A5 \uC2E4\uD328: " + saveResult.ErrorMessage);

@@ -49,6 +49,95 @@ namespace MvcVisionSystem
             };
         }
 
+        public static string BuildActionStatePart(
+            string buttonText,
+            bool isEnabled,
+            bool isAvailable,
+            bool canRun,
+            string toolTip)
+        {
+            string label = CompactModelCenterActionLabel(buttonText);
+            if (isEnabled)
+            {
+                return $"{label} \uAC00\uB2A5";
+            }
+
+            string reason = !isAvailable
+                ? "\uB300\uC0C1 \uC5C6\uC74C"
+                : !canRun
+                    ? BuildModelCenterUnavailableReason(toolTip, "\uC791\uC5C5 \uC870\uAC74 \uD655\uC778")
+                    : BuildModelCenterUnavailableReason(toolTip, "\uC900\uBE44 \uD544\uC694");
+            return $"{label} \uB300\uAE30: {reason}";
+        }
+
+        private static string CompactModelCenterActionLabel(string buttonText)
+        {
+            string text = (buttonText ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return "\uBC84\uD2BC";
+            }
+
+            if (text.Contains("\uD6C4\uBCF4", StringComparison.Ordinal))
+            {
+                return "\uD6C4\uBCF4 \uAC80\uC99D";
+            }
+
+            if (text.Contains("\uC800\uC7A5", StringComparison.Ordinal))
+            {
+                return "\uAC80\uC0AC \uBAA8\uB378 \uC800\uC7A5";
+            }
+
+            if (text.Contains("\uAC80\uC0AC", StringComparison.Ordinal))
+            {
+                return "\uD604\uC7AC \uAC80\uC0AC";
+            }
+
+            return text.Length > 16
+                ? text.Substring(0, 16) + "..."
+                : text;
+        }
+
+        private static string BuildModelCenterUnavailableReason(string toolTip, string fallback)
+        {
+            string text = (toolTip ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return fallback;
+            }
+
+            if (text.Contains("\uAC80\uD1A0\uD560", StringComparison.Ordinal)
+                && text.Contains("\uC5C6\uC2B5\uB2C8\uB2E4", StringComparison.Ordinal))
+            {
+                return "\uD559\uC2B5 \uD6C4\uBCF4 \uC5C6\uC74C";
+            }
+
+            if (text.Contains("\uD655\uC815\uD560", StringComparison.Ordinal)
+                && text.Contains("\uC5C6\uC2B5\uB2C8\uB2E4", StringComparison.Ordinal))
+            {
+                return "\uC800\uC7A5\uD560 \uD6C4\uBCF4 \uC5C6\uC74C";
+            }
+
+            if (text.Contains("recipe", StringComparison.OrdinalIgnoreCase))
+            {
+                return "recipe \uC800\uC7A5 \uC870\uAC74 \uD655\uC778";
+            }
+
+            if (text.Contains("\uAC80\uC0AC \uBAA8\uB378\uC744 \uC800\uC7A5", StringComparison.Ordinal))
+            {
+                return "\uAC80\uC0AC \uBAA8\uB378 \uC800\uC7A5 \uD544\uC694";
+            }
+
+            if (text.Contains("\uD604\uC7AC \uC774\uBBF8\uC9C0", StringComparison.Ordinal))
+            {
+                return "\uD604\uC7AC \uC774\uBBF8\uC9C0/\uBAA8\uB378 \uD655\uC778";
+            }
+
+            return text.Length > 30
+                ? text.Substring(0, 30) + "..."
+                : text;
+        }
+
         private static string BuildCurrentModelText(
             PythonModelSettings settings,
             string configuredWeightsPath,

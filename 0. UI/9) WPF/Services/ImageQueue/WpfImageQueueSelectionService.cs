@@ -216,6 +216,59 @@ namespace MvcVisionSystem
             return false;
         }
 
+        public WpfImageQueueItem FindAdjacentOpenableItem(
+            IEnumerable<WpfImageQueueItem> visibleItems,
+            string activeImagePath,
+            string selectedImagePath,
+            int direction,
+            Func<WpfImageQueueItem, bool> canOpen = null)
+        {
+            if (direction == 0)
+            {
+                return null;
+            }
+
+            Func<WpfImageQueueItem, bool> openability = canOpen ?? CanOpen;
+            List<WpfImageQueueItem> openableItems = (visibleItems ?? Array.Empty<WpfImageQueueItem>())
+                .Where(item => item != null && openability(item))
+                .ToList();
+            if (openableItems.Count == 0)
+            {
+                return null;
+            }
+
+            int currentIndex = FindItemIndex(openableItems, activeImagePath);
+            if (currentIndex < 0)
+            {
+                currentIndex = FindItemIndex(openableItems, selectedImagePath);
+            }
+
+            int targetIndex = currentIndex < 0
+                ? (direction > 0 ? 0 : openableItems.Count - 1)
+                : currentIndex + Math.Sign(direction);
+            return targetIndex >= 0 && targetIndex < openableItems.Count
+                ? openableItems[targetIndex]
+                : null;
+        }
+
+        private static int FindItemIndex(IReadOnlyList<WpfImageQueueItem> items, string imagePath)
+        {
+            if (items == null || string.IsNullOrWhiteSpace(imagePath))
+            {
+                return -1;
+            }
+
+            for (int index = 0; index < items.Count; index++)
+            {
+                if (string.Equals(items[index]?.ImagePath, imagePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
         public WpfImageQueueOpenSelection ResolveOpenSelection(IEnumerable<WpfImageQueueItem> candidates, LabelingProjectData data)
         {
             foreach (WpfImageQueueItem candidate in candidates ?? Array.Empty<WpfImageQueueItem>())
